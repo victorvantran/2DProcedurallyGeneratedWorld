@@ -1,6 +1,8 @@
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
 
+#include "settings.h"
+
 // Override base class with your custom functionality
 class Example : public olc::PixelGameEngine
 {
@@ -31,7 +33,7 @@ public:
 int main()
 {
 	Example demo;
-	if ( demo.Construct( 256, 240, 4, 4 ) )
+	if ( demo.Construct( SETTINGS::RESOLUTION::X, SETTINGS::RESOLUTION::Y, SETTINGS::RESOLUTION::PIXELSCALEX, SETTINGS::RESOLUTION::PIXELSCALEY ) )
 		demo.Start();
 	return 0;
 }
