@@ -1,5 +1,8 @@
 #pragma once
 
+#include "olcPixelGameEngine.h"
+
+
 enum class TILE_TYPE
 {
 	BASIC,
@@ -13,6 +16,7 @@ struct Tile
 
 	int edgeId[4];
 	int edgeExist[4];
+
 
 	Tile();
 	~Tile();

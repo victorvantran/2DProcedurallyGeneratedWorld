@@ -1,6 +1,5 @@
-#include "olcPixelGameEngine.h"
 #include "Layer.h"
-
+/*
 namespace olc {
 	template<typename T>
 	Layer<T>::Layer()
@@ -15,6 +14,13 @@ namespace olc {
 	}
 
 	template<typename T>
+	void Layer<T>::test()
+	{
+		return;
+	}
+
+
+	template<typename T>
 	void Layer<T>::create( vi2d layerDimension, vi2d tileDimension )
 	{
 	// Establishes essentially a blank layer canvas
@@ -27,8 +33,7 @@ namespace olc {
 			this->_pTiles[i].id = 0;
 		}
 
-		Atlas _atlas;
-		T* _pTiles;
+		return;
 	}
 
 	template<typename T>
@@ -44,8 +49,7 @@ namespace olc {
 			this->_pTiles[i].id = 0;
 		}
 
-		Atlas _atlas;
-		T* _pTiles;
+		return;
 	}
 
 	template<typename T>
@@ -110,3 +114,4 @@ namespace olc {
 
 
 }
+*/

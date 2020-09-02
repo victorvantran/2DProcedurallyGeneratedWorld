@@ -4,6 +4,8 @@
 #include "settings.h"
 #include "GameState.h"
 #include "Screen.h"
+#include "Layer.h"
+#include "Tile.h"
 
 
 
@@ -16,9 +18,9 @@ private:
 
 
 	///
-
+	olc::Layer<Tile> _layerLoading;
+	olc::Atlas _atlasLoading;
 	///
-
 
 
 public:
@@ -40,6 +42,10 @@ public:
 		// initialize the screen
 		// run through the first state of the game
 		sAppName = "Example";
+
+		this->initializeAtlases();
+		this->initializeLayers();
+
 		this->_gameState = GameState::LOADING;
 		this->_pScreen = new olc::Screen();
 		return;
@@ -48,7 +54,37 @@ public:
 	void destroyGame()
 	{
 		// free memory of what was used in Game::initalizeGame()
+		this->destroyAtlases();
+		this->destroyLayers();
+
 		delete this->_pScreen;
+		return;
+	}
+
+
+	void initializeAtlases()
+	{
+		//this->_atlasLoading.create(new olc::Sprite(, ) );
+		return;
+	}
+
+
+	void destroyAtlases()
+	{
+		// free memory of what was used in initializeAtlases()
+		return;
+	}
+
+
+	void initializeLayers()
+	{
+		this->_layerLoading.create( SETTINGS::RESOLUTION::SCREEN_X, SETTINGS::RESOLUTION::SCREEN_Y, SETTINGS::RESOLUTION::PIXEL_SCALE_X, SETTINGS::RESOLUTION::PIXEL_SCALE_Y );
+		return;
+	}
+
+	void destroyLayers()
+	{
+		// free memory of what was used in initializeLayers()
 		return;
 	}
 
@@ -116,7 +152,7 @@ int main()
 	{
 		if ( demo.Construct( SETTINGS::RESOLUTION::SCREEN_X, SETTINGS::RESOLUTION::SCREEN_Y, SETTINGS::RESOLUTION::PIXEL_SCALE_X, SETTINGS::RESOLUTION::PIXEL_SCALE_Y ) )
 		{
-			demo.Start();
+		//	demo.Start();
 		}
 		return 0;
 	}

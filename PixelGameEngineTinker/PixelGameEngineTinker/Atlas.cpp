@@ -34,15 +34,17 @@ namespace olc
 		return FAIL;
 	}
 
-	Sprite Atlas::getTileSheet()
+	Sprite* Atlas::getTileSheet()
 	{
 		// returns a tilesheet which depicts an arrangement of unique-looking tiles
+		return this->_spriteTileSheet;
 	}
 
 
-	std::vector<std::tuple<int32_t, int32_t, int32_t, int32_t>> getMapping()
+	std::vector<std::tuple<int32_t, int32_t, int32_t, int32_t>> Atlas::getMapping()
 	{
 		// returns a mapping that directs a certain tile to a certain point in the tile sheet
+		return this->_mapping;
 	}
 
 }
