@@ -210,11 +210,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Atlas.h" />
+    <ClInclude Include="Edge.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
+    <ClInclude Include="Screen.h" />
     <ClInclude Include="settings.h" />
+    <ClInclude Include="Layer.h" />
+    <ClInclude Include="Tile.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Atlas.cpp" />
+    <ClCompile Include="Layer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Tile.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

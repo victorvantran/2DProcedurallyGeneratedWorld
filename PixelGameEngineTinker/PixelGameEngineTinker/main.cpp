@@ -33,7 +33,11 @@ public:
 int main()
 {
 	Example demo;
-	if ( demo.Construct( SETTINGS::RESOLUTION::X, SETTINGS::RESOLUTION::Y, SETTINGS::RESOLUTION::PIXELSCALEX, SETTINGS::RESOLUTION::PIXELSCALEY ) )
-		demo.Start();
-	return 0;
+	{
+		if ( demo.Construct( SETTINGS::RESOLUTION::SCREEN_X, SETTINGS::RESOLUTION::SCREEN_Y, SETTINGS::RESOLUTION::PIXEL_SCALE_X, SETTINGS::RESOLUTION::PIXEL_SCALE_Y ) )
+		{
+			demo.Start();
+		}
+		return 0;
+	}
 }

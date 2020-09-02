@@ -1,0 +1,44 @@
+#include "olcPixelGameEngine.h"
+#include "Atlas.h"
+
+
+namespace olc
+{
+	Atlas::Atlas()
+	{
+
+	}
+
+	Atlas::~Atlas()
+	{
+
+	}
+
+	void Atlas::create( Sprite* tileSheet )
+	{
+	//
+	}
+
+	
+	rcode Atlas::loadFromFile( std::string filename )
+	{
+	//
+	}
+
+	rcode Atlas::saveToFile( std::string filename )
+	{
+	//
+	}
+
+	Sprite Atlas::getTileSheet()
+	{
+		// returns a tilesheet which depicts an arrangement of unique-looking tiles
+	}
+
+
+	std::vector<std::tuple<int32_t, int32_t, int32_t, int32_t>> getMapping()
+	{
+		// returns a mapping that directs a certain tile to a certain point in the tile sheet
+	}
+
+}
