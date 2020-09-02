@@ -17,17 +17,21 @@ namespace olc
 	void Atlas::create( Sprite* tileSheet )
 	{
 	//
+		this->_spriteTileSheet = tileSheet;
+		this->_mapping.clear();
 	}
 
 	
 	rcode Atlas::loadFromFile( std::string filename )
 	{
 	//
+		return FAIL;
 	}
 
 	rcode Atlas::saveToFile( std::string filename )
 	{
 	//
+		return FAIL;
 	}
 
 	Sprite Atlas::getTileSheet()

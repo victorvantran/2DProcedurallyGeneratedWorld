@@ -212,6 +212,7 @@
   <ItemGroup>
     <ClInclude Include="Atlas.h" />
     <ClInclude Include="Edge.h" />
+    <ClInclude Include="GameState.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="settings.h" />
@@ -222,6 +223,7 @@
     <ClCompile Include="Atlas.cpp" />
     <ClCompile Include="Layer.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Screen.cpp" />
     <ClCompile Include="Tile.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

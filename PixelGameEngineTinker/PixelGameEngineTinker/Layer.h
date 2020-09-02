@@ -11,8 +11,8 @@ namespace olc
 	class Layer : public olc::PGEX
 	{
 	private:
-		vi2d _layerSize;
-		vi2d _tileSize;
+		vi2d _layerDimension;
+		vi2d _tileDimension;
 
 		Atlas _atlas;
 		T* _pTiles;
@@ -29,6 +29,9 @@ namespace olc
 
 		T* getTile(int x, int y);
 		T* getTile(vi2d position);
+
+		vi2d getLayerDimension();
+		vi2d getTileDimension();
 
 
 
