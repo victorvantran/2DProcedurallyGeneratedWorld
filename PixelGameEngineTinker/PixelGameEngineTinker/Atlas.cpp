@@ -18,7 +18,7 @@ namespace olc
 	{
 	//
 		this->_spriteTileSheet = tileSheet;
-		this->_mapping.clear();
+		this->mapping.clear();
 	}
 
 	
@@ -44,7 +44,7 @@ namespace olc
 	std::vector<std::tuple<int32_t, int32_t, int32_t, int32_t>> Atlas::getMapping()
 	{
 		// returns a mapping that directs a certain tile to a certain point in the tile sheet
-		return this->_mapping;
+		return this->mapping;
 	}
 
 }

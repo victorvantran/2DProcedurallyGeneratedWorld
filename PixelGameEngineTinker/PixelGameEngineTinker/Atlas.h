@@ -8,9 +8,10 @@ namespace olc
 	{
 	private:
 		Sprite *_spriteTileSheet;
-		std::vector<std::tuple<int32_t, int32_t, int32_t, int32_t>> _mapping;
 
 	public:
+		std::vector<std::tuple<int32_t, int32_t, int32_t, int32_t>> mapping;
+
 		Atlas();
 		~Atlas();
 

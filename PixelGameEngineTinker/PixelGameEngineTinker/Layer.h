@@ -53,16 +53,18 @@ namespace olc {
 
 
 	template<typename T>
-	void Layer<T>::create( vi2d layerDimension, vi2d tileDimension )
+	void Layer<T>::create( vi2d layerDimension, vi2d tileResolution )
 	{
-	// Establishes essentially a blank layer canvas
+	// Establishes essentially a blank layer canvas 
+	// Example: (64 cells by 64 cells for the layer matrix dimension, 64 pixel by 64 pixel for the tile resolution)
 		this->_layerDimension = layerDimension;
-		this->_tileDimension = tileDimension;
+		this->_tileDimension = tileResolution;
 
 		this->_pTiles = new T[this->_layerDimension.x * this->_layerDimension.y];
-		for ( int i = 0; i < sizeof( this->_pTiles ) / sizeof( this->_pTiles[0] ); i++ )
+		for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
 		{
-			this->_pTiles[i].id = 0;
+			this->_pTiles[i].id = i;
+			this->_pTiles[i].exist = true;
 		}
 
 		return;
@@ -77,9 +79,10 @@ namespace olc {
 		this->_tileDimension = vi2d{ tileX, tileY };
 
 		this->_pTiles = new T[this->_layerDimension.x * this->_layerDimension.y];
-		for ( int i = 0; i < sizeof( this->_pTiles ) / sizeof( this->_pTiles[0] ); i++ )
+		for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
 		{
-			this->_pTiles[i].id = 0;
+			this->_pTiles[i].id = i;
+			this->_pTiles[i].exist = true;
 		}
 
 		return;
