@@ -17,7 +17,7 @@ namespace olc
 
 
 		template<typename T>
-		static void drawLayer( Layer<T> &layer, Atlas &atlas, vf2d cameraPosition, vi2d tileMatrixDimension, int scale = 1);
+		static void drawLayer( Layer<T> &layer, Atlas* atlas, vf2d cameraPosition, vi2d tileMatrixDimension, float scale = 1.0f);
 
 
 		template<typename T>
@@ -44,14 +44,13 @@ namespace olc {
 
 
 	template<typename T>
-	static void Screen::drawLayer( Layer<T>& layer, Atlas& atlas, vf2d cameraPosition, vi2d tileMatrixDimension, int scale )
+	static void Screen::drawLayer( Layer<T>& layer, Atlas* atlas, vf2d cameraPosition, vi2d tileMatrixDimension, float scale )
 	{
 		/// Renders a layer (there may be mutliple layers in a screen)
 		/// Camera position is in matrix world [col, row]
 		/// TileMatrixDimension is the matrix area of visible tiles [col, row]
 
 		vf2d offset = cameraPosition - vi2d{ cameraPosition }; // get the decimal point offset
-
 		for ( int row = 0; row < tileMatrixDimension.y + 1; row++ )
 		{
 			for ( int column = 0; column < tileMatrixDimension.x + 1; column++ )
@@ -64,27 +63,23 @@ namespace olc {
 				{
 					/// Get the float Position of the tile based on: its matrix index and slight decimal point offset 
 					/// The slight decimal point is to make sure we do not miss rendering tiles that are slightly off screen
-
 					vf2d tilePosition = vf2d
 					{
 						vi2d
 						{
-							(int) (( ( float )column - offset.x ) * ( float )layer.getTileDimension().x),
+							( int )( ( ( float )column - offset.x ) * ( float )layer.getTileDimension().x),
 							( int )( ( ( float )row - offset.y ) * ( float )layer.getTileDimension().y )
 						},
 					};
+					
 
 					/// Render the individual tile
-					//pge->DrawPartialDecal
-					pge->DrawPartialSprite(
-						tilePosition.x + 0.5f - ( tilePosition.x < 0.0f ),
-						tilePosition.y + 0.5f - ( tilePosition.y < 0.0f ),
-						atlas.getTileSheet(),
-						std::get<0>( atlas.mapping[tile->id] ),
-						std::get<1>( atlas.mapping[tile->id] ),
-						std::get<2>( atlas.mapping[tile->id] ),
-						std::get<3>( atlas.mapping[tile->id] ),
-						scale
+					pge->DrawPartialDecal(
+						vf2d{ tilePosition.x + 0.5f - ( tilePosition.x < 0.0f ), tilePosition.y + 0.5f - ( tilePosition.y < 0.0f ) },
+						atlas->getDecalTileSheet(),
+						vf2d{ ( float )std::get<0>( atlas->mapping[tile->id] ), ( float )std::get<1>( atlas->mapping[tile->id] ) },
+						vf2d{ ( float )std::get<2>( atlas->mapping[tile->id] ), ( float )std::get<3>( atlas->mapping[tile->id] ) },
+						vf2d{ scale, scale }
 					);
 				}
 			}
