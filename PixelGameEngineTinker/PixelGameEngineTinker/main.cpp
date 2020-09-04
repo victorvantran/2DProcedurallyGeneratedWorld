@@ -18,10 +18,10 @@ private:
 
 
 	///
-	olc::ResourcePack _rpPlayer;
+	olc::vf2d camera = olc::vf2d{ 1,1 };
+
+	//olc::ResourcePack _rpPlayer;
 	olc::Sprite *_spriteLoading;
-
-
 	olc::Layer<Tile> _layerLoading;
 	olc::Atlas _atlasLoading;
 	///
@@ -59,7 +59,7 @@ public:
 
 	void destroyGame()
 	{
-		/// free memory of what was used in Game::initalizeGame()
+		/// Free memory of what was used in Game::initalizeGame()
 		this->destroyAtlases();
 		this->destroyLayers();
 
@@ -71,19 +71,19 @@ public:
 
 	void initializeAtlases()
 	{
-		this->_spriteLoading = new olc::Sprite();
-		//this->_atlasLoading.create(new olc::Sprite("C:\\Users\\Victor\\Desktop\\Tinker\\test64x64.png", &this->_rpPlayer) );
-		this->_atlasLoading.create( new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\test64x64.png") );
+		// Information needed: png, resolution of png, and resolution of the tile
+		// For each tile [0,0], [1,0], [2,0], ..., [n,m], mark the location of the subarea (via bounding box) of the given png based on the resolution of the tile
+		this->_spriteLoading = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\worldmap480x270_8x8.png" );
+		this->_atlasLoading.create( this->_spriteLoading );
 
-		for ( int i = 0; i < 64; i++ )
+		for ( int row = 0; row < 270; row++ )
 		{
-			for ( int j = 0; j < 64; j++ )
+			for ( int column = 0; column < 480; column++ )
 			{
-				this->_atlasLoading.mapping.emplace_back(j * 64, i * 64, 64, 64);
+				this->_atlasLoading.mapping.emplace_back((int)column * 8, (int)row * 8, 8, 8);
 			}
 
 		}
-
 
 		return;
 	}
@@ -91,16 +91,14 @@ public:
 
 	void destroyAtlases()
 	{
-		/// free memory of what was used in initializeAtlases()
+		/// Free memory of what was used in initializeAtlases()
 		return;
 	}
 
 
 	void initializeLayers()
 	{
-		//this->_layerLoading.create( SETTINGS::RESOLUTION::SCREEN_X, SETTINGS::RESOLUTION::SCREEN_Y, SETTINGS::RESOLUTION::PIXEL_SCALE_X, SETTINGS::RESOLUTION::PIXEL_SCALE_Y );
-		//this->_layerLoading.create( SETTINGS::RESOLUTION::SCREEN_X, SETTINGS::RESOLUTION::SCREEN_Y, 64, 64);
-		this->_layerLoading.create( 64, 64, 64, 64 ); // NOT PIXEl RESOLUTION BUT MATRIX SIZE (64 cells by 64 cells, 64 pixel by 64 pixel for the tile resolution)
+		this->_layerLoading.create( olc::vi2d{ 480, 270 }, olc::vi2d{ 8, 8 } ); 
 		return;
 	}
 
@@ -119,16 +117,13 @@ public:
 
 	void runGameStateLoading( float fElapsedTime )
 	{
-		///
-
 		Clear( olc::WHITE );
 
-
 		//SetPixelMode( olc::Pixel::ALPHA );
-		this->_pScreen->drawLayer( this->_layerLoading, this->_atlasLoading, olc::vf2d{55, 55}, olc::vi2d{ 5, 5 }, 1 ); // 5 visible tilex, 5 visible tiles y (need to calcualte #visible tiles based on zoom too!)
+		this->_pScreen->drawLayer( this->_layerLoading, this->_atlasLoading, camera, olc::vi2d{ 128, 72 }, 1 ); // [col, row]
+		camera = camera * 1.001;
 		//SetPixelMode( olc::Pixel::NORMAL );
 
-		//std::cout << "state: loading" << std::endl;
 		return;
 	}
 
@@ -157,14 +152,6 @@ public:
 
 	bool OnUserUpdate( float fElapsedTime ) override
 	{
-		
-		/*
-		// called once per frame, draws random coloured pixels
-		for ( int x = 0; x < ScreenWidth(); x++ )
-			for ( int y = 0; y < ScreenHeight(); y++ )
-				Draw( x, y, olc::Pixel( rand() % 256, rand() % 256, rand() % 256 ) );
-		*/
-
 		switch ( this->getGameState() )
 		{
 		case GameState::LOADING: this->runGameStateLoading( fElapsedTime ); break;

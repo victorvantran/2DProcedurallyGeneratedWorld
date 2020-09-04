@@ -55,7 +55,7 @@ namespace olc {
 	template<typename T>
 	void Layer<T>::create( vi2d layerDimension, vi2d tileResolution )
 	{
-	// Establishes essentially a blank layer canvas 
+	// Establishes essentially a blank layer canvas given the layer dimension of tiles [col, row] and tile resolution
 	// Example: (64 cells by 64 cells for the layer matrix dimension, 64 pixel by 64 pixel for the tile resolution)
 		this->_layerDimension = layerDimension;
 		this->_tileDimension = tileResolution;
@@ -74,7 +74,8 @@ namespace olc {
 	template<typename T>
 	void Layer<T>::create( int layerX, int layerY, int tileX, int tileY )
 	{
-	// Establishes essentially a blank layer canvas
+	// Establishes essentially a blank layer canvas given the layer dimension of tiles [col, row] and tile resolution
+	// Example: (64 cells by 64 cells for the layer matrix dimension, 64 pixel by 64 pixel for the tile resolution)
 		this->_layerDimension = vi2d{ layerX, layerY };
 		this->_tileDimension = vi2d{ tileX, tileY };
 
@@ -108,15 +109,15 @@ namespace olc {
 	template<typename T>
 	T* Layer<T>::getTile( int x, int y )
 	{
-	// returns a pointer to a tile given a indices [row, col] on the layer's matrix map of tiles
-		if ( x < 0 || x >= this->_layerDimension.x || y < 0 || y > this->_layerDimension.y )
+	// returns a pointer to a tile given a indices [col, row] on the layer's matrix map of tiles
+		if ( x < 0 || x >= this->_layerDimension.x || y < 0 || y >= this->_layerDimension.y )
 		{
 			return nullptr;
 		}
 		else
 		{
 			// transposing a "2d matrix" to an array (finding the correct row (y), then column (x))
-			return &this->_pTiles[y*this->_layerDimension.y + x];
+			return &this->_pTiles[y*this->_layerDimension.x + x];
 		}
 	}
 
@@ -124,15 +125,15 @@ namespace olc {
 	template<typename T>
 	T* Layer<T>::getTile( vi2d indicies )
 	{
-	// returns a pointer to a tile given a indicies [row, col] on the layer's matrix map of tiles
-		if ( indicies.x < 0 || indicies.x >= this->_layerDimension.x || indicies.y < 0 || indicies.y > this->_layerDimension.y )
+	// returns a pointer to a tile given a indicies [col, row] on the layer's matrix map of tiles
+		if ( indicies.x < 0 || indicies.x >= this->_layerDimension.x || indicies.y < 0 || indicies.y >= this->_layerDimension.y )
 		{
 			return nullptr;
 		}
 		else
 		{
 			// transposing a "2d matrix" to an array (finding the correct row (y), then column (x))
-			return &this->_pTiles[indicies.y * this->_layerDimension.y + indicies.x];
+			return &this->_pTiles[indicies.y * this->_layerDimension.x + indicies.x];
 		}
 	}
 

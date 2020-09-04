@@ -11,7 +11,7 @@ namespace olc
 
 	Atlas::~Atlas()
 	{
-
+		delete this->_spriteTileSheet;
 	}
 
 	void Atlas::create( Sprite* tileSheet )

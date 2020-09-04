@@ -46,46 +46,46 @@ namespace olc {
 	template<typename T>
 	static void Screen::drawLayer( Layer<T>& layer, Atlas& atlas, vf2d cameraPosition, vi2d tileMatrixDimension, int scale )
 	{
-		/// renders a layer (there may be mutliple layers in a screen)
-		/// camera position is in matrix world
-		/// tileMatrixDimension is the matrix area of visible tiles
+		/// Renders a layer (there may be mutliple layers in a screen)
+		/// Camera position is in matrix world [col, row]
+		/// TileMatrixDimension is the matrix area of visible tiles [col, row]
 
 		vf2d offset = cameraPosition - vi2d{ cameraPosition }; // get the decimal point offset
 
-		for ( int x = 0; x < tileMatrixDimension.x; x++ )
+		for ( int row = 0; row < tileMatrixDimension.y + 1; row++ )
 		{
-			for ( int y = 0; y < tileMatrixDimension.y; y++ )
+			for ( int column = 0; column < tileMatrixDimension.x + 1; column++ )
 			{
-				/// render out a subsection the matrix (offset by where the camera is)
-				/// therefore, we only need to draw out what the camera can see and not the entire matrix every time
-				Tile* tile = layer.getTile( x + ( int )cameraPosition.x, y + ( int )cameraPosition.y );
+				/// Render out a subsection the matrix (offset by where the camera is)
+				/// Therefore, we only need to draw out what the camera can see and not the entire matrix every time (added +1 to the for loops to add a little buffer)
+
+				Tile* tile = layer.getTile( column + ( int )cameraPosition.x, row + ( int )cameraPosition.y );
 				if ( tile != nullptr && tile->exist )
 				{
-					/// get the float Position of the tile based on its matrix index and slight decimal point offset
-					/// the slight decimal point is to make sure we do not miss rendering tiles that are slightly off screen
+					/// Get the float Position of the tile based on: its matrix index and slight decimal point offset 
+					/// The slight decimal point is to make sure we do not miss rendering tiles that are slightly off screen
 
 					vf2d tilePosition = vf2d
 					{
 						vi2d
 						{
-							(int) (( ( float )x - offset.x ) * ( float )layer.getLayerDimension().x),
-							(int) (( ( float )y - offset.y ) * ( float )layer.getLayerDimension().y)
+							(int) (( ( float )column - offset.x ) * ( float )layer.getTileDimension().x),
+							( int )( ( ( float )row - offset.y ) * ( float )layer.getTileDimension().y )
 						},
 					};
 
-					// render the individual tile
+					/// Render the individual tile
 					//pge->DrawPartialDecal
 					pge->DrawPartialSprite(
 						tilePosition.x + 0.5f - ( tilePosition.x < 0.0f ),
 						tilePosition.y + 0.5f - ( tilePosition.y < 0.0f ),
 						atlas.getTileSheet(),
-						std::get<0>(atlas.mapping[tile->id]),
-						std::get<1>( atlas.mapping[tile->id]),
-						std::get<2>( atlas.mapping[tile->id]),
-						std::get<3>( atlas.mapping[tile->id]),
+						std::get<0>( atlas.mapping[tile->id] ),
+						std::get<1>( atlas.mapping[tile->id] ),
+						std::get<2>( atlas.mapping[tile->id] ),
+						std::get<3>( atlas.mapping[tile->id] ),
 						scale
 					);
-
 				}
 			}
 		}
@@ -97,7 +97,7 @@ namespace olc {
 	template<typename T>
 	static Pixel Screen::getLayerPixel( Layer<T>& layer, Atlas& atlas, vf2d pixelPosition )
 	{
-		/// return the olc::Pixel based on the position on the screen
+		/// Return the olc::Pixel based on the position on the screen
 		return BLANK;
 	}
 
@@ -105,7 +105,7 @@ namespace olc {
 	template<typename T>
 	static std::vector<Edge> Screen::extractEdgesFromLayer( Layer<T>& layer, vi2d tileIndex, vi2d tileSize )
 	{
-		/// returns the edges of an individual tile pinpointed by what tile index we are in (and size of the tile)
+		/// Returns the edges of an individual tile pinpointed by what tile index we are in (and size of the tile)
 		std::vector<Edge> edges;
 		return edges;
 	}
