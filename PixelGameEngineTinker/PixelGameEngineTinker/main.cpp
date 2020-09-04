@@ -17,19 +17,35 @@ private:
 	olc::Screen* _pScreen;
 
 
-	///
-	olc::vf2d camera = olc::vf2d{ 10,10 };
 
 	//olc::ResourcePack _rpPlayer;
 
 
 
-	/// Datatype for sprites
+	/// Temporary Datatype for sprites for testing purposes
+	olc::Sprite* _spritePlayerMouse;
 	olc::Sprite* _spriteLoading;
 
-	/// Datatype for decals
+
+	/// Temporary Datatype for decals for testing purposes
+	olc::Decal* _decalPlayerMouse;
 	olc::Decal* _decalLoading;
 
+
+	/// Temporary Player DataType
+	enum class KeyInput
+	{
+		UpKey = 0,
+		DownKey = 1,
+		LeftKey = 2,
+		RightKey = 3,
+		JumpKey = 4,
+		count
+	};
+
+	bool* _playerInputs;
+	olc::vf2d _playerMouse;
+	olc::vf2d _playerCamera;
 
 
 	olc::Layer<Tile> _layerLoading;
@@ -61,8 +77,9 @@ public:
 		this->initializeDecals();
 		this->initializeAtlases();
 		this->initializeLayers();
+		this->initializePlayer();
 
-		this->_gameState = GameState::LOADING;
+		this->_gameState = GameState::TINKER;
 		this->_pScreen = new olc::Screen();
 
 		// this->_rpPlayer.LoadPack(...);
@@ -76,6 +93,7 @@ public:
 		this->destroyLayers();
 		this->destroySprites();
 		this->destroyDecals();
+		this->destroyPlayer();
 
 		delete this->_pScreen;
 		// this->_rpPlayer.ClearPack();
@@ -85,7 +103,8 @@ public:
 	void initializeSprites()
 	{
 	/// Initialize the datatype that holds all the sprites
-		this->_spriteLoading = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\worldmap480x270_8x8.png" );
+		this->_spritePlayerMouse = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\dwarven_gauntlet.png" );
+		this->_spriteLoading = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\worldmapgrid480x270_8x8.png" );
 		return;
 	}
 
@@ -98,7 +117,9 @@ public:
 	void initializeDecals()
 	{
 	/// Initialize the datatype that holds all the decals
+		this->_decalPlayerMouse = new olc::Decal( this->_spritePlayerMouse );
 		this->_decalLoading = new olc::Decal( this->_spriteLoading );
+
 		return;
 	}
 
@@ -151,23 +172,30 @@ public:
 	}
 
 
-	GameState getGameState()
+	void initializePlayer()
 	{
-		return this->_gameState;
+		this->_playerInputs = new bool[(int)KeyInput::count];
+		this->_playerMouse = olc::vf2d{ 0.0f, 0.0f };
+		this->_playerCamera = olc::vf2d{ 0.0f, 0.0f };
+	}
+
+
+	void destroyPlayer()
+	{
+		delete[] this->_playerInputs;
 	}
 
 
 
+	GameState getGameState()
+	{
+	/// Returns the current gamestate
+		return this->_gameState;
+	}
+
 
 	void runGameStateLoading( float fElapsedTime )
 	{
-		Clear( olc::DARK_BLUE );
-
-		//SetPixelMode( olc::Pixel::ALPHA );
-		this->_pScreen->drawLayer( this->_layerLoading, this->_atlasLoading, camera, olc::vi2d{ 128, 72 }, 1.0f ); // [col, row]
-		camera = camera * 1.001;
-		//SetPixelMode( olc::Pixel::NORMAL );
-
 		return;
 	}
 
@@ -181,10 +209,117 @@ public:
 
 	void runGameStateTinker( float fElapsedTime )
 	{
-		///
+	///
+
+		updatePlayer();
+
+		Clear( olc::DARK_BLUE );
+
+		//SetPixelMode( olc::Pixel::ALPHA );
+		this->_pScreen->drawLayer( this->_layerLoading, this->_atlasLoading, this->_playerCamera, olc::vi2d{ 128, 72 }, 1.0f ); // [col, row]
+		//SetPixelMode( olc::Pixel::NORMAL );
+
+		if ( this->_playerCamera.x < 1 )
+		{
+			this->_playerCamera = olc::vf2d{ 50.0f, 50.0f };
+		}
+		//this->_playerCamera = this->_playerCamera * 1.0001;
+
+		this->drawPlayerMouse();
 		return;
 	}
 
+
+
+public:
+	void updatePlayer()
+	{
+		this->updatePlayerMouse();
+		this->resetPlayerInputs();
+		this->updatePlayerInputs();
+		this->updatePlayerCamera();
+
+		return;
+	}
+
+	void updatePlayerMouse()
+	{
+		this->_playerMouse = olc::vf2d{ (float)this->GetMouseX(), (float)this->GetMouseY() };
+
+		return;
+	}
+
+
+	void updatePlayerInputs()
+	{
+	/// Updates the array of bool values that represent a key being pressed
+		if ( this->GetKey( olc::Key::UP ).bPressed || this->GetKey( olc::Key::UP ).bHeld )
+		{
+			this->_playerInputs[( int )KeyInput::UpKey] = true;
+		}
+		if ( this->GetKey( olc::Key::DOWN ).bPressed || this->GetKey( olc::Key::DOWN ).bHeld )
+		{
+			this->_playerInputs[( int )KeyInput::DownKey] = true;
+		}
+		if ( this->GetKey( olc::Key::LEFT ).bPressed || this->GetKey( olc::Key::LEFT ).bHeld )
+		{
+			this->_playerInputs[( int )KeyInput::LeftKey] = true;
+		}
+		if ( this->GetKey( olc::Key::RIGHT ).bPressed || this->GetKey( olc::Key::RIGHT ).bHeld )
+		{
+			this->_playerInputs[( int )KeyInput::RightKey] = true;
+		}
+
+		return;
+	}
+
+	void resetPlayerInputs()
+	{
+	/// Resets the array of bool values that represent a key being pressed
+		for ( int i = 0; i < ( int )KeyInput::count; i++ )
+		{
+			this->_playerInputs[i] = false;
+		}
+
+		return;
+	}
+
+
+	void updatePlayerCamera()
+	{
+		float speed = 0.1f;
+		if ( this->IsFocused() )
+		{
+			if ( this->GetKey( olc::Key::UP ).bHeld )
+			{
+				this->_playerCamera.y += -speed;
+			}
+
+			if ( this->GetKey( olc::Key::DOWN ).bHeld )
+			{
+				this->_playerCamera.y += speed;
+			}
+
+
+			if ( this->GetKey( olc::Key::LEFT ).bHeld )
+			{
+				this->_playerCamera.x += -speed;
+			}
+
+
+			if ( this->GetKey( olc::Key::RIGHT ).bHeld )
+			{
+				this->_playerCamera.x += speed;
+			}
+		}
+	}
+
+
+	void drawPlayerMouse()
+	{
+		this->DrawDecal( this->_playerMouse, this->_decalPlayerMouse );
+		return;
+	}
 
 
 public:
