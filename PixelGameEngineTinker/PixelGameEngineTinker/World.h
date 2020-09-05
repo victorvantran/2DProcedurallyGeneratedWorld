@@ -29,12 +29,7 @@ World::World()
 
 World::~World()
 {
-/// Frees the memory reserved for:
-///		1) pointers to atlases
-///		2) pointers to layers
-/// Be sure that the memory of each atlas and layer is freed too
-	//delete[] this->_atlases; 
-	//delete[] this->layers;
+/// Delete world chunks
 }
 
 
@@ -42,8 +37,8 @@ void World::generateTestLayer( olc::vi2d layerDimension, Atlas* atlas )
 {
 /// Creates a randomly generated layer of specific size
 	Layer<Tile>* layer = new Layer<Tile>();
-	layer->create( olc::vi2d{ 480, 270 }, olc::vi2d{ 8, 8 } );
-	//layer->generateRandomness( atlas );
+	layer->create( layerDimension );
+	layer->generateRandomness( atlas );
 	this->_worldChunks.push_back( std::tuple{ layer, atlas });
 
 	return;

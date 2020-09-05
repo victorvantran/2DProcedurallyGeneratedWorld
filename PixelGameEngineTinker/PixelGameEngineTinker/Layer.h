@@ -10,7 +10,6 @@ class Layer : public olc::PGEX
 {
 private:
 	olc::vi2d _layerDimension;
-	olc::vi2d _tileDimension;
 
 	Atlas _atlas;
 	T* _pTiles;
@@ -19,11 +18,10 @@ public:
 	Layer();
 	~Layer();
 		
-	void create( olc::vi2d layerSize, olc::vi2d tileSize );
-	void create(int layerWidth, int layerHeight, int tileWidth, int tileHeight);
+	void create( olc::vi2d layerSize );
+	void create( int layerWidth, int layerHeight );
 
-	void generateRandomness( olc::vi2d layerDimension, Atlas* atlas );
-	void generateRandomness2( olc::vi2d layerDimension, Atlas* atlas );
+	void generateRandomness( Atlas* atlas );
 
 	olc::rcode loadFromFile(std::string filename);
 	olc::rcode saveToFile(std::string filename);
@@ -32,7 +30,6 @@ public:
 	T* getTile(olc::vi2d position);
 
 	olc::vi2d getLayerDimension();
-	olc::vi2d getTileDimension();
 
 };
 
@@ -55,12 +52,11 @@ Layer<T>::~Layer()
 
 
 template<typename T>
-void Layer<T>::create( olc::vi2d layerDimension, olc::vi2d tileResolution )
+void Layer<T>::create( olc::vi2d layerDimension )
 {
 /// Establishes essentially a blank layer canvas given the layer dimension of tiles [col, row] and tile resolution
 /// Example: (64 cells by 64 cells for the layer matrix dimension, 64 pixel by 64 pixel for the tile resolution)
 	this->_layerDimension = layerDimension;
-	this->_tileDimension = tileResolution;
 
 	this->_pTiles = new T[this->_layerDimension.x * this->_layerDimension.y];
 	for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
@@ -74,12 +70,11 @@ void Layer<T>::create( olc::vi2d layerDimension, olc::vi2d tileResolution )
 
 
 template<typename T>
-void Layer<T>::create( int layerX, int layerY, int tileX, int tileY )
+void Layer<T>::create( int layerX, int layerY )
 {
 /// Establishes essentially a blank layer canvas given the layer dimension of tiles [col, row] and tile resolution
 /// Example: (64 cells by 64 cells for the layer matrix dimension, 64 pixel by 64 pixel for the tile resolution)
 	this->_layerDimension = olc::vi2d{ layerX, layerY };
-	this->_tileDimension = olc::vi2d{ tileX, tileY };
 
 	this->_pTiles = new T[this->_layerDimension.x * this->_layerDimension.y];
 	for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
@@ -93,20 +88,17 @@ void Layer<T>::create( int layerX, int layerY, int tileX, int tileY )
 
 
 template<typename T>
-void Layer<T>::generateRandomness( olc::vi2d layerDimension, Atlas* atlas)
+void Layer<T>::generateRandomness( Atlas* atlas )
 {
-	this->_layerDimension = layerDimension;
-	this->_tileDimension = atlas->getTileDimension();
-
+/// 
 	olc::vi2d atlasDimension = atlas->getAtlasDimension();
 	int numTiles = atlasDimension.x * atlasDimension.y;
-
 
 	this->_pTiles = new T[this->_layerDimension.x * this->_layerDimension.y];
 	for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
 	{
 		/// In this case, rand() [short int] is from 0 to 32,767, so ideally the atlas should not have over 32,768 unique tiles
-		this->_pTiles[i].id = rand();
+		this->_pTiles[i].id = rand() % numTiles;
 		this->_pTiles[i].exist = true;
 	}
 
@@ -173,10 +165,4 @@ olc::vi2d Layer<T>::getLayerDimension()
 }
 
 
-template<typename T>
-olc::vi2d Layer<T>::getTileDimension()
-{
-/// Returns the dimension of the tile
-	return this->_tileDimension;
-}
 

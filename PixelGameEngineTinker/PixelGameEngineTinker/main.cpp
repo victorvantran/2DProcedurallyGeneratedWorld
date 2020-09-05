@@ -27,10 +27,14 @@ private:
 	olc::Sprite* _spritePlayerMouse;
 	olc::Sprite* _spriteLoading;
 
+	olc::Sprite* _spriteTileSetTinkerWorld;
+
 
 	/// Temporary Datatype for decals for testing purposes
 	olc::Decal* _decalPlayerMouse;
 	olc::Decal* _decalLoading;
+
+	olc::Decal* _decalTileSetTinkerWorld;
 
 
 	/// Temporary Player DataType
@@ -51,6 +55,8 @@ private:
 
 	Layer<Tile>* _layerLoading;
 	Atlas* _atlasLoading;
+
+	Atlas* _atlasTinkerWorld;
 
 	///
 
@@ -107,7 +113,9 @@ public:
 	{
 	/// Initialize the datatype that holds all the sprites
 		this->_spritePlayerMouse = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\dwarven_gauntlet_cursor.png" );
-		this->_spriteLoading = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\worldmapgrid480x270_8x8.png" );
+		this->_spriteLoading = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\worldmapgrid_480x270_8x8.png" );
+		this->_spriteTileSetTinkerWorld = new olc::Sprite("C:\\Users\\Victor\\Desktop\\Tinker\\platformer_25x16_8x8.png");
+
 		return;
 	}
 
@@ -122,6 +130,7 @@ public:
 	/// Initialize the datatype that holds all the decals
 		this->_decalPlayerMouse = new olc::Decal( this->_spritePlayerMouse );
 		this->_decalLoading = new olc::Decal( this->_spriteLoading );
+		this->_decalTileSetTinkerWorld = new olc::Decal( this->_spriteTileSetTinkerWorld );
 
 		return;
 	}
@@ -138,6 +147,7 @@ public:
 	// Information needed: png, resolution of png, and resolution of the tile
 	// For each tile [0,0], [1,0], [2,0], ..., [n,m], mark the location of the subarea (via bounding box) of the given png based on the resolution of the tile
 		this->_atlasLoading = new Atlas( this->_spriteLoading, this->_decalLoading, olc::vi2d(480, 270), olc::vi2d(8, 8) );
+		this->_atlasTinkerWorld = new Atlas( this->_spriteTileSetTinkerWorld, this->_decalTileSetTinkerWorld, olc::vi2d( 25, 16 ), olc::vi2d( 8, 8 ) );
 	}
 
 
@@ -145,6 +155,7 @@ public:
 	{
 	/// Free memory of what was used in initializeAtlases()
 		delete this->_atlasLoading;
+		delete this->_atlasTinkerWorld;
 		return;
 	}
 
@@ -153,7 +164,7 @@ public:
 	{
 	/// Create the matrix of cells based on the screen and tile resolution
 		this->_layerLoading = new Layer<Tile>();
-		this->_layerLoading->create( olc::vi2d{ 480, 270 }, olc::vi2d{ 8, 8 } ); 
+		this->_layerLoading->create( olc::vi2d{ 480, 270 } ); 
 		return;
 	}
 
@@ -234,11 +245,7 @@ public:
 	void runGameStateTinkerWorldLoading( float fElapsedTime )
 	{
 	///
-		//this->_world->generateTestLayer( olc::vi2d{200, 200}, this->_atlasLoading );
-		//this->_layerLoading->generateRandomness( this->_atlasLoading );
-		this->_layerRandom = new Layer<Tile>();
-		//this->_layerRandom->create( olc::vi2d{ 480, 270 }, olc::vi2d{ 8, 8 } );
-		this->_layerRandom->generateRandomness( olc::vi2d{ 500,500 }, this->_atlasLoading );
+		this->_world->generateTestLayer( olc::vi2d{1000, 1000}, this->_atlasTinkerWorld );
 		this->_gameState = GameState::TINKER_WORLD;
 		return;
 	}
@@ -252,12 +259,11 @@ public:
 
 
 
-		Clear( olc::DARK_BLUE );
+		Clear( olc::DARK_CYAN );
 
 
-		//this->_pScreen->drawLayer( this->_layerLoading, this->_atlasLoading, this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f ); // [col, row] 128,72
-		this->_pScreen->drawLayer( this->_layerRandom, this->_atlasLoading, this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f ); // [col, row] 128,72
-		//this->_pScreen->drawLayer( std::get<0>(this->_world->getWorldChunks()[0]), std::get<1>(this->_world->getWorldChunks()[0]), this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
+		//this->_pScreen->drawLayer( this->_layerRandom, this->_atlasLoading, this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f ); // [col, row] 128,72
+		this->_pScreen->drawLayer( std::get<0>(this->_world->getWorldChunks()[0]), std::get<1>(this->_world->getWorldChunks()[0]), this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
 
 		this->drawPlayerMouse();
 		return;

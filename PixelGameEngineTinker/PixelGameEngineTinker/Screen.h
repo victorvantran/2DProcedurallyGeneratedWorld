@@ -69,8 +69,8 @@ static void Screen::drawLayer( Layer<T>* layer, Atlas* atlas, olc::vf2d cameraPo
 				{
 					olc::vi2d
 					{
-						( int )( ( ( float )column - offset.x ) * ( float )layer->getTileDimension().x),
-						( int )( ( ( float )row - offset.y ) * ( float )layer->getTileDimension().y )
+						( int )( ( ( float )column - offset.x ) * ( float )atlas->getTileDimension().x),
+						( int )( ( ( float )row - offset.y ) * ( float )atlas->getTileDimension().y )
 					},
 				};
 				
