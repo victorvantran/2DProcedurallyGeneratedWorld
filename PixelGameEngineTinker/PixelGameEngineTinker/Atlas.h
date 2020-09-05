@@ -2,31 +2,38 @@
 
 #include "olcPixelGameEngine.h"
 
-namespace olc
+
+class Atlas
 {
-	class Atlas
-	{
-	private:
-		Sprite *_spriteTileSheet;
-		Decal* _decalTileSheet;
+private:
+	olc::Sprite *_spriteTileSheet;
+	olc::Decal* _decalTileSheet;
+	olc::vi2d _atlasDimension;
+	olc::vi2d _tileDimension;
 
-	public:
-		std::vector<std::tuple<int32_t, int32_t, int32_t, int32_t>> mapping;
+public:
+	std::vector<std::tuple<int32_t, int32_t, int32_t, int32_t>> mapping;
 
-		Atlas();
-		~Atlas();
+	Atlas();
+	~Atlas();
 
-		void create( std::string sheetPath );
-		void create(Sprite *spriteSheet);
-		void create( Decal *decalSheet );
-		void create( Sprite *spriteSheet, Decal* decalSheet );
+	Atlas( olc::Sprite* spriteSheet, olc::Decal* decalSheet, olc::vi2d atlasDimension, olc::vi2d tileDimension );
 
-		rcode loadFromFile(std::string filename);
-		rcode saveToFile(std::string filename);
+	void create( std::string sheetPath );
+	void create( olc::Sprite *spriteSheet);
+	void create( olc::Decal *decalSheet );
+	void create( olc::Sprite *spriteSheet, olc::Decal* decalSheet );
 
-		Sprite* getSpriteTileSheet();
-		Decal* getDecalTileSheet();
+	void fillMapping();
 
-		std::vector<std::tuple<int32_t, int32_t, int32_t, int32_t>> getMapping();
-	};
-}
+	olc::rcode loadFromFile(std::string filename);
+	olc::rcode saveToFile(std::string filename);
+
+	olc::Sprite* getSpriteTileSheet();
+	olc::Decal* getDecalTileSheet();
+
+	olc::vi2d getAtlasDimension();
+	olc::vi2d getTileDimension();
+
+	std::vector<std::tuple<int32_t, int32_t, int32_t, int32_t>> getMapping();
+};

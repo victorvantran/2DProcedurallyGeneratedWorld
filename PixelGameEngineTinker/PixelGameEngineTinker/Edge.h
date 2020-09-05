@@ -2,11 +2,9 @@
 
 #include "olcPixelGameEngine.h"
 
-namespace olc
+
+struct Edge
 {
-	struct Edge
-	{
-		vf2d start;
-		vf2d end;
-	};
-}
+	olc::vf2d start;
+	olc::vf2d end;
+};
