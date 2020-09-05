@@ -212,6 +212,7 @@
   <ItemGroup>
     <ClInclude Include="Atlas.h" />
     <ClInclude Include="Edge.h" />
+    <ClInclude Include="Forest.h" />
     <ClInclude Include="GameState.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="Screen.h" />
@@ -219,6 +220,7 @@
     <ClInclude Include="Layer.h" />
     <ClInclude Include="Tile.h" />
     <ClInclude Include="World.h" />
+    <ClInclude Include="WorldChunk.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Atlas.cpp" />

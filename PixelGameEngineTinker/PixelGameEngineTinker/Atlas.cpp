@@ -9,8 +9,8 @@ Atlas::Atlas()
 
 Atlas::~Atlas()
 {
-	delete this->_spriteTileSheet;
-	delete this->_decalTileSheet;
+	//delete this->_spriteTileSheet;
+	//delete this->_decalTileSheet;
 }
 
 
@@ -21,7 +21,7 @@ Atlas::Atlas( olc::Sprite* spriteSheet, olc::Decal* decalSheet, olc::vi2d atlasD
 	this->_atlasDimension = atlasDimension;
 	this->_tileDimension = tileDimension;
 	this->create( spriteSheet, decalSheet );
-	this->fillMapping();
+	//this->fillMapping();
 }
 
 void Atlas::create( std::string tilePath )
@@ -31,6 +31,7 @@ void Atlas::create( std::string tilePath )
 	this->_spriteTileSheet = new olc::Sprite( tilePath );
 	this->_decalTileSheet = new olc::Decal( this->_spriteTileSheet );
 	this->mapping.clear();
+	this->fillMapping();
 }
 
 
@@ -41,6 +42,7 @@ void Atlas::create( olc::Sprite* spriteSheet )
 	this->_spriteTileSheet = spriteSheet;
 	this->_decalTileSheet = new olc::Decal( spriteSheet );
 	this->mapping.clear();
+	this->fillMapping();
 }
 
 
@@ -51,6 +53,7 @@ void Atlas::create( olc::Decal* decalSheet )
 	this->_spriteTileSheet = nullptr;
 	this->_decalTileSheet = decalSheet;
 	this->mapping.clear();
+	this->fillMapping();
 }
 
 
@@ -61,6 +64,7 @@ void Atlas::create( olc::Sprite* spriteSheet, olc::Decal* decalSheet )
 	this->_spriteTileSheet = spriteSheet;
 	this->_decalTileSheet = decalSheet;
 	this->mapping.clear();
+	this->fillMapping();
 }
 
 	

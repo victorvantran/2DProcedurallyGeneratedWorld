@@ -29,12 +29,16 @@ private:
 
 	olc::Sprite* _spriteTileSetTinkerWorld;
 
+	olc::Sprite* _spriteTileSetForest;
+
 
 	/// Temporary Datatype for decals for testing purposes
 	olc::Decal* _decalPlayerMouse;
 	olc::Decal* _decalLoading;
 
 	olc::Decal* _decalTileSetTinkerWorld;
+
+	olc::Decal* _decalTileSetForest;
 
 
 	/// Temporary Player DataType
@@ -115,7 +119,7 @@ public:
 		this->_spritePlayerMouse = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\dwarven_gauntlet_cursor.png" );
 		this->_spriteLoading = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\worldmapgrid_480x270_8x8.png" );
 		this->_spriteTileSetTinkerWorld = new olc::Sprite("C:\\Users\\Victor\\Desktop\\Tinker\\platformer_25x16_8x8.png");
-
+		this->_spriteTileSetForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_2x2_8x8.png" );
 		return;
 	}
 
@@ -131,7 +135,7 @@ public:
 		this->_decalPlayerMouse = new olc::Decal( this->_spritePlayerMouse );
 		this->_decalLoading = new olc::Decal( this->_spriteLoading );
 		this->_decalTileSetTinkerWorld = new olc::Decal( this->_spriteTileSetTinkerWorld );
-
+		this->_decalTileSetForest = new olc::Decal( this->_spriteTileSetForest);
 		return;
 	}
 
@@ -245,7 +249,12 @@ public:
 	void runGameStateTinkerWorldLoading( float fElapsedTime )
 	{
 	///
+		/*
 		this->_world->generateTestLayer( olc::vi2d{1000, 1000}, this->_atlasTinkerWorld );
+		this->_gameState = GameState::TINKER_WORLD;
+		*/
+
+		this->_world->generateTestForest( olc::vi2d{ 1000, 1000 }, this->_decalTileSetForest );
 		this->_gameState = GameState::TINKER_WORLD;
 		return;
 	}
@@ -255,17 +264,24 @@ public:
 	{
 		///
 
+		/*
 		updatePlayer();
-
-
 
 		Clear( olc::DARK_CYAN );
 
-
-		//this->_pScreen->drawLayer( this->_layerRandom, this->_atlasLoading, this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f ); // [col, row] 128,72
 		this->_pScreen->drawLayer( std::get<0>(this->_world->getWorldChunks()[0]), std::get<1>(this->_world->getWorldChunks()[0]), this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
 
 		this->drawPlayerMouse();
+		*/
+
+		updatePlayer();
+
+		Clear( olc::DARK_CYAN );
+
+		this->_pScreen->drawWorldChunk( *this->_world->getWorldChunks()[0], this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
+
+		this->drawPlayerMouse();
+
 		return;
 	}
 

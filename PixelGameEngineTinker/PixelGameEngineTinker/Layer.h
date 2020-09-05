@@ -22,6 +22,7 @@ public:
 	void create( int layerWidth, int layerHeight );
 
 	void generateRandomness( Atlas* atlas );
+	void copyMapping( std::vector<int> mapping );
 
 	olc::rcode loadFromFile(std::string filename);
 	olc::rcode saveToFile(std::string filename);
@@ -61,7 +62,7 @@ void Layer<T>::create( olc::vi2d layerDimension )
 	this->_pTiles = new T[this->_layerDimension.x * this->_layerDimension.y];
 	for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
 	{
-		this->_pTiles[i].id = i;
+		this->_pTiles[i].id = 0;
 		this->_pTiles[i].exist = true;
 	}
 
@@ -79,7 +80,7 @@ void Layer<T>::create( int layerX, int layerY )
 	this->_pTiles = new T[this->_layerDimension.x * this->_layerDimension.y];
 	for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
 	{
-		this->_pTiles[i].id = i;
+		this->_pTiles[i].id = 0;
 		this->_pTiles[i].exist = true;
 	}
 
@@ -106,6 +107,22 @@ void Layer<T>::generateRandomness( Atlas* atlas )
 }
 
 
+template<typename T>
+void Layer<T>::copyMapping( std::vector<int> mapping )
+{
+/// 
+	if ( mapping.size() == this->_layerDimension.x * this->_layerDimension.y )
+	{
+		for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
+		{
+			/// In this case, rand() [short int] is from 0 to 32,767, so ideally the atlas should not have over 32,768 unique tiles
+			this->_pTiles[i].id = mapping[i];
+			this->_pTiles[i].exist = true;
+		}
+	}
+
+	return;
+}
 
 
 
