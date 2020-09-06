@@ -17,18 +17,21 @@ private:
 public:
 	Layer();
 	~Layer();
+
+	Layer( olc::vi2d layerDimension );
+	Layer( int layerWidth, int layerHeight );
 		
-	void create( olc::vi2d layerSize );
+	void create( olc::vi2d layerDimension );
 	void create( int layerWidth, int layerHeight );
 
 	void generateRandomness( Atlas* atlas );
-	void copyMapping( std::vector<int> mapping );
+	void copyMapping( std::vector<std::tuple<int,bool>> mapping );
 
-	olc::rcode loadFromFile(std::string filename);
-	olc::rcode saveToFile(std::string filename);
+	olc::rcode loadFromFile( std::string filename );
+	olc::rcode saveToFile( std::string filename );
 
-	T* getTile(int x, int y);
-	T* getTile(olc::vi2d position);
+	T* getTile( int x, int y );
+	T* getTile( olc::vi2d position );
 
 	olc::vi2d getLayerDimension();
 
@@ -53,6 +56,23 @@ Layer<T>::~Layer()
 
 
 template<typename T>
+Layer<T>::Layer( olc::vi2d layerDimension )
+{
+/// Constructs a layer of given dimension filled with non-existent tiles
+	this->create( layerDimension );
+}
+
+
+
+template<typename T>
+Layer<T>::Layer( int layerX, int layerY )
+{
+/// Constructs a layer of given dimension filled with non-existent tiles
+	this->create( layerX, layerY );
+}
+
+
+template<typename T>
 void Layer<T>::create( olc::vi2d layerDimension )
 {
 /// Establishes essentially a blank layer canvas given the layer dimension of tiles [col, row] and tile resolution
@@ -63,7 +83,7 @@ void Layer<T>::create( olc::vi2d layerDimension )
 	for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
 	{
 		this->_pTiles[i].id = 0;
-		this->_pTiles[i].exist = true;
+		this->_pTiles[i].exist = false;
 	}
 
 	return;
@@ -81,7 +101,7 @@ void Layer<T>::create( int layerX, int layerY )
 	for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
 	{
 		this->_pTiles[i].id = 0;
-		this->_pTiles[i].exist = true;
+		this->_pTiles[i].exist = false;
 	}
 
 	return;
@@ -91,7 +111,7 @@ void Layer<T>::create( int layerX, int layerY )
 template<typename T>
 void Layer<T>::generateRandomness( Atlas* atlas )
 {
-/// 
+/// Generate pure random array of tiles given an atlas to choose from
 	olc::vi2d atlasDimension = atlas->getAtlasDimension();
 	int numTiles = atlasDimension.x * atlasDimension.y;
 
@@ -108,16 +128,17 @@ void Layer<T>::generateRandomness( Atlas* atlas )
 
 
 template<typename T>
-void Layer<T>::copyMapping( std::vector<int> mapping )
+void Layer<T>::copyMapping( std::vector<std::tuple<int, bool>> mapping )
 {
-/// 
+/// Given a vector of tuple(int, bool), copy it into the mapping
+///		1) id
+///		2) existence
 	if ( mapping.size() == this->_layerDimension.x * this->_layerDimension.y )
 	{
 		for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
 		{
-			/// In this case, rand() [short int] is from 0 to 32,767, so ideally the atlas should not have over 32,768 unique tiles
-			this->_pTiles[i].id = mapping[i];
-			this->_pTiles[i].exist = true;
+			this->_pTiles[i].id = std::get<0>( mapping[i] );
+			this->_pTiles[i].exist = std::get<1>( mapping[i] );
 		}
 	}
 
@@ -137,7 +158,7 @@ olc::rcode Layer<T>::loadFromFile( std::string filename )
 template<typename T>
 olc::rcode Layer<T>::saveToFile( std::string filename )
 {
-	///
+///
 	return olc::FAIL;
 }
 

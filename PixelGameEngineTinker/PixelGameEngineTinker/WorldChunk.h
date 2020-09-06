@@ -42,14 +42,6 @@ public:
 WorldChunk::WorldChunk()
 {
 ///
-	this->_chunkDimension = olc::vi2d{ 0, 0 };
-
-	this->_chunkSeed = nullptr;
-	this->_perlinNoise2D = nullptr;
-
-
-	this->_octaves = 1;
-	this->_scalingBias = 2.0f;
 }
 
 
@@ -64,9 +56,9 @@ WorldChunk::~WorldChunk()
 
 void WorldChunk::generateRandomSeed()
 {
-///
-	int chunkWidth = (int) this->_chunkLayer.getLayerDimension().x;
-	int chunkHeight = (int) this->_chunkLayer.getLayerDimension().y;
+/// Generates a 2D array of random normalized values to represent the seed in which the PerlinNoise2D is derived from
+	int chunkWidth = (int) this->_chunkDimension.x;
+	int chunkHeight = (int) this->_chunkDimension.y;
 	int numTiles = chunkWidth * chunkHeight;
 
 	this->_chunkSeed = new float[numTiles];
@@ -84,9 +76,9 @@ void WorldChunk::generateRandomSeed()
 
 void WorldChunk::generatePerlinNoise2D()
 {
-///
-	int chunkWidth = ( int )this->_chunkLayer.getLayerDimension().x;
-	int chunkHeight = ( int )this->_chunkLayer.getLayerDimension().y;
+/// Generates a PerlinNoise2D based on the world chunk's generated seed
+	int chunkWidth = ( int )this->_chunkDimension.x;
+	int chunkHeight = ( int )this->_chunkDimension.y;
 
 	for ( int x = 0; x < chunkWidth; x++ )
 	{
@@ -128,13 +120,32 @@ void WorldChunk::generatePerlinNoise2D()
 
 Layer<Tile> WorldChunk::getLayer()
 {
-///
+/// Returns the layer of the world chunk
 	return this->_chunkLayer;
 }
 
 
 Atlas WorldChunk::getAtlas()
 {
-///
+/// Returns the atlas of the world chunk
 	return this->_chunkAtlas;
 }
+
+
+
+/*
+Perlin Noise
+
+Developed by Ken Perlin
+Procedural randomness: randomness with a perceived coherence, features that look natural in clusters
+Can be used to create artifical terrain simply by adding a color map to the Perlin Noise
+
+Perlin Noise can be 1D, 2D, and abstracted to 3D
+
+Scaling factor and pitch on the sample seed and cummulatively addd, linear interpolation
+
+P = 1.0*S(x,16) + 0.5*S(x,8) + 0.25*S(x, 4) + 0.125*S(x,2) + 0.0625*S(x,1) + ....
+
+Tesolation from beginning and end
+
+*/

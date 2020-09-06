@@ -57,11 +57,14 @@ private:
 	olc::vf2d _playerCamera;
 
 
+
 	Layer<Tile>* _layerLoading;
+
+
+	/// Temporary Atlas Datatype
 	Atlas* _atlasLoading;
-
 	Atlas* _atlasTinkerWorld;
-
+	Atlas _atlasForest;
 	///
 
 
@@ -80,8 +83,8 @@ public:
 public:
 	void initializeGame()
 	{
-		/// initialize the screen
-		/// run through the first state of the game
+	/// initialize the screen
+	/// run through the first state of the game
 		sAppName = "Example";
 
 		this->initializeSprites();
@@ -100,7 +103,7 @@ public:
 
 	void destroyGame()
 	{
-		/// Free memory of what was used in Game::initalizeGame()
+	/// Free memory of what was used in Game::initalizeGame()
 		this->destroyAtlases();
 		this->destroyLayers();
 		this->destroySprites();
@@ -152,6 +155,7 @@ public:
 	// For each tile [0,0], [1,0], [2,0], ..., [n,m], mark the location of the subarea (via bounding box) of the given png based on the resolution of the tile
 		this->_atlasLoading = new Atlas( this->_spriteLoading, this->_decalLoading, olc::vi2d(480, 270), olc::vi2d(8, 8) );
 		this->_atlasTinkerWorld = new Atlas( this->_spriteTileSetTinkerWorld, this->_decalTileSetTinkerWorld, olc::vi2d( 25, 16 ), olc::vi2d( 8, 8 ) );
+		this->_atlasForest = Atlas( this->_spriteTileSetForest, this->_decalTileSetForest, olc::vi2d{ 2,2 }, olc::vi2d{ 8,8 }  );
 	}
 
 
@@ -167,8 +171,7 @@ public:
 	void initializeLayers()
 	{
 	/// Create the matrix of cells based on the screen and tile resolution
-		this->_layerLoading = new Layer<Tile>();
-		this->_layerLoading->create( olc::vi2d{ 480, 270 } ); 
+		this->_layerLoading = new Layer<Tile>( olc::vi2d{ 480, 270 } );
 		return;
 	}
 
@@ -182,6 +185,7 @@ public:
 
 	void initializePlayer()
 	{
+	///
 		this->_playerInputs = new bool[(int)KeyInput::count];
 		this->_playerMouse = olc::vf2d{ 0.0f, 0.0f };
 		this->_playerCamera = olc::vf2d{ 0.0f, 0.0f };
@@ -190,6 +194,7 @@ public:
 
 	void destroyPlayer()
 	{
+	///
 		delete[] this->_playerInputs;
 	}
 
@@ -216,6 +221,7 @@ public:
 
 
 	void runGameStateLoading( float fElapsedTime )
+	///
 	{
 		return;
 	}
@@ -223,7 +229,7 @@ public:
 
 	void runGameStateTitle( float fElapsedTime )
 	{
-		///
+	///
 		return;
 	}
 
@@ -249,12 +255,7 @@ public:
 	void runGameStateTinkerWorldLoading( float fElapsedTime )
 	{
 	///
-		/*
-		this->_world->generateTestLayer( olc::vi2d{1000, 1000}, this->_atlasTinkerWorld );
-		this->_gameState = GameState::TINKER_WORLD;
-		*/
-
-		this->_world->generateTestForest( olc::vi2d{ 1000, 1000 }, this->_decalTileSetForest );
+		this->_world->generateTestForest( olc::vi2d{ 1000, 1000 }, this->_atlasForest );
 		this->_gameState = GameState::TINKER_WORLD;
 		return;
 	}
@@ -262,18 +263,7 @@ public:
 
 	void runGameStateTinkerWorld( float fElapsedTime )
 	{
-		///
-
-		/*
-		updatePlayer();
-
-		Clear( olc::DARK_CYAN );
-
-		this->_pScreen->drawLayer( std::get<0>(this->_world->getWorldChunks()[0]), std::get<1>(this->_world->getWorldChunks()[0]), this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
-
-		this->drawPlayerMouse();
-		*/
-
+	///
 		updatePlayer();
 
 		Clear( olc::DARK_CYAN );
@@ -299,6 +289,7 @@ public:
 
 	void updatePlayerMouse()
 	{
+	///
 		this->_playerMouse = olc::vf2d{ (float)this->GetMouseX(), (float)this->GetMouseY() };
 
 		return;
@@ -372,6 +363,7 @@ public:
 
 	void drawPlayerMouse()
 	{
+	///
 		this->DrawDecal( this->_playerMouse, this->_decalPlayerMouse );
 		return;
 	}
