@@ -252,18 +252,18 @@ public:
 
 
 
-	void runGameStateTinkerWorldLoading( float fElapsedTime )
+	void runGameStateTinkerForestWorldLoading( float fElapsedTime )
 	{
-	///
+	/// Generate forest
 		this->_world->generateTestForest( olc::vi2d{ 1000, 1000 }, this->_atlasForest );
 		this->_gameState = GameState::TINKER_WORLD;
 		return;
 	}
 
 
-	void runGameStateTinkerWorld( float fElapsedTime )
+	void runGameStateTinkerForestWorld( float fElapsedTime )
 	{
-	///
+	/// Render forest world
 		updatePlayer();
 
 		Clear( olc::DARK_CYAN );
@@ -275,6 +275,23 @@ public:
 		return;
 	}
 
+
+
+	void runGameStateTinkerWorldLoading( float fElapsedTime )
+	{
+	///
+		this->_gameState = GameState::TINKER_WORLD;
+		return;
+	}
+
+
+	void runGameStateTinkerWorld( float fElapsedTime )
+	{
+	///
+
+		Clear( olc::DARK_CYAN );
+		return;
+	}
 
 public:
 	void updatePlayer()

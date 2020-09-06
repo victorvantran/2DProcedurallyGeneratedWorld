@@ -210,7 +210,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AABB.h" />
     <ClInclude Include="Atlas.h" />
+    <ClInclude Include="Character.h" />
+    <ClInclude Include="DynamicObject.h" />
     <ClInclude Include="Edge.h" />
     <ClInclude Include="Forest.h" />
     <ClInclude Include="GameState.h" />
