@@ -1,16 +1,31 @@
 #pragma once
 
+#include "olcPixelGameEngine.h"
 
-class SETTINGS
+namespace settings
 {
-public:
+
 	struct RESOLUTION
 	{
-		const static int SCREEN_X = 768;//1024; //;1024;//256;
-		const static int SCREEN_Y = 432;//576; //;576;//240;
-
-		const static int PIXEL_SCALE_X = 2;
-		const static int PIXEL_SCALE_Y = 2;
+		const static olc::vi2d SCREEN_DIMENSION;
+		const static olc::vi2d PIXEL_SCALE;
 	};
 
-};
+	struct CHARACTER
+	{
+		/// Constant static floats need to be initialized in .cpp because compiler does not support in-line initilization of it
+		const static float WALK_SPEED;
+		const static float JUMP_SPEED;
+		const static float GRAVITY;
+		const static float TERMINAL_FALLING_SPEED;
+		const static float MIN_JUMP_SPEED;
+
+		const static olc::vf2d AABB_HALF_SIZE;
+		const static olc::vf2d AABB_OFFSET;
+
+		const static olc::vf2d SCALE;
+	};
+
+};	
+
+

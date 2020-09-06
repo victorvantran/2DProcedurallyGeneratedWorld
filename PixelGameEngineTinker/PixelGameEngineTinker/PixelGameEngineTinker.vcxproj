@@ -228,6 +228,7 @@
   <ItemGroup>
     <ClCompile Include="Atlas.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="settings.cpp" />
     <ClCompile Include="Tile.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>

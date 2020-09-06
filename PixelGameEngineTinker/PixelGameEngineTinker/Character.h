@@ -1,6 +1,7 @@
 #pragma once
 
 #include "olcPixelGameEngine.h"
+#include "settings.h"
 #include "DynamicObject.h"
 
 
@@ -26,11 +27,11 @@ enum class CharacterState
 };
 
 
-class Character : private aabb::DynamicObject
+class Character : public aabb::DynamicObject
 {
 private:
-	bool _currInputs[(int)KeyInput::count];
-	bool _prevInputs[(int)KeyInput::count];
+	bool* _currInputs;
+	bool* _prevInputs;
 
 	CharacterState _currState;
 	float _walkSpeed;
@@ -50,7 +51,9 @@ public:
 	Character();
 	~Character();
 
-	void constructCharacter();
+	Character( bool currInputs[], bool prevInputs[], olc::vf2d startPosition = olc::vf2d{ 0.0f, 0.0f } );
+
+	void constructCharacter( bool currInputs[], bool prevInputs[], olc::vf2d startPosition );
 	void destructCharacter();
 
 	void updateCharacter( float deltaTime );
@@ -67,7 +70,7 @@ public:
 
 Character::Character()
 {
-	this->constructCharacter();
+	this->constructCharacter( nullptr, nullptr, olc::vf2d{ 0.0f, 0.0f } );
 }
 
 
@@ -77,14 +80,30 @@ Character::~Character()
 }
 
 
-void Character::constructCharacter()
+Character::Character( bool currInputs[], bool prevInputs[], olc::vf2d startPosition )
 {
+	this->constructCharacter( currInputs, prevInputs, startPosition );
+}
+
+
+
+void Character::constructCharacter( bool currInputs[], bool prevInputs[], olc::vf2d startPosition )
+{
+	this->_currInputs = currInputs;
+	this->_prevInputs = prevInputs;
+
 	this->_currState = CharacterState::Stand;
-	this->_walkSpeed = 10.0f;
-	this->_jumpSpeed = 30.0f;
-	this->_gravity = 9.8f;
-	this->_terminalFallingSpeed = 10.0f;
-	this->_minJumpSpeed = this->_jumpSpeed / 2.0f;
+	this->_walkSpeed = settings::CHARACTER::WALK_SPEED;
+	this->_jumpSpeed = settings::CHARACTER::JUMP_SPEED;
+	this->_gravity = settings::CHARACTER::GRAVITY;
+	this->_terminalFallingSpeed = settings::CHARACTER::TERMINAL_FALLING_SPEED;
+	this->_minJumpSpeed = settings::CHARACTER::MIN_JUMP_SPEED;
+
+	this->_prevPosition = startPosition;
+	this->_currPosition = startPosition;
+	this->_aabb.halfSize = settings::CHARACTER::AABB_HALF_SIZE;
+	this->_aabbOffset = settings::CHARACTER::AABB_OFFSET;
+	this->_scale = settings::CHARACTER::SCALE;
 	return;
 }
 
@@ -152,7 +171,7 @@ void Character::runStandState()
 	// Next priority is Jump key is pressed, then transition to jump state
 	else if ( this->keyState( KeyInput::JumpKey ) )
 	{
-		this->_currVelocity.y = this->_jumpSpeed;
+		this->_currVelocity.y = -this->_jumpSpeed;
 		this->_currState = CharacterState::Jump;
 		return;
 	}
@@ -203,7 +222,7 @@ void Character::runWalkState()
 	// Next check for jumping. If the jump key is pressed, set the verticle speed
 	if ( this->keyState( KeyInput::JumpKey ) )
 	{
-		this->_currVelocity.y = this->_jumpSpeed;
+		this->_currVelocity.y = -this->_jumpSpeed;
 		// [!] Play jump audio
 		this->_currState = CharacterState::Jump;
 		return;
@@ -227,7 +246,7 @@ void Character::runJumpState( float deltaTime )
 	this->_currVelocity.y = this->_currVelocity.y + this->_gravity * deltaTime;
 
 	// Lock to the limiting terminal velocity. Remember that downwards is higher y value, so we are using max
-	this->_currVelocity.y = std::max<float>( this->_currVelocity.y, this->_terminalFallingSpeed);
+	this->_currVelocity.y = std::min<float>( this->_currVelocity.y, this->_terminalFallingSpeed);
 
 	// If left and right key are both pressed or unpressed, then no strafing (velocity.x = 0)
 	if ( this->keyState( KeyInput::LeftKey ) == this->keyState( KeyInput::RightKey ) )
@@ -261,10 +280,28 @@ void Character::runJumpState( float deltaTime )
 		// [!] Flip sprite horitzontally
 	}
 
+	/*
 	// Make the jump higher the longer the button is pressed
 	if ( !this->keyState( KeyInput::JumpKey ) && this->_currVelocity.y > 0.0f )
 	{
-		this->_currVelocity.y = std::min<float>( this->_currVelocity.y, this->_minJumpSpeed );
+		this->_currVelocity.y = -std::min<float>( this->_currVelocity.y, this->_minJumpSpeed );
+	}
+	*/
+
+
+	/// Temporary make object not fall off screen (the bottom of screen "simulates" a floor)
+	if ( this->_currPosition.y > settings::RESOLUTION::SCREEN_DIMENSION.y - this->getHalfSize().y )
+	{
+		if ( !this->keyState( KeyInput::JumpKey ) )
+		{
+			this->_currPosition.y = settings::RESOLUTION::SCREEN_DIMENSION.y - this->getHalfSize().y;
+			this->_currPushDown = true;
+			this->_currState = CharacterState::Stand;
+		}
+	}
+	else
+	{
+		this->_currPushDown = false;
 	}
 
 	return;
@@ -306,4 +343,5 @@ bool Character::keyState( KeyInput key )
 {
 	return this->_currInputs[( int )key];
 }
+
 

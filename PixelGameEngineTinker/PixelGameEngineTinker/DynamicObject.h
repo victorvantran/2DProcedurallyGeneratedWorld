@@ -37,6 +37,11 @@ namespace aabb
 
 		void updatePhysics( float deltaTime );
 
+
+		olc::vf2d getCurrPosition();
+		olc::vf2d getSize();
+		olc::vf2d getHalfSize();
+		olc::vf2d getScale();
 	};
 }
 
@@ -46,7 +51,7 @@ aabb::DynamicObject::DynamicObject()
 
 }
 
-aabb::DynamicObject::DynamicObject()
+aabb::DynamicObject::~DynamicObject()
 {
 
 }
@@ -64,21 +69,35 @@ void aabb::DynamicObject::updatePhysics( float deltaTime )
 
 	this->_currPosition = this->_currPosition + this->_currVelocity * deltaTime;
 
-	/// Temporary
-	if ( this->_currPosition.y < 0.0f )
-	{
-		this->_currPosition.y = 0.0f;
-		this->_currPushDown = true;
-	}
-	else
-	{
-		this->_currPushDown = false;
-	}
-
 
 	/// Update center position
 	this->_aabb.center = this->_currPosition + this->_aabbOffset;
 
 
 	return;
+}
+
+
+
+olc::vf2d aabb::DynamicObject::getCurrPosition()
+{
+	return this->_currPosition;
+}
+
+
+olc::vf2d aabb::DynamicObject::getSize()
+{
+	return this->_aabb.halfSize * 2.0f;
+}
+
+
+olc::vf2d aabb::DynamicObject::getHalfSize()
+{
+	return this->_aabb.halfSize;
+}
+
+
+olc::vf2d aabb::DynamicObject::getScale()
+{
+	return this->_scale;
 }

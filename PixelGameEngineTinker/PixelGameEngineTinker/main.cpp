@@ -7,7 +7,7 @@
 #include "Layer.h"
 #include "Tile.h"
 #include "World.h"
-
+#include "Character.h"
 
 /// Override base class with your custom functionality
 class Game : public olc::PixelGameEngine
@@ -52,9 +52,13 @@ private:
 		count
 	};
 
-	bool* _playerInputs;
+	bool* _playerCurrInputs;
+	bool* _playerPrevInputs;
+
 	olc::vf2d _playerMouse;
 	olc::vf2d _playerCamera;
+
+	Character _playerCharacter;
 
 
 
@@ -186,16 +190,21 @@ public:
 	void initializePlayer()
 	{
 	///
-		this->_playerInputs = new bool[(int)KeyInput::count];
+		this->_playerCurrInputs = new bool[(int)KeyInput::count];
+		this->_playerPrevInputs = new bool[( int )KeyInput::count];
 		this->_playerMouse = olc::vf2d{ 0.0f, 0.0f };
 		this->_playerCamera = olc::vf2d{ 0.0f, 0.0f };
+
+		this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 100.0f, 100.0f } );
 	}
 
 
 	void destroyPlayer()
 	{
 	///
-		delete[] this->_playerInputs;
+		delete[] this->_playerCurrInputs;
+		delete[] this->_playerPrevInputs;
+
 	}
 
 	void initializeWorld()
@@ -266,6 +275,7 @@ public:
 	/// Render forest world
 		updatePlayer();
 
+
 		Clear( olc::DARK_CYAN );
 
 		this->_pScreen->drawWorldChunk( *this->_world->getWorldChunks()[0], this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
@@ -288,8 +298,22 @@ public:
 	void runGameStateTinkerWorld( float fElapsedTime )
 	{
 	///
+		this->updatePlayer();
+		this->_playerCharacter.updateCharacter( fElapsedTime );
+
+		/*
+		for ( int i = 0; i < ( int )KeyInput::count; i++ )
+		{
+			std::cout << this->_playerCurrInputs[i] << std::endl;
+		}
+		*/
+
 
 		Clear( olc::DARK_CYAN );
+
+
+		this->DrawRect( this->_playerCharacter.getCurrPosition() - this->_playerCharacter.getHalfSize(), this->_playerCharacter.getHalfSize()*2.0f, olc::WHITE );
+		this->DrawCircle( this->_playerCharacter.getCurrPosition(), 1, olc::YELLOW );
 		return;
 	}
 
@@ -318,19 +342,23 @@ public:
 	/// Updates the array of bool values that represent a key being pressed
 		if ( this->GetKey( olc::Key::UP ).bPressed || this->GetKey( olc::Key::UP ).bHeld )
 		{
-			this->_playerInputs[( int )KeyInput::UpKey] = true;
+			this->_playerCurrInputs[( int )KeyInput::UpKey] = true;
 		}
 		if ( this->GetKey( olc::Key::DOWN ).bPressed || this->GetKey( olc::Key::DOWN ).bHeld )
 		{
-			this->_playerInputs[( int )KeyInput::DownKey] = true;
+			this->_playerCurrInputs[( int )KeyInput::DownKey] = true;
 		}
 		if ( this->GetKey( olc::Key::LEFT ).bPressed || this->GetKey( olc::Key::LEFT ).bHeld )
 		{
-			this->_playerInputs[( int )KeyInput::LeftKey] = true;
+			this->_playerCurrInputs[( int )KeyInput::LeftKey] = true;
 		}
 		if ( this->GetKey( olc::Key::RIGHT ).bPressed || this->GetKey( olc::Key::RIGHT ).bHeld )
 		{
-			this->_playerInputs[( int )KeyInput::RightKey] = true;
+			this->_playerCurrInputs[( int )KeyInput::RightKey] = true;
+		}
+		if ( this->GetKey( olc::Key::SPACE ).bPressed || this->GetKey( olc::Key::SPACE ).bHeld )
+		{
+			this->_playerCurrInputs[( int )KeyInput::JumpKey] = true;
 		}
 
 		return;
@@ -341,7 +369,7 @@ public:
 	/// Resets the array of bool values that represent a key being pressed
 		for ( int i = 0; i < ( int )KeyInput::count; i++ )
 		{
-			this->_playerInputs[i] = false;
+			this->_playerCurrInputs[i] = false;
 		}
 
 		return;
@@ -413,7 +441,7 @@ int main()
 {
 	Game demo;
 	{
-		if ( demo.Construct( SETTINGS::RESOLUTION::SCREEN_X, SETTINGS::RESOLUTION::SCREEN_Y, SETTINGS::RESOLUTION::PIXEL_SCALE_X, SETTINGS::RESOLUTION::PIXEL_SCALE_Y ) )
+		if ( demo.Construct( settings::RESOLUTION::SCREEN_DIMENSION.x, settings::RESOLUTION::SCREEN_DIMENSION.y, settings::RESOLUTION::PIXEL_SCALE.x, settings::RESOLUTION::PIXEL_SCALE.y ) )
 		{
 			demo.Start();
 		}
