@@ -329,7 +329,7 @@ public:
 		this->_pScreen->drawCharacter( this->_playerCharacter, this->_playerCamera );
 
 
-		this->DrawCircle( olc::vi2d{ 768, 432 }/2, 1, olc::WHITE );
+		this->DrawCircle( settings::RESOLUTION::SCREEN_DIMENSION /2, 1, olc::WHITE );
 		return;
 	}
 

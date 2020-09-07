@@ -300,38 +300,13 @@ void Character::runJumpState( float deltaTime )
 			// [!] Play sound
 		}
 	}
-
-
 	
 	// Make the jump higher the longer the button is pressed
-	
-	/*
-	if ( !this->keyState( KeyInput::JumpKey ) && this->_currVelocity.y > 0.0f )
+	if ( !this->keyState( KeyInput::JumpKey ) && this->_currVelocity.y < 0.0f )
 	{
 		this->_currVelocity.y = -std::min<float>( this->_currVelocity.y, this->_minJumpSpeed );
 	}
-	*/
-
-
-	/// Temporary make object not fall off screen (the bottom of screen "simulates" a floor)
 	
-	/*
-	if ( this->_currPosition.y > settings::RESOLUTION::SCREEN_DIMENSION.y - this->getHalfSize().y )
-	{
-		if ( !this->keyState( KeyInput::JumpKey ) )
-		{
-			this->_currPosition.y = settings::RESOLUTION::SCREEN_DIMENSION.y - this->getHalfSize().y;
-			this->_currPushDown = true;
-			this->_currState = CharacterState::Stand;
-		}
-	}
-	else
-	{
-		this->_currPushDown = false;
-	}
-	*/
-	
-
 	return;
 }
 
@@ -345,7 +320,7 @@ void Character::runGrabLedgeState()
 
 void Character::updatePrevInputs()
 {
-/// Move the key values from currInputs to prevInputs
+	/// Move the key values from currInputs to prevInputs
 
 	for ( int i = 0; i < ( int )KeyInput::count; i++ )
 	{
