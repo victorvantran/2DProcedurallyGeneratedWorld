@@ -35,6 +35,9 @@ public:
 	olc::vi2d getIndexFromPixelPosition( float x, float y );
 	olc::vi2d getIndexFromPixelPosition( olc::vf2d pixelPosition );
 
+	WorldChunk* getWorldChunkFromIndex( int x, int y );
+	WorldChunk* getWorldChunkFromIndex( olc::vi2d index );
+
 	Tile* getTileFromIndex( int x, int y );
 	Tile* getTileFromIndex( olc::vi2d index );
 
@@ -87,6 +90,98 @@ std::vector<WorldChunk*> World::getWorldChunks()
 {
 	return this->_worldChunks;
 }
+
+
+
+WorldChunk* World::getWorldChunkFromIndex( int x, int y )
+{
+	for ( WorldChunk* worldChunk : this->_worldChunks )
+	{
+		// If tile is within range of the worldchunk, then render it
+		olc::vi2d startWorldChunkPosition = worldChunk->getPosition();
+		olc::vi2d endWorldChunkPosition = worldChunk->getPosition() + worldChunk->getDimension();
+
+		if ( x >= startWorldChunkPosition.x && y >= startWorldChunkPosition.y &&
+			x < endWorldChunkPosition.x && y < endWorldChunkPosition.y ) {
+
+			return worldChunk;
+		}
+	}
+
+	return nullptr;
+}
+
+
+
+WorldChunk* World::getWorldChunkFromIndex( olc::vi2d index )
+{
+	for ( WorldChunk* worldChunk : this->_worldChunks )
+	{
+		// If tile is within range of the worldchunk, then render it
+		olc::vi2d startWorldChunkPosition = worldChunk->getPosition();
+		olc::vi2d endWorldChunkPosition = worldChunk->getPosition() + worldChunk->getDimension();
+
+		if ( index.x >= startWorldChunkPosition.x && index.y >= startWorldChunkPosition.y &&
+			index.x < endWorldChunkPosition.x && index.y < endWorldChunkPosition.y ) {
+
+			return worldChunk;
+		}
+	}
+
+	return nullptr;
+}
+
+
+
+Tile* World::getTileFromIndex( int x, int y )
+{
+	for ( WorldChunk* worldChunk : this->_worldChunks )
+	{
+		// If tile is within range of the worldchunk, then render it
+		olc::vi2d startWorldChunkPosition = worldChunk->getPosition();
+		olc::vi2d endWorldChunkPosition = worldChunk->getPosition() + worldChunk->getDimension();
+
+		if ( x >= startWorldChunkPosition.x && y >= startWorldChunkPosition.y &&
+			x < endWorldChunkPosition.x && y < endWorldChunkPosition.y ) {
+
+			return worldChunk->getTileFromIndex( x, y );
+		}
+	}
+
+	return nullptr;
+}
+
+
+Tile* World::getTileFromIndex( olc::vi2d index )
+{
+	for ( WorldChunk* worldChunk : this->_worldChunks )
+	{
+		// If tile is within range of the worldchunk, then render it
+		olc::vi2d startWorldChunkPosition = worldChunk->getPosition();
+		olc::vi2d endWorldChunkPosition = worldChunk->getPosition() + worldChunk->getDimension();
+
+		if ( index.x >= startWorldChunkPosition.x && index.y >= startWorldChunkPosition.y &&
+			index.x < endWorldChunkPosition.x && index.y < endWorldChunkPosition.y ) {
+
+			return worldChunk->getTileFromIndex( index );
+		}
+	}
+
+	return nullptr;
+}
+
+
+Tile* World::getTileFromPixelPosition( float x, float y )
+{
+	return nullptr;
+}
+
+
+Tile* World::getTileFromPixelPosition( olc::vf2d pixelPosition )
+{
+	return nullptr;
+}
+
 
 
 olc::vi2d World::getTileDimension()

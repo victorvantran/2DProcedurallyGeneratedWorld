@@ -291,7 +291,7 @@ void Character::runJumpState( float deltaTime )
 
 
 	/// Temporary make object not fall off screen (the bottom of screen "simulates" a floor)
-	/*
+	
 	if ( this->_currPosition.y > settings::RESOLUTION::SCREEN_DIMENSION.y - this->getHalfSize().y )
 	{
 		if ( !this->keyState( KeyInput::JumpKey ) )
@@ -305,7 +305,7 @@ void Character::runJumpState( float deltaTime )
 	{
 		this->_currPushDown = false;
 	}
-	*/
+	
 
 	/*
 	float contactY = 0.0f;

@@ -47,7 +47,7 @@ namespace aabb
 
 
 		/// Object detection methods (tile-based using boundary senors)
-		bool isCollidingDown( olc::vf2d prevPosition, olc::vf2d currPosition, olc::vf2d speed, float& groundY, WorldChunk& worldChunk );
+		bool isCollidingDown( olc::vf2d prevPosition, olc::vf2d currPosition, olc::vf2d speed, float& groundY, World& worldChunk );
 	};
 }
 
@@ -115,7 +115,7 @@ olc::vf2d aabb::DynamicObject::getScale()
 
 
 // need a region of checking
-bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d currPosition, olc::vf2d speed, float& contactY, WorldChunk& worldChunk )
+bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d currPosition, olc::vf2d speed, float& contactY, World& world )
 {
 /// If collided downwards (like hitting a ground), calculate the beginning point and end point of the bottom sensor line. Note that it is one pixel below and one pixel short on each side
 /// Updates the groundLevel where the contact occured
@@ -128,17 +128,19 @@ bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d cur
 	// [!] settings::ATLAS::TILE_DIMENSION is temporary; the dynamic object needs to know the tile dimension given by either by a world, worldchunk, or layer to reference
 	olc::vi2d checkTileIndex;
 	Tile* checkTile;
+	///WorldChunk worldChunk;
 
-	for ( olc::vf2d checkTilePosition = bottomLeft; checkTilePosition.x >= bottomRight.x; checkTilePosition.x += settings::ATLAS::TILE_DIMENSION.x )
+	for ( olc::vf2d checkTilePosition = bottomLeft; checkTilePosition.x >= bottomRight.x; checkTilePosition.x += settings::ATLAS::TILE_DIMENSION.x)
 	{
 		checkTilePosition.x = std::min<float>( checkTilePosition.x, bottomRight.x); // Make sure our checked tile is not out of range of the bottomRight endpoint
 
-		checkTileIndex = worldChunk.getIndexFromPixelPosition( checkTilePosition );
+		///checkTileIndex = world.getIndexFromPixelPosition( checkTilePosition );
 
+		///worldChunk = ;
 		// Calculate the potential bottom contact point
-		contactY = ( float )checkTileIndex.y * worldChunk.getAtlas().getTileDimension().y + worldChunk.getAtlas().getTileDimension().y / 2.0f + worldChunk.getPosition().y;
+		///contactY = ( float )checkTileIndex.y * world.getTileDimension().y + world.getTileDimension().y / 2.0f + worldChunk.getCenterPosition().y;
 
-		checkTile = worldChunk.getTileFromPixelPosition( checkTilePosition );
+		checkTile = world.getTileFromPixelPosition( checkTilePosition );
 
 		if ( checkTile != nullptr && checkTile->isBlock() )
 		{

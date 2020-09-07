@@ -39,6 +39,7 @@ public:
 	Atlas getAtlas();
 
 	olc::vi2d getPosition();
+	olc::vi2d getCenterPosition();
 	olc::vi2d getDimension();
 
 	olc::vi2d getIndexFromPixelPosition( float x, float y );
@@ -135,22 +136,28 @@ void WorldChunk::generatePerlinNoise2D()
 
 Layer<Tile> WorldChunk::getLayer()
 {
-/// Returns the layer of the world chunk
+	/// Returns the layer of the world chunk
 	return this->_chunkLayer;
 }
 
 
 Atlas WorldChunk::getAtlas()
 {
-/// Returns the atlas of the world chunk
+	/// Returns the atlas of the world chunk
 	return this->_chunkAtlas;
 }
 
 
 olc::vi2d WorldChunk::getPosition()
 {
-/// Returns the position of the chunk
+	/// Returns the position of the chunk
 	return this->_chunkPosition;
+}
+
+olc::vi2d WorldChunk::getCenterPosition()
+{
+	/// Returns the center position of the chunk
+	return this->_chunkPosition + (this->_chunkDimension / 2);
 }
 
 

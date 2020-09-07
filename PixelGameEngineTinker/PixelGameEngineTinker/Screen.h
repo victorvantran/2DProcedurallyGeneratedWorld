@@ -37,44 +37,32 @@ public:
 
 				//olc::vi2d tilePixelPosition = olc::vi2d{ tileIndex.x * world.getTileDimension().x, tileIndex.y * world.getTileDimension().y };
 				
+				WorldChunk* worldChunk = world.getWorldChunkFromIndex( tileIndex );
+				Atlas worldChunkAtlas = worldChunk->getAtlas();
+				Tile* tile = worldChunk->getTileFromIndex( tileIndex );
 				
-				for ( WorldChunk* worldChunk : world.getWorldChunks() )
+				if ( tile != nullptr && tile->exist )
 				{
-					// If tile is within range of the worldchunk, then render it
-					olc::vi2d startWorldChunkPosition = worldChunk->getPosition();
-					olc::vi2d endWorldChunkPosition = worldChunk->getPosition() + worldChunk->getDimension();
-
-					if ( tileIndex.x >= startWorldChunkPosition.x && tileIndex.y >= startWorldChunkPosition.y &&
-						tileIndex.x < endWorldChunkPosition.x && tileIndex.y < endWorldChunkPosition.y ) {
-
-						Tile* tile = worldChunk->getTileFromIndex( column + ( int )cameraPosition.x, row + ( int )cameraPosition.y );
-						Atlas worldChunkAtlas = worldChunk->getAtlas();
-
-						if ( tile != nullptr && tile->exist )
+					/// Get the float Position of the tile based on: its matrix index and slight decimal point offset 
+					/// The slight decimal point is to make sure we do not miss rendering tiles that are slightly off screen
+					olc::vf2d tilePosition = olc::vf2d
+					{
+						olc::vi2d
 						{
-							/// Get the float Position of the tile based on: its matrix index and slight decimal point offset 
-							/// The slight decimal point is to make sure we do not miss rendering tiles that are slightly off screen
-							olc::vf2d tilePosition = olc::vf2d
-							{
-								olc::vi2d
-								{
-									( int )( ( ( float )column - offset.x ) * ( float )worldChunkAtlas.getTileDimension().x ),
-									( int )( ( ( float )row - offset.y ) * ( float )worldChunkAtlas.getTileDimension().y )
-								},
-							};
+							( int )( ( ( float )column - offset.x ) * ( float )worldChunkAtlas.getTileDimension().x ),
+							( int )( ( ( float )row - offset.y ) * ( float )worldChunkAtlas.getTileDimension().y )
+						},
+					};
 
-							/// Render the individual tile
-							pge->DrawPartialDecal(
-								olc::vf2d{ tilePosition.x + 0.5f - ( tilePosition.x < 0.0f ), tilePosition.y + 0.5f - ( tilePosition.y < 0.0f ) },
-								worldChunkAtlas.getDecalTileSheet(),
-								olc::vf2d{ ( float )std::get<0>( worldChunkAtlas.mapping[tile->id] ), ( float )std::get<1>( worldChunkAtlas.mapping[tile->id] ) },
-								olc::vf2d{ ( float )std::get<2>( worldChunkAtlas.mapping[tile->id] ), ( float )std::get<3>( worldChunkAtlas.mapping[tile->id] ) },
-								olc::vf2d{ scale, scale }
-							);
+					/// Render the individual tile
+					pge->DrawPartialDecal(
+						olc::vf2d{ tilePosition.x + 0.5f - ( tilePosition.x < 0.0f ), tilePosition.y + 0.5f - ( tilePosition.y < 0.0f ) },
+						worldChunkAtlas.getDecalTileSheet(),
+						olc::vf2d{ ( float )std::get<0>( worldChunkAtlas.mapping[tile->id] ), ( float )std::get<1>( worldChunkAtlas.mapping[tile->id] ) },
+						olc::vf2d{ ( float )std::get<2>( worldChunkAtlas.mapping[tile->id] ), ( float )std::get<3>( worldChunkAtlas.mapping[tile->id] ) },
+						olc::vf2d{ scale, scale }
+					);
 
-						}
-						break;
-					}
 				}
 			}
 		}
