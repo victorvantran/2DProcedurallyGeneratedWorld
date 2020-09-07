@@ -6,6 +6,7 @@
 #include "Edge.h"
 #include "World.h"
 #include "WorldChunk.h"
+#include "Character.h"
 
 class Screen : public olc::PGEX
 {
@@ -21,6 +22,19 @@ public:
 	template<typename T>
 	static void drawLayer( Layer<T>* layer, Atlas* atlas, olc::vf2d cameraPosition, olc::vi2d tileMatrixDimension, float scale = 1.0f);
 
+
+	static void drawCharacter( Character& character )
+	{
+		/// Renders the character
+		/// Temporary use original tile size; need to add member variables for screen: TileDimension...
+		//pge->DrawRect( (character.getCurrPosition() - character.getHalfSize() * settings::ATLAS::TILE_DIMENSION ), character.getHalfSize() * 2.0f * settings::ATLAS::TILE_DIMENSION, olc::WHITE);
+		pge->DrawRect( ( character.getCurrPosition() - character.getHalfSize() ) * settings::ATLAS::TILE_DIMENSION, character.getHalfSize() * 2.0f * settings::ATLAS::TILE_DIMENSION, olc::WHITE );
+
+
+		return;
+	}
+
+
 	static void drawWorld( World& world, olc::vf2d cameraPosition, olc::vi2d scopeDimension, float scale = 1.0f )
 	{
 		/// Renders all world chunks
@@ -35,6 +49,8 @@ public:
 
 				olc::vi2d tileIndex = olc::vi2d{ column + ( int )cameraPosition.x, row + ( int )cameraPosition.y };
 				//olc::vi2d tilePixelPosition = olc::vi2d{ tileIndex.x * world.getTileDimension().x, tileIndex.y * world.getTileDimension().y };
+
+				/// Search for the WorldChunk that holds the given tile in the tileIndex coordinate 
 				WorldChunk* worldChunk = world.getWorldChunkFromIndex( tileIndex );
 
 				/// WorldChunk cannot be found (perhaps does not exist or not loaded) for a certain tile index; so skip

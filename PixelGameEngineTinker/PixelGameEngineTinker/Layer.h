@@ -2,7 +2,7 @@
 
 #include "olcPixelGameEngine.h"
 #include "Atlas.h"
-
+#include "Tile.h"
 
 template <typename T>
 class Layer : public olc::PGEX
@@ -132,12 +132,19 @@ void Layer<T>::copyMapping( std::vector<std::tuple<int, bool>> mapping )
 	/// Given a vector of tuple(int, bool), copy it into the mapping
 	///		1) id
 	///		2) existence
+	///		3) tyletype [!] Need to update mapping to include tyletypes
 	if ( mapping.size() == this->_layerDimension.x * this->_layerDimension.y )
 	{
 		for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
 		{
 			this->_pCells[i].id = std::get<0>( mapping[i] );
 			this->_pCells[i].exist = std::get<1>( mapping[i] );
+
+			/// Temporary
+			if ( std::get<1>( mapping[i] ) )
+			{
+				this->_pCells[i].tileType = TileType::Block;
+			}
 		}
 	}
 

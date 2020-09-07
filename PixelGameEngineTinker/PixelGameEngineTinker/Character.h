@@ -45,6 +45,7 @@ private:
 	void runJumpState( float deltaTime );
 	void runGrabLedgeState();
 
+
 	
 
 public:
@@ -56,7 +57,7 @@ public:
 	void constructCharacter( bool currInputs[], bool prevInputs[], olc::vf2d startPosition );
 	void destructCharacter();
 
-	void updateCharacter( float deltaTime );
+	void updateCharacter( float deltaTime, World& world );
 
 	void updatePrevInputs();
 
@@ -100,8 +101,8 @@ void Character::constructCharacter( bool currInputs[], bool prevInputs[], olc::v
 	this->_terminalFallingSpeed = settings::CHARACTER::TERMINAL_FALLING_SPEED;
 	this->_minJumpSpeed = settings::CHARACTER::MIN_JUMP_SPEED;
 
-	this->_prevPosition = startPosition;
-	this->_currPosition = startPosition;
+	this->_prevCenterPosition = startPosition;
+	this->_currCenterPosition = startPosition;
 	this->_aabb.halfSize = settings::CHARACTER::AABB_HALF_SIZE;
 	this->_aabbOffset = settings::CHARACTER::AABB_OFFSET;
 	this->_scale = settings::CHARACTER::SCALE;
@@ -115,7 +116,7 @@ void Character::destructCharacter()
 }
 
 
-void Character::updateCharacter( float deltaTime )
+void Character::updateCharacter( float deltaTime, World& world )
 {
 	switch ( this->_currState )
 	{
@@ -133,7 +134,7 @@ void Character::updateCharacter( float deltaTime )
 		break;
 	}
 
-	this->updatePhysics( deltaTime );
+	this->updatePhysics( deltaTime, world );
 
 	// Play an audio when a character collides with an object (just touched ceiling, ground, or walls)
 	if ( !this->_prevPushUp && this->_currPushUp
@@ -281,8 +282,9 @@ void Character::runJumpState( float deltaTime )
 		// [!] Flip sprite horitzontally
 	}
 
-	/*
+	
 	// Make the jump higher the longer the button is pressed
+	/*
 	if ( !this->keyState( KeyInput::JumpKey ) && this->_currVelocity.y > 0.0f )
 	{
 		this->_currVelocity.y = -std::min<float>( this->_currVelocity.y, this->_minJumpSpeed );
@@ -292,6 +294,7 @@ void Character::runJumpState( float deltaTime )
 
 	/// Temporary make object not fall off screen (the bottom of screen "simulates" a floor)
 	
+	/*
 	if ( this->_currPosition.y > settings::RESOLUTION::SCREEN_DIMENSION.y - this->getHalfSize().y )
 	{
 		if ( !this->keyState( KeyInput::JumpKey ) )
@@ -305,21 +308,8 @@ void Character::runJumpState( float deltaTime )
 	{
 		this->_currPushDown = false;
 	}
-	
-
-	/*
-	float contactY = 0.0f;
-	if ( this->_currVelocity.y <= 0.0f && this->isCollidingDown(this->_prevPosition, this->_currPosition, this->_currVelocity, contactY, world) )
-	{
-		this->_currPosition.y = contactY + this->getHalfSize().y - this->getOffset().y;
-		this->_currVelocity.y = 0.0f;
-		this->_currPushDown = true;
-	}
-	else
-	{
-		this->_currPushDown = false;
-	}
 	*/
+	
 
 	return;
 }

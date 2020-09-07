@@ -5,8 +5,8 @@ Tile::Tile()
 {
 	// Establishes essentially a blank, non-existent tile
 	this->id = 0;
-	this->exist = true;
-	this->tileType = TileType::Block;
+	this->exist = false;
+	this->tileType = TileType::Empty;
 
 	for ( int i = 0; i < sizeof(this->edgeId)/sizeof(this->edgeId[0]); i++ )
 	{

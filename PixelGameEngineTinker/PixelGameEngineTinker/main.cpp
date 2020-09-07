@@ -195,7 +195,7 @@ public:
 		this->_playerMouse = olc::vf2d{ 0.0f, 0.0f };
 		this->_playerCamera = olc::vf2d{ 0.0f, 0.0f };
 
-		this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 100.0f, 100.0f } );
+		this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 12.0f, 8.0f } );
 	}
 
 
@@ -302,6 +302,11 @@ public:
 	void runGameStateTinkerWorldLoading( float fElapsedTime )
 	{
 	///
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ settings::WORLD_CHUNK::DIMENSION.x, 0 }, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ 0, settings::WORLD_CHUNK::DIMENSION.y }, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + settings::WORLD_CHUNK::DIMENSION, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
+
 		this->_gameState = GameState::TINKER_WORLD;
 		return;
 	}
@@ -311,14 +316,17 @@ public:
 	{
 	///
 		this->updatePlayer( fElapsedTime );
-		this->_playerCharacter.updateCharacter( fElapsedTime );
+		this->_playerCharacter.updateCharacter( fElapsedTime, *this->_world );
 
 
 		Clear( olc::DARK_CYAN );
 
+		this->_pScreen->drawWorld( *this->_world, this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
+		
+		this->_pScreen->drawCharacter( this->_playerCharacter );
 
-		this->DrawRect( this->_playerCharacter.getCurrPosition() - this->_playerCharacter.getHalfSize(), this->_playerCharacter.getHalfSize()*2.0f, olc::YELLOW );
-		this->DrawCircle( this->_playerCharacter.getCurrPosition(), 1, olc::WHITE );
+		//this->DrawRect( this->_playerCharacter.getCurrPosition() - this->_playerCharacter.getHalfSize(), this->_playerCharacter.getHalfSize()*2.0f, olc::YELLOW );
+		//this->DrawCircle( this->_playerCharacter.getCurrPosition(), 1, olc::WHITE );
 		return;
 	}
 
@@ -383,7 +391,7 @@ public:
 
 	void updatePlayerCamera( float fElapsedTime )
 	{
-		float speed = 10.0f; // 1.0f is 1 tile size
+		float speed = 0.0f; // 1.0f is 1 tile size
 		if ( this->IsFocused() )
 		{
 			if ( this->GetKey( olc::Key::UP ).bPressed || this->GetKey( olc::Key::UP ).bHeld )
@@ -434,8 +442,8 @@ public:
 		case GameState::LOADING: this->runGameStateLoading( fElapsedTime ); break;
 		case GameState::TITLE: this->runGameStateTitle( fElapsedTime ); break;
 		case GameState::TINKER: this->runGameStateTinker( fElapsedTime ); break;
-		case GameState::TINKER_WORLD_LOADING: this->runGameStateTinkerForestWorldLoading( fElapsedTime ); break;
-		case GameState::TINKER_WORLD: this->runGameStateTinkerForestWorld( fElapsedTime ); break;
+		case GameState::TINKER_WORLD_LOADING: this->runGameStateTinkerWorldLoading( fElapsedTime ); break;
+		case GameState::TINKER_WORLD: this->runGameStateTinkerWorld( fElapsedTime ); break;
 		}
 
 		return true;
