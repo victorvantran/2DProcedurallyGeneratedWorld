@@ -195,7 +195,7 @@ public:
 		this->_playerMouse = olc::vf2d{ 0.0f, 0.0f };
 		this->_playerCamera = olc::vf2d{ 0.0f, 0.0f };
 
-		this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 12.0f, 8.0f } );
+		this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 14.0f, 8.0f } );
 	}
 
 

@@ -18,6 +18,11 @@ namespace aabb
 
 		olc::vf2d _scale;
 
+		
+		float _oneWayPlatformThreshold;
+		bool _onOneWayPlatform;
+
+
 
 		AABB _aabb;
 		olc::vf2d _aabbOffset; // needed to align AABB to anything such as an object's sprite
@@ -52,7 +57,7 @@ namespace aabb
 
 
 		/// Object detection methods (tile-based using boundary senors)
-		bool isCollidingDown( olc::vf2d prevPosition, olc::vf2d currPosition, olc::vf2d speed, World& world, float& contactY );
+		bool isCollidingDown( olc::vf2d prevPosition, olc::vf2d currPosition, olc::vf2d speed, World& world, float& contactY, bool& onOneWayPlatform );
 	};
 }
 
@@ -78,6 +83,9 @@ void aabb::DynamicObject::constructDynamicObject()
 	this->_currPushLeft = false;
 	this->_prevPushRight = false;
 	this->_currPushRight = false;
+
+	this->_onOneWayPlatform = false;
+	this->_oneWayPlatformThreshold = settings::DYNAMIC_OBJECT::ONE_WAY_PLATFORM_THRESHOLD;
 	return;
 }
 
@@ -101,7 +109,7 @@ void aabb::DynamicObject::updatePhysics( float deltaTime, World& world )
 	
 	/// Pushing down detection
 	float contactY = 0.0f;
-	if ( this->_currVelocity.y >= 0.0f && this->isCollidingDown( this->_prevCenterPosition, this->_currCenterPosition, this->_currVelocity, world, contactY ) )
+	if ( this->_currVelocity.y >= 0.0f && this->isCollidingDown( this->_prevCenterPosition, this->_currCenterPosition, this->_currVelocity, world, contactY, _onOneWayPlatform ) )
 	{
 		this->_currCenterPosition.y = contactY - this->getHalfSize().y + this->getOffset().y;
 		this->_currVelocity.y = 0.0f;
@@ -197,10 +205,15 @@ bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d cur
 */
 
 
-bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d currPosition, olc::vf2d speed, World& world, float& contactY )
+bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d currPosition, olc::vf2d speed, World& world, float& contactY, bool& onOneWayPlatform )
 {
-	// If collided downwards (like hitting a ground), calculate the beginning point and end point of the bottom sensor line. Note that it is the index of the cell one pixel below and one pixel short on each side
+	// If collided downwards (like hitting a ground), calculate the beginning point and end point of the bottom sensor line.
+	// Note that it is the index of the cell one pixel below and one pixel short on each side
+	// Iterpolate through the tiles possibly touched between the prev and current, to ensure character does not fall too fast through a block
+	// This is more computationally expensive, so perhaps use a simpler ground detection for slow moving objects
 	// Updates the groundLevel where the contact occured
+
+	onOneWayPlatform = false;
 
 	// Get the bottom censors
 	olc::vf2d prevCenter = prevPosition + this->_aabbOffset;
@@ -230,14 +243,14 @@ bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d cur
 	for ( int tileIndexY = begY; tileIndexY <= endY; ++tileIndexY )
 	{
 		// interpolate
-		float t = std::abs(endY - tileIndexY);
-		olc::vf2d checkBottomLeft = (currBottomLeft * t + prevBottomLeft * (1 - t));//olc::vf2d{ };
+		float t = std::abs(endY - tileIndexY) / dist;
+		olc::vf2d checkBottomLeft = ( currBottomLeft * t + prevBottomLeft * (1 - t) );
 		olc::vf2d checkBottomRight = olc::vf2d{ checkBottomLeft.x + this->getHalfSize().x * 2.0f - (2.0f / world.getTileDimension().x ), checkBottomLeft.y};
 
 		olc::vi2d checkBottomLeftIndex = olc::vi2d{ checkBottomLeft };
 		olc::vi2d checkBottomRightIndex = olc::vi2d{ checkBottomRight };
 
-		for ( checkTileIndex = checkBottomLeftIndex; checkTileIndex.x <= checkBottomRightIndex.x; checkTileIndex.x += 1.0f )
+		for ( checkTileIndex = checkBottomLeftIndex; ; checkTileIndex.x += 1.0f )
 		{
 			worldChunk = world.getWorldChunkFromIndex( checkTileIndex );
 			if ( worldChunk == nullptr )
@@ -246,13 +259,37 @@ bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d cur
 			}
 
 			// Calculate the potential bottom contact point
-			contactY = ( float )checkTileIndex.y;
+			contactY = ( float )checkTileIndex.y; // contactIndex ( the real contactY = checkBottomLeft.y )
 			checkTile = world.getTileFromIndex( checkTileIndex );
 
-			if ( checkTile != nullptr && checkTile->isBlock() )
+			if ( checkTile != nullptr && checkTile->exists() )
 			{
-				return true;
+				if ( checkTile->isBlock() ) 
+				{
+					onOneWayPlatform = false; // In case the character is on both a block and a onewayplatform (prevent from using the oneway platform)
+					return true;
+				}
+				else if ( checkTile->isOneWayPlatform() )
+				{
+					// Collision ignored if fall beyond the character's one way platform threshold when standing on a one way platform
+					// Collision not ignoted if the character does not fall beyond the threshold point when standing on a one way platform
+					if ( std::abs(checkTileIndex.y - checkBottomLeft.y) <= settings::CHARACTER::ONE_WAY_PLATFORM_THRESHOLD + currPosition.y - prevPosition.y )
+					{
+						onOneWayPlatform = true;
+					}
+				}
 			}
+
+
+			if ( checkTileIndex.x >= checkBottomRightIndex.x )
+			{
+				if ( onOneWayPlatform )
+				{
+					return true;
+				}
+				break;
+			}
+
 		}
 	}
 

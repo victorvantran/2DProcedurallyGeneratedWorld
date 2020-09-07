@@ -40,6 +40,7 @@ private:
 	float _terminalFallingSpeed;
 	float _minJumpSpeed;
 
+
 	void runStandState();
 	void runWalkState();
 	void runJumpState( float deltaTime );
@@ -106,6 +107,9 @@ void Character::constructCharacter( bool currInputs[], bool prevInputs[], olc::v
 	this->_aabb.halfSize = settings::CHARACTER::AABB_HALF_SIZE;
 	this->_aabbOffset = settings::CHARACTER::AABB_OFFSET;
 	this->_scale = settings::CHARACTER::SCALE;
+
+
+	this->_oneWayPlatformThreshold = settings::CHARACTER::ONE_WAY_PLATFORM_THRESHOLD;
 	return;
 }
 
@@ -178,6 +182,15 @@ void Character::runStandState()
 		return;
 	}
 
+	// If the character presses down and is standing on a one way platform, move down the threshold as to pass through it
+	if ( this->keyState( KeyInput::DownKey ) )
+	{
+		if ( _onOneWayPlatform )
+		{
+			this->_currCenterPosition.y += this->_oneWayPlatformThreshold;
+		}
+	}
+
 	return;
 }
 
@@ -234,6 +247,15 @@ void Character::runWalkState()
 	{
 		this->_currState = CharacterState::Jump;
 		return;
+	}
+
+	// If the character presses down and is standing on a one way platform, move down the threshold as to pass through it
+	if ( this->keyState( KeyInput::DownKey ) )
+	{
+		if ( _onOneWayPlatform )
+		{
+			this->_currCenterPosition.y += this->_oneWayPlatformThreshold;
+		}
 	}
 
 	return;

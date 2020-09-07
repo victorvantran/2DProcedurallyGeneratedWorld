@@ -24,7 +24,7 @@ public:
 	void create( int layerWidth, int layerHeight );
 
 	void generateRandomness( Atlas* atlas );
-	void copyMapping( std::vector<std::tuple<int,bool>> mapping );
+	void copyMapping( std::vector<std::tuple<int,bool,TileType>> mapping );
 
 	olc::rcode loadFromFile( std::string filename );
 	olc::rcode saveToFile( std::string filename );
@@ -127,7 +127,7 @@ void Layer<T>::generateRandomness( Atlas* atlas )
 
 
 template<typename T>
-void Layer<T>::copyMapping( std::vector<std::tuple<int, bool>> mapping )
+void Layer<T>::copyMapping( std::vector<std::tuple<int, bool, TileType>> mapping )
 {
 	/// Given a vector of tuple(int, bool), copy it into the mapping
 	///		1) id
@@ -141,10 +141,16 @@ void Layer<T>::copyMapping( std::vector<std::tuple<int, bool>> mapping )
 			this->_pCells[i].exist = std::get<1>( mapping[i] );
 
 			/// Temporary
+			
 			if ( std::get<1>( mapping[i] ) )
 			{
-				this->_pCells[i].tileType = TileType::Block;
+				this->_pCells[i].tileType = std::get<2>( mapping[i] );
+				//this->_pCells[i].tileType = TileType::Block;
 			}
+			
+
+			
+			//this->_pCells[i].tileType = std::get<2>( mapping[i] );
 		}
 	}
 

@@ -34,13 +34,18 @@ bool Tile::isBlock()
 }
 
 
-bool Tile::isOneWay()
+bool Tile::isOneWayPlatform()
 {
-	return this->tileType == TileType::OneWay;
+	return this->tileType == TileType::OneWayPlatform;
 }
 
 
 bool Tile::isGround()
 {
-	return this->tileType == TileType::Block || this->tileType == TileType::OneWay;
+	return this->tileType == TileType::Block || this->tileType == TileType::OneWayPlatform;
+}
+
+bool Tile::exists()
+{
+	return this->exist;
 }

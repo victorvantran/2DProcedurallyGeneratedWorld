@@ -11,6 +11,11 @@ namespace settings
 		const static olc::vi2d PIXEL_SCALE;
 	};
 
+	struct DYNAMIC_OBJECT
+	{
+		const static float ONE_WAY_PLATFORM_THRESHOLD;
+	};
+
 	struct CHARACTER
 	{
 		/// Constant static floats need to be initialized in .cpp because compiler does not support in-line initilization of it
@@ -24,6 +29,8 @@ namespace settings
 		const static olc::vf2d AABB_OFFSET;
 
 		const static olc::vf2d SCALE;
+
+		const static float ONE_WAY_PLATFORM_THRESHOLD;
 	};
 
 
@@ -41,6 +48,8 @@ namespace settings
 		const static int OCTAVE;
 		const static float SCALING_BIAS;
 	};
+
+
 
 };	
 

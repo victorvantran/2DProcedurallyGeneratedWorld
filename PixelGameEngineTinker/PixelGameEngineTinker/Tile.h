@@ -7,7 +7,7 @@ enum class TileType
 {
 	Empty = 0,
 	Block = 1,
-	OneWay = 2,
+	OneWayPlatform = 2,
 	count
 };
 
@@ -27,7 +27,9 @@ struct Tile
 
 	bool isEmpty();
 	bool isBlock();
-	bool isOneWay();
+	bool isOneWayPlatform();
 	bool isGround();
+
+	bool exists();
 };
 

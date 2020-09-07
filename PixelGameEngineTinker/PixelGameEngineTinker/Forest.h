@@ -67,7 +67,7 @@ void Forest::generateLayer()
 
 	int numTiles = this->_chunkDimension.x * this->_chunkDimension.y;
 
-	std::vector<std::tuple<int, bool>> forestMapping;
+	std::vector<std::tuple<int, bool, TileType>> forestMapping;
 
 	for ( int i = 0; i < numTiles; i++ )
 	{
@@ -75,35 +75,35 @@ void Forest::generateLayer()
 
 		if ( tileDecider < 32 )
 		{
-			forestMapping.push_back( std::tuple{ 3, true } );
+			forestMapping.push_back( std::tuple{ 3, true, TileType::Block } );
 		}
 		else if ( tileDecider < 64 )
 		{
-			forestMapping.push_back( std::tuple{ 3, true } );
+			forestMapping.push_back( std::tuple{ 3, true, TileType::Block } );
 		}
 		else if ( tileDecider < 96 )
 		{
-			forestMapping.push_back( std::tuple{ 2, true } );
+			forestMapping.push_back( std::tuple{ 2, true, TileType::Block } );
 		}
 		else if ( tileDecider < 128 )
 		{
-			forestMapping.push_back( std::tuple{ 1, true } );
+			forestMapping.push_back( std::tuple{ 1, true, TileType::OneWayPlatform} );
 		}
 		else if ( tileDecider < 160 )
 		{
-			forestMapping.push_back( std::tuple{ 0, false } );
+			forestMapping.push_back( std::tuple{ 0, false, TileType::Empty } );
 		}
 		else if ( tileDecider < 192 )
 		{
-			forestMapping.push_back( std::tuple{ 0, false } );
+			forestMapping.push_back( std::tuple{ 0, false, TileType::Empty } );
 		}
 		else if ( tileDecider < 224 )
 		{
-			forestMapping.push_back( std::tuple{ 0, false } );
+			forestMapping.push_back( std::tuple{ 0, false, TileType::Empty } );
 		}
 		else if ( tileDecider < 256 )
 		{
-			forestMapping.push_back( std::tuple{ 0, false } );
+			forestMapping.push_back( std::tuple{ 0, false, TileType::Empty } );
 		}
 	}
 
