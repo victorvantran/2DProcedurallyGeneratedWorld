@@ -120,27 +120,23 @@ bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d cur
 /// If collided downwards (like hitting a ground), calculate the beginning point and end point of the bottom sensor line. Note that it is one pixel below and one pixel short on each side
 /// Updates the groundLevel where the contact occured
 	olc::vf2d center = currPosition + this->_aabbOffset;
-	olc::vf2d bottomLeft = center - this->getHalfSize() + olc::vf2d{ 1.0f, 1.0f };
+	olc::vf2d bottomLeft = center - this->getHalfSize() + olc::vf2d{ 1.0f, 1.0f }; // [!] may need to divided by 8.0
 	olc::vf2d bottomRight = olc::vf2d( bottomLeft.x + this->getHalfSize().x * 2.0f - 2.0f, bottomLeft.y );
 
 	// Based on the sensors, we can get the position of tiles needed to check
-
-	// [!] settings::ATLAS::TILE_DIMENSION is temporary; the dynamic object needs to know the tile dimension given by either by a world, worldchunk, or layer to reference
 	olc::vi2d checkTileIndex;
 	Tile* checkTile;
-	///WorldChunk worldChunk;
+	WorldChunk* worldChunk;
 
+	/// need to adjust checkTilePosition (div 8 or not?) // maybe not (just int it. cut off decimal remember?!)
 	for ( olc::vf2d checkTilePosition = bottomLeft; checkTilePosition.x >= bottomRight.x; checkTilePosition.x += settings::ATLAS::TILE_DIMENSION.x)
 	{
 		checkTilePosition.x = std::min<float>( checkTilePosition.x, bottomRight.x); // Make sure our checked tile is not out of range of the bottomRight endpoint
-
 		///checkTileIndex = world.getIndexFromPixelPosition( checkTilePosition );
-
-		///worldChunk = ;
+		worldChunk = world.getWorldChunkFromIndex( checkTilePosition );
 		// Calculate the potential bottom contact point
-		///contactY = ( float )checkTileIndex.y * world.getTileDimension().y + world.getTileDimension().y / 2.0f + worldChunk.getCenterPosition().y;
-
-		checkTile = world.getTileFromPixelPosition( checkTilePosition );
+		contactY = ( float )checkTileIndex.y * world.getTileDimension().y + world.getTileDimension().y / 2.0f + worldChunk->getCenterPosition().y;
+		checkTile = world.getTileFromIndex( checkTilePosition );
 
 		if ( checkTile != nullptr && checkTile->isBlock() )
 		{

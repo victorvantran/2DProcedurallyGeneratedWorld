@@ -34,10 +34,15 @@ public:
 			{
 
 				olc::vi2d tileIndex = olc::vi2d{ column + ( int )cameraPosition.x, row + ( int )cameraPosition.y };
-
 				//olc::vi2d tilePixelPosition = olc::vi2d{ tileIndex.x * world.getTileDimension().x, tileIndex.y * world.getTileDimension().y };
-				
 				WorldChunk* worldChunk = world.getWorldChunkFromIndex( tileIndex );
+
+				/// WorldChunk cannot be found (perhaps does not exist or not loaded) for a certain tile index; so skip
+				if ( worldChunk == nullptr )
+				{
+					continue;
+				}
+
 				Atlas worldChunkAtlas = worldChunk->getAtlas();
 				Tile* tile = worldChunk->getTileFromIndex( tileIndex );
 				
