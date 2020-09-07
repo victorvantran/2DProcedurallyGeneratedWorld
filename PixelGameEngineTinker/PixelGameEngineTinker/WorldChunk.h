@@ -10,7 +10,10 @@ class WorldChunk
 private:
 
 protected:
+	olc::vf2d _chunkPosition;
+
 	olc::vi2d _chunkDimension;
+	olc::vi2d _tileDimension;
 
 	Layer<Tile> _chunkLayer;
 	Atlas _chunkAtlas;
@@ -34,6 +37,18 @@ public:
 
 	Layer<Tile> getLayer();
 	Atlas getAtlas();
+
+	olc::vi2d getPosition();
+	olc::vi2d getDimension();
+
+	olc::vi2d getIndexFromPixelPosition( float x, float y );
+	olc::vi2d getIndexFromPixelPosition( olc::vf2d pixelPosition );
+
+	Tile* getTileFromIndex( int x, int y );
+	Tile* getTileFromIndex( olc::vi2d index );
+
+	Tile* getTileFromPixelPosition( float x, float y );
+	Tile* getTileFromPixelPosition( olc::vf2d pixelPosition );
 
 };
 
@@ -131,6 +146,64 @@ Atlas WorldChunk::getAtlas()
 	return this->_chunkAtlas;
 }
 
+
+olc::vi2d WorldChunk::getPosition()
+{
+/// Returns the position of the chunk
+	return this->_chunkPosition;
+}
+
+
+olc::vi2d WorldChunk::getDimension()
+{
+	/// Returns the position of the chunk
+	return this->_chunkDimension;
+}
+
+
+
+olc::vi2d WorldChunk::getIndexFromPixelPosition( float x, float y )
+{
+/// Return cell index given absolute pixel position
+	return olc::vi2d{ ( int )( x / this->_tileDimension.x ), ( int )( y / this->_tileDimension.y ) };
+}
+
+
+olc::vi2d WorldChunk::getIndexFromPixelPosition( olc::vf2d pixelPosition )
+{
+/// Return cell index given absolute pixel position
+	return olc::vi2d{ ( int )( pixelPosition.x / this->_tileDimension.x ), ( int )( pixelPosition.y / this->_tileDimension.y ) };
+}
+
+
+
+
+Tile* WorldChunk::getTileFromIndex( int x, int y )
+{
+	return this->_chunkLayer.getCell( x - this->_chunkPosition.x, y - this->_chunkPosition.y ); // [!] need to offset by the starting position
+}
+
+
+Tile* WorldChunk::getTileFromIndex( olc::vi2d index )
+{
+	return this->_chunkLayer.getCell( index.x - this->_chunkPosition.x, index.y - this->_chunkPosition.y );
+}
+
+
+Tile* WorldChunk::getTileFromPixelPosition( float x, float y )
+{
+	/// Given the pixel position of a tile, return the respective tile
+	olc::vi2d index = this->getIndexFromPixelPosition( x, y );
+	return this->_chunkLayer.getCell( index );
+}
+
+
+Tile* WorldChunk::getTileFromPixelPosition( olc::vf2d pixelPosition )
+{
+	/// Given the pixel position of a tile, return the respective tile
+	olc::vi2d index = this->getIndexFromPixelPosition( pixelPosition );
+	return this->_chunkLayer.getCell( index );
+}
 
 
 /*

@@ -157,9 +157,9 @@ public:
 	{
 	// Information needed: png, resolution of png, and resolution of the tile
 	// For each tile [0,0], [1,0], [2,0], ..., [n,m], mark the location of the subarea (via bounding box) of the given png based on the resolution of the tile
-		this->_atlasLoading = new Atlas( this->_spriteLoading, this->_decalLoading, olc::vi2d(480, 270), olc::vi2d(8, 8) );
-		this->_atlasTinkerWorld = new Atlas( this->_spriteTileSetTinkerWorld, this->_decalTileSetTinkerWorld, olc::vi2d( 25, 16 ), olc::vi2d( 8, 8 ) );
-		this->_atlasForest = Atlas( this->_spriteTileSetForest, this->_decalTileSetForest, olc::vi2d{ 2,2 }, olc::vi2d{ 8,8 }  );
+		this->_atlasLoading = new Atlas( this->_spriteLoading, this->_decalLoading, olc::vi2d(480, 270), settings::ATLAS::TILE_DIMENSION );
+		this->_atlasTinkerWorld = new Atlas( this->_spriteTileSetTinkerWorld, this->_decalTileSetTinkerWorld, olc::vi2d( 25, 16 ), settings::ATLAS::TILE_DIMENSION );
+		this->_atlasForest = Atlas( this->_spriteTileSetForest, this->_decalTileSetForest, olc::vi2d{ 2,2 }, settings::ATLAS::TILE_DIMENSION );
 	}
 
 
@@ -264,7 +264,7 @@ public:
 	void runGameStateTinkerForestWorldLoading( float fElapsedTime )
 	{
 	/// Generate forest
-		this->_world->generateTestForest( olc::vi2d{ 1000, 1000 }, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
 		this->_gameState = GameState::TINKER_WORLD;
 		return;
 	}
@@ -278,7 +278,16 @@ public:
 
 		Clear( olc::DARK_CYAN );
 
-		this->_pScreen->drawWorldChunk( *this->_world->getWorldChunks()[0], this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
+		//this->_pScreen->drawWorldChunk( *this->_world->getWorldChunks()[0], this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
+		//this->_pScreen->drawWorld( *this->_world, this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
+		this->_pScreen->drawWorld( *this->_world, this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
+
+
+		//olc::vf2d mouse = olc::vf2d{ ( float )this->GetMouseX(), ( float )this->GetMouseY() };
+		//std::cout << "[" << ( int )( ( this->_playerCamera.x * 8.0f + mouse.x ) / 8.0f ) << "," << ( int )( ( this->_playerCamera.y * 8.0f + mouse.y ) / 8.0f ) << "]" << std::endl;
+	
+		
+		// absolute pixel = {this->_playerCamera.x * 8.0f + mouse.x, this->_playerCamera.y * 8.0f + mouse.y ) / 8.0f}
 
 		this->drawPlayerMouse();
 
@@ -301,19 +310,12 @@ public:
 		this->updatePlayer();
 		this->_playerCharacter.updateCharacter( fElapsedTime );
 
-		/*
-		for ( int i = 0; i < ( int )KeyInput::count; i++ )
-		{
-			std::cout << this->_playerCurrInputs[i] << std::endl;
-		}
-		*/
-
 
 		Clear( olc::DARK_CYAN );
 
 
-		this->DrawRect( this->_playerCharacter.getCurrPosition() - this->_playerCharacter.getHalfSize(), this->_playerCharacter.getHalfSize()*2.0f, olc::WHITE );
-		this->DrawCircle( this->_playerCharacter.getCurrPosition(), 1, olc::YELLOW );
+		this->DrawRect( this->_playerCharacter.getCurrPosition() - this->_playerCharacter.getHalfSize(), this->_playerCharacter.getHalfSize()*2.0f, olc::YELLOW );
+		this->DrawCircle( this->_playerCharacter.getCurrPosition(), 1, olc::WHITE );
 		return;
 	}
 
@@ -378,27 +380,27 @@ public:
 
 	void updatePlayerCamera()
 	{
-		float speed = 1.0f;
+		float speed = 0.01f; // 1.0f is 1 tile size
 		if ( this->IsFocused() )
 		{
-			if ( this->GetKey( olc::Key::UP ).bPressed )
+			if ( this->GetKey( olc::Key::UP ).bPressed || this->GetKey( olc::Key::UP ).bHeld )
 			{
 				this->_playerCamera.y += -speed;
 			}
 
-			if ( this->GetKey( olc::Key::DOWN ).bPressed )
+			if ( this->GetKey( olc::Key::DOWN ).bPressed || this->GetKey( olc::Key::DOWN ).bHeld )
 			{
 				this->_playerCamera.y += speed;
 			}
 
 
-			if ( this->GetKey( olc::Key::LEFT ).bPressed )
+			if ( this->GetKey( olc::Key::LEFT ).bPressed || this->GetKey( olc::Key::LEFT ).bHeld )
 			{
 				this->_playerCamera.x += -speed;
 			}
 
 
-			if ( this->GetKey( olc::Key::RIGHT ).bPressed )
+			if ( this->GetKey( olc::Key::RIGHT ).bPressed || this->GetKey( olc::Key::RIGHT ).bHeld )
 			{
 				this->_playerCamera.x += speed;
 			}
@@ -429,8 +431,8 @@ public:
 		case GameState::LOADING: this->runGameStateLoading( fElapsedTime ); break;
 		case GameState::TITLE: this->runGameStateTitle( fElapsedTime ); break;
 		case GameState::TINKER: this->runGameStateTinker( fElapsedTime ); break;
-		case GameState::TINKER_WORLD_LOADING: this->runGameStateTinkerWorldLoading( fElapsedTime ); break;
-		case GameState::TINKER_WORLD: this->runGameStateTinkerWorld( fElapsedTime ); break;
+		case GameState::TINKER_WORLD_LOADING: this->runGameStateTinkerForestWorldLoading( fElapsedTime ); break;
+		case GameState::TINKER_WORLD: this->runGameStateTinkerForestWorld( fElapsedTime ); break;
 		}
 
 		return true;

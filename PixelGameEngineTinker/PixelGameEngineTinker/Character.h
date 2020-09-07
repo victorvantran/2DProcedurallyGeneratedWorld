@@ -65,6 +65,7 @@ public:
 	bool keyReleased(KeyInput key);
 	bool keyState(KeyInput key);
 
+
 };
 
 
@@ -290,6 +291,7 @@ void Character::runJumpState( float deltaTime )
 
 
 	/// Temporary make object not fall off screen (the bottom of screen "simulates" a floor)
+	/*
 	if ( this->_currPosition.y > settings::RESOLUTION::SCREEN_DIMENSION.y - this->getHalfSize().y )
 	{
 		if ( !this->keyState( KeyInput::JumpKey ) )
@@ -303,6 +305,21 @@ void Character::runJumpState( float deltaTime )
 	{
 		this->_currPushDown = false;
 	}
+	*/
+
+	/*
+	float contactY = 0.0f;
+	if ( this->_currVelocity.y <= 0.0f && this->isCollidingDown(this->_prevPosition, this->_currPosition, this->_currVelocity, contactY, world) )
+	{
+		this->_currPosition.y = contactY + this->getHalfSize().y - this->getOffset().y;
+		this->_currVelocity.y = 0.0f;
+		this->_currPushDown = true;
+	}
+	else
+	{
+		this->_currPushDown = false;
+	}
+	*/
 
 	return;
 }
@@ -343,5 +360,7 @@ bool Character::keyState( KeyInput key )
 {
 	return this->_currInputs[( int )key];
 }
+
+
 
 

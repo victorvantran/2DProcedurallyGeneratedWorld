@@ -26,6 +26,22 @@ namespace settings
 		const static olc::vf2d SCALE;
 	};
 
+
+	struct ATLAS
+	{
+		const static olc::vi2d TILE_DIMENSION;
+	};
+
+
+
+	struct WORLD_CHUNK
+	{
+		const static olc::vi2d POSITION;
+		const static olc::vi2d DIMENSION;
+		const static int OCTAVE;
+		const static float SCALING_BIAS;
+	};
+
 };	
 
 

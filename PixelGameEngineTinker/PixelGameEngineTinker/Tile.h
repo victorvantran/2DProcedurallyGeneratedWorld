@@ -3,16 +3,20 @@
 #include "olcPixelGameEngine.h"
 
 
-enum class TILE_TYPE
+enum class TileType
 {
-	BASIC,
+	Empty = 0,
+	Block = 1,
+	OneWay = 2,
+	count
 };
 
 struct Tile
 {
 	int id = 0;
 	bool exist = true;
-	TILE_TYPE tileType = TILE_TYPE::BASIC;
+	// bool isDynamic;
+	TileType tileType;
 
 	int edgeId[4];
 	int edgeExist[4];
@@ -20,4 +24,10 @@ struct Tile
 
 	Tile();
 	~Tile();
+
+	bool isEmpty();
+	bool isBlock();
+	bool isOneWay();
+	bool isGround();
 };
+

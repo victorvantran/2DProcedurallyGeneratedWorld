@@ -1,7 +1,6 @@
 #pragma once
 
 #include "olcPixelGameEngine.h"
-#include "Tile.h"
 #include "Atlas.h"
 
 
@@ -12,7 +11,7 @@ private:
 	olc::vi2d _layerDimension;
 
 	Atlas _atlas;
-	T* _pTiles;
+	T* _pCells;
 		
 public:
 	Layer();
@@ -30,8 +29,8 @@ public:
 	olc::rcode loadFromFile( std::string filename );
 	olc::rcode saveToFile( std::string filename );
 
-	T* getTile( int x, int y );
-	T* getTile( olc::vi2d position );
+	T* getCell( int x, int y );
+	T* getCell( olc::vi2d position );
 
 	olc::vi2d getLayerDimension();
 
@@ -58,7 +57,7 @@ Layer<T>::~Layer()
 template<typename T>
 Layer<T>::Layer( olc::vi2d layerDimension )
 {
-/// Constructs a layer of given dimension filled with non-existent tiles
+	/// Constructs a layer of given dimension filled with non-existent cells
 	this->create( layerDimension );
 }
 
@@ -67,7 +66,7 @@ Layer<T>::Layer( olc::vi2d layerDimension )
 template<typename T>
 Layer<T>::Layer( int layerX, int layerY )
 {
-/// Constructs a layer of given dimension filled with non-existent tiles
+	/// Constructs a layer of given dimension filled with non-existent cells
 	this->create( layerX, layerY );
 }
 
@@ -75,15 +74,15 @@ Layer<T>::Layer( int layerX, int layerY )
 template<typename T>
 void Layer<T>::create( olc::vi2d layerDimension )
 {
-/// Establishes essentially a blank layer canvas given the layer dimension of tiles [col, row] and tile resolution
-/// Example: (64 cells by 64 cells for the layer matrix dimension, 64 pixel by 64 pixel for the tile resolution)
+	/// Establishes essentially a blank layer canvas given the layer dimension of cells [col, row] and cell resolution
+	/// Example: (64 cells by 64 cells for the layer matrix dimension, 64 pixel by 64 pixel for the cell resolution)
 	this->_layerDimension = layerDimension;
 
-	this->_pTiles = new T[this->_layerDimension.x * this->_layerDimension.y];
+	this->_pCells = new T[this->_layerDimension.x * this->_layerDimension.y];
 	for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
 	{
-		this->_pTiles[i].id = 0;
-		this->_pTiles[i].exist = false;
+		this->_pCells[i].id = 0;
+		this->_pCells[i].exist = false;
 	}
 
 	return;
@@ -93,15 +92,15 @@ void Layer<T>::create( olc::vi2d layerDimension )
 template<typename T>
 void Layer<T>::create( int layerX, int layerY )
 {
-/// Establishes essentially a blank layer canvas given the layer dimension of tiles [col, row] and tile resolution
-/// Example: (64 cells by 64 cells for the layer matrix dimension, 64 pixel by 64 pixel for the tile resolution)
+	/// Establishes essentially a blank layer canvas given the layer dimension of cells [col, row] and cell resolution
+	/// Example: (64 cells by 64 cells for the layer matrix dimension, 64 pixel by 64 pixel for the cell resolution)
 	this->_layerDimension = olc::vi2d{ layerX, layerY };
 
-	this->_pTiles = new T[this->_layerDimension.x * this->_layerDimension.y];
+	this->_pCells = new T[this->_layerDimension.x * this->_layerDimension.y];
 	for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
 	{
-		this->_pTiles[i].id = 0;
-		this->_pTiles[i].exist = false;
+		this->_pCells[i].id = 0;
+		this->_pCells[i].exist = false;
 	}
 
 	return;
@@ -111,16 +110,16 @@ void Layer<T>::create( int layerX, int layerY )
 template<typename T>
 void Layer<T>::generateRandomness( Atlas* atlas )
 {
-/// Generate pure random array of tiles given an atlas to choose from
+	/// Generate pure random array of tiles given an atlas to choose from
 	olc::vi2d atlasDimension = atlas->getAtlasDimension();
 	int numTiles = atlasDimension.x * atlasDimension.y;
 
-	this->_pTiles = new T[this->_layerDimension.x * this->_layerDimension.y];
+	this->_pCells = new T[this->_layerDimension.x * this->_layerDimension.y];
 	for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
 	{
 		/// In this case, rand() [short int] is from 0 to 32,767, so ideally the atlas should not have over 32,768 unique tiles
-		this->_pTiles[i].id = rand() % numTiles;
-		this->_pTiles[i].exist = true;
+		this->_pCells[i].id = rand() % numTiles;
+		this->_pCells[i].exist = true;
 	}
 
 	return;
@@ -130,15 +129,15 @@ void Layer<T>::generateRandomness( Atlas* atlas )
 template<typename T>
 void Layer<T>::copyMapping( std::vector<std::tuple<int, bool>> mapping )
 {
-/// Given a vector of tuple(int, bool), copy it into the mapping
-///		1) id
-///		2) existence
+	/// Given a vector of tuple(int, bool), copy it into the mapping
+	///		1) id
+	///		2) existence
 	if ( mapping.size() == this->_layerDimension.x * this->_layerDimension.y )
 	{
 		for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
 		{
-			this->_pTiles[i].id = std::get<0>( mapping[i] );
-			this->_pTiles[i].exist = std::get<1>( mapping[i] );
+			this->_pCells[i].id = std::get<0>( mapping[i] );
+			this->_pCells[i].exist = std::get<1>( mapping[i] );
 		}
 	}
 
@@ -150,7 +149,7 @@ void Layer<T>::copyMapping( std::vector<std::tuple<int, bool>> mapping )
 template<typename T>
 olc::rcode Layer<T>::loadFromFile( std::string filename )
 {
-///
+	///
 	return olc::FAIL;
 }
 
@@ -158,15 +157,15 @@ olc::rcode Layer<T>::loadFromFile( std::string filename )
 template<typename T>
 olc::rcode Layer<T>::saveToFile( std::string filename )
 {
-///
+	///
 	return olc::FAIL;
 }
 
 
 template<typename T>
-T* Layer<T>::getTile( int x, int y )
+T* Layer<T>::getCell( int x, int y )
 {
-/// Returns a pointer to a tile given a indices [col, row] on the layer's matrix map of tiles
+	/// Returns a pointer to a cell given a indices [col, row] on the layer's matrix map of cells
 	if ( x < 0 || x >= this->_layerDimension.x || y < 0 || y >= this->_layerDimension.y )
 	{
 		return nullptr;
@@ -174,15 +173,15 @@ T* Layer<T>::getTile( int x, int y )
 	else
 	{
 	/// Transposing a "2d matrix" to an array (finding the correct row (y), then column (x))
-		return &this->_pTiles[y*this->_layerDimension.x + x];
+		return &this->_pCells[y*this->_layerDimension.x + x];
 	}
 }
 
 
 template<typename T>
-T* Layer<T>::getTile( olc::vi2d indicies )
+T* Layer<T>::getCell( olc::vi2d indicies )
 {
-/// Returns a pointer to a tile given a indicies [col, row] on the layer's matrix map of tiles
+	/// Returns a pointer to a cell given a indicies [col, row] on the layer's matrix map of cells
 	if ( indicies.x < 0 || indicies.x >= this->_layerDimension.x || indicies.y < 0 || indicies.y >= this->_layerDimension.y )
 	{
 		return nullptr;
@@ -190,15 +189,16 @@ T* Layer<T>::getTile( olc::vi2d indicies )
 	else
 	{
 	/// Transposing a "2d matrix" to an array (finding the correct row (y), then column (x))
-		return &this->_pTiles[indicies.y * this->_layerDimension.x + indicies.x];
+		return &this->_pCells[indicies.y * this->_layerDimension.x + indicies.x];
 	}
 }
+
 
 
 template<typename T>
 olc::vi2d Layer<T>::getLayerDimension()
 {
-/// Returns the dimension of the layer matrix
+	/// Returns the dimension of the layer matrix
 	return this->_layerDimension;
 }
 

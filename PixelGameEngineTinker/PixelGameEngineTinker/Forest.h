@@ -1,6 +1,7 @@
 #pragma once
 #include "olcPixelGameEngine.h"
 #include "WorldChunk.h"
+#include "settings.h"
 
 class Forest : public WorldChunk
 {
@@ -11,9 +12,9 @@ public:
 	Forest();
 	~Forest();
 
-	Forest( olc::vi2d chunkDimension, Atlas& atlas, int octaves = 8, float scalingBias = 0.2f );
+	Forest( olc::vi2d chunkPosition, olc::vi2d chunkDimension, Atlas& atlas, int octaves = settings::WORLD_CHUNK::OCTAVE, float scalingBias = 0.2f );
 
-	void create( olc::vi2d chunkDimension, Atlas& atlas, int octaves, float scalingBias );
+	void create( olc::vi2d chunkPosition, olc::vi2d chunkDimension, Atlas& atlas, int octaves, float scalingBias );
 	void generateLayer();
 
 };
@@ -22,7 +23,9 @@ public:
 
 Forest::Forest()
 {
+	this->_chunkPosition = olc::vf2d{ 0, 0 };
 	this->_chunkDimension = olc::vi2d{ 0, 0 };
+	this->_tileDimension = settings::ATLAS::TILE_DIMENSION;
 	this->_chunkSeed = nullptr;
 	this->_perlinNoise2D = nullptr;
 }
@@ -34,19 +37,21 @@ Forest::~Forest()
 }
 
 
-Forest::Forest( olc::vi2d chunkDimension, Atlas& atlas, int octaves, float scalingBias )
+Forest::Forest( olc::vi2d chunkPosition, olc::vi2d chunkDimension, Atlas& atlas, int octaves, float scalingBias )
 {
-	this->create( chunkDimension, atlas, octaves, scalingBias );
+	this->create( chunkPosition, chunkDimension, atlas, octaves, scalingBias );
 }
 
 
 
-void Forest::create( olc::vi2d chunkDimension, Atlas& atlas, int octaves, float scalingBias )
+void Forest::create( olc::vi2d chunkPosition, olc::vi2d chunkDimension, Atlas& atlas, int octaves, float scalingBias )
 {
 	this->_octaves = octaves;
 	this->_scalingBias = scalingBias;
+	this->_chunkPosition = chunkPosition;
 	this->_chunkDimension = chunkDimension;
 	this->_chunkAtlas = atlas;
+	this->_tileDimension = atlas.getTileDimension();
 
 	this->generateRandomSeed();
 	this->generatePerlinNoise2D();
