@@ -8,7 +8,7 @@ const olc::vi2d settings::RESOLUTION::PIXEL_SCALE = olc::vi2d{ 2, 2 };
 
 
 /// Default dynamic object settings
-const float settings::DYNAMIC_OBJECT::ONE_WAY_PLATFORM_THRESHOLD = 0.25f; // percentage of how much a character must go through a tile before can pass through it
+const float settings::DYNAMIC_OBJECT::ONE_WAY_PLATFORM_THRESHOLD = 0.125f; // percentage of how much a character must go through a tile before can pass through it
 
 
 /// Default character settings
@@ -17,7 +17,7 @@ const float settings::CHARACTER::JUMP_SPEED = 25.0f;
 const float settings::CHARACTER::GRAVITY = 98.0f;// 980.0f;
 const float settings::CHARACTER::TERMINAL_FALLING_SPEED = 2000.0f;
 const float settings::CHARACTER::MIN_JUMP_SPEED = 5.0f;
-const float settings::CHARACTER::ONE_WAY_PLATFORM_THRESHOLD = 0.25f; // percentage of how much a character must go through a tile before can pass through it
+const float settings::CHARACTER::ONE_WAY_PLATFORM_THRESHOLD = 0.125f; // percentage of how much a character must go through a tile before can pass through it
 
 
 const olc::vf2d settings::CHARACTER::AABB_HALF_SIZE = olc::vf2d{ 1.0f, 2.0f };

@@ -57,7 +57,9 @@ namespace aabb
 
 
 		/// Object detection methods (tile-based using boundary senors)
-		bool isCollidingDown( olc::vf2d prevPosition, olc::vf2d currPosition, olc::vf2d speed, World& world, float& contactY, bool& onOneWayPlatform );
+		bool isCollidingDown( olc::vf2d prevPosition, olc::vf2d currPosition, olc::vf2d speed, World& world, float& contactDown, bool& onOneWayPlatform );
+		bool isCollidingUp( olc::vf2d prevPosition, olc::vf2d currPosition, olc::vf2d speed, World& world, float& contactUp );
+
 	};
 }
 
@@ -108,10 +110,10 @@ void aabb::DynamicObject::updatePhysics( float deltaTime, World& world )
 	
 	
 	/// Pushing down detection
-	float contactY = 0.0f;
-	if ( this->_currVelocity.y >= 0.0f && this->isCollidingDown( this->_prevCenterPosition, this->_currCenterPosition, this->_currVelocity, world, contactY, _onOneWayPlatform ) )
+	float contactDown = 0.0f;
+	if ( this->_currVelocity.y >= 0.0f && this->isCollidingDown( this->_prevCenterPosition, this->_currCenterPosition, this->_currVelocity, world, contactDown, _onOneWayPlatform ) )
 	{
-		this->_currCenterPosition.y = contactY - this->getHalfSize().y + this->getOffset().y;
+		this->_currCenterPosition.y = contactDown - this->getHalfSize().y + this->getOffset().y;
 		this->_currVelocity.y = 0.0f;
 		this->_currPushDown = true;
 	}
@@ -119,6 +121,21 @@ void aabb::DynamicObject::updatePhysics( float deltaTime, World& world )
 	{
 		this->_currPushDown = false;
 	}
+
+
+	/// Pushing up detection
+	float contactUp = 0.0f;
+	if ( this->_currVelocity.y <= 0.0f && this->isCollidingUp( this->_prevCenterPosition, this->_currCenterPosition, this->_currVelocity, world, contactUp ) )
+	{
+		this->_currCenterPosition.y = contactUp + this->getHalfSize().y + this->getOffset().y;
+		this->_currVelocity.y = 0.0f;
+		this->_currPushUp = true;
+	}
+	else
+	{
+		this->_currPushUp = false;
+	}
+
 	
 
 	this->_currCenterPosition = this->_currCenterPosition + this->_currVelocity * deltaTime;
@@ -164,7 +181,7 @@ olc::vf2d aabb::DynamicObject::getScale()
 
 // [!] need an efficient way for region of checking (perhaps quadtree?)
 /*
-bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d currPosition, olc::vf2d speed, World& world, float& contactY )
+bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d currPosition, olc::vf2d speed, World& world, float& contactDown )
 {
 	// If collided downwards (like hitting a ground), calculate the beginning point and end point of the bottom sensor line. Note that it is the index of the cell one pixel below and one pixel short on each side
 	// Updates the groundLevel where the contact occured
@@ -191,7 +208,7 @@ bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d cur
 		}
 
 		// Calculate the potential bottom contact point
-		contactY = ( float )checkTileIndex.y;
+		contactDown = ( float )checkTileIndex.y;
 		checkTile = world.getTileFromIndex( checkTileIndex );
 
 		if ( checkTile != nullptr && checkTile->isBlock() )
@@ -205,13 +222,13 @@ bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d cur
 */
 
 
-bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d currPosition, olc::vf2d speed, World& world, float& contactY, bool& onOneWayPlatform )
+bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d currPosition, olc::vf2d speed, World& world, float& contactDown, bool& onOneWayPlatform )
 {
 	// If collided downwards (like hitting a ground), calculate the beginning point and end point of the bottom sensor line.
 	// Note that it is the index of the cell one pixel below and one pixel short on each side
 	// Iterpolate through the tiles possibly touched between the prev and current, to ensure character does not fall too fast through a block
-	// This is more computationally expensive, so perhaps use a simpler ground detection for slow moving objects
-	// Updates the groundLevel where the contact occured
+	// This is more computationally expensive, so perhaps use a simpler ground detection (the commented function above) for slow moving objects
+	// Updates the y-level where the contact occured
 
 	onOneWayPlatform = false;
 
@@ -224,14 +241,14 @@ bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d cur
 	olc::vf2d currBottomRight = currCenter + this->getHalfSize() - olc::vf2d{ 1.0f / world.getTileDimension().x, -1.0f / world.getTileDimension().y };
 
 
-	olc::vi2d prevBottomLeftIndex = olc::vi2d{ ( int )prevBottomLeft.x, ( int )prevBottomLeft.y };
-	olc::vi2d currBottomLeftIndex = olc::vi2d{ ( int )currBottomLeft.x, ( int )currBottomLeft.y };
-	olc::vi2d currBottomRightIndex = olc::vi2d{ ( int )currBottomRight.x, ( int )currBottomRight.y };
+	olc::vi2d prevBottomLeftIndex = olc::vi2d{ prevBottomLeft };
+	olc::vi2d currBottomLeftIndex = olc::vi2d{ currBottomLeft };
+	olc::vi2d currBottomRightIndex = olc::vi2d{ currBottomRight };
 
 
 	int endY = currBottomLeftIndex.y;
 	int begY = std::min<int>( prevBottomLeftIndex.y, endY);
-	int dist = std::max<int>( endY - begY, 1);
+	int dist = std::max<int>( std::abs(endY - begY), 1);
 
 	int tileIndexX;
 
@@ -250,7 +267,7 @@ bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d cur
 		olc::vi2d checkBottomLeftIndex = olc::vi2d{ checkBottomLeft };
 		olc::vi2d checkBottomRightIndex = olc::vi2d{ checkBottomRight };
 
-		for ( checkTileIndex = checkBottomLeftIndex; ; checkTileIndex.x += 1.0f )
+		for ( checkTileIndex = checkBottomLeftIndex; ; checkTileIndex.x += 1 )
 		{
 			worldChunk = world.getWorldChunkFromIndex( checkTileIndex );
 			if ( worldChunk == nullptr )
@@ -259,7 +276,7 @@ bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d cur
 			}
 
 			// Calculate the potential bottom contact point
-			contactY = ( float )checkTileIndex.y; // contactIndex ( the real contactY = checkBottomLeft.y )
+			contactDown = ( float )checkTileIndex.y; // contactIndex ( the real contactDown = checkBottomLeft.y )
 			checkTile = world.getTileFromIndex( checkTileIndex );
 
 			if ( checkTile != nullptr && checkTile->exists() )
@@ -280,14 +297,91 @@ bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d cur
 				}
 			}
 
-
+			// If you finish checking all the potential down tiles
 			if ( checkTileIndex.x >= checkBottomRightIndex.x )
 			{
+				// If it all happens to be a oneWayPlayform (no block detected), then stand
 				if ( onOneWayPlatform )
 				{
 					return true;
 				}
+				// Else it has not detected a block (otherwise it would have returned true before, so just break out of the loop now
 				break;
+			}
+
+		}
+	}
+
+	return false;
+}
+
+
+
+
+
+
+bool aabb::DynamicObject::isCollidingUp( olc::vf2d prevPosition, olc::vf2d currPosition, olc::vf2d speed, World& world, float& contactUp )
+{
+	// If collided up (like hitting a ground), calculate the beginning point and end point of the bottom sensor line.
+	// Note that it is the index of the cell one pixel below and one pixel short on each side
+	// Iterpolate through the tiles possibly touched between the prev and current, to ensure character does not push too fast through a block
+	// Updates the y-level where the contact occured
+	contactUp = 0.0f;
+
+	// Get the bottom censors
+	olc::vf2d prevCenter = prevPosition + this->_aabbOffset;
+	olc::vf2d currCenter = currPosition + this->_aabbOffset;
+
+
+	olc::vf2d prevTopRight = prevCenter - olc::vf2d{ -this->getHalfSize().x, this->getHalfSize().y } - olc::vf2d{ 1.0f / world.getTileDimension().x, 1.0f / world.getTileDimension().y };
+	olc::vf2d currTopRight = currCenter - olc::vf2d{ -this->getHalfSize().x, this->getHalfSize().y } - olc::vf2d{ 1.0f / world.getTileDimension().x, 1.0f / world.getTileDimension().y };
+	olc::vf2d currTopLeft = currCenter - olc::vf2d{ this->getHalfSize().x, this->getHalfSize().y } - olc::vf2d{ -1.0f / world.getTileDimension().x, 1.0f / world.getTileDimension().y };
+
+
+	olc::vi2d prevTopRightIndex = olc::vi2d{ prevTopRight };
+	olc::vi2d currTopRightIndex = olc::vi2d{ currTopRight };
+	olc::vi2d currTopLeftIndex = olc::vi2d{ currTopLeft };
+
+
+	int endY = currTopRight.y;
+	int begY = std::min<int>( prevTopRightIndex.y, endY );
+	int dist = std::max<int>( std::abs(endY - begY), 1 );
+
+	int tileIndexX;
+
+
+	Tile* checkTile;
+	olc::vi2d checkTileIndex;
+	WorldChunk* worldChunk;
+
+	for ( int tileIndexY = begY; tileIndexY <= endY; ++tileIndexY )
+	{
+		// Interpolate
+		float t = std::abs( endY - tileIndexY ) / dist;
+		olc::vf2d checkTopRight = ( currTopRight * t + prevTopRight * ( 1 - t ) );
+		olc::vf2d checkTopLeft = olc::vf2d{ checkTopRight.x - this->getHalfSize().x * 2.0f + ( 2.0f / world.getTileDimension().x ), checkTopRight.y };
+
+		olc::vi2d checkTopRightIndex = olc::vi2d{ checkTopRight };
+		olc::vi2d checkTopLeftIndex = olc::vi2d{ checkTopLeft };
+
+		for ( checkTileIndex = checkTopLeftIndex; checkTileIndex.x <= checkTopRightIndex.x; checkTileIndex.x += 1 )
+		{
+			worldChunk = world.getWorldChunkFromIndex( checkTileIndex );
+			if ( worldChunk == nullptr )
+			{
+				return true; // [!] Raise exception for trying to touch an index on a tile that does not exist because the worldchunk does not exist
+			}
+
+			// Calculate the potential top contact point
+			contactUp = ( float )checkTileIndex.y + 1.0f; // contactIndex ( the real contactUp = checkTopRight.y ) Add 1.0f because it's the cell size
+			checkTile = world.getTileFromIndex( checkTileIndex );
+
+			if ( checkTile != nullptr && checkTile->exists() )
+			{
+				if ( checkTile->isBlock() )
+				{
+					return true;
+				}
 			}
 
 		}

@@ -195,7 +195,7 @@ public:
 		this->_playerMouse = olc::vf2d{ 0.0f, 0.0f };
 		this->_playerCamera = olc::vf2d{ 0.0f, 0.0f };
 
-		this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 14.0f, 8.0f } );
+		this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 70.0f, 16.0f } );
 	}
 
 
@@ -395,31 +395,6 @@ public:
 	void updatePlayerCamera( float fElapsedTime )
 	{
 		float speed = 1.0f; // 1.0f is 1 tile size
-		/*if ( this->IsFocused() )
-		{
-			if ( this->GetKey( olc::Key::UP ).bPressed || this->GetKey( olc::Key::UP ).bHeld )
-			{
-				this->_playerCamera.y += -speed*fElapsedTime;
-			}
-
-			if ( this->GetKey( olc::Key::DOWN ).bPressed || this->GetKey( olc::Key::DOWN ).bHeld )
-			{
-				this->_playerCamera.y += speed * fElapsedTime;
-			}
-
-
-			if ( this->GetKey( olc::Key::LEFT ).bPressed || this->GetKey( olc::Key::LEFT ).bHeld )
-			{
-				this->_playerCamera.x += -speed * fElapsedTime;
-			}
-
-
-			if ( this->GetKey( olc::Key::RIGHT ).bPressed || this->GetKey( olc::Key::RIGHT ).bHeld )
-			{
-				this->_playerCamera.x += speed * fElapsedTime;
-			}
-		}*/
-
 		if ( this->IsFocused() )
 		{
 			if ( this->GetKey( olc::Key::W ).bPressed || this->GetKey( olc::Key::W ).bHeld )
