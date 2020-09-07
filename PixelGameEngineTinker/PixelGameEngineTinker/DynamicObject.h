@@ -163,7 +163,6 @@ bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d cur
 
 		if ( checkTile != nullptr && checkTile->isBlock() )
 		{
-			//std::cout << checkTileIndex << std::endl;
 			return true;
 		}
 	}

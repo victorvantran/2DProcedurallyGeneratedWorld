@@ -118,7 +118,6 @@ void Character::destructCharacter()
 
 void Character::updateCharacter( float deltaTime, World& world )
 {
-	std::cout << (int)this->_currState << std::endl;
 	switch ( this->_currState )
 	{
 	case CharacterState::Stand:
@@ -161,7 +160,6 @@ void Character::runStandState()
 	// If there is no floor to push down on, then transition to jump state
 	if ( !this->_currPushDown )
 	{
-		std::cout << "Transition to jump state" << std::endl;
 		this->_currState = CharacterState::Jump;
 		return;
 	}
