@@ -247,7 +247,7 @@ public:
 	{
 	///
 
-		updatePlayer();
+		updatePlayer( fElapsedTime );
 
 		Clear( olc::DARK_BLUE );
 
@@ -263,8 +263,12 @@ public:
 
 	void runGameStateTinkerForestWorldLoading( float fElapsedTime )
 	{
-	/// Generate forest
+	/// Generate forests
 		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ settings::WORLD_CHUNK::DIMENSION.x, 0 }, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ 0, settings::WORLD_CHUNK::DIMENSION.y }, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + settings::WORLD_CHUNK::DIMENSION, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
+
 		this->_gameState = GameState::TINKER_WORLD;
 		return;
 	}
@@ -273,13 +277,12 @@ public:
 	void runGameStateTinkerForestWorld( float fElapsedTime )
 	{
 	/// Render forest world
-		updatePlayer();
+		updatePlayer( fElapsedTime );
 
 
 		Clear( olc::DARK_CYAN );
 
 		//this->_pScreen->drawWorldChunk( *this->_world->getWorldChunks()[0], this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
-		//this->_pScreen->drawWorld( *this->_world, this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
 		this->_pScreen->drawWorld( *this->_world, this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
 
 
@@ -307,7 +310,7 @@ public:
 	void runGameStateTinkerWorld( float fElapsedTime )
 	{
 	///
-		this->updatePlayer();
+		this->updatePlayer( fElapsedTime );
 		this->_playerCharacter.updateCharacter( fElapsedTime );
 
 
@@ -320,12 +323,12 @@ public:
 	}
 
 public:
-	void updatePlayer()
+	void updatePlayer( float deltaTime )
 	{
 		this->updatePlayerMouse();
 		this->resetPlayerInputs();
 		this->updatePlayerInputs();
-		this->updatePlayerCamera();
+		this->updatePlayerCamera( deltaTime );
 
 		return;
 	}
@@ -378,31 +381,31 @@ public:
 	}
 
 
-	void updatePlayerCamera()
+	void updatePlayerCamera( float fElapsedTime )
 	{
-		float speed = 0.01f; // 1.0f is 1 tile size
+		float speed = 10.0f; // 1.0f is 1 tile size
 		if ( this->IsFocused() )
 		{
 			if ( this->GetKey( olc::Key::UP ).bPressed || this->GetKey( olc::Key::UP ).bHeld )
 			{
-				this->_playerCamera.y += -speed;
+				this->_playerCamera.y += -speed*fElapsedTime;
 			}
 
 			if ( this->GetKey( olc::Key::DOWN ).bPressed || this->GetKey( olc::Key::DOWN ).bHeld )
 			{
-				this->_playerCamera.y += speed;
+				this->_playerCamera.y += speed * fElapsedTime;
 			}
 
 
 			if ( this->GetKey( olc::Key::LEFT ).bPressed || this->GetKey( olc::Key::LEFT ).bHeld )
 			{
-				this->_playerCamera.x += -speed;
+				this->_playerCamera.x += -speed * fElapsedTime;
 			}
 
 
 			if ( this->GetKey( olc::Key::RIGHT ).bPressed || this->GetKey( olc::Key::RIGHT ).bHeld )
 			{
-				this->_playerCamera.x += speed;
+				this->_playerCamera.x += speed * fElapsedTime;
 			}
 		}
 	}
