@@ -118,6 +118,7 @@ void Character::destructCharacter()
 
 void Character::updateCharacter( float deltaTime, World& world )
 {
+	std::cout << (int)this->_currState << std::endl;
 	switch ( this->_currState )
 	{
 	case CharacterState::Stand:
@@ -160,6 +161,7 @@ void Character::runStandState()
 	// If there is no floor to push down on, then transition to jump state
 	if ( !this->_currPushDown )
 	{
+		std::cout << "Transition to jump state" << std::endl;
 		this->_currState = CharacterState::Jump;
 		return;
 	}
@@ -282,8 +284,29 @@ void Character::runJumpState( float deltaTime )
 		// [!] Flip sprite horitzontally
 	}
 
+	// If we hit the ground
+	if ( this->_currPushDown )
+	{
+		// If no movement, then transition to stand
+		if ( this->keyState( KeyInput::LeftKey ) == this->keyState( KeyInput::RightKey ) )
+		{
+			this->_currVelocity.x = 0.0f;
+			this->_currVelocity.y = 0.0f;
+			this->_currState = CharacterState::Stand;
+			// [!] Play sound
+		}
+		else
+		{
+			this->_currVelocity.y = 0.0f;
+			this->_currState = CharacterState::Walk;
+			// [!] Play sound
+		}
+	}
+
+
 	
 	// Make the jump higher the longer the button is pressed
+	
 	/*
 	if ( !this->keyState( KeyInput::JumpKey ) && this->_currVelocity.y > 0.0f )
 	{

@@ -9,7 +9,7 @@ const olc::vi2d settings::RESOLUTION::PIXEL_SCALE = olc::vi2d{ 2, 2 };
 
 /// Default character settings
 const float settings::CHARACTER::WALK_SPEED = 10.0f;
-const float settings::CHARACTER::JUMP_SPEED = 250.0f;
+const float settings::CHARACTER::JUMP_SPEED = 25.0f;
 const float settings::CHARACTER::GRAVITY = 98.0f;// 980.0f;
 const float settings::CHARACTER::TERMINAL_FALLING_SPEED = 2000.0f;
 const float settings::CHARACTER::MIN_JUMP_SPEED = 5.0f;

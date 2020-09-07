@@ -73,8 +73,10 @@ void aabb::DynamicObject::updatePhysics( float deltaTime, World& world )
 	this->_prevPushLeft = this->_currPushLeft;
 	this->_prevPushRight = this->_currPushRight;
 	
+	
+	/// Pushing down detection
 	float contactY = 0.0f;
-	if ( this->_currVelocity.y > 0.0f && this->isCollidingDown( this->_prevCenterPosition, this->_currCenterPosition, this->_currVelocity, world, contactY ) )
+	if ( this->_currVelocity.y >= 0.0f && this->isCollidingDown( this->_prevCenterPosition, this->_currCenterPosition, this->_currVelocity, world, contactY ) )
 	{
 		this->_currCenterPosition.y = contactY - this->getHalfSize().y + this->getOffset().y;
 		this->_currVelocity.y = 0.0f;

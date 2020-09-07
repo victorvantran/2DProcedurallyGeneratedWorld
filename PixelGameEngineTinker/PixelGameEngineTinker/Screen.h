@@ -11,7 +11,8 @@
 class Screen : public olc::PGEX
 {
 private:
-
+	olc::vi2d _screenDimension;
+	olc::vi2d _tileDimension;
 public:
 	Screen();
 	~Screen();
@@ -23,13 +24,11 @@ public:
 	static void drawLayer( Layer<T>* layer, Atlas* atlas, olc::vf2d cameraPosition, olc::vi2d tileMatrixDimension, float scale = 1.0f);
 
 
-	static void drawCharacter( Character& character )
+	static void drawCharacter( Character& character, float scale = 1.0f )
 	{
 		/// Renders the character
 		/// Temporary use original tile size; need to add member variables for screen: TileDimension...
-		//pge->DrawRect( (character.getCurrPosition() - character.getHalfSize() * settings::ATLAS::TILE_DIMENSION ), character.getHalfSize() * 2.0f * settings::ATLAS::TILE_DIMENSION, olc::WHITE);
-		pge->DrawRect( ( character.getCurrPosition() - character.getHalfSize() ) * settings::ATLAS::TILE_DIMENSION, character.getHalfSize() * 2.0f * settings::ATLAS::TILE_DIMENSION, olc::WHITE );
-
+		pge->DrawRect( ( character.getCurrPosition() - character.getHalfSize() ) * settings::ATLAS::TILE_DIMENSION, character.getHalfSize() * 2.0f * settings::ATLAS::TILE_DIMENSION * scale, olc::WHITE );
 
 		return;
 	}
