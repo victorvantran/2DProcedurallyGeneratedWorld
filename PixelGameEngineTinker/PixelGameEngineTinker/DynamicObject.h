@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include "olcPixelGameEngine.h"
 #include "AABB.h"
 #include "WorldChunk.h"
@@ -9,6 +10,8 @@ namespace aabb
 {
 	class DynamicObject
 	{
+	private:
+
 	protected:
 		olc::vf2d _prevCenterPosition;
 		olc::vf2d _currCenterPosition;
@@ -45,6 +48,8 @@ namespace aabb
 
 		void constructDynamicObject();
 		void destructDynamicObject();
+
+		void roundVf2d( olc::vf2d& vector );
 
 		void updatePhysics( float deltaTime, World& world );
 
@@ -96,6 +101,14 @@ void aabb::DynamicObject::constructDynamicObject()
 
 void aabb::DynamicObject::destructDynamicObject()
 {
+	return;
+}
+
+
+void aabb::DynamicObject::roundVf2d( olc::vf2d& vector )
+{
+	// Round float for corners
+	vector = olc::vf2d{ std::roundf(vector.x), std::roundf(vector.y) };
 	return;
 }
 
@@ -272,22 +285,26 @@ bool aabb::DynamicObject::isCollidingUp( olc::vf2d prevPosition, olc::vf2d currP
 	// Note that it is the index of the cell one pixel below and one pixel short on each side
 	// Iterpolate through the tiles possibly touched between the prev and current, to ensure character does not push too fast through a block
 	// Updates the y-level where the contact occured
+
 	contactUp = 0.0f;
 
-	// Get the bottom censors
 	olc::vf2d prevCenter = prevPosition + this->_aabbOffset;
 	olc::vf2d currCenter = currPosition + this->_aabbOffset;
 
-
+	// Get the up sensors
 	olc::vf2d prevTopRight = prevCenter - olc::vf2d{ -this->getHalfSize().x, this->getHalfSize().y } -olc::vf2d{ 1.0f / world.getTileDimension().x, 1.0f / world.getTileDimension().y };
 	olc::vf2d currTopRight = currCenter - olc::vf2d{ -this->getHalfSize().x, this->getHalfSize().y } -olc::vf2d{ 1.0f / world.getTileDimension().x, 1.0f / world.getTileDimension().y };
 	olc::vf2d currTopLeft = currCenter - olc::vf2d{ this->getHalfSize().x, this->getHalfSize().y } -olc::vf2d{ -1.0f / world.getTileDimension().x, 1.0f / world.getTileDimension().y };
 
+	// Round floats to avoid floating point errors from weird positions/scales
+	//this->roundVf2d( prevTopRight );
+	//this->roundVf2d( currTopRight );
+	//this->roundVf2d( currTopLeft );
 
+	// From position, get the index
 	olc::vi2d prevTopRightIndex = olc::vi2d{ prevTopRight };
 	olc::vi2d currTopRightIndex = olc::vi2d{ currTopRight };
 	olc::vi2d currTopLeftIndex = olc::vi2d{ currTopLeft };
-
 
 	int endY = currTopRightIndex.y;
 	int begY = std::min<int>( prevTopRightIndex.y, endY );
@@ -347,18 +364,24 @@ bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d cur
 	// to decide which algorithm to use
 	// Updates the y-level where the contact occured
 
-	onOneWayPlatform = false;
 	contactDown = 0.0f;
+	onOneWayPlatform = false;
 
-	// Get the bottom censors
 	olc::vf2d prevCenter = prevPosition + this->_aabbOffset;
 	olc::vf2d currCenter = currPosition + this->_aabbOffset;
 
+	// Get the bottom sensors
 	olc::vf2d prevBottomLeft = prevCenter + this->getHalfSize() - olc::vf2d{ this->getHalfSize().x * 2.0f, 0.0f } +olc::vf2d{ 1.0f / world.getTileDimension().x, 1.0f / world.getTileDimension().y };
 	olc::vf2d currBottomLeft = currCenter + this->getHalfSize() - olc::vf2d{ this->getHalfSize().x * 2.0f, 0.0f } +olc::vf2d{ 1.0f / world.getTileDimension().x, 1.0f / world.getTileDimension().y };
 	olc::vf2d currBottomRight = currCenter + this->getHalfSize() - olc::vf2d{ 1.0f / world.getTileDimension().x, -1.0f / world.getTileDimension().y };
 
+	// Round floats to avoid floating point errors from weird positions/scales
+	//this->roundVf2d( prevBottomLeft );
+	//this->roundVf2d( currBottomLeft );
+	//this->roundVf2d( currBottomRight );
 
+
+	// From position, get the index
 	olc::vi2d prevBottomLeftIndex = olc::vi2d{ prevBottomLeft };
 	olc::vi2d currBottomLeftIndex = olc::vi2d{ currBottomLeft };
 	olc::vi2d currBottomRightIndex = olc::vi2d{ currBottomRight };
@@ -435,8 +458,6 @@ bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d cur
 
 
 
-
-
 bool aabb::DynamicObject::isCollidingLeft( olc::vf2d prevPosition, olc::vf2d currPosition, World& world, float& contactLeft )
 {
 	// If collided left (like hitting a wall), calculate the beginning point and end point of the bottom sensor line.
@@ -445,21 +466,20 @@ bool aabb::DynamicObject::isCollidingLeft( olc::vf2d prevPosition, olc::vf2d cur
 	// Updates the y-level where the contact occured
 	contactLeft = 0.0f;
 
-	// Get the bottom censors
 	olc::vf2d prevCenter = prevPosition + this->_aabbOffset;
 	olc::vf2d currCenter = currPosition + this->_aabbOffset;
 
-	/*
-	olc::vf2d prevBottomLeft = prevCenter - olc::vf2d{ this->getHalfSize().x, -this->getHalfSize().y } - olc::vf2d{ 1.0f / world.getTileDimension().x, 0.0f };
-	olc::vf2d currBottomLeft = currCenter - olc::vf2d{ this->getHalfSize().x, -this->getHalfSize().y } - olc::vf2d{ 1.0f / world.getTileDimension().x, 0.0f };
-	olc::vf2d currTopLeft = currCenter - this->getHalfSize() - olc::vf2d{ 1.0f / world.getTileDimension().x, 0.0f };
-	*/
+	// Get the left sensors
 	olc::vf2d prevBottomLeft = prevCenter - olc::vf2d{ this->getHalfSize().x, -this->getHalfSize().y } - olc::vf2d{ 1.0f / world.getTileDimension().x, 1.0f / world.getTileDimension().y };
 	olc::vf2d currBottomLeft = currCenter - olc::vf2d{ this->getHalfSize().x, -this->getHalfSize().y } - olc::vf2d{ 1.0f / world.getTileDimension().x, 1.0f / world.getTileDimension().y };
 	olc::vf2d currTopLeft = currCenter - this->getHalfSize() - olc::vf2d{ 1.0f / world.getTileDimension().x, - 1.0f / world.getTileDimension().y };
 
+	// Round floats to avoid floating point errors from weird positions/scales
+	//this->roundVf2d( prevBottomLeft );
+	//this->roundVf2d( currBottomLeft );
+	//this->roundVf2d( currTopLeft );
 
-
+	// From position, get the index
 	olc::vi2d prevBottomLeftIndex = olc::vi2d{ prevBottomLeft };
 	olc::vi2d currBottomLeftIndex = olc::vi2d{ currBottomLeft };
 	olc::vi2d currTopLeftIndex = olc::vi2d{ currTopLeft };
@@ -473,7 +493,6 @@ bool aabb::DynamicObject::isCollidingLeft( olc::vf2d prevPosition, olc::vf2d cur
 
 	Tile* checkTile;
 	olc::vi2d checkTileIndex;
-	//olc::vf2d checkTilePosition;
 	WorldChunk* worldChunk;
 
 	for ( int tileIndexX = begX; tileIndexX >= endX; --tileIndexX ) // right to left
@@ -508,40 +527,10 @@ bool aabb::DynamicObject::isCollidingLeft( olc::vf2d prevPosition, olc::vf2d cur
 			}
 
 		}
-
-		/*
-		for ( checkTilePosition = checkBottomLeft; checkTilePosition.y >= checkTopLeft.y; checkTilePosition.y -= 1 )
-		{
-			worldChunk = world.getWorldChunkFromIndex( olc::vi2d{ checkTilePosition } );
-			if ( worldChunk == nullptr )
-			{
-				return true; // [!] Raise exception for trying to touch an index on a tile that does not exist because the worldchunk does not exist
-			}
-
-			checkTile = world.getTileFromIndex( olc::vi2d{ checkTilePosition } );
-
-			if ( checkTile != nullptr && checkTile->exists() )
-			{
-				if ( checkTile->isBlock() )
-				{
-					// Calculate the potential top contact point
-					//contactLeft = ( float )checkTileIndex.x + 1.0f; 
-					contactLeft = ( float )checkTilePosition.x; // contactIndex ( the real contactUp = checkBottomLeft.x ) Add 1.0f because it's the cell size
-					return true;
-				}
-			}
-
-		}
-		*/
 	}
-
 
 	return false;
 }
-
-
-
-
 
 
 
@@ -553,20 +542,20 @@ bool aabb::DynamicObject::isCollidingRight( olc::vf2d prevPosition, olc::vf2d cu
 	// Updates the y-level where the contact occured
 	contactRight = 0.0f;
 
-	// Get the bottom censors
 	olc::vf2d prevCenter = prevPosition + this->_aabbOffset;
 	olc::vf2d currCenter = currPosition + this->_aabbOffset;
 
-	/*
-	olc::vf2d prevBottomRight = prevCenter + this->getHalfSize() + olc::vf2d{ 1.0f / world.getTileDimension().x, 0.0f };
-	olc::vf2d currBottomRight = currCenter + this->getHalfSize() + olc::vf2d{ 1.0f / world.getTileDimension().x, 0.0f };
-	olc::vf2d currTopRight = currCenter + this->getHalfSize() - olc::vf2d{ -1.0f / world.getTileDimension().x, this->getHalfSize().y * 2.0f };
-	*/	
-
+	// Get the right sensors
 	olc::vf2d prevBottomRight = prevCenter + this->getHalfSize() + olc::vf2d{ 1.0f / world.getTileDimension().x, -1.0f / world.getTileDimension().y };
 	olc::vf2d currBottomRight = currCenter + this->getHalfSize() + olc::vf2d{ 1.0f / world.getTileDimension().x, -1.0f / world.getTileDimension().y };
 	olc::vf2d currTopRight = currCenter + this->getHalfSize() - olc::vf2d{ -1.0f / world.getTileDimension().x, ( this->getHalfSize().y * 2.0f ) - ( 1.0f / world.getTileDimension().y ) };
 
+	// Round floats to avoid floating point errors from weird positions/scales
+	//this->roundVf2d( prevBottomRight );
+	//this->roundVf2d( currBottomRight );
+	//this->roundVf2d( currTopRight );
+
+	// From position, get the index
 	olc::vi2d prevBottomRightIndex = olc::vi2d{ prevBottomRight };
 	olc::vi2d currBottomRightIndex = olc::vi2d{ currBottomRight };
 	olc::vi2d currTopRightIndex = olc::vi2d{ currTopRight };
@@ -616,7 +605,6 @@ bool aabb::DynamicObject::isCollidingRight( olc::vf2d prevPosition, olc::vf2d cu
 		}
 
 	}
-
 
 	return false;
 }
