@@ -40,6 +40,7 @@ private:
 	float _terminalFallingSpeed;
 	float _minJumpSpeed;
 	
+	bool _grabLedgeEnabled;
 	olc::vi2d _ledgeTileIndex;
 	float _grabLedgeStart;
 	float _grabLedgeEnd;
@@ -121,6 +122,8 @@ void Character::constructCharacter( bool currInputs[], bool prevInputs[], olc::v
 	this->_scale = settings::CHARACTER::SCALE;
 
 	this->_oneWayPlatformThreshold = settings::CHARACTER::ONE_WAY_PLATFORM_THRESHOLD;
+
+	this->_grabLedgeEnabled = settings::CHARACTER::GRAB_LEDGE_ENABLED;
 	this->_grabLedgeStart = settings::CHARACTER::GRAB_LEDGE_START;
 	this->_grabLedgeEnd = settings::CHARACTER::GRAB_LEDGE_END;
 	this->_grabLedgeOffset = settings::CHARACTER::GRAB_LEDGE_OFFSET;
@@ -388,10 +391,12 @@ void Character::runJumpState( float deltaTime, World& world )
 	// 2) If the character is not at the ground
 	// 3) If the character is not at the ceiling
 	// 4) If the character collides with a wall
-	if ( this->_currVelocity.y >= 0.0f &&
+	if ( this->_grabLedgeEnabled && 
+		this->_currVelocity.y >= 0.0f &&
 		!this->_currPushDown &&
 		!this->_currPushUp &&
-		( ( this->_prevPushLeft && this->keyState( KeyInput::LeftKey ) ) || ( this->_prevPushRight && this->keyState( KeyInput::RightKey ) ) )
+		( ( this->_prevPushLeft && this->keyState( KeyInput::LeftKey ) ) || ( this->_prevPushRight && this->keyState( KeyInput::RightKey ) ) ) &&
+		this->_currInputs[( int )KeyInput::JumpKey]
 		)
 	{
 		// Look for a ledge to grab

@@ -12,9 +12,9 @@ public:
 	Forest();
 	~Forest();
 
-	Forest( olc::vi2d chunkPosition, olc::vi2d chunkDimension, Atlas& atlas, int octaves = settings::WORLD_CHUNK::OCTAVE, float scalingBias = 0.2f );
+	Forest( olc::vi2d chunkPosition, olc::vi2d chunkDimension, int octaves, float scalingBias, Atlas& atlas );
 
-	void create( olc::vi2d chunkPosition, olc::vi2d chunkDimension, Atlas& atlas, int octaves, float scalingBias );
+	void create( olc::vi2d chunkPosition, olc::vi2d chunkDimension, int octaves, float scalingBias, Atlas& atlas );
 	void generateLayer();
 
 };
@@ -23,9 +23,11 @@ public:
 
 Forest::Forest()
 {
-	this->_chunkPosition = olc::vf2d{ 0, 0 };
-	this->_chunkDimension = olc::vi2d{ 0, 0 };
+	this->_chunkPosition = settings::WORLD_CHUNK::POSITION;
+	this->_chunkDimension = settings::WORLD_CHUNK::DIMENSION;
 	this->_tileDimension = settings::ATLAS::TILE_DIMENSION;
+	this->_octaves = settings::FOREST::OCTAVES;
+	this->_scalingBias = settings::FOREST::SCALING_BIAS;
 	this->_chunkSeed = nullptr;
 	this->_perlinNoise2D = nullptr;
 }
@@ -37,16 +39,16 @@ Forest::~Forest()
 }
 
 
-Forest::Forest( olc::vi2d chunkPosition, olc::vi2d chunkDimension, Atlas& atlas, int octaves, float scalingBias )
+Forest::Forest( olc::vi2d chunkPosition, olc::vi2d chunkDimension, int octaves, float scalingBias, Atlas& atlas )
 {
-	this->create( chunkPosition, chunkDimension, atlas, octaves, scalingBias );
+	this->create( chunkPosition, chunkDimension, octaves, scalingBias, atlas );
 }
 
 
 
-void Forest::create( olc::vi2d chunkPosition, olc::vi2d chunkDimension, Atlas& atlas, int octaves, float scalingBias )
+void Forest::create( olc::vi2d chunkPosition, olc::vi2d chunkDimension, int octaves, float scalingBias, Atlas& atlas )
 {
-	this->_octaves = octaves;
+	this->_octaves = std::min<int>(octaves, (int)std::log2( chunkDimension.x ) ); // [!] Limited by x value, so x <= y
 	this->_scalingBias = scalingBias;
 	this->_chunkPosition = chunkPosition;
 	this->_chunkDimension = chunkDimension;

@@ -10,7 +10,7 @@ class WorldChunk
 private:
 
 protected:
-	olc::vf2d _chunkPosition;
+	olc::vf2d _chunkPosition; // top left
 
 	olc::vi2d _chunkDimension;
 	olc::vi2d _tileDimension;

@@ -265,10 +265,10 @@ public:
 	void runGameStateTinkerForestWorldLoading( float fElapsedTime )
 	{
 	/// Generate forests
-		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
-		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ settings::WORLD_CHUNK::DIMENSION.x, 0 }, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
-		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ 0, settings::WORLD_CHUNK::DIMENSION.y }, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
-		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + settings::WORLD_CHUNK::DIMENSION, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ settings::WORLD_CHUNK::DIMENSION.x, 0 }, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ 0, settings::WORLD_CHUNK::DIMENSION.y }, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + settings::WORLD_CHUNK::DIMENSION, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
 
 		this->_gameState = GameState::TINKER_WORLD;
 		return;
@@ -303,10 +303,13 @@ public:
 	void runGameStateTinkerWorldLoading( float fElapsedTime )
 	{
 	///
-		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
-		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ settings::WORLD_CHUNK::DIMENSION.x, 0 }, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
-		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ 0, settings::WORLD_CHUNK::DIMENSION.y }, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
-		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + settings::WORLD_CHUNK::DIMENSION, settings::WORLD_CHUNK::DIMENSION, this->_atlasForest );
+		// this->_world->generateTestForest( olc::vi2d{ 50, 50 }, olc::vi2d{ 40, 200 }, ( int )std::log2( 40 ) - 1, 0.2f, this->_atlasForest );
+
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION, settings::WORLD_CHUNK::DIMENSION, (int)std::log2( settings::WORLD_CHUNK::DIMENSION .x ) - 1, 0.2f, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ settings::WORLD_CHUNK::DIMENSION.x, 0 }, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ 0, settings::WORLD_CHUNK::DIMENSION.y }, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + settings::WORLD_CHUNK::DIMENSION, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
+
 
 		this->_gameState = GameState::TINKER_WORLD;
 		return;
@@ -366,23 +369,25 @@ public:
 	void updatePlayerInputs()
 	{
 	/// Updates the array of bool values that represent a key being pressed
-		if ( this->GetKey( olc::Key::UP ).bPressed || this->GetKey( olc::Key::UP ).bHeld )
+		if ( this->GetKey( olc::Key::W ).bPressed || this->GetKey( olc::Key::W ).bHeld )
 		{
 			this->_playerCurrInputs[( int )KeyInput::UpKey] = true;
 		}
-		if ( this->GetKey( olc::Key::DOWN ).bPressed || this->GetKey( olc::Key::DOWN ).bHeld )
+		if ( this->GetKey( olc::Key::S ).bPressed || this->GetKey( olc::Key::S ).bHeld )
 		{
 			this->_playerCurrInputs[( int )KeyInput::DownKey] = true;
 		}
-		if ( this->GetKey( olc::Key::LEFT ).bPressed || this->GetKey( olc::Key::LEFT ).bHeld )
+		if ( this->GetKey( olc::Key::A ).bPressed || this->GetKey( olc::Key::A ).bHeld )
 		{
 			this->_playerCurrInputs[( int )KeyInput::LeftKey] = true;
 		}
-		if ( this->GetKey( olc::Key::RIGHT ).bPressed || this->GetKey( olc::Key::RIGHT ).bHeld )
+		if ( this->GetKey( olc::Key::D ).bPressed || this->GetKey( olc::Key::D ).bHeld )
 		{
 			this->_playerCurrInputs[( int )KeyInput::RightKey] = true;
 		}
-		if ( this->GetKey( olc::Key::SPACE ).bPressed || this->GetKey( olc::Key::SPACE ).bHeld )
+		if ( this->GetKey( olc::Key::SPACE ).bPressed || this->GetKey( olc::Key::SPACE ).bHeld ||
+			this->GetKey( olc::Key::W ).bPressed || this->GetKey( olc::Key::W ).bHeld
+			)
 		{
 			this->_playerCurrInputs[( int )KeyInput::JumpKey] = true;
 		}

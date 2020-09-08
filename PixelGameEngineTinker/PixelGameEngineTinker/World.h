@@ -26,7 +26,7 @@ public:
 	void destructWorld();
 
 
-	void generateTestForest( olc::vf2d chunkPosition, olc::vi2d forestDimension, Atlas& atlas );
+	void generateTestForest( olc::vf2d chunkPosition, olc::vi2d forestDimension, int octaves, float scalingBias, Atlas& atlas );
 
 	std::vector<WorldChunk*> getWorldChunks();
 
@@ -76,10 +76,10 @@ void World::destructWorld()
 
 
 
-void World::generateTestForest( olc::vf2d chunkPosition, olc::vi2d forestDimension, Atlas& atlas )
+void World::generateTestForest( olc::vf2d chunkPosition, olc::vi2d forestDimension, int octaves, float scalingBias, Atlas& atlas )
 {
 /// Creates a randomly generated Forest layer by Perlin Noise of specific size and atlas
-	Forest* forest = new Forest( chunkPosition, forestDimension, atlas );
+	Forest* forest = new Forest( chunkPosition, forestDimension, octaves, scalingBias, atlas );
 	this->_worldChunks.push_back( forest );
 
 	return;
