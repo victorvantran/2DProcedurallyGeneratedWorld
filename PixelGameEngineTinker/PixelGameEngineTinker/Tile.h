@@ -28,7 +28,10 @@ struct Tile
 	bool isEmpty();
 	bool isBlock();
 	bool isOneWayPlatform();
+
+	bool isObstacle();
 	bool isGround();
+	bool isLedge();
 
 	bool exists();
 };

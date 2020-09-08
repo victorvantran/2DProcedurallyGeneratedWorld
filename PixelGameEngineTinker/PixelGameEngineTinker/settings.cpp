@@ -18,6 +18,11 @@ const float settings::CHARACTER::GRAVITY = 98.0f;// 980.0f;
 const float settings::CHARACTER::TERMINAL_FALLING_SPEED = 2000.0f;
 const float settings::CHARACTER::MIN_JUMP_SPEED = 5.0f;
 const float settings::CHARACTER::ONE_WAY_PLATFORM_THRESHOLD = 0.125f; // percentage of how much a character must go through a tile before can pass through it
+const float settings::CHARACTER::GRAB_LEDGE_START = 0.0f;
+const float settings::CHARACTER::GRAB_LEDGE_END = 0.25f; // ( 8 * 0.25 = 2 pixels to grab )
+const float settings::CHARACTER::GRAB_LEDGE_OFFSET = 0.5f; // y-offset when hanging on the ledge
+const float settings::CHARACTER::GRAB_LEDGE_JUMP_SPEED = 30.0f;
+
 
 
 const olc::vf2d settings::CHARACTER::AABB_HALF_SIZE = olc::vf2d{ 1.0f, 2.0f };

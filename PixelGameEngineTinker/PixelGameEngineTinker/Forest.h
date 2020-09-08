@@ -87,7 +87,7 @@ void Forest::generateLayer()
 		}
 		else if ( tileDecider < 128 )
 		{
-			forestMapping.push_back( std::tuple{ 1, true, TileType::OneWayPlatform} );
+			forestMapping.push_back( std::tuple{ 1, true, TileType::Block} );
 		}
 		else if ( tileDecider < 160 )
 		{

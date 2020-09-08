@@ -195,7 +195,8 @@ public:
 		this->_playerMouse = olc::vf2d{ 0.0f, 0.0f };
 		this->_playerCamera = olc::vf2d{ 0.0f, 0.0f };
 
-		this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 70.0f, 16.0f } );
+		//this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 70.0f, 16.0f } );
+		this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 60.0f, 14.0f } );
 	}
 
 
@@ -287,7 +288,7 @@ public:
 
 
 		//olc::vf2d mouse = olc::vf2d{ ( float )this->GetMouseX(), ( float )this->GetMouseY() };
-		//std::cout << "[" << ( int )( ( this->_playerCamera.x * 8.0f + mouse.x ) / 8.0f ) << "," << ( int )( ( this->_playerCamera.y * 8.0f + mouse.y ) / 8.0f ) << "]" << std::endl;
+		//std::cout << "[" << ( int )( ( this->_playerCamera.x * 8.0f + GetMouseX() ) / 8.0f ) << "," << ( int )( ( this->_playerCamera.y * 8.0f + GetMouseY() ) / 8.0f ) << "]" << std::endl;
 	
 		
 		// absolute pixel = {this->_playerCamera.x * 8.0f + mouse.x, this->_playerCamera.y * 8.0f + mouse.y ) / 8.0f}
@@ -323,6 +324,7 @@ public:
 
 
 		this->_playerCamera = this->_playerCharacter.getCurrPosition() - ( ( settings::RESOLUTION::SCREEN_DIMENSION / settings::ATLAS::TILE_DIMENSION ) / 2 ); // Make camera centered on character ( - (screendimension/tilesize)/2 )
+		//std::cout << "[" << ( int )( ( this->_playerCamera.x * 8.0f + GetMouseX() ) / 8.0f ) << "," << ( int )( ( this->_playerCamera.y * 8.0f + GetMouseY() ) / 8.0f ) << "]" << std::endl;
 
 
 		this->_pScreen->drawWorld( *this->_world, this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );

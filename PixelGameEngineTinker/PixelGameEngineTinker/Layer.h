@@ -139,14 +139,15 @@ void Layer<T>::copyMapping( std::vector<std::tuple<int, bool, TileType>> mapping
 		{
 			this->_pCells[i].id = std::get<0>( mapping[i] );
 			this->_pCells[i].exist = std::get<1>( mapping[i] );
-
+			this->_pCells[i].tileType = std::get<2>( mapping[i] );
 			/// Temporary
-			
+			/*
 			if ( std::get<1>( mapping[i] ) )
 			{
 				this->_pCells[i].tileType = std::get<2>( mapping[i] );
 				//this->_pCells[i].tileType = TileType::Block;
 			}
+			*/
 			
 
 			

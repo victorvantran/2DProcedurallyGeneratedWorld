@@ -40,10 +40,23 @@ bool Tile::isOneWayPlatform()
 }
 
 
+bool Tile::isObstacle()
+{
+	return this->tileType == TileType::Block || this->tileType == TileType::OneWayPlatform;
+}
+
+
 bool Tile::isGround()
 {
 	return this->tileType == TileType::Block || this->tileType == TileType::OneWayPlatform;
 }
+
+
+bool Tile::isLedge()
+{
+	return this->tileType == TileType::Block || this->tileType == TileType::OneWayPlatform;
+}
+
 
 bool Tile::exists()
 {

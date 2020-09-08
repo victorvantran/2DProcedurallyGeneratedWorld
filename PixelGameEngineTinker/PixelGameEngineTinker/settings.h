@@ -31,6 +31,11 @@ namespace settings
 		const static olc::vf2d SCALE;
 
 		const static float ONE_WAY_PLATFORM_THRESHOLD;
+
+		const static float GRAB_LEDGE_START;
+		const static float GRAB_LEDGE_END;
+		const static float GRAB_LEDGE_OFFSET;
+		const static float GRAB_LEDGE_JUMP_SPEED;
 	};
 
 
