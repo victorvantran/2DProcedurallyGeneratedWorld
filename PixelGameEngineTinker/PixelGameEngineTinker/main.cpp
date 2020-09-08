@@ -196,7 +196,7 @@ public:
 		this->_playerCamera = olc::vf2d{ 0.0f, 0.0f };
 
 		//this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 70.0f, 16.0f } );
-		this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 60.0f, 14.0f } );
+		this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 65.0f, 14.0f } );
 	}
 
 
@@ -330,6 +330,14 @@ public:
 		this->_pScreen->drawWorld( *this->_world, this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
 		this->_pScreen->drawCharacter( this->_playerCharacter, this->_playerCamera );
 
+
+		// Mouse debug
+		olc::vi2d tileChosen = olc::vi2d{ ( int )( ( this->_playerCamera.x * 8.0f + GetMouseX() ) / 8.0f ), ( int )( ( this->_playerCamera.y * 8.0f + GetMouseY() ) / 8.0f ) };
+		if ( this->GetMouse( 0 ).bPressed || this->GetMouse( 0 ).bHeld )
+		{
+			this->_world->getTileFromIndex( tileChosen )->exist = false;
+		}
+		this->DrawString( olc::vi2d{ this->GetMouseX(), this->GetMouseY() }, "[" + std::to_string( tileChosen.x ) + "," + std::to_string( tileChosen.y ) + "]", olc::YELLOW, 1 );
 
 		this->DrawCircle( settings::RESOLUTION::SCREEN_DIMENSION /2, 1, olc::WHITE );
 		return;

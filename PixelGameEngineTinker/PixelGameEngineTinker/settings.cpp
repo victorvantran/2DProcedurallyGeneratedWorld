@@ -22,6 +22,9 @@ const float settings::CHARACTER::GRAB_LEDGE_START = 0.0f;
 const float settings::CHARACTER::GRAB_LEDGE_END = 0.25f; // ( 8 * 0.25 = 2 pixels to grab )
 const float settings::CHARACTER::GRAB_LEDGE_OFFSET = 0.5f; // y-offset when hanging on the ledge
 const float settings::CHARACTER::GRAB_LEDGE_JUMP_SPEED = 30.0f;
+const int settings::CHARACTER::GRAB_LEDGE_HOLD_FRAMES = 4; // [!] should be based on frames per second since if running at 1000fps, barely any threshold time (not useful not, but useful when locking fps)
+															// It actually makes things look "jittery" when having a low value for now because not enough time to drop far enough as to not be able to grab ledge again
+const int settings::CHARACTER::JUMP_FRAMES_THRESHOLD = 4; // [!] should be based on frames per second since if running at 1000fps, barely any threshold time (not useful not, but useful when locking fps)
 
 
 

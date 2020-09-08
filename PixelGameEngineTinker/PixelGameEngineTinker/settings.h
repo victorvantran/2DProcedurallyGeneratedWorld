@@ -36,6 +36,11 @@ namespace settings
 		const static float GRAB_LEDGE_END;
 		const static float GRAB_LEDGE_OFFSET;
 		const static float GRAB_LEDGE_JUMP_SPEED;
+
+		const static int GRAB_LEDGE_HOLD_FRAMES;
+
+
+		const static int JUMP_FRAMES_THRESHOLD;
 	};
 
 

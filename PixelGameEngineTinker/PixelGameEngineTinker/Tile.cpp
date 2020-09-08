@@ -24,37 +24,43 @@ Tile::~Tile()
 
 bool Tile::isEmpty()
 {
-	return this->tileType == TileType::Empty;
+	return this->exist &&
+		this->tileType == TileType::Empty;
 }
 
 
 bool Tile::isBlock()
 {
-	return this->tileType == TileType::Block;
+	return this->exist &&
+		this->tileType == TileType::Block;
 }
 
 
 bool Tile::isOneWayPlatform()
 {
-	return this->tileType == TileType::OneWayPlatform;
+	return this->exist &&
+		this->tileType == TileType::OneWayPlatform;
 }
 
 
 bool Tile::isObstacle()
 {
-	return this->tileType == TileType::Block || this->tileType == TileType::OneWayPlatform;
+	return this->exist &&
+		this->tileType == TileType::Block || this->tileType == TileType::OneWayPlatform;
 }
 
 
 bool Tile::isGround()
 {
-	return this->tileType == TileType::Block || this->tileType == TileType::OneWayPlatform;
+	return this->exist &&
+		this->tileType == TileType::Block || this->tileType == TileType::OneWayPlatform;
 }
 
 
 bool Tile::isLedge()
 {
-	return this->tileType == TileType::Block || this->tileType == TileType::OneWayPlatform;
+	return this->exist &&
+		this->tileType == TileType::Block || this->tileType == TileType::OneWayPlatform;
 }
 
 

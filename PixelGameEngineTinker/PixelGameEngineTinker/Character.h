@@ -46,6 +46,13 @@ private:
 	float _grabLedgeOffset;
 	float _grabLedgeJumpSpeed;
 
+	int _grabLedgeHoldFrames;
+	int _framesFromGrabLedgeLeft;
+	int _framesFromGrabLedgeRight;
+
+	int _jumpFramesThreshold;
+	int _framesFromJumpStart;
+
 
 	void runStandState();
 	void runWalkState();
@@ -118,6 +125,13 @@ void Character::constructCharacter( bool currInputs[], bool prevInputs[], olc::v
 	this->_grabLedgeEnd = settings::CHARACTER::GRAB_LEDGE_END;
 	this->_grabLedgeOffset = settings::CHARACTER::GRAB_LEDGE_OFFSET;
 	this->_grabLedgeJumpSpeed = settings::CHARACTER::GRAB_LEDGE_JUMP_SPEED;
+	this->_grabLedgeHoldFrames = settings::CHARACTER::GRAB_LEDGE_HOLD_FRAMES;
+	this->_framesFromGrabLedgeLeft = 0;
+	this->_framesFromGrabLedgeRight = 0;
+
+	this->_jumpFramesThreshold = settings::CHARACTER::JUMP_FRAMES_THRESHOLD;
+	this->_framesFromJumpStart = 0;
+
 
 
 	return;
@@ -149,6 +163,13 @@ void Character::updateCharacter( float deltaTime, World& world )
 	}
 
 	this->updatePhysics( deltaTime, world );
+
+	// Allow leaniency in jump frames
+	if ( this->_prevPushDown && !this->_currPushDown )
+	{
+		this->_framesFromJumpStart = 0;
+	}
+
 
 	// Play an audio when a character collides with an object (just touched ceiling, ground, or walls)
 	if ( !this->_prevPushUp && this->_currPushUp
@@ -276,6 +297,22 @@ void Character::runJumpState( float deltaTime, World& world )
 {
 	// [!] Animate jump
 
+	++this->_framesFromJumpStart;
+	// Do not allow an mid-air jump if the character is at the ceiling or has upward velocity already
+	// Else allow the mid-air jump
+	if ( this->_framesFromJumpStart <= this->_jumpFramesThreshold )
+	{
+		if ( this->_currPushUp || this->_currVelocity.y < 0.0f )
+		{
+			this->_framesFromJumpStart = this->_jumpFramesThreshold + 1;
+		}
+		else if ( this->keyState( KeyInput::JumpKey ) )
+		{
+			this->_currVelocity.y = -this->_jumpSpeed;
+		}
+	}
+
+
 	// Character is affected by gravity
 	this->_currVelocity.y = this->_currVelocity.y + this->_gravity * deltaTime;
 
@@ -331,6 +368,18 @@ void Character::runJumpState( float deltaTime, World& world )
 			this->_currState = CharacterState::Walk;
 			// [!] Play sound
 		}
+	}
+
+	// Prevents player for immediately grabbing ledge after letting go
+	if ( this->_framesFromGrabLedgeLeft > 0 )
+	{
+		this->_framesFromGrabLedgeLeft--;
+		this->_currInputs[( int )KeyInput::LeftKey] = false;
+	}
+	if ( this->_framesFromGrabLedgeRight > 0 )
+	{
+		this->_framesFromGrabLedgeRight--;
+		this->_currInputs[( int )KeyInput::RightKey] = false;
 	}
 
 
@@ -391,16 +440,7 @@ void Character::runJumpState( float deltaTime, World& world )
 				if ( !topTile->isObstacle() &&
 					bottomTile->isLedge() )
 				{
-
-					//olc::vf2d tileCorner = olc::vi2d{ tileX + ( cornerOffset.x > 0 ) ? 1 : 0, y + 1 };
 					olc::vf2d tileCorner = olc::vi2d{ tileX, y + 1 };
-
-
-					//tileCorner.x += ( cornerOffset.x > 0 ) ? 1 : ( ( cornerOffset.x < 0 ) ? 0 : 0 );
-
-
-					//tileCorner.x -= ( cornerOffset.x > 0 ) ? 1 : ( ( cornerOffset.x < 0 ) ? -1 : 0 );
-					//tileCorner.y -= 0.5f;
 
 					if ( ( y < bottomY ) ||
 						( tileCorner.y - ( this->_currCenterPosition.y + cornerOffset.y ) <= this->_grabLedgeEnd ) &&
@@ -451,6 +491,15 @@ void Character::runGrabLedgeState()
 		( !this->_currInputs[( int )KeyInput::RightKey] && ledgeOnRight ) 
 		)
 	{
+		if ( ledgeOnLeft )
+		{
+			this->_framesFromGrabLedgeLeft = this->_framesFromJumpStart;
+		}
+		else
+		{
+			this->_framesFromGrabLedgeRight = this->_framesFromJumpStart;
+		}
+
 		this->_currState = CharacterState::Jump;
 	}
 	// To jump up to the ledge, the player simply presses the jump key
