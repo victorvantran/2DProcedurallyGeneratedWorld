@@ -24,15 +24,34 @@ public:
 	static void drawLayer( Layer<T>* layer, Atlas* atlas, olc::vf2d cameraPosition, olc::vi2d tileMatrixDimension, float scale = 1.0f);
 
 
-	static void drawCharacter( Character& character, olc::vf2d cameraPosition, float scale = 1.0f )
+	static void drawWorldChunkBackground( WorldChunk& worldChunk, float scale = 1.0f )
 	{
-		/// Renders the character
-		/// Temporary use original tile size; need to add member variables for screen: TileDimension...
+			Atlas worldChunkAtlas = worldChunk.getAtlas();
 
-		pge->DrawRect( ( character.getCurrPosition() - character.getHalfSize() - cameraPosition ) * settings::ATLAS::TILE_DIMENSION, character.getHalfSize() * 2.0f * settings::ATLAS::TILE_DIMENSION * scale, olc::WHITE );
+			if ( worldChunkAtlas.getDecalBackground() != nullptr )
+			{
+
+			//pge->DrawPartialDecal(
+			//	worldChunk->getPosition() * worldChunkAtlas.getTileDimension(),
+			//	worldChunkAtlas.getDecalBackground(),
+			//	olc::vf2d{ 0.0f, 0.0f },
+			//	olc::vf2d{ ( float )worldChunkAtlas.getDecalBackground()->sprite->width, ( float )worldChunkAtlas.getDecalBackground()->sprite->height },
+			//	olc::vf2d{ 1.0f, 1.0f }
+			//);
+
+			const olc::vf2d position = worldChunk.getPosition() * worldChunkAtlas.getTileDimension();
+
+			pge->DrawDecal
+			(
+				worldChunk.getPosition() * worldChunkAtlas.getTileDimension(),
+				worldChunkAtlas.getDecalBackground(),
+				olc::vf2d{ scale, scale }
+			);
+		}
 
 		return;
 	}
+
 
 
 	static void drawWorld( World& world, olc::vf2d cameraPosition, olc::vi2d scopeDimension, float scale = 1.0f )
@@ -40,6 +59,17 @@ public:
 		/// Renders all world chunks
 		/// Camera position is in matrix world [col, row]
 		/// scopeDimension is the matrix area of visible tiles [col, row]
+
+
+		// [!] Temporoary: Draw background of the worldchunk
+		olc::vi2d worldChunkIndex = olc::vi2d{ ( int )cameraPosition.x, ( int )cameraPosition.y };
+		WorldChunk* worldChunk = world.getWorldChunkFromIndex( worldChunkIndex );
+		
+		if ( worldChunk != nullptr )
+		{
+			Screen::drawWorldChunkBackground( *worldChunk, scale );
+		}
+		
 
 		olc::vf2d offset = cameraPosition - olc::vi2d{ cameraPosition };
 		for ( int row = 0; row < scopeDimension.y + 1; row++ )
@@ -60,6 +90,7 @@ public:
 				}
 
 				Atlas worldChunkAtlas = worldChunk->getAtlas();
+
 				Tile* tile = worldChunk->getTileFromIndex( tileIndex );
 				
 				if ( tile != nullptr && tile->exist )
@@ -90,6 +121,8 @@ public:
 		return;
 	}
 
+
+	// [!] may not need
 	static void drawWorldChunk( WorldChunk& worldChunk, olc::vf2d cameraPosition, olc::vi2d scopeDimension, float scale = 1.0f )
 	{
 		/// Renders a world chunk
@@ -139,6 +172,28 @@ public:
 
 		return;
 	}
+
+
+	static void drawCharacter( Character& character, olc::vf2d cameraPosition, float scale = 1.0f )
+	{
+		/// Renders the character
+		/// Temporary use original tile size; need to add member variables for screen: TileDimension...
+
+		pge->DrawRect( ( character.getCurrPosition() - character.getHalfSize() - cameraPosition ) * settings::ATLAS::TILE_DIMENSION, character.getHalfSize() * 2.0f * settings::ATLAS::TILE_DIMENSION * scale, olc::WHITE );
+
+		
+		pge->DrawPartialDecal(
+			( character.getCurrPosition() - character.getHalfSize() - cameraPosition ) * settings::ATLAS::TILE_DIMENSION + olc::vf2d{ 0.5f, 0.5f }, // added 0.5f offset due to decal being off, not the collision detection
+			character.getDecal(),
+			olc::vf2d{ 0.0f, 0.0f },
+			olc::vf2d{ (float)character.getDecal()->sprite->width, (float)character.getDecal()->sprite->height },
+			olc::vf2d{ ( 8.0f / character.getDecal()->sprite->width ) * character.getHalfSize().x * 2 * scale, ( 8.0f / character.getDecal()->sprite->height ) * character.getHalfSize().y * 2 * scale }
+		);
+		
+
+		return;
+	}
+
 
 	template<typename T>
 	static olc::Pixel getLayerPixel( Layer<T> &layer, Atlas& atlas, olc::vf2d pixelPosition );

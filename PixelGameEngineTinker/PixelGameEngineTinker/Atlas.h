@@ -11,16 +11,17 @@ private:
 	olc::vi2d _atlasDimension;
 	olc::vi2d _tileDimension;
 
+	olc::Decal* _decalBackground;
 public:
 	std::vector<std::tuple<int32_t, int32_t, int32_t, int32_t>> mapping;
 
 	Atlas();
 	~Atlas();
 
-	Atlas( olc::Sprite* spriteSheet, olc::Decal* decalSheet, olc::vi2d atlasDimension, olc::vi2d tileDimension );
+	Atlas( olc::Sprite* spriteSheet, olc::Decal* decalSheet, olc::vi2d atlasDimension, olc::vi2d tileDimension, olc::Decal* decalBackground = nullptr );
 
 	void create( std::string sheetPath );
-	void create( olc::Sprite *spriteSheet);
+	void create( olc::Sprite *spriteSheet );
 	void create( olc::Decal *decalSheet );
 	void create( olc::Sprite *spriteSheet, olc::Decal* decalSheet );
 
@@ -31,6 +32,7 @@ public:
 
 	olc::Sprite* getSpriteTileSheet();
 	olc::Decal* getDecalTileSheet();
+	olc::Decal* getDecalBackground();
 
 	olc::vi2d getAtlasDimension();
 	olc::vi2d getTileDimension();

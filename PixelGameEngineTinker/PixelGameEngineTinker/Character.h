@@ -60,15 +60,15 @@ private:
 	void runJumpState( float deltaTime, World& world );
 	void runGrabLedgeState();
 
-	
+	olc::Decal* _decalCharacter;
 
 public:
 	Character();
 	~Character();
 
-	Character( bool currInputs[], bool prevInputs[], olc::vf2d startPosition = olc::vf2d{ 0.0f, 0.0f } );
+	Character( bool currInputs[], bool prevInputs[], olc::vf2d startPosition, olc::Decal* decalCharacter );
 
-	void constructCharacter( bool currInputs[], bool prevInputs[], olc::vf2d startPosition );
+	void constructCharacter( bool currInputs[], bool prevInputs[], olc::vf2d startPosition, olc::Decal* decalCharacter );
 	void destructCharacter();
 
 	void updateCharacter( float deltaTime, World& world );
@@ -80,13 +80,14 @@ public:
 	bool keyReleased(KeyInput key);
 	bool keyState(KeyInput key);
 
+	olc::Decal* getDecal();
 
 };
 
 
 Character::Character()
 {
-	this->constructCharacter( nullptr, nullptr, olc::vf2d{ 0.0f, 0.0f } );
+	this->constructCharacter( nullptr, nullptr, olc::vf2d{ 0.0f, 0.0f }, nullptr );
 }
 
 
@@ -96,14 +97,14 @@ Character::~Character()
 }
 
 
-Character::Character( bool currInputs[], bool prevInputs[], olc::vf2d startPosition )
+Character::Character( bool currInputs[], bool prevInputs[], olc::vf2d startPosition, olc::Decal* decalCharacter )
 {
-	this->constructCharacter( currInputs, prevInputs, startPosition );
+	this->constructCharacter( currInputs, prevInputs, startPosition, decalCharacter );
 }
 
 
 
-void Character::constructCharacter( bool currInputs[], bool prevInputs[], olc::vf2d startPosition )
+void Character::constructCharacter( bool currInputs[], bool prevInputs[], olc::vf2d startPosition, olc::Decal* decalCharacter )
 {
 	this->_currInputs = currInputs;
 	this->_prevInputs = prevInputs;
@@ -135,7 +136,7 @@ void Character::constructCharacter( bool currInputs[], bool prevInputs[], olc::v
 	this->_jumpFramesThreshold = settings::CHARACTER::JUMP_FRAMES_THRESHOLD;
 	this->_framesFromJumpStart = 0;
 
-
+	this->_decalCharacter = decalCharacter;
 
 	return;
 }
@@ -548,5 +549,8 @@ bool Character::keyState( KeyInput key )
 }
 
 
-
-
+olc::Decal* Character::getDecal()
+{
+	//
+	return this->_decalCharacter;
+}

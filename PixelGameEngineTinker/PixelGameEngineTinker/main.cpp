@@ -30,7 +30,9 @@ private:
 	olc::Sprite* _spriteTileSetTinkerWorld;
 
 	olc::Sprite* _spriteTileSetForest;
+	olc::Sprite* _spriteBackgroundForest;
 
+	olc::Sprite* _spritePlayerCharacter;
 
 	/// Temporary Datatype for decals for testing purposes
 	olc::Decal* _decalPlayerMouse;
@@ -39,6 +41,9 @@ private:
 	olc::Decal* _decalTileSetTinkerWorld;
 
 	olc::Decal* _decalTileSetForest;
+	olc::Decal* _decalBackgroundForest;
+
+	olc::Decal* _decalPlayerCharacter;
 
 
 	/// Temporary Player DataType
@@ -123,10 +128,13 @@ public:
 	void initializeSprites()
 	{
 	/// Initialize the datatype that holds all the sprites
+		this->_spritePlayerCharacter = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\character_2x4_8x8.png" );
 		this->_spritePlayerMouse = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\dwarven_gauntlet_cursor.png" );
 		this->_spriteLoading = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\worldmapgrid_480x270_8x8.png" );
 		this->_spriteTileSetTinkerWorld = new olc::Sprite("C:\\Users\\Victor\\Desktop\\Tinker\\platformer_25x16_8x8.png");
-		this->_spriteTileSetForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_2x2_8x8.png" );
+		this->_spriteTileSetForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_2x2_8x8_v2.png" );
+		this->_spriteBackgroundForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_background_100x100_8x8.png" );;
+
 		return;
 	}
 
@@ -139,10 +147,12 @@ public:
 	void initializeDecals()
 	{
 	/// Initialize the datatype that holds all the decals
+		this->_decalPlayerCharacter = new olc::Decal( this->_spritePlayerCharacter );
 		this->_decalPlayerMouse = new olc::Decal( this->_spritePlayerMouse );
 		this->_decalLoading = new olc::Decal( this->_spriteLoading );
 		this->_decalTileSetTinkerWorld = new olc::Decal( this->_spriteTileSetTinkerWorld );
 		this->_decalTileSetForest = new olc::Decal( this->_spriteTileSetForest);
+		this->_decalBackgroundForest = new olc::Decal( this->_spriteBackgroundForest );
 		return;
 	}
 
@@ -159,7 +169,7 @@ public:
 	// For each tile [0,0], [1,0], [2,0], ..., [n,m], mark the location of the subarea (via bounding box) of the given png based on the resolution of the tile
 		this->_atlasLoading = new Atlas( this->_spriteLoading, this->_decalLoading, olc::vi2d(480, 270), settings::ATLAS::TILE_DIMENSION );
 		this->_atlasTinkerWorld = new Atlas( this->_spriteTileSetTinkerWorld, this->_decalTileSetTinkerWorld, olc::vi2d( 25, 16 ), settings::ATLAS::TILE_DIMENSION );
-		this->_atlasForest = Atlas( this->_spriteTileSetForest, this->_decalTileSetForest, olc::vi2d{ 2,2 }, settings::ATLAS::TILE_DIMENSION );
+		this->_atlasForest = Atlas( this->_spriteTileSetForest, this->_decalTileSetForest, olc::vi2d{ 2,2 }, settings::ATLAS::TILE_DIMENSION, this->_decalBackgroundForest );
 	}
 
 
@@ -196,7 +206,7 @@ public:
 		this->_playerCamera = olc::vf2d{ 0.0f, 0.0f };
 
 		//this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 70.0f, 16.0f } );
-		this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 65.0f, 14.0f } );
+		this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 65.0f, 14.0f }, this->_decalPlayerCharacter );
 	}
 
 
@@ -329,7 +339,6 @@ public:
 		this->_playerCamera = this->_playerCharacter.getCurrPosition() - ( ( settings::RESOLUTION::SCREEN_DIMENSION / settings::ATLAS::TILE_DIMENSION ) / 2 ); // Make camera centered on character ( - (screendimension/tilesize)/2 )
 		//std::cout << "[" << ( int )( ( this->_playerCamera.x * 8.0f + GetMouseX() ) / 8.0f ) << "," << ( int )( ( this->_playerCamera.y * 8.0f + GetMouseY() ) / 8.0f ) << "]" << std::endl;
 
-
 		this->_pScreen->drawWorld( *this->_world, this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
 		this->_pScreen->drawCharacter( this->_playerCharacter, this->_playerCamera );
 
@@ -338,11 +347,36 @@ public:
 		olc::vi2d tileChosen = olc::vi2d{ ( int )( ( this->_playerCamera.x * 8.0f + GetMouseX() ) / 8.0f ), ( int )( ( this->_playerCamera.y * 8.0f + GetMouseY() ) / 8.0f ) };
 		if ( this->GetMouse( 0 ).bPressed || this->GetMouse( 0 ).bHeld )
 		{
-			this->_world->getTileFromIndex( tileChosen )->exist = false;
+			Tile* chosenTile = this->_world->getTileFromIndex( tileChosen );
+			if ( chosenTile != nullptr )
+			{
+				chosenTile->exist = false;
+			}
 		}
 		this->DrawString( olc::vi2d{ this->GetMouseX(), this->GetMouseY() }, "[" + std::to_string( tileChosen.x ) + "," + std::to_string( tileChosen.y ) + "]", olc::YELLOW, 1 );
 
+
+
+		// Confirmed slight decal offset; not a problem with collision detection
+		if ( this->GetMouse( 1 ).bPressed )
+		{
+			float x = ( this->_playerCamera.x * 8.0f + GetMouseX() ) / 8.0f;
+			float y = ( this->_playerCamera.y * 8.0f + GetMouseY() ) / 8.0f;
+
+			if ( x >= this->_playerCharacter.getCurrPosition().x - this->_playerCharacter.getHalfSize().x && 
+				x <= this->_playerCharacter.getCurrPosition().x + this->_playerCharacter.getHalfSize().x &&
+				y >= this->_playerCharacter.getCurrPosition().y - this->_playerCharacter.getHalfSize().y &&
+				y <= this->_playerCharacter.getCurrPosition().y + this->_playerCharacter.getHalfSize().y )
+			{
+				std::cout << "Clicked on character" << std::endl;
+			}
+
+		}
+
+
 		this->DrawCircle( settings::RESOLUTION::SCREEN_DIMENSION /2, 1, olc::WHITE );
+
+
 		return;
 	}
 
