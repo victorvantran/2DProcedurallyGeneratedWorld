@@ -77,6 +77,9 @@ private:
 	///
 
 
+	// Debugging tools
+	bool _freeRoam = false;
+
 public:
 	Game()
 	{
@@ -133,7 +136,7 @@ public:
 		this->_spriteLoading = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\worldmapgrid_480x270_8x8.png" );
 		this->_spriteTileSetTinkerWorld = new olc::Sprite("C:\\Users\\Victor\\Desktop\\Tinker\\platformer_25x16_8x8.png");
 		this->_spriteTileSetForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_2x2_8x8_v2.png" );
-		this->_spriteBackgroundForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_background_100x100_8x8.png" );;
+		this->_spriteBackgroundForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_background_v2_100x100_8x8.png" );;
 
 		return;
 	}
@@ -335,8 +338,10 @@ public:
 
 		Clear( olc::DARK_CYAN );
 
-
-		this->_playerCamera = this->_playerCharacter.getCurrPosition() - ( ( settings::RESOLUTION::SCREEN_DIMENSION / settings::ATLAS::TILE_DIMENSION ) / 2 ); // Make camera centered on character ( - (screendimension/tilesize)/2 )
+		if ( !this->_freeRoam )
+		{
+			this->_playerCamera = this->_playerCharacter.getCurrPosition() - ( ( settings::RESOLUTION::SCREEN_DIMENSION / settings::ATLAS::TILE_DIMENSION ) / 2 ); // Make camera centered on character ( - (screendimension/tilesize)/2 )
+		}
 		//std::cout << "[" << ( int )( ( this->_playerCamera.x * 8.0f + GetMouseX() ) / 8.0f ) << "," << ( int )( ( this->_playerCamera.y * 8.0f + GetMouseY() ) / 8.0f ) << "]" << std::endl;
 
 		this->_pScreen->drawWorld( *this->_world, this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
@@ -443,27 +448,32 @@ public:
 
 	void updatePlayerCamera( float fElapsedTime )
 	{
-		float speed = 1.0f; // 1.0f is 1 tile size
+		float speed = 40.0f; // 1.0f is 1 tile size
 		if ( this->IsFocused() )
 		{
-			if ( this->GetKey( olc::Key::W ).bPressed || this->GetKey( olc::Key::W ).bHeld )
+			if ( this->GetKey( olc::Key::F ).bPressed )
+			{
+				this->_freeRoam = !this->_freeRoam;
+			}
+
+			if ( this->GetKey( olc::Key::UP ).bPressed || this->GetKey( olc::Key::UP ).bHeld )
 			{
 				this->_playerCamera.y += -speed * fElapsedTime;
 			}
 
-			if ( this->GetKey( olc::Key::S ).bPressed || this->GetKey( olc::Key::S ).bHeld )
+			if ( this->GetKey( olc::Key::DOWN ).bPressed || this->GetKey( olc::Key::DOWN ).bHeld )
 			{
 				this->_playerCamera.y += speed * fElapsedTime;
 			}
 
 
-			if ( this->GetKey( olc::Key::A ).bPressed || this->GetKey( olc::Key::A ).bHeld )
+			if ( this->GetKey( olc::Key::LEFT ).bPressed || this->GetKey( olc::Key::LEFT ).bHeld )
 			{
 				this->_playerCamera.x += -speed * fElapsedTime;
 			}
 
 
-			if ( this->GetKey( olc::Key::D ).bPressed || this->GetKey( olc::Key::D ).bHeld )
+			if ( this->GetKey( olc::Key::RIGHT ).bPressed || this->GetKey( olc::Key::RIGHT ).bHeld )
 			{
 				this->_playerCamera.x += speed * fElapsedTime;
 			}

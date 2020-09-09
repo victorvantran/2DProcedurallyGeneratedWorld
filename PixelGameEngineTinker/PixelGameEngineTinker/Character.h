@@ -471,7 +471,7 @@ void Character::runJumpState( float deltaTime, World& world )
 	// Make the jump higher the longer the button is pressed
 	if ( !this->keyState( KeyInput::JumpKey ) && this->_currVelocity.y < 0.0f )
 	{
-		this->_currVelocity.y = -std::min<float>( this->_currVelocity.y, this->_minJumpSpeed );
+		this->_currVelocity.y = std::max<float>( this->_currVelocity.y, -this->_minJumpSpeed );
 	}
 	
 

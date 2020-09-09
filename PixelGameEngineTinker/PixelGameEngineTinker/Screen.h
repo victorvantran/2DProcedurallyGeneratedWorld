@@ -24,29 +24,22 @@ public:
 	static void drawLayer( Layer<T>* layer, Atlas* atlas, olc::vf2d cameraPosition, olc::vi2d tileMatrixDimension, float scale = 1.0f);
 
 
-	static void drawWorldChunkBackground( WorldChunk& worldChunk, float scale = 1.0f )
+	static void drawWorldChunkBackground( WorldChunk& worldChunk, olc::vf2d cameraPosition, float scale = 1.0f )
 	{
-			Atlas worldChunkAtlas = worldChunk.getAtlas();
+		// Draws the background of a world chunk
+		// [!] Temporary: Need to improve so that it pans with the camera
+		Atlas worldChunkAtlas = worldChunk.getAtlas();
 
-			if ( worldChunkAtlas.getDecalBackground() != nullptr )
-			{
-
-			//pge->DrawPartialDecal(
-			//	worldChunk->getPosition() * worldChunkAtlas.getTileDimension(),
-			//	worldChunkAtlas.getDecalBackground(),
-			//	olc::vf2d{ 0.0f, 0.0f },
-			//	olc::vf2d{ ( float )worldChunkAtlas.getDecalBackground()->sprite->width, ( float )worldChunkAtlas.getDecalBackground()->sprite->height },
-			//	olc::vf2d{ 1.0f, 1.0f }
-			//);
-
-			const olc::vf2d position = worldChunk.getPosition() * worldChunkAtlas.getTileDimension();
-
+		if ( worldChunkAtlas.getDecalBackground() != nullptr )
+		{
 			pge->DrawDecal
 			(
-				worldChunk.getPosition() * worldChunkAtlas.getTileDimension(),
+				worldChunk.getPosition() * worldChunkAtlas.getTileDimension(), // + cameraPosition
 				worldChunkAtlas.getDecalBackground(),
 				olc::vf2d{ scale, scale }
 			);
+			
+			olc::vf2d offset = cameraPosition - olc::vi2d{ cameraPosition };
 		}
 
 		return;
@@ -62,19 +55,21 @@ public:
 
 
 		// [!] Temporoary: Draw background of the worldchunk
+		// Can detect all world chunks and draw all background by checking all 4 points of the camera with cameraPosition and scopeDimension, but for now wait until we overhaul worldChunk generation
 		olc::vi2d worldChunkIndex = olc::vi2d{ ( int )cameraPosition.x, ( int )cameraPosition.y };
 		WorldChunk* worldChunk = world.getWorldChunkFromIndex( worldChunkIndex );
 		
 		if ( worldChunk != nullptr )
 		{
-			Screen::drawWorldChunkBackground( *worldChunk, scale );
+			Screen::drawWorldChunkBackground( *worldChunk, cameraPosition, scale );
 		}
+
 		
 
 		olc::vf2d offset = cameraPosition - olc::vi2d{ cameraPosition };
-		for ( int row = 0; row < scopeDimension.y + 1; row++ )
+		for ( int row = -1; row < scopeDimension.y + 1; row++ )
 		{
-			for ( int column = 0; column < scopeDimension.x + 1; column++ )
+			for ( int column = -1; column < scopeDimension.x + 1; column++ )
 			{
 
 				olc::vi2d tileIndex = olc::vi2d{ column + ( int )cameraPosition.x, row + ( int )cameraPosition.y };
@@ -108,7 +103,8 @@ public:
 
 					/// Render the individual tile
 					pge->DrawPartialDecal(
-						olc::vf2d{ tilePosition.x + 0.5f - ( tilePosition.x < 0.0f ), tilePosition.y + 0.5f - ( tilePosition.y < 0.0f ) },
+						 olc::vf2d{ tilePosition.x + 0.5f - ( tilePosition.x < 0.0f ), tilePosition.y + 0.5f - ( tilePosition.y < 0.0f ) },
+						//olc::vf2d{ tilePosition.x, tilePosition.y },
 						worldChunkAtlas.getDecalTileSheet(),
 						olc::vf2d{ ( float )std::get<0>( worldChunkAtlas.mapping[tile->id] ), ( float )std::get<1>( worldChunkAtlas.mapping[tile->id] ) },
 						olc::vf2d{ ( float )std::get<2>( worldChunkAtlas.mapping[tile->id] ), ( float )std::get<3>( worldChunkAtlas.mapping[tile->id] ) },
@@ -177,20 +173,15 @@ public:
 	static void drawCharacter( Character& character, olc::vf2d cameraPosition, float scale = 1.0f )
 	{
 		/// Renders the character
-		/// Temporary use original tile size; need to add member variables for screen: TileDimension...
-
+		/// [!] Temporary use original tile size; need to add member variables for screen: TileDimension...
 		pge->DrawRect( ( character.getCurrPosition() - character.getHalfSize() - cameraPosition ) * settings::ATLAS::TILE_DIMENSION, character.getHalfSize() * 2.0f * settings::ATLAS::TILE_DIMENSION * scale, olc::WHITE );
 
-		
-		pge->DrawPartialDecal(
-			( character.getCurrPosition() - character.getHalfSize() - cameraPosition ) * settings::ATLAS::TILE_DIMENSION + olc::vf2d{ 0.5f, 0.5f }, // added 0.5f offset due to decal being off, not the collision detection
+		pge->DrawDecal(
+			olc::vf2d{ olc::vi2d{ ( character.getCurrPosition() - character.getHalfSize() - cameraPosition ) * settings::ATLAS::TILE_DIMENSION } } + olc::vf2d{ 0.5f, 0.5f }, // added 0.5f offset due to decal being off, not the collision detection
 			character.getDecal(),
-			olc::vf2d{ 0.0f, 0.0f },
-			olc::vf2d{ (float)character.getDecal()->sprite->width, (float)character.getDecal()->sprite->height },
 			olc::vf2d{ ( 8.0f / character.getDecal()->sprite->width ) * character.getHalfSize().x * 2 * scale, ( 8.0f / character.getDecal()->sprite->height ) * character.getHalfSize().y * 2 * scale }
 		);
 		
-
 		return;
 	}
 
