@@ -136,7 +136,8 @@ public:
 		this->_spriteLoading = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\worldmapgrid_480x270_8x8.png" );
 		this->_spriteTileSetTinkerWorld = new olc::Sprite("C:\\Users\\Victor\\Desktop\\Tinker\\platformer_25x16_8x8.png");
 		this->_spriteTileSetForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_2x2_8x8_v2.png" );
-		this->_spriteBackgroundForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_background_v2_100x100_8x8.png" );;
+		//this->_spriteBackgroundForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_background_v3_100x100_8x8.png" );;
+		this->_spriteBackgroundForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_background_240x135_8x8.png" );;
 
 		return;
 	}

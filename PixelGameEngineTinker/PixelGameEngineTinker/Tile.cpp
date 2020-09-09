@@ -17,8 +17,8 @@ Tile::Tile()
 
 Tile::~Tile()
 {
-	delete[] this->edgeId;
-	delete[] this->edgeExist;
+	//delete[] this->edgeId;
+	//delete[] this->edgeExist;
 }
 
 

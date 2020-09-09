@@ -36,7 +36,7 @@ public:
 			(
 				worldChunk.getPosition() * worldChunkAtlas.getTileDimension(), // + cameraPosition
 				worldChunkAtlas.getDecalBackground(),
-				olc::vf2d{ scale, scale }
+				olc::vf2d{ scale*0.5f, scale*0.5f }
 			);
 			
 			olc::vf2d offset = cameraPosition - olc::vi2d{ cameraPosition };
