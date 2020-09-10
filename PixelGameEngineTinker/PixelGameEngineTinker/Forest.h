@@ -21,7 +21,7 @@ public:
 
 
 
-Forest::Forest()
+Forest::Forest() : WorldChunk() // [!] need to properly call parent class
 {
 	this->_chunkPosition = settings::WORLD_CHUNK::POSITION;
 	this->_chunkDimension = settings::WORLD_CHUNK::DIMENSION;
