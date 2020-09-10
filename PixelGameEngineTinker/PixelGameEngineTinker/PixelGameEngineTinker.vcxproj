@@ -217,6 +217,7 @@
     <ClInclude Include="Edge.h" />
     <ClInclude Include="Forest.h" />
     <ClInclude Include="GameState.h" />
+    <ClInclude Include="MarchingSquares.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="settings.h" />
