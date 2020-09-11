@@ -14,6 +14,7 @@ enum class TileType
 struct Tile
 {
 	int id = 0;
+	int configuration = 16;
 	bool exist = true;
 	// bool isDynamic;
 	TileType tileType;

@@ -1,7 +1,7 @@
 #pragma once
 #include "olcPixelGameEngine.h"
-#include "WorldChunk.h"
 #include "settings.h"
+#include "WorldChunk.h"
 
 class Forest : public WorldChunk
 {
@@ -15,7 +15,8 @@ public:
 	Forest( olc::vi2d chunkPosition, olc::vi2d chunkDimension, int octaves, float scalingBias, Atlas& atlas );
 
 	void create( olc::vi2d chunkPosition, olc::vi2d chunkDimension, int octaves, float scalingBias, Atlas& atlas );
-	void generateLayer();
+	void constructLayer();
+	void constructMesh();
 
 };
 
@@ -25,7 +26,6 @@ Forest::Forest() : WorldChunk() // [!] need to properly call parent class
 {
 	this->_chunkPosition = settings::WORLD_CHUNK::POSITION;
 	this->_chunkDimension = settings::WORLD_CHUNK::DIMENSION;
-	this->_tileDimension = settings::ATLAS::TILE_DIMENSION;
 	this->_octaves = settings::FOREST::OCTAVES;
 	this->_scalingBias = settings::FOREST::SCALING_BIAS;
 	this->_chunkSeed = nullptr;
@@ -35,13 +35,14 @@ Forest::Forest() : WorldChunk() // [!] need to properly call parent class
 
 Forest::~Forest()
 {
-
+	// all deletion done by WorldChunk
 }
 
 
 Forest::Forest( olc::vi2d chunkPosition, olc::vi2d chunkDimension, int octaves, float scalingBias, Atlas& atlas )
 {
-	this->create( chunkPosition, chunkDimension, octaves, scalingBias, atlas );
+	this->create( chunkPosition, chunkDimension, octaves, scalingBias, atlas);
+
 }
 
 
@@ -53,16 +54,15 @@ void Forest::create( olc::vi2d chunkPosition, olc::vi2d chunkDimension, int octa
 	this->_chunkPosition = chunkPosition;
 	this->_chunkDimension = chunkDimension;
 	this->_chunkAtlas = atlas;
-	this->_tileDimension = atlas.getTileDimension();
 
 	this->generateRandomSeed();
 	this->generatePerlinNoise2D();
-	this->generateLayer();
+	this->constructLayer();
 	return;
 }
 
 
-void Forest::generateLayer()
+void Forest::constructLayer()
 {
 /// Generates a forest layer
 	this->_chunkLayer = Layer<Tile>( this->_chunkDimension );
@@ -77,19 +77,19 @@ void Forest::generateLayer()
 
 		if ( tileDecider < 32 )
 		{
-			forestMapping.push_back( std::tuple{ 3, true, TileType::Block } );
+			forestMapping.push_back( std::tuple{ 3, true, TileType::Block } ); // Stone
 		}
 		else if ( tileDecider < 64 )
 		{
-			forestMapping.push_back( std::tuple{ 3, true, TileType::Block } );
+			forestMapping.push_back( std::tuple{ 3, true, TileType::Block } ); // Stone
 		}
 		else if ( tileDecider < 96 )
 		{
-			forestMapping.push_back( std::tuple{ 2, true, TileType::Block } );
+			forestMapping.push_back( std::tuple{ 2, true, TileType::Block } ); // Dirt
 		}
 		else if ( tileDecider < 128 )
 		{
-			forestMapping.push_back( std::tuple{ 1, true, TileType::Block} );
+			forestMapping.push_back( std::tuple{ 1, true, TileType::Block} ); // Grass
 		}
 		else if ( tileDecider < 160 )
 		{
@@ -110,9 +110,30 @@ void Forest::generateLayer()
 	}
 
 	this->_chunkLayer.copyMapping( forestMapping );
-	
+	this->constructMesh();
 
 	return;
 }
 
+
+
+void Forest::constructMesh()
+{
+	// Constructs a mesh of the map to over lay
+	this->_chunkMesh.generateMeshMapping( this->_chunkLayer.getMapping(), this->_chunkLayer.getDimension() );
+	
+	/*
+	int* a =this->_chunkMesh.getMapping();
+	for ( int x = 0; x < this->_chunkLayer.getDimension().x - 1; x++ )
+	{
+		for ( int y = 0; y < this->_chunkLayer.getDimension().y - 1; y++ )
+		{
+			std::cout << a[y * ( this->_chunkLayer.getDimension().x - 1) + x] << std::endl;
+		}
+	}
+	*/
+
+	this->_chunkMesh.meshify( this->_chunkLayer );
+	return;
+}
 

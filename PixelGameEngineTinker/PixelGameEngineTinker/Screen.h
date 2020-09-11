@@ -7,6 +7,7 @@
 #include "World.h"
 #include "WorldChunk.h"
 #include "Character.h"
+#include "MarchingSquares.h"
 
 class Screen : public olc::PGEX
 {
@@ -34,7 +35,7 @@ public:
 		{
 			pge->DrawDecal
 			(
-				worldChunk.getPosition() * worldChunkAtlas.getTileDimension(), // + cameraPosition
+				worldChunk.getPosition() * settings::RESOLUTION::TILE_DIMENSION, // + cameraPosition
 				worldChunkAtlas.getDecalBackground(),
 				olc::vf2d{ scale*0.5f, scale*0.5f }
 			);
@@ -96,18 +97,39 @@ public:
 					{
 						olc::vi2d
 						{
-							( int )( ( ( float )column - offset.x ) * ( float )worldChunkAtlas.getTileDimension().x ),
-							( int )( ( ( float )row - offset.y ) * ( float )worldChunkAtlas.getTileDimension().y )
+							( int )( ( ( float )column - offset.x ) * ( float )settings::RESOLUTION::TILE_DIMENSION.x ),
+							( int )( ( ( float )row - offset.y ) * ( float )settings::RESOLUTION::TILE_DIMENSION.y )
 						},
 					};
 
+					
+					int blockFamilyColumns = (int)( worldChunkAtlas.getSpriteTileSheet()->width ) / ( settings::RESOLUTION::TILE_DIMENSION.x * 4 );
+					
+
+					int blockFamilyX = ( tile->id % blockFamilyColumns ) * 4;
+					int blockFamilyY = ( tile->id / blockFamilyColumns ) * 4;
+
+					int blockFamilyMemberX = tile->configuration % 4;
+					int blockFamilyMemberY = tile->configuration / 4;
+
+					int blockX = blockFamilyX + blockFamilyMemberX;
+					int blockY = blockFamilyY + blockFamilyMemberY;
+
+					int linearizedIndex = blockY * settings::RESOLUTION::TILE_DIMENSION.x + blockX;
+
+
+					linearizedIndex = blockFamilyMemberY * settings::RESOLUTION::TILE_DIMENSION.x + blockFamilyMemberX;
+
+					
 					/// Render the individual tile
 					pge->DrawPartialDecal(
 						 olc::vf2d{ tilePosition.x + 0.5f - ( tilePosition.x < 0.0f ), tilePosition.y + 0.5f - ( tilePosition.y < 0.0f ) },
 						//olc::vf2d{ tilePosition.x, tilePosition.y },
 						worldChunkAtlas.getDecalTileSheet(),
-						olc::vf2d{ ( float )std::get<0>( worldChunkAtlas.mapping[tile->id] ), ( float )std::get<1>( worldChunkAtlas.mapping[tile->id] ) },
-						olc::vf2d{ ( float )std::get<2>( worldChunkAtlas.mapping[tile->id] ), ( float )std::get<3>( worldChunkAtlas.mapping[tile->id] ) },
+						//olc::vf2d{ ( float )std::get<0>( worldChunkAtlas.mapping[tile->id] ), ( float )std::get<1>( worldChunkAtlas.mapping[tile->id] ) },
+						olc::vf2d{ ( float )std::get<0>( worldChunkAtlas.mapping[linearizedIndex] ), ( float )std::get<1>( worldChunkAtlas.mapping[linearizedIndex] ) },
+						olc::vf2d{ settings::RESOLUTION::TILE_DIMENSION }, // can shorten the size of the mapping if we know that all the blocks are same size (no redundant emplacing]
+						//olc::vf2d{ ( float )std::get<2>( atlas->mapping[tile->id] ), ( float )std::get<3>( atlas->mapping[tile->id] ) },
 						olc::vf2d{ scale, scale }
 					);
 
@@ -139,7 +161,6 @@ public:
 				/// Therefore, we only need to draw out what the camera can see and not the entire matrix every time (added +1 to the for loops to add a little buffer)
 
 				Tile* tile = worldChunk.getTileFromIndex( column + ( int )cameraPosition.x, row + ( int )cameraPosition.y );
-				//Tile* tile = worldChunkLayer.getTile( column + ( int )cameraPosition.x, row + ( int )cameraPosition.y );
 				if ( tile != nullptr && tile->exist )
 				{
 					/// Get the float Position of the tile based on: its matrix index and slight decimal point offset 
@@ -148,8 +169,8 @@ public:
 					{
 						olc::vi2d
 						{
-							( int )( ( ( float )column - offset.x ) * ( float )worldChunkAtlas.getTileDimension().x ),
-							( int )( ( ( float )row - offset.y ) * ( float )worldChunkAtlas.getTileDimension().y )
+							( int )( ( ( float )column - offset.x ) * ( float )settings::RESOLUTION::TILE_DIMENSION.x ),
+							( int )( ( ( float )row - offset.y ) * ( float )settings::RESOLUTION::TILE_DIMENSION.y )
 						},
 					};
 
@@ -158,7 +179,7 @@ public:
 						olc::vf2d{ tilePosition.x + 0.5f - ( tilePosition.x < 0.0f ), tilePosition.y + 0.5f - ( tilePosition.y < 0.0f ) },
 						worldChunkAtlas.getDecalTileSheet(),
 						olc::vf2d{ ( float )std::get<0>( worldChunkAtlas.mapping[tile->id] ), ( float )std::get<1>( worldChunkAtlas.mapping[tile->id] ) },
-						olc::vf2d{ ( float )std::get<2>( worldChunkAtlas.mapping[tile->id] ), ( float )std::get<3>( worldChunkAtlas.mapping[tile->id] ) },
+						olc::vf2d{ settings::RESOLUTION::TILE_DIMENSION },
 						olc::vf2d{ scale, scale }
 					);
 
@@ -234,18 +255,17 @@ static void Screen::drawLayer( Layer<T>* layer, Atlas* atlas, olc::vf2d cameraPo
 				{
 					olc::vi2d
 					{
-						( int )( ( ( float )column - offset.x ) * ( float )atlas->getTileDimension().x),
-						( int )( ( ( float )row - offset.y ) * ( float )atlas->getTileDimension().y )
+						( int )( ( ( float )column - offset.x ) * ( float )settings::RESOLUTION::TILE_DIMENSION.x),
+						( int )( ( ( float )row - offset.y ) * ( float )settings::RESOLUTION::TILE_DIMENSION.y )
 					},
 				};
 				
-
 				/// Render the individual tile
 				pge->DrawPartialDecal(
 					olc::vf2d{ tilePosition.x + 0.5f - ( tilePosition.x < 0.0f ), tilePosition.y + 0.5f - ( tilePosition.y < 0.0f ) },
 					atlas->getDecalTileSheet(),
 					olc::vf2d{ ( float )std::get<0>( atlas->mapping[tile->id] ), ( float )std::get<1>( atlas->mapping[tile->id] ) },
-					olc::vf2d{ ( float )std::get<2>( atlas->mapping[tile->id] ), ( float )std::get<3>( atlas->mapping[tile->id] ) },
+					olc::vf2d{ settings::RESOLUTION::TILE_DIMENSION },
 					olc::vf2d{ scale, scale }
 				);
 

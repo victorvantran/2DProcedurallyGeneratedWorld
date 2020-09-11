@@ -32,7 +32,8 @@ public:
 	T* getCell( int x, int y );
 	T* getCell( olc::vi2d position );
 
-	olc::vi2d getLayerDimension();
+	T* getMapping();
+	olc::vi2d getDimension();
 
 };
 
@@ -208,9 +209,17 @@ T* Layer<T>::getCell( olc::vi2d indicies )
 }
 
 
+template<typename T>
+T* Layer<T>::getMapping()
+{
+	// Returns a pointer to the first element of the mapping
+	return this->_pCells;
+}
+
+
 
 template<typename T>
-olc::vi2d Layer<T>::getLayerDimension()
+olc::vi2d Layer<T>::getDimension()
 {
 	/// Returns the dimension of the layer matrix
 	return this->_layerDimension;

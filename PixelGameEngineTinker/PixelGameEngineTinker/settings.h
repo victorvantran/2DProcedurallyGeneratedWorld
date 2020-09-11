@@ -8,6 +8,7 @@ namespace settings
 	struct RESOLUTION
 	{
 		const static olc::vi2d SCREEN_DIMENSION;
+		const static olc::vi2d TILE_DIMENSION;
 		const static olc::vi2d PIXEL_SCALE;
 	};
 

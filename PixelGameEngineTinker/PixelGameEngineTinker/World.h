@@ -8,11 +8,13 @@
 #include "Tile.h"
 #include "WorldChunk.h"
 #include "Forest.h"
+#include "MarchingSquares.h"
 
 class World
 {
 private:
 	std::vector<WorldChunk*> _worldChunks; // renderable
+	mesh::MarchingSquares<Tile> _meshGenerator;
 	
 	// workingWorldChunk
 
@@ -79,7 +81,7 @@ void World::destructWorld()
 void World::generateTestForest( olc::vf2d chunkPosition, olc::vi2d forestDimension, int octaves, float scalingBias, Atlas& atlas )
 {
 /// Creates a randomly generated Forest layer by Perlin Noise of specific size and atlas
-	Forest* forest = new Forest( chunkPosition, forestDimension, octaves, scalingBias, atlas ); // remember to delete
+	Forest* forest = new Forest( chunkPosition, forestDimension, octaves, scalingBias, atlas ); // remember to delete [circular problem]
 	this->_worldChunks.push_back( forest );
 
 	return;

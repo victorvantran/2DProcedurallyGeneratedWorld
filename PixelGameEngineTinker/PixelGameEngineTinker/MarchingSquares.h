@@ -69,6 +69,11 @@ namespace mesh
 
 		Grid( T* map, const olc::vi2d& gridDimension );
 		Grid( T* map, int gridWidth, int gridHeight );
+
+		Cell* getCells();
+		ControlIndex* getControlIndicies();
+
+		olc::vi2d getDimension();
 	};
 
 
@@ -77,14 +82,13 @@ namespace mesh
 
 
 	template<typename T> // Example: Tile
-	class MarchingSquares
+	class MarchingSquares : public olc::PGEX
 	{
 	private:
 		Grid<T>* _grid;
-		int* _mesh; // An array of integers that represent the configuration/id of a tile. Only purpose is to render. Nothing else about it is interactable. That is reserved for the Tile
+		int* _meshMapping; // An array of integers that represent the configuration/id of a tile. Only purpose is to render. Nothing else about it is interactable. That is reserved for the Tile
 		
 	public:
-
 		MarchingSquares();
 		~MarchingSquares();
 
@@ -93,7 +97,18 @@ namespace mesh
 		// void generate( layer );
 		void destroy();
 
-		int* getMeshMapping();
+		void updateCell( const olc::vi2d& index ); // [!] Future: reconfigure a cell and the surround cells ( used if a tile is modified (i.e. destroyed, built, changed )
+
+		Grid<T>* getGrid();
+		int* getMapping();
+
+
+		void meshify( Layer<T>& layer );
+
+		void update( Layer<T>& layer );
+
+		void triangulateCell( const mesh::Cell& square, int x, int y );
+
 	};
 
 
@@ -178,15 +193,15 @@ mesh::Cell::Cell( ControlIndex* topLeft, ControlIndex* topRight, ControlIndex* b
 	{
 		this->configuration += 1;
 	}
-	if ( this->topLeft->exist )
+	if ( this->topRight->exist )
 	{
 		this->configuration += 2;
 	}
-	if ( this->topLeft->exist )
+	if ( this->bottomRight->exist )
 	{
 		this->configuration += 4;
 	}
-	if ( this->topLeft->exist )
+	if ( this->bottomLeft->exist )
 	{
 		this->configuration += 8;
 	}
@@ -242,7 +257,7 @@ mesh::Grid<T>::Grid( T* map, const olc::vi2d& gridDimension )
 		for ( int y = 0; y < gridHeight; y++ )
 		{
 			olc::vf2d position{ ( float )x, ( float )y }; // top left
-			bool exist = map[y * gridWidth + x].exists(); // ensure that T has exists() method
+			bool exist = map[y * gridWidth + x].exist; // ensure that T has exists() method
 			this->_controlIndicies[y * gridWidth + x] = ControlIndex( position, exist );
 		}
 	}
@@ -250,16 +265,23 @@ mesh::Grid<T>::Grid( T* map, const olc::vi2d& gridDimension )
 	// The reason for subtracting 1 is that the cells in the first rows and/or column do not have the neighbors
 	// to assign all of topRight, topLeft, bottomRight, bottomLeft
 	// Cells[0,0] is actually starting on Grid[1,1]
-	this->_cells = new Cells[( gridWidth - 1 ) * ( gridHeight - 1 )];
+	this->_cells = new Cell[( gridWidth - 1 ) * ( gridHeight - 1 )];
 	for ( int x = 0; x < ( gridWidth - 1 ); x++ )
 	{
 		for ( int y = 0; y < ( gridHeight - 1 ); y++ )
 		{
+			this->_cells[y * ( gridWidth - 1 ) + x] = Cell(
+				&this->_controlIndicies[( y ) * gridWidth + ( x )], // topLeft
+				&this->_controlIndicies[( y ) * gridWidth + ( x + 1 )], // topRight
+				&this->_controlIndicies[( y + 1 ) * gridWidth + ( x + 1 )], // bottomRight
+				&this->_controlIndicies[( y + 1 ) * gridWidth + ( x )] ); // bottomLeft
+			/*
 			this->_cells[y * ( gridWidth - 1 ) + x] = Cell( 
-				&controlIndicies[( y ) * ( gridWidth - 1 ) + ( x )], // topLeft
-				&controlIndicies[( y ) * ( gridWidth - 1 ) + ( x + 1 )], // topRight
-				&controlIndicies[( y + 1 ) * ( gridWidth - 1 ) + ( x + 1)], // bottomRight
-				&controlIndicies[( y + 1 ) * ( gridWidth - 1 ) + ( x )]); // bottomLeft
+				&this->_controlIndicies[( y ) * ( gridWidth - 1 ) + ( x )], // topLeft
+				&this->_controlIndicies[( y ) * ( gridWidth - 1 ) + ( x + 1 )], // topRight
+				&this->_controlIndicies[( y + 1 ) * ( gridWidth - 1 ) + ( x + 1)], // bottomRight
+				&this->_controlIndicies[( y + 1 ) * ( gridWidth - 1 ) + ( x )]); // bottomLeft
+			*/
 		}
 	}
 }
@@ -267,6 +289,8 @@ mesh::Grid<T>::Grid( T* map, const olc::vi2d& gridDimension )
 template<typename T>
 mesh::Grid<T>::Grid( T* map, int gridWidth, int gridHeight )
 {
+	this->_gridDimension = olc::vi2d{ gridWidth, gridHeight };
+
 	// Mark whether a control index exists (for example, has a tile located on it)
 	this->_controlIndicies = new ControlIndex[gridWidth * gridHeight];
 	for ( int x = 0; x < gridWidth; x++ )
@@ -274,7 +298,7 @@ mesh::Grid<T>::Grid( T* map, int gridWidth, int gridHeight )
 		for ( int y = 0; y < gridHeight; y++ )
 		{
 			olc::vf2d position{ ( float )x, ( float )y }; // top left
-			bool exist = map[y * gridWidth + x].exists(); // ensure that T has exists() method
+			bool exist = map[y * gridWidth + x].exist; // ensure that T has exists() method
 			this->_controlIndicies[y * gridWidth + x] = ControlIndex( position, exist );
 		}
 	}
@@ -282,20 +306,40 @@ mesh::Grid<T>::Grid( T* map, int gridWidth, int gridHeight )
 	// The reason for subtracting 1 is that the cells in the first rows and/or column do not have the neighbors
 	// to assign all of topRight, topLeft, bottomRight, bottomLeft
 	// Cells[0,0] is actually starting on Grid[1,1]
-	this->_cells = new Cells[( gridWidth - 1 ) * ( gridHeight - 1 )];
+	this->_cells = new Cell[( gridWidth - 1 ) * ( gridHeight - 1 )];
 	for ( int x = 0; x < ( gridWidth - 1 ); x++ )
 	{
 		for ( int y = 0; y < ( gridHeight - 1 ); y++ )
 		{
 			this->_cells[y * ( gridWidth - 1 ) + x] = Cell(
-				&controlIndicies[( y ) * ( gridWidth - 1 ) + ( x )], // topLeft
-				&controlIndicies[( y ) * ( gridWidth - 1 ) + ( x + 1 )], // topRight
-				&controlIndicies[( y + 1 ) * ( gridWidth - 1 ) + ( x + 1 )], // bottomRight
-				&controlIndicies[( y + 1 ) * ( gridWidth - 1 ) + ( x )] ); // bottomLeft
+				&this->_controlIndicies[( y ) * gridWidth + ( x )], // topLeft
+				&this->_controlIndicies[( y ) * gridWidth + ( x + 1 )], // topRight
+				&this->_controlIndicies[( y + 1 ) * gridWidth + ( x + 1 )], // bottomRight
+				&this->_controlIndicies[( y + 1 ) * gridWidth + ( x )] ); // bottomLeft
 		}
 	}
 }
 
+
+template<typename T>
+mesh::Cell* mesh::Grid<T>::getCells()
+{
+	return this->_cells;
+}
+
+
+template<typename T>
+olc::vi2d mesh::Grid<T>::getDimension()
+{
+	return this->_gridDimension;
+}
+
+
+template<typename T>
+mesh::ControlIndex* mesh::Grid<T>::getControlIndicies()
+{
+	return this->_controlIndicies;
+}
 
 
 // MarchingSquares
@@ -303,7 +347,7 @@ template<typename T>
 mesh::MarchingSquares<T>::MarchingSquares()
 {
 	this->_grid = nullptr;
-	this->_mesh = nullptr;
+	this->_meshMapping = nullptr;
 }
 
 template<typename T>
@@ -321,36 +365,321 @@ void mesh::MarchingSquares<T>::generateMeshMapping( T* map, const olc::vi2d& map
 	int gridHeight = mapDimension.y;
 
 	this->_grid = new Grid( map, gridWidth, gridHeight );
-	this->_meshMapping = new int[ ( gridWidth - 1 ) * ( gridHeight - 1 ) ]; // to be deleted by the Mesh, so must be assigned to a mesh
+	this->_meshMapping = new int[gridWidth * gridHeight];
 
-	int gridWidth = mapDimension.x;
-	int gridHeight = mapDimension.y;
-
-	for ( int x = 0; x < gridWidth - 1; x++ )
+	for ( int x = 0; x < gridWidth; x++ )
 	{
-		for ( int y = 0; y < gridHeight - 1; y++ )
+		for ( int y = 0; y < gridHeight; y++ )
 		{
-			this->_meshMapping[y * ( gridWidth - 1 ) + x] = this->_grid->_cells[y * ( gridWidth - 1 ) + x].configuration;
+			if ( x == 0 || y == 0 )
+			{
+				this->_meshMapping[y * gridWidth + x] = 15; // default solid block
+			}
+			else
+			{
+				this->_meshMapping[y * gridWidth + x] = this->_grid->getCells()[(y-1) * (gridWidth - 1) + (x-1)].configuration;
+			}
 		}
 	}
 
 	return;
 }
 
-// generate ( World Chunk )
+// generateMeshMapping ( World Chunk )
 
 template<typename T>
 void mesh::MarchingSquares<T>::destroy()
 {
+	// Delete everything used to set up the creation of a mesh map, except the meshMap itself
+	// After destroying, can reuse generateMeshMapping given a different map parameter
+
 	delete this->_grid;
 	this->_grid = nullptr;
+
+	delete this->_meshMapping;
+	this->_meshMapping = nullptr;
 	return;
 }
 
-// generate ( World Chunk )
 
 template<typename T>
-int* mesh::MarchingSquares<T>::getMeshMapping()
+mesh::Grid<T>* mesh::MarchingSquares<T>::getGrid()
+{
+	return this->_grid;
+}
+
+template<typename T>
+int* mesh::MarchingSquares<T>::getMapping()
 {
 	return this->_meshMapping;
 }
+
+template<typename T>
+void mesh::MarchingSquares<T>::meshify( Layer<T>& layer )
+{
+	T* layerMap = layer.getMapping();
+
+	int layerWidth = layer.getDimension().x;
+	int layerHeight = layer.getDimension().y;
+
+
+
+	Cell* cells = this->_grid->getCells();
+
+
+
+	
+	// Top
+	for ( int x = 0; x < layerWidth; x++ )
+	{
+		for ( int y = 0; y < layerHeight; y++ )
+		{
+			if ( x == 0 || y == 0 )
+			{
+				// Do something special (or find borders if worldchunks are connected)
+				//continue;
+				layerMap[y * layerWidth + x].configuration = 15; // 15 is the all-solid configuration
+			}
+			else
+			{
+				layerMap[y * layerWidth + x].configuration = cells[( y - 1 ) * ( layerWidth - 1 ) + ( x - 1 )].configuration;//this->_meshMapping[y * layerWidth + x];
+			}
+		}
+	}
+	
+	// Bottom
+	/*
+	for ( int x = 0; x < layerWidth - 1; x++ )
+	{
+		for ( int y = 0; y < layerHeight - 1; y++ )
+		{
+			if ( x == 0 || y == 0 )
+			{
+				// Do something special (or find borders if worldchunks are connected)
+				//continue;
+				layerMap[y * layerWidth + x].configuration = 15; // 15 is the all-solid configuration
+			}
+			else
+			{
+				layerMap[y * layerWidth + x].configuration = cells[y* ( layerWidth - 1 ) + x ].configuration;//this->_meshMapping[y * layerWidth + x];
+			}
+		}
+	}
+	*/
+
+
+
+
+	return;
+}
+
+
+
+
+template<typename T>
+void mesh::MarchingSquares<T>::update( Layer<T>& layer )
+{
+	
+	olc::vi2d gridDimension = this->_grid->getDimension();
+	int gridWidth = gridDimension.x;
+	int gridHeight = gridDimension.y;
+
+	//std::cout << gridWidth << gridHeight << std::endl;
+
+	
+	T* map = layer.getMapping();
+
+	for ( int x = 0; x < gridWidth; x++ )
+	{
+		for ( int y = 0; y < gridHeight; y++ )
+		{
+			olc::vf2d position{ ( float )x, ( float )y }; // top left
+			bool exist = map[y * gridWidth + x].exists(); // ensure that T has exists() method
+			this->_grid->getControlIndicies()[y * gridWidth + x].exist = exist;// = ControlIndex( position, exist );
+		}
+	}
+
+	// The reason for subtracting 1 is that the cells in the first rows and/or column do not have the neighbors
+	// to assign all of topRight, topLeft, bottomRight, bottomLeft
+	// Cells[0,0] is actually starting on Grid[1,1]
+
+	Cell* cells = this->_grid->getCells();
+	for ( int x = 0; x < ( gridWidth - 1 ); x++ )
+	{
+		for ( int y = 0; y < ( gridHeight - 1 ); y++ )
+		{
+
+			cells[y * ( gridWidth - 1 ) + x] = Cell(
+					&this->_grid->getControlIndicies()[( y )*gridWidth + ( x )], // topLeft
+					&this->_grid->getControlIndicies()[( y )*gridWidth + ( x + 1 )], // topRight
+					&this->_grid->getControlIndicies()[( y + 1 ) * gridWidth + ( x + 1 )], // bottomRight
+					&this->_grid->getControlIndicies()[( y + 1 ) * gridWidth + ( x )] ); // bottomLeft
+
+		}
+	}
+
+
+	for ( int x = 0; x < gridWidth; x++ )
+	{
+		for ( int y = 0; y < gridHeight; y++ )
+		{
+			if ( x == 0 || y == 0 )
+			{
+				this->_meshMapping[y * gridWidth + x] = 15; // default solid block
+			}
+			else
+			{
+				this->_meshMapping[y * gridWidth + x] = cells[( y - 1 ) * ( gridWidth - 1 ) + ( x - 1 )].configuration;
+			}
+		}
+	}
+
+
+	/*
+	for ( int x = 0; x < gridWidth - 1; x++ )
+	{
+		for ( int y = 0; y < gridHeight - 1; y++ )
+		{
+			this->triangulateCell( cells[y * ( gridWidth - 1 ) + x], x, y );
+		}
+	}
+	*/
+	
+	
+	this->meshify( layer );
+}
+
+
+/*
+
+template<typename T>
+void mesh::MarchingSquares<T>::triangulateCell( const mesh::Cell& square, int x, int y )
+{
+	int tileSize = 8;
+	olc::vf2d controlNodeSize = -olc::vf2d{ ( float )tileSize, ( float )tileSize } *1.0f;
+
+	switch ( square.configuration )
+	{
+		// 0 point
+	case 0: // no mesh (empty)
+		break;
+
+		// 1 control node
+	case 1:
+		//pge->FillRect( olc::vf2d{ square.topLeft->position * tileSize - controlNodeSize / 2.0f }, controlNodeSize, square.topLeft->exists ? olc::BLACK : olc::DARK_GREY ); // scale down the square to see center
+		pge->DrawPartialDecal(
+			olc::vf2d{ square.topLeft->position * tileSize - controlNodeSize / 2.0f },
+			this->decalTile,
+			olc::vf2d{ 1.0f, 0.0f } * tileSize,
+			olc::vf2d{ ( float )tileSize, ( float )tileSize } );
+		break;
+	case 2:
+		pge->DrawPartialDecal(
+			olc::vf2d{ square.topLeft->position * tileSize - controlNodeSize / 2.0f },
+			this->decalTile,
+			olc::vf2d{ 2.0f, 0.0f } *tileSize,
+			olc::vf2d{ ( float )tileSize, ( float )tileSize } );
+		break;
+	case 4:
+		pge->DrawPartialDecal(
+			olc::vf2d{ square.topLeft->position * tileSize - controlNodeSize / 2.0f },
+			this->decalTile,
+			olc::vf2d{ 0.0f, 1.0f } *tileSize,
+			olc::vf2d{ ( float )tileSize, ( float )tileSize } );
+		break;
+	case 8:
+		pge->DrawPartialDecal(
+			olc::vf2d{ square.topLeft->position * tileSize - controlNodeSize / 2.0f },
+			this->decalTile,
+			olc::vf2d{ 0.0f, 2.0f } *tileSize,
+			olc::vf2d{ ( float )tileSize, ( float )tileSize } );
+		break;
+
+		// 2 control node
+	case 3:
+		pge->DrawPartialDecal(
+			olc::vf2d{ square.topLeft->position * tileSize - controlNodeSize / 2.0f },
+			this->decalTile,
+			olc::vf2d{ 3.0f, 0.0f } *tileSize,
+			olc::vf2d{ ( float )tileSize, ( float )tileSize } );
+		break;
+	case 6:
+		pge->DrawPartialDecal(
+			olc::vf2d{ square.topLeft->position * tileSize - controlNodeSize / 2.0f },
+			this->decalTile,
+			olc::vf2d{ 2.0f, 1.0f } *tileSize,
+			olc::vf2d{ ( float )tileSize, ( float )tileSize } );
+		break;
+	case 9:
+		pge->DrawPartialDecal(
+			olc::vf2d{ square.topLeft->position * tileSize - controlNodeSize / 2.0f },
+			this->decalTile,
+			olc::vf2d{ 1.0f, 2.0f } *tileSize,
+			olc::vf2d{ ( float )tileSize, ( float )tileSize } );
+		break;
+	case 12:
+		pge->DrawPartialDecal(
+			olc::vf2d{ square.topLeft->position * tileSize - controlNodeSize / 2.0f },
+			this->decalTile,
+			olc::vf2d{ 0.0f, 3.0f } *tileSize,
+			olc::vf2d{ ( float )tileSize, ( float )tileSize } );
+		break;
+	case 5:
+		pge->DrawPartialDecal(
+			olc::vf2d{ square.topLeft->position * tileSize - controlNodeSize / 2.0f },
+			this->decalTile,
+			olc::vf2d{ 1.0f, 1.0f } *tileSize,
+			olc::vf2d{ ( float )tileSize, ( float )tileSize } );
+		break;
+	case 10:
+		pge->DrawPartialDecal(
+			olc::vf2d{ square.topLeft->position * tileSize - controlNodeSize / 2.0f },
+			this->decalTile,
+			olc::vf2d{ 2.0f, 2.0f } *tileSize,
+			olc::vf2d{ ( float )tileSize, ( float )tileSize } );
+		break;
+
+		// 3 control node
+	case 7:
+		pge->DrawPartialDecal(
+			olc::vf2d{ square.topLeft->position * tileSize - controlNodeSize / 2.0f },
+			this->decalTile,
+			olc::vf2d{ 3.0f, 1.0f } *tileSize,
+			olc::vf2d{ ( float )tileSize, ( float )tileSize } );
+		break;
+	case 11:
+		pge->DrawPartialDecal(
+			olc::vf2d{ square.topLeft->position * tileSize - controlNodeSize / 2.0f },
+			this->decalTile,
+			olc::vf2d{ 3.0f, 2.0f } *tileSize,
+			olc::vf2d{ ( float )tileSize, ( float )tileSize } );
+		break;
+	case 13:
+		pge->DrawPartialDecal(
+			olc::vf2d{ square.topLeft->position * tileSize - controlNodeSize / 2.0f },
+			this->decalTile,
+			olc::vf2d{ 1.0f, 3.0f } *tileSize,
+			olc::vf2d{ ( float )tileSize, ( float )tileSize } );
+		break;
+	case 14:
+		pge->DrawPartialDecal(
+			olc::vf2d{ square.topLeft->position * tileSize - controlNodeSize / 2.0f },
+			this->decalTile,
+			olc::vf2d{ 2.0f, 3.0f } *tileSize,
+			olc::vf2d{ ( float )tileSize, ( float )tileSize } );
+		break;
+
+		// 4 control node
+	case 15:
+		pge->DrawPartialDecal(
+			olc::vf2d{ square.topLeft->position * tileSize - controlNodeSize / 2.0f },
+			this->decalTile,
+			olc::vf2d{ 3.0f, 3.0f } *tileSize,
+			olc::vf2d{ ( float )tileSize, ( float )tileSize } );
+		break;
+	default:
+		break;
+	}
+	return;
+}
+*/

@@ -5,6 +5,7 @@ Tile::Tile()
 {
 	// Establishes essentially a blank, non-existent tile
 	this->id = 0;
+	this->configuration = 16;
 	this->exist = false;
 	this->tileType = TileType::Empty;
 

@@ -1,4 +1,5 @@
 #include "olcPixelGameEngine.h"
+#include "settings.h"
 #include "Atlas.h"
 
 
@@ -15,11 +16,10 @@ Atlas::~Atlas()
 
 
 
-Atlas::Atlas( olc::Sprite* spriteSheet, olc::Decal* decalSheet, olc::vi2d atlasDimension, olc::vi2d tileDimension, olc::Decal* decalBackground )
+Atlas::Atlas( olc::Sprite* spriteSheet, olc::Decal* decalSheet, olc::vi2d atlasDimension, olc::Decal* decalBackground )
 {
 	// Temporary constructor to create an atlas. In the future, unpack all the information from one datatype
 	this->_atlasDimension = atlasDimension;
-	this->_tileDimension = tileDimension;
 	this->_decalBackground = decalBackground;
 	this->create( spriteSheet, decalSheet );
 	//this->fillMapping();
@@ -75,9 +75,8 @@ void Atlas::fillMapping()
 	{
 		for ( int column = 0; column < this->_atlasDimension.x; column++ )
 		{
-			this->mapping.emplace_back( ( int )column * this->_tileDimension.x, ( int )row * this->_tileDimension.y, this->_tileDimension.x, this->_tileDimension.y );
+			this->mapping.emplace_back( ( int )column * settings::RESOLUTION::TILE_DIMENSION.x, ( int )row * settings::RESOLUTION::TILE_DIMENSION.y );
 		}
-
 	}
 
 	return;
@@ -122,14 +121,8 @@ olc::vi2d Atlas::getAtlasDimension()
 }
 
 
-olc::vi2d Atlas::getTileDimension()
-{
-	// Returns the dimension of the tile used to create an emplace array/mapping
-	return this->_tileDimension;
-}
 
-
-std::vector<std::tuple<int32_t, int32_t, int32_t, int32_t>> Atlas::getMapping()
+std::vector<std::tuple<int32_t, int32_t>> Atlas::getMapping()
 {
 	// Returns a mapping that directs a certain tile to a certain point in the tile sheet
 	return this->mapping;

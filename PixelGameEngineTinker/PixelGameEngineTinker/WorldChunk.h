@@ -4,23 +4,25 @@
 #include "Atlas.h"
 #include "Layer.h"
 #include "Tile.h"
+#include "Mesh.h"
+#include "MarchingSquares.h"
+#include "MeshGenerator.h"
+#include "World.h"
 
-class WorldChunk
+class WorldChunk : public olc::PGEX
 {
 private:
 
 protected:
-	olc::vf2d _chunkPosition; // top left
-
-	olc::vi2d _chunkDimension;
-	olc::vi2d _tileDimension;
-
 	Layer<Tile> _chunkLayer;
 	Atlas _chunkAtlas;
+	mesh::MarchingSquares<Tile> _chunkMesh;
+
+	olc::vf2d _chunkPosition; // top left
+	olc::vi2d _chunkDimension;
 
 	float* _chunkSeed;
 	float* _perlinNoise2D;
-
 
 	int _octaves;
 	float _scalingBias;
@@ -33,10 +35,12 @@ public:
 	void generateRandomSeed();
 	void generatePerlinNoise2D();
 
-	virtual void generateLayer() = 0;
+	virtual void constructLayer() = 0;
+	virtual void constructMesh() = 0;
 
 	Layer<Tile> getLayer();
 	Atlas getAtlas();
+	mesh::MarchingSquares<Tile> getMesh();
 
 	olc::vi2d getPosition();
 	olc::vi2d getCenterPosition();
@@ -51,22 +55,28 @@ public:
 	Tile* getTileFromPixelPosition( float x, float y );
 	Tile* getTileFromPixelPosition( olc::vf2d pixelPosition );
 
+	void updateMesh();
+
 };
 
 
 
 WorldChunk::WorldChunk()
 {
-///
+	//
 }
 
 
 WorldChunk::~WorldChunk()
 {
-///
+	//
 	delete[] this->_chunkSeed;
-	delete[] this->_perlinNoise2D;
+	this->_chunkSeed = nullptr;
 
+	delete[] this->_perlinNoise2D;
+	this->_perlinNoise2D = nullptr;
+
+	delete this->_chunkMesh.getMapping();
 }
 
 
@@ -134,6 +144,13 @@ void WorldChunk::generatePerlinNoise2D()
 
 
 
+void WorldChunk::updateMesh()
+{
+	this->_chunkMesh.update(this->_chunkLayer);
+}
+
+
+
 Layer<Tile> WorldChunk::getLayer()
 {
 	/// Returns the layer of the world chunk
@@ -145,6 +162,12 @@ Atlas WorldChunk::getAtlas()
 {
 	/// Returns the atlas of the world chunk
 	return this->_chunkAtlas;
+}
+
+mesh::MarchingSquares<Tile> WorldChunk::getMesh()
+{
+	/// Returns the mesh of the world chunk
+	return this->_chunkMesh;
 }
 
 
@@ -172,14 +195,14 @@ olc::vi2d WorldChunk::getDimension()
 olc::vi2d WorldChunk::getIndexFromPixelPosition( float x, float y )
 {
 /// Return cell index given absolute pixel position
-	return olc::vi2d{ ( int )( x / this->_tileDimension.x ), ( int )( y / this->_tileDimension.y ) };
+	return olc::vi2d{ ( int )( x / settings::RESOLUTION::TILE_DIMENSION.x ), ( int )( y / settings::RESOLUTION::TILE_DIMENSION.y ) };
 }
 
 
 olc::vi2d WorldChunk::getIndexFromPixelPosition( olc::vf2d pixelPosition )
 {
 /// Return cell index given absolute pixel position
-	return olc::vi2d{ ( int )( pixelPosition.x / this->_tileDimension.x ), ( int )( pixelPosition.y / this->_tileDimension.y ) };
+	return olc::vi2d{ ( int )( pixelPosition.x / settings::RESOLUTION::TILE_DIMENSION.x ), ( int )( pixelPosition.y / settings::RESOLUTION::TILE_DIMENSION.y ) };
 }
 
 
@@ -211,6 +234,8 @@ Tile* WorldChunk::getTileFromPixelPosition( olc::vf2d pixelPosition )
 	olc::vi2d index = this->getIndexFromPixelPosition( pixelPosition );
 	return this->_chunkLayer.getCell( index );
 }
+
+
 
 
 /*
