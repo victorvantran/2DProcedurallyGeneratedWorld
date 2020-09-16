@@ -212,6 +212,8 @@
   <ItemGroup>
     <ClInclude Include="AABB.h" />
     <ClInclude Include="Atlas.h" />
+    <ClInclude Include="BoundingBox.h" />
+    <ClInclude Include="BoundingBoxConsolidated.h" />
     <ClInclude Include="Character.h" />
     <ClInclude Include="DynamicObject.h" />
     <ClInclude Include="Edge.h" />
@@ -219,6 +221,7 @@
     <ClInclude Include="GameState.h" />
     <ClInclude Include="MarchingSquares.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
+    <ClInclude Include="QuadTree.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="settings.h" />
     <ClInclude Include="Layer.h" />

@@ -107,6 +107,7 @@ void Forest::constructLayer()
 		{
 			forestMapping.push_back( std::tuple{ 0, false, TileType::Empty } );
 		}
+
 	}
 
 	this->_chunkLayer.copyMapping( forestMapping );

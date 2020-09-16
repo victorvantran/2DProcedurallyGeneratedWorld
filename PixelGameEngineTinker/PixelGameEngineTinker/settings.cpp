@@ -54,3 +54,12 @@ const float settings::WORLD_CHUNK::SCALING_BIAS = 0.2f;
 /// Default Forest settings
 const float settings::FOREST::SCALING_BIAS = 0.2f;
 const int settings::FOREST::OCTAVES = 1; // [!] Limited by x value, so x <= y
+
+
+
+
+
+
+
+
+

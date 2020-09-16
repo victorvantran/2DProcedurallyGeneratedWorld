@@ -59,6 +59,96 @@ public:
 		// Can detect all world chunks and draw all background by checking all 4 points of the camera with cameraPosition and scopeDimension, but for now wait until we overhaul worldChunk generation
 		olc::vi2d worldChunkIndex = olc::vi2d{ ( int )cameraPosition.x, ( int )cameraPosition.y };
 		WorldChunk* worldChunk = world.getWorldChunkFromIndex( worldChunkIndex );
+
+		if ( worldChunk != nullptr )
+		{
+			Screen::drawWorldChunkBackground( *worldChunk, cameraPosition, scale );
+		}
+
+
+
+		olc::vf2d offset = cameraPosition - olc::vi2d{ cameraPosition };
+		for ( int row = -1; row < scopeDimension.y + 1; row++ )
+		{
+			for ( int column = -1; column < scopeDimension.x + 1; column++ )
+			{
+
+				olc::vi2d tileIndex = olc::vi2d{ column + ( int )cameraPosition.x, row + ( int )cameraPosition.y };
+				//olc::vi2d tilePixelPosition = olc::vi2d{ tileIndex.x * world.getTileDimension().x, tileIndex.y * world.getTileDimension().y };
+
+				/// Search for the WorldChunk that holds the given tile in the tileIndex coordinate 
+				WorldChunk* worldChunk = world.getWorldChunkFromIndex( tileIndex );
+
+				/// WorldChunk cannot be found (perhaps does not exist or not loaded) for a certain tile index; so skip
+				if ( worldChunk == nullptr )
+				{
+					continue;
+				}
+
+				Atlas worldChunkAtlas = worldChunk->getAtlas();
+
+				Tile* tile = worldChunk->getTileFromIndex( tileIndex );
+
+				if ( tile != nullptr && tile->exist )
+				{
+					/// Get the float Position of the tile based on: its matrix index and slight decimal point offset 
+					/// The slight decimal point is to make sure we do not miss rendering tiles that are slightly off screen
+					olc::vf2d tilePosition = olc::vf2d
+					{
+						olc::vi2d
+						{
+							( int )( ( ( float )column - offset.x ) * ( float )settings::RESOLUTION::TILE_DIMENSION.x ),
+							( int )( ( ( float )row - offset.y ) * ( float )settings::RESOLUTION::TILE_DIMENSION.y )
+						},
+					};
+
+
+					int blockFamilyColumns = ( int )( worldChunkAtlas.getSpriteTileSheet()->width ) / ( settings::RESOLUTION::TILE_DIMENSION.x * 4 );
+
+
+					int blockFamilyX = ( tile->id % blockFamilyColumns ) * 4;
+					int blockFamilyY = ( tile->id / blockFamilyColumns ) * 4;
+
+					int blockFamilyMemberX = 15 % 4;
+					int blockFamilyMemberY = 15 / 4;
+
+					int blockX = blockFamilyX + blockFamilyMemberX;
+					int blockY = blockFamilyY + blockFamilyMemberY;
+
+					int linearizedIndex = blockY * settings::RESOLUTION::TILE_DIMENSION.x + blockX;
+
+
+					/// Render the individual tile
+					pge->DrawPartialDecal(
+						olc::vf2d{ tilePosition.x + 0.5f - ( tilePosition.x < 0.0f ), tilePosition.y + 0.5f - ( tilePosition.y < 0.0f ) },
+						//olc::vf2d{ tilePosition.x, tilePosition.y },
+						worldChunkAtlas.getDecalTileSheet(),
+						//olc::vf2d{ ( float )std::get<0>( worldChunkAtlas.mapping[tile->id] ), ( float )std::get<1>( worldChunkAtlas.mapping[tile->id] ) },
+						olc::vf2d{ ( float )std::get<0>( worldChunkAtlas.mapping[linearizedIndex] ), ( float )std::get<1>( worldChunkAtlas.mapping[linearizedIndex] ) },
+						olc::vf2d{ settings::RESOLUTION::TILE_DIMENSION }, // can shorten the size of the mapping if we know that all the blocks are same size (no redundant emplacing]
+						//olc::vf2d{ ( float )std::get<2>( atlas->mapping[tile->id] ), ( float )std::get<3>( atlas->mapping[tile->id] ) },
+						olc::vf2d{ scale, scale }
+					);
+
+				}
+			}
+		}
+		return;
+	}
+
+
+
+	static void drawWorldMarchinSquares( World& world, olc::vf2d cameraPosition, olc::vi2d scopeDimension, float scale = 1.0f )
+	{
+		/// Renders all world chunks
+		/// Camera position is in matrix world [col, row]
+		/// scopeDimension is the matrix area of visible tiles [col, row]
+
+
+		// [!] Temporoary: Draw background of the worldchunk
+		// Can detect all world chunks and draw all background by checking all 4 points of the camera with cameraPosition and scopeDimension, but for now wait until we overhaul worldChunk generation
+		olc::vi2d worldChunkIndex = olc::vi2d{ ( int )cameraPosition.x, ( int )cameraPosition.y };
+		WorldChunk* worldChunk = world.getWorldChunkFromIndex( worldChunkIndex );
 		
 		if ( worldChunk != nullptr )
 		{

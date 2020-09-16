@@ -136,8 +136,8 @@ public:
 		this->_spriteLoading = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\worldmapgrid_480x270_8x8.png" );
 		this->_spriteTileSetTinkerWorld = new olc::Sprite("C:\\Users\\Victor\\Desktop\\Tinker\\platformer_25x16_8x8.png");
 		//this->_spriteTileSetForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_2x2_8x8_v2.png" );
-		//this->_spriteTileSetForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\marching_forest_8x8_8x8_v2.png" );
-		this->_spriteTileSetForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\beta_4x4_8x8.png" );
+		this->_spriteTileSetForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\marching_forest_8x8_8x8_v3.png" );
+		//this->_spriteTileSetForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\beta_4x4_8x8.png" );
 		//this->_spriteBackgroundForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_background_v3_100x100_8x8.png" );;
 		this->_spriteBackgroundForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_background_240x135_8x8.png" );;
 
@@ -281,7 +281,7 @@ public:
 	void runGameStateTinkerForestWorldLoading( float fElapsedTime )
 	{
 	/// Generate forests
-		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
+		//this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
 		//this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ settings::WORLD_CHUNK::DIMENSION.x, 0 }, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
 		//this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ 0, settings::WORLD_CHUNK::DIMENSION.y }, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
 		//this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + settings::WORLD_CHUNK::DIMENSION, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
@@ -319,9 +319,14 @@ public:
 	void runGameStateTinkerWorldLoading( float fElapsedTime )
 	{
 	///
-		// this->_world->generateTestForest( olc::vi2d{ 50, 50 }, olc::vi2d{ 40, 200 }, ( int )std::log2( 40 ) - 1, 0.2f, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION, settings::WORLD_CHUNK::DIMENSION, 0, 0.2f, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ settings::WORLD_CHUNK::DIMENSION.x, 0 }, settings::WORLD_CHUNK::DIMENSION, 0, 0.2f, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ 0, settings::WORLD_CHUNK::DIMENSION.y }, settings::WORLD_CHUNK::DIMENSION, 0, 0.2f, this->_atlasForest );
+		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + settings::WORLD_CHUNK::DIMENSION, settings::WORLD_CHUNK::DIMENSION, 0, 0.2f, this->_atlasForest );
 
-		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION, settings::WORLD_CHUNK::DIMENSION, (int)std::log2( settings::WORLD_CHUNK::DIMENSION .x ) - 1, 0.2f, this->_atlasForest );
+
+
+		//this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION, settings::WORLD_CHUNK::DIMENSION, (int)std::log2( settings::WORLD_CHUNK::DIMENSION .x ) - 1, 0.2f, this->_atlasForest );
 		//this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ settings::WORLD_CHUNK::DIMENSION.x, 0 }, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
 		//this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ 0, settings::WORLD_CHUNK::DIMENSION.y }, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
 		//this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + settings::WORLD_CHUNK::DIMENSION, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
@@ -382,6 +387,16 @@ public:
 			if ( chosenTile != nullptr )
 			{
 				std::cout << chosenTile->exist << std::endl;
+			}
+		}
+
+
+		if ( this->GetKey( olc::Key::I ).bPressed )
+		{
+			Tile* chosenTile = this->_world->getTileFromIndex( tileChosen );
+			if ( chosenTile != nullptr )
+			{
+				std::cout << chosenTile->id << std::endl;
 			}
 		}
 
