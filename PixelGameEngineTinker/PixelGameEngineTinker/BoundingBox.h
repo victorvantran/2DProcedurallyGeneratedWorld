@@ -11,6 +11,9 @@ struct BoundingBox
 	BoundingBox( T x = -1, T y = -1, T width = -1, T height = -1 );
 	~BoundingBox();
 
+	bool operator==( const BoundingBox<T>& rhs ) const;
+	bool operator>=( const BoundingBox<T>& rhs ) const; // encapsulate
+
 	void clear();
 };
 
@@ -27,6 +30,30 @@ BoundingBox<T>::BoundingBox( T x, T y, T width, T height )
 template<typename T>
 BoundingBox<T>::~BoundingBox()
 {
+}
+
+
+
+template<typename T>
+bool BoundingBox<T>::operator==( const BoundingBox<T>& rhs ) const
+{
+	return ( this->x == rhs.x &&
+		this->y == rhs.y &&
+		this->width == rhs.width &&
+		this->height == rhs.height
+		);
+}
+
+
+
+template<typename T>
+bool BoundingBox<T>::operator>=( const BoundingBox<T>& rhs ) const
+{
+	return ( this->x <= rhs.x &&
+		this->y <= rhs.y &&
+		( this->x + this->width ) >= ( rhs.x + rhs.width ) &&
+		( this->y + this->height ) >= ( rhs.y + rhs.height )
+		);
 }
 
 

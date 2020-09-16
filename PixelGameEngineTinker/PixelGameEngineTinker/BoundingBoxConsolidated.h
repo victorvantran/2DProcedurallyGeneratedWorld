@@ -6,20 +6,21 @@ template<typename T>
 struct BoundingBoxConsolidated : public BoundingBox<T>
 {
 	int id = -1;
-	int consolidateLevel = 0; // [!] derived from size, so not neccessary
 
-	BoundingBoxConsolidated<T>* = nullptr; // BoundingBoxConsolidated<T>[4]
+	// have a thing here
 
-	BoundingBoxConsolidated( T x = -1, T y = -1, T width = -1, T height = -1, int id = -1, int consolidateLevel = 0 );
+	BoundingBoxConsolidated( T x = -1, T y = -1, T width = -1, T height = -1, int id = -1 );
 	~BoundingBoxConsolidated();
+
+
 
 	void clear();
 };
 
 
 template<typename T>
-BoundingBoxConsolidated<T>::BoundingBoxConsolidated( T x, T y, T width, T height, int id, int consolidateLevel )
-	: BoundingBox<T>( x, y, width, height ), id( id ), consolidateLevel( consolidateLevel )
+BoundingBoxConsolidated<T>::BoundingBoxConsolidated( T x, T y, T width, T height, int id )
+	: BoundingBox<T>( x, y, width, height ), id( id )
 {
 
 }
@@ -33,6 +34,7 @@ BoundingBoxConsolidated<T>::~BoundingBoxConsolidated()
 
 
 
+
 template<typename T>
 void BoundingBoxConsolidated<T>::clear()
 {
@@ -43,3 +45,5 @@ void BoundingBoxConsolidated<T>::clear()
 	this->id = -1;
 	return;
 }
+
+

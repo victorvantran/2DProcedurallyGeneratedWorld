@@ -6,18 +6,17 @@
 #include <iterator>
 
 
-// need to transition from BoundingBox<int> to Tile (which means tile must have Cellsize)
+//[!] to stop the drawing, need to make childrenNodeIndicies == nullptr when they are all gone (maybe trakc how many nodes in quad tree and when remove function, if end up zero, then delete and nullptr?)
+// [!] problem; infinite recursion on insert and consolodate
 
-// [!] if divided == false: akin to _nodes == nulptr;
-// [!] if nodes[i] == nullptr: akin to nodes, = -1 (index)
 
 template<typename T>
 class QuadTree
 {
 public: // private
 	const static int _MAX_OBJECTS = 4;
-	const static int _MIN_LEVELS = 0; // 5 = 1024, 4 = 256, 3 = 64, 2 = 16, 1 = 4, 0 = 1 (2^level) (Change minLevels to 1?)
-
+	const static int _MIN_LEVELS = 0; // (level => gridsize => pixelSize) 5 => 1024 =>64, 4 => 32 => 512, 3 => 16 => 256, 2 => 8 => 128, 1 => 4 => 64, 0 => 2 => 32
+	const static int _MAX_LEVELS = 5; // [!] need to fix max levels stuff
 
 	int _myIndex;
 	int _parentIndex;
@@ -60,14 +59,13 @@ public:
 
 	void consolidate( int level );
 	void insert( BoundingBoxConsolidated<int> boundingBox );
+	void remove( const BoundingBoxConsolidated<int>& rBoundingBox );
 	std::vector<BoundingBoxConsolidated<int>> query( const BoundingBoxConsolidated<int>& boundingBox, std::vector<BoundingBoxConsolidated<int>>& returnObjects );
 
 
-	int* getChildrenNodeIndicies(); // [!] need to update to getChildrenNodeIndicies is a range of integers
+	int* getChildrenNodeIndicies();
 
 	BoundingBox<int> getBounds();
-
-	bool hasBoundingBox( BoundingBoxConsolidated<int> boundingBox );
 
 	BoundingBoxConsolidated<int>* getBoundingBoxes();
 
@@ -115,6 +113,8 @@ QuadTree<T>::QuadTree( int myIndex, int parentIndex, int level, int quadrant, Bo
 template<typename T>
 QuadTree<T>::~QuadTree()
 {
+	std::cout << "destruct" << std::endl;
+
 	this->clear();
 
 	delete this->_childrenNodeIndicies;
@@ -152,6 +152,8 @@ void QuadTree<T>::constructQuadTree( int myIndex, int parentIndex, int level, in
 template<typename T>
 void QuadTree<T>::clear()
 {
+	std::cout << "clear" << std::endl;
+
 	if ( this->_boundingBoxes != nullptr )
 	{
 		for ( int i = 0; i < 4; i++ )
@@ -165,7 +167,7 @@ void QuadTree<T>::clear()
 	{
 		for ( int i = 0; i < 4; i++ )
 		{
-			this->_childrenNodeIndicies[i] = -1; 
+			this->_childrenNodeIndicies[i] = -1;
 		}
 	}
 
@@ -175,6 +177,8 @@ void QuadTree<T>::clear()
 template<typename T>
 void QuadTree<T>::divide()
 {
+	std::cout << "divide" << std::endl;
+
 	// Splits the node into four subnodes each initialized with new bounds
 	/*
 	_________
@@ -190,9 +194,9 @@ void QuadTree<T>::divide()
 
 	// Calculate initial Shift
 	int initialShift = 0;
-	for ( int i = this->_level; i <= 5; i++ ) // [!] change 5 to be a variable parameter (log(2) gridSize + 1)
+	for ( int i = this->_level; i <= this->_MAX_LEVELS; i++ )
 	{
-		initialShift += ( 4 << ( ( 5 - i ) * 2 ) ) / 4; // 4^(5 - parentLevel)
+		initialShift += ( 4 << ( ( this->_MAX_LEVELS - i ) * 2 ) ) / 4; // 4^(5 - parentLevel)
 	}
 
 
@@ -200,7 +204,7 @@ void QuadTree<T>::divide()
 	int recursiveShift = 0;
 	QuadTree<T>* ancestor = this;
 	int j = 1;
-	for ( int i = this->_level; i <= 5; i++ )
+	for ( int i = this->_level; i <= this->_MAX_LEVELS; i++ )
 	{
 		recursiveShift += ancestor->getMyQuadrant() * ( ( 4 << ( j * 2 ) ) / 4 );
 		ancestor = &this->_referenceNodes[ancestor->getParentIndex()]; // index is the quadrant
@@ -234,6 +238,7 @@ void QuadTree<T>::divide()
 template<typename T>
 int QuadTree<T>::getQuadrant( const BoundingBoxConsolidated<int>& boundingBox )
 {
+	//std::cout << "getQuadrant" << std::endl;
 	// Given a boundingBox, returns the index of the nodes ( which quadrant the box belongs to )
 	float verticleMidpoint = this->_quadTreeBounds.x + ( this->_quadTreeBounds.width / 2 );
 	float horizontalMidpoint = this->_quadTreeBounds.y + ( this->_quadTreeBounds.height / 2 );
@@ -272,6 +277,10 @@ int QuadTree<T>::getQuadrant( const BoundingBoxConsolidated<int>& boundingBox )
 template<typename T>
 void QuadTree<T>::consolidate( int level )
 {
+	std::cout << "X" << std::endl;
+	std::cout << "consolidate" << std::endl;
+	std::cout << "Y" << std::endl;
+
 	// Check the four boundingBoxes. If two conditions are met:
 	// 1) they all have the same consolidation level
 	// 2) Given the position and size of the boundingBoxes from the array, determine if they "fill" the bounds of the QuadTree
@@ -296,22 +305,28 @@ void QuadTree<T>::consolidate( int level )
 			_boundingBoxes[0].width == ( ( 2 << ( this->_level ) ) / 2 )
 			)
 		)
+
 		// height check not necessary if our bounding box is a square, but for formality
 	{
+		if ( this->_level < this->_MAX_LEVELS )
+		{
+			int posX = std::min<int>( std::min<int>( _boundingBoxes[0].x, _boundingBoxes[1].x ), std::min<int>( _boundingBoxes[2].x, _boundingBoxes[3].x ) ); // technically only need to check for 3 of them
+			int posY = std::min<int>( std::min<int>( _boundingBoxes[0].y, _boundingBoxes[1].y ), std::min<int>( _boundingBoxes[2].y, _boundingBoxes[3].y ) );
+			int width = _boundingBoxes[0].width * 2;
+			int height = _boundingBoxes[0].height * 2;
+			int id = _boundingBoxes[0].id;
 
+			// [!] when we add encapsulate box, store the four sub bounding box
+			// [!] when we remove encapsulate, destroy this considiated bounding box, recursively find the bounding box to be destoryed, and add the other 3 instead
+			BoundingBoxConsolidated<int> encapsulateBox = BoundingBoxConsolidated<int>( posX, posY, width, height, id );
+			this->_consolidated = true;
 
-		int posX = std::min<int>( std::min<int>( _boundingBoxes[0].x, _boundingBoxes[1].x ), std::min<int>( _boundingBoxes[2].x, _boundingBoxes[3].x ) ); // technically only need to check for 3 of them
-		int posY = std::min<int>( std::min<int>( _boundingBoxes[0].y, _boundingBoxes[1].y ), std::min<int>( _boundingBoxes[2].y, _boundingBoxes[3].y ) );
-		int width = _boundingBoxes[0].width * 2;
-		int height = _boundingBoxes[0].height * 2;
-		int id = _boundingBoxes[0].id;
-
-		// [!] when we add encapsulate box, store the four sub bounding box
-		// [!] when we remove encapsulate, destroy this considiated bounding box, recursively find the bounding box to be destoryed, and add the other 3 instead
-		BoundingBoxConsolidated<int> encapsulateBox = BoundingBoxConsolidated<int>( posX, posY, width, height, id, 0 ); // [!] find the need for encapsulate nlevel when we can already retriveve from size
-		this->_consolidated = true;
-
-		this->_referenceNodes[this->_parentIndex].insert( encapsulateBox ); // make the encapsulate box hold pointer to other encapsulate box (so when removed, can re-add)
+			this->_referenceNodes[this->_parentIndex].insert( encapsulateBox ); // make the encapsulate box hold pointer to other encapsulate box (so when removed, can re-add)
+		}
+		else
+		{
+			return; // no need to consolidate at the root node beacuse there is no parent to insert the encapsulate box
+		}
 	}
 	else
 	{
@@ -326,13 +341,32 @@ void QuadTree<T>::consolidate( int level )
 				this->divide();
 			}
 
-			this->_boundingBoxCount = 0; // if we add stuff, it would overwrite our childrenNodeIndicies history, but that's okay because our encapsulated bounding box will hold history
+			//this->_boundingBoxCount = 0; // if we add stuff, it would overwrite our childrenNodeIndicies history, but that's okay because our encapsulated bounding box will hold history
+			//this->_boundingBoxCount = 0;
+
+
 
 			for ( int i = 0; i < 4; i++ )
 			{
 				int index = this->getQuadrant( this->_boundingBoxes[i] );
-				this->_referenceNodes[this->_childrenNodeIndicies[index]].insert( this->_boundingBoxes[i] );
+
+				BoundingBoxConsolidated<int> cachedBox = this->_boundingBoxes[i];
+				this->_boundingBoxes[i].clear();
+				this->_boundingBoxCount -= 1;
+				//this->_referenceNodes[this->_childrenNodeIndicies[index]].insert( this->_boundingBoxes[i] );
+				this->_referenceNodes[this->_childrenNodeIndicies[index]].insert( cachedBox );
 			}
+
+			// [!] if added (do not clear) (because could have added back and if you cleared it, then you're screwed); that's also why we don' reset the boundingbox count to 0 afterwards
+			// keep a record; if the same, then remove it and decrement
+
+			/*
+			for ( int i = 0; i < 4; i++ )
+			{
+				this->_boundingBoxes[i].clear();
+			}
+			*/
+			//this->_boundingBoxCount = 0;
 		}
 
 	}
@@ -344,6 +378,8 @@ void QuadTree<T>::consolidate( int level )
 template<typename T>
 void QuadTree<T>::insert( BoundingBoxConsolidated<int> boundingBox )
 {
+	std::cout << "insert" << std::endl;
+
 	// Determine if the node has any children nodes conceived yet, and if the object can be added into one of them
 	// If there are not yet any concieved child nodes or the object cannot entirely fit into a child node, store it in the parent node
 	// After adding the object, determine if splitting needs to occur if the current number of object exceeds the maximum amount of objects
@@ -353,21 +389,16 @@ void QuadTree<T>::insert( BoundingBoxConsolidated<int> boundingBox )
 	// If children nodes exist, and the bounds belong in one of them given by the index, then insert in the proper node
 
 
-	// Check if boundingBox has already been inserted here 
-	/*
-	if ( this->hasBoundingBox( boundingBox ) ) // [!] need to redefine hasbounding box as within the range of any of its members (hasEncapsualtedBoundingBox)
+
+	if ( !( this->_quadTreeBounds >= boundingBox ) )
 	{
 		return;
 	}
-	*/
-
-	// [!] If out of quadTreeBounds, return;
 
 
 	if ( this->_childrenNodeIndicies != nullptr )
 	{
 		int index = this->getQuadrant( boundingBox );
-
 		if ( this->_referenceNodes[this->_childrenNodeIndicies[index]].isConsolidated() == false )
 		{
 			this->_referenceNodes[this->_childrenNodeIndicies[index]].insert( boundingBox );
@@ -376,14 +407,101 @@ void QuadTree<T>::insert( BoundingBoxConsolidated<int> boundingBox )
 
 	}
 
-	this->_boundingBoxes[this->_boundingBoxCount] = boundingBox;
-	this->_boundingBoxCount += 1;
+
+	// Find the first free bounding box (it could be in any order because of remove method removing any)
+	for ( int i = 0; i < 4; i++ )
+	{
+		if ( this->_boundingBoxes[i].x == -1 ) // -1 indicates cleared
+		{
+			this->_boundingBoxes[i] = boundingBox;
+			this->_boundingBoxCount += 1;
+			break;
+		}
+	}
+
+	// this->_boundingBoxCount += 1;
+
+
+	if ( this->_boundingBoxCount > 4 ) // [!] need to fix
+	{
+		std::cout << "_________________________________________________________" << std::endl;
+		//this->_boundingBoxCount = 0; // hacky non-crash, but i think will render fail
+		//this->_boundingBoxCount = 4;
+	}
 
 	if ( this->_boundingBoxCount >= this->_MAX_OBJECTS && this->_level >= this->_MIN_LEVELS )
 	{
 		this->consolidate( this->_level );
 	}
 
+	return;
+}
+
+
+template<typename T>
+void QuadTree<T>::remove( const BoundingBoxConsolidated<int>& boundingBox )
+{
+	//std::cout << "remove" << std::endl;
+
+	// maybe it exists  without it being restricted to trees of width/2
+	for ( int i = 0; i < 4; i++ )
+	{
+		if ( this->_boundingBoxes[i] == boundingBox && this->_boundingBoxes[i].id == boundingBox.id )
+		{
+			this->_boundingBoxes[i].clear();
+			this->_boundingBoxCount -= 1;
+			this->_consolidated = false;
+			std::cout << "erased from higher level" << std::endl;
+
+			return;
+		}
+	}
+
+
+
+	if ( boundingBox.width == ( this->_quadTreeBounds.width / 2 ) ) // [!] size instead of width/height [!] can get rid of this condition
+	{
+		for ( int i = 0; i < 4; i++ )
+		{
+			if ( this->_boundingBoxes[i] == boundingBox && this->_boundingBoxes[i].id == boundingBox.id )
+			{
+				this->_boundingBoxes[i].clear();
+				this->_boundingBoxCount -= 1;
+				this->_consolidated = false;
+				std::cout << "erased from level 0" << std::endl;
+				return;
+			}
+		}
+	}
+	else
+	{
+		int i = this->getQuadrant( boundingBox );
+		if ( this->_referenceNodes != nullptr && this->_childrenNodeIndicies != nullptr && this->_referenceNodes[this->_childrenNodeIndicies[i]].getBounds() >= boundingBox )
+		{
+			// clear the bounding box if found one (which implies it's consolidated?)
+			for ( int j = 0; j < 4; j++ )
+			{
+				if ( this->_boundingBoxes[j] >= boundingBox && this->_boundingBoxes[j].id == boundingBox.id )
+				{
+					this->_boundingBoxes[j].clear();
+					this->_boundingBoxCount -= 1;
+					this->_consolidated = false;
+				}
+			}
+			this->_consolidated = false; // consolidate = false anyway
+
+			// regardless if found one or not, keep checking the actual tree because the bounding box may have been overwritten
+			this->_referenceNodes[this->_childrenNodeIndicies[i]].remove( boundingBox );
+			return;
+		}
+		else
+		{
+			// Trying to remove out of bounds
+			return;
+		}
+
+	}
+	// Trying to remove something that is non existent
 	return;
 }
 
@@ -408,7 +526,7 @@ std::vector<BoundingBoxConsolidated<int>> QuadTree<T>::query( const BoundingBoxC
 template<typename T>
 int* QuadTree<T>::getChildrenNodeIndicies()
 {
-	return this->_childrenNodeIndicies; // [!] change
+	return this->_childrenNodeIndicies;
 }
 
 template<typename T>
@@ -417,23 +535,6 @@ BoundingBox<int> QuadTree<T>::getBounds()
 	return this->_quadTreeBounds;
 }
 
-template<typename T>
-bool QuadTree<T>::hasBoundingBox( BoundingBoxConsolidated<int> boundingBox )
-{
-	// For now, just check if its x,y,width,height are same; but in the future, when we have encapsulated box, check if it resides within there recursively 
-	BoundingBoxConsolidated<int> memberBox;
-
-	for ( int i = 0; i < 4; i++ )
-	{
-		memberBox = this->_boundingBoxes[i];
-		if ( boundingBox.x == memberBox.x && boundingBox.y == memberBox.y && boundingBox.width == memberBox.width && boundingBox.height == memberBox.height )
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
 
 
 template<typename T>
