@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Tile.h"
 #include "BoundingBox.h"
 #include "BoundingBoxConsolidated.h"
 #include <vector>
@@ -14,6 +15,8 @@ public: // private
 	const static int _MIN_LEVELS = 0; // (level => gridsize => pixelSize) 5 => 1024 =>64, 4 => 32 => 512, 3 => 16 => 256, 2 => 8 => 128, 1 => 4 => 64, 0 => 2 => 32
 	const static int _MAX_LEVELS = 5; // [!] need to fix max levels
 
+	const static int _MIN_CELL_SIZE = ( 2 << QuadTree<T>::_MIN_LEVELS ) / 2;
+
 	int _myIndex;
 	int _parentIndex;
 	int _level;
@@ -26,8 +29,17 @@ public: // private
 	bool _consolidated;
 	bool _shaded;
 
+
+
 	BoundingBoxConsolidated<int>* _boundingBoxes;
+	T* _cells;
+
+
+
+
+
 	int _boundingBoxCount;
+	int _cellCount;
 
 
 	int* _childrenNodeIndicies;
@@ -53,12 +65,12 @@ public:
 	int getQuadrant( const BoundingBoxConsolidated<int>& boundingBox );
 
 	void consolidate( int level );
-	void insert( BoundingBoxConsolidated<int> boundingBox );
+	void insert( const BoundingBoxConsolidated<int>& boundingBox );
 	void remove( const BoundingBoxConsolidated<int>& rBoundingBox );
 
-	bool isCellOccupied( const BoundingBoxConsolidated<int>& BoundingBox );
-
 	std::vector<BoundingBoxConsolidated<int>> query( const BoundingBoxConsolidated<int>& boundingBox, std::vector<BoundingBoxConsolidated<int>>& returnObjects );
+
+	bool isCellOccupied( const BoundingBoxConsolidated<int>& BoundingBox );
 
 
 	int* getChildrenNodeIndicies();
@@ -181,6 +193,11 @@ void QuadTree<T>::divide()
 
 	*/
 
+	// Do not further split for the lowest level
+	if ( this->_level == QuadTree<T>::_MIN_LEVELS )
+	{
+		return;
+	}
 
 	this->_childrenNodeIndicies = new int[4];
 
@@ -287,6 +304,15 @@ void QuadTree<T>::consolidate( int level )
 			)
 		&&
 		(
+			(
+				_boundingBoxes[0].exist &&
+				_boundingBoxes[1].exist &&
+				_boundingBoxes[2].exist &&
+				_boundingBoxes[3].exist
+				)
+			)
+		&&
+		(
 			( level == this->_MIN_LEVELS ) ||
 			(
 				( _boundingBoxes[0].width == _boundingBoxes[1].width ) &&
@@ -303,22 +329,8 @@ void QuadTree<T>::consolidate( int level )
 			)
 		)
 	{
-		// Since level is lowest level, there is no children to check if all of them are consolidated
-		if ( this->_level == this->_MIN_LEVELS )
-		{
-			int posX = std::min<int>( std::min<int>( _boundingBoxes[0].x, _boundingBoxes[1].x ), std::min<int>( _boundingBoxes[2].x, _boundingBoxes[3].x ) ); // technically only need to check for 3 of them
-			int posY = std::min<int>( std::min<int>( _boundingBoxes[0].y, _boundingBoxes[1].y ), std::min<int>( _boundingBoxes[2].y, _boundingBoxes[3].y ) );
-			int width = _boundingBoxes[0].width * 2;
-			int height = _boundingBoxes[0].height * 2;
-			int id = _boundingBoxes[0].id;
-
-
-			BoundingBoxConsolidated<int> encapsulateBox = BoundingBoxConsolidated<int>( posX, posY, width, height, id );
-			this->_consolidated = true;
-			this->_referenceNodes[this->_parentIndex].insert( encapsulateBox );
-		}
 		// Since level is not lowest level, there is children to necessarilly check if all of them are consolidated
-		else if ( this->_level < this->_MAX_LEVELS )
+		if ( ( this->_level < this->_MAX_LEVELS ) && ( this->_level != this->_MIN_LEVELS ) )
 		{
 			for ( int i = 0; i < 4; i++ )
 			{
@@ -327,18 +339,20 @@ void QuadTree<T>::consolidate( int level )
 					return;
 				}
 			}
-
-			int posX = std::min<int>( std::min<int>( _boundingBoxes[0].x, _boundingBoxes[1].x ), std::min<int>( _boundingBoxes[2].x, _boundingBoxes[3].x ) ); // technically only need to check for 3 of them
-			int posY = std::min<int>( std::min<int>( _boundingBoxes[0].y, _boundingBoxes[1].y ), std::min<int>( _boundingBoxes[2].y, _boundingBoxes[3].y ) );
-			int width = _boundingBoxes[0].width * 2;
-			int height = _boundingBoxes[0].height * 2;
-			int id = _boundingBoxes[0].id;
-
-
-			BoundingBoxConsolidated<int> encapsulateBox = BoundingBoxConsolidated<int>( posX, posY, width, height, id );
-			this->_consolidated = true;
-			this->_referenceNodes[this->_parentIndex].insert( encapsulateBox );
 		}
+
+		// Add encapsulated box 
+		int posX = std::min<int>( std::min<int>( _boundingBoxes[0].x, _boundingBoxes[1].x ), std::min<int>( _boundingBoxes[2].x, _boundingBoxes[3].x ) ); // technically only need to check for 3 of them
+		int posY = std::min<int>( std::min<int>( _boundingBoxes[0].y, _boundingBoxes[1].y ), std::min<int>( _boundingBoxes[2].y, _boundingBoxes[3].y ) );
+		int width = _boundingBoxes[0].width * 2;
+		int height = _boundingBoxes[0].height * 2;
+		int id = _boundingBoxes[0].id;
+		bool exist = _boundingBoxes[0].exist;
+
+
+		BoundingBoxConsolidated<int> encapsulateBox = BoundingBoxConsolidated<int>( posX, posY, width, height, id, exist );
+		this->_consolidated = true;
+		this->_referenceNodes[this->_parentIndex].insert( encapsulateBox );
 		// Else no need to consolidate at the root node beacuse there is no parent to insert the encapsulate box
 	}
 
@@ -349,7 +363,7 @@ void QuadTree<T>::consolidate( int level )
 
 
 template<typename T>
-void QuadTree<T>::insert( BoundingBoxConsolidated<int> boundingBox )
+void QuadTree<T>::insert( const BoundingBoxConsolidated<int>& boundingBox )
 {
 	// Recursively adds bounding boxes and consolidates
 
@@ -407,7 +421,7 @@ void QuadTree<T>::insert( BoundingBoxConsolidated<int> boundingBox )
 			return;
 		}
 
-		const BoundingBoxConsolidated<int> trimmedBox = BoundingBoxConsolidated<int>( trimX, trimY, trimWidth, trimHeight, boundingBox.id );
+		const BoundingBoxConsolidated<int> trimmedBox = BoundingBoxConsolidated<int>( trimX, trimY, trimWidth, trimHeight, boundingBox.id, boundingBox.exist );
 		this->insert( trimmedBox );
 		return;
 	}
@@ -420,6 +434,7 @@ void QuadTree<T>::insert( BoundingBoxConsolidated<int> boundingBox )
 		int x = boundingBox.x;
 		int y = boundingBox.y;
 		int id = boundingBox.id;
+		bool exist = boundingBox.exist;
 
 		int subWidth1 = boundingBox.width / 2;
 		int subHeight1 = boundingBox.height / 2;
@@ -427,10 +442,10 @@ void QuadTree<T>::insert( BoundingBoxConsolidated<int> boundingBox )
 		int subWidth2 = boundingBox.width - subWidth1;
 		int subHeight2 = boundingBox.height - subHeight1;
 
-		const BoundingBoxConsolidated<int> rSubBoundingBox0 = BoundingBoxConsolidated<int>( x, y, subWidth1, subHeight1, id );
-		const BoundingBoxConsolidated<int> rSubBoundingBox1 = BoundingBoxConsolidated<int>( x + subWidth1, y, subWidth2, subHeight1, id );
-		const BoundingBoxConsolidated<int> rSubBoundingBox2 = BoundingBoxConsolidated<int>( x, y + subHeight1, subWidth1, subHeight2, id );
-		const BoundingBoxConsolidated<int> rSubBoundingBox3 = BoundingBoxConsolidated<int>( x + subWidth1, y + subHeight1, subWidth2, subHeight2, id );
+		const BoundingBoxConsolidated<int> rSubBoundingBox0 = BoundingBoxConsolidated<int>( x, y, subWidth1, subHeight1, id, exist );
+		const BoundingBoxConsolidated<int> rSubBoundingBox1 = BoundingBoxConsolidated<int>( x + subWidth1, y, subWidth2, subHeight1, id, exist );
+		const BoundingBoxConsolidated<int> rSubBoundingBox2 = BoundingBoxConsolidated<int>( x, y + subHeight1, subWidth1, subHeight2, id, exist );
+		const BoundingBoxConsolidated<int> rSubBoundingBox3 = BoundingBoxConsolidated<int>( x + subWidth1, y + subHeight1, subWidth2, subHeight2, id, exist );
 
 		this->insert( rSubBoundingBox0 );
 		this->insert( rSubBoundingBox1 );
@@ -447,34 +462,33 @@ void QuadTree<T>::insert( BoundingBoxConsolidated<int> boundingBox )
 	// [!] can update to make _boundingBoxes *{ data strcuture with id, configuration, exist }
 
 
-	// Level 0: Simply fill in the bounding boxes and end the recursion
-	if ( this->_level == 0 )
+	// Level Min: Simply fill in the bounding boxes and end the recursion
+	if ( this->_level == this->_MIN_LEVELS )
 	{
 		// Existing check already done
 		// Find the index by using the bounds, and the position of the single-cell bounding box
-
-		if ( this->_boundingBoxes[0].id == -1 && ( boundingBox.x == this->_quadTreeBounds.x ) && ( boundingBox.y == this->_quadTreeBounds.y ) )
+		if ( !this->_boundingBoxes[0].exists() && ( boundingBox.x == this->_quadTreeBounds.x ) && ( boundingBox.y == this->_quadTreeBounds.y ) )
 		{
 			this->_boundingBoxes[0] = boundingBox;
 			this->_boundingBoxCount += 1;
 		}
-		else if ( this->_boundingBoxes[1].id == -1 && ( boundingBox.x == ( this->_quadTreeBounds.x + 1 ) ) && ( boundingBox.y == this->_quadTreeBounds.y ) )
+		else if ( !this->_boundingBoxes[1].exists() && ( boundingBox.x == ( this->_quadTreeBounds.x + _MIN_CELL_SIZE ) ) && ( boundingBox.y == this->_quadTreeBounds.y ) )
 		{
 			this->_boundingBoxes[1] = boundingBox;
 			this->_boundingBoxCount += 1;
 		}
-		else if ( this->_boundingBoxes[2].id == -1 && ( boundingBox.x == this->_quadTreeBounds.x ) && ( boundingBox.y == ( this->_quadTreeBounds.y + 1 ) ) )
+		else if ( !this->_boundingBoxes[2].exists() && ( boundingBox.x == this->_quadTreeBounds.x ) && ( boundingBox.y == ( this->_quadTreeBounds.y + _MIN_CELL_SIZE ) ) )
 		{
 			this->_boundingBoxes[2] = boundingBox;
 			this->_boundingBoxCount += 1;
 		}
-		else if ( this->_boundingBoxes[3].id == -1 )
+		else if ( !this->_boundingBoxes[3].exists() && ( boundingBox.x == this->_quadTreeBounds.x + _MIN_CELL_SIZE ) && ( boundingBox.y == ( this->_quadTreeBounds.y + _MIN_CELL_SIZE ) ) )
 		{
 			this->_boundingBoxes[3] = boundingBox;
 			this->_boundingBoxCount += 1;
 		}
 	}
-	// Level > 0: Fill the bounding boxes and recur to children nodes
+	// Level > Min: Fill the bounding boxes and recur to children nodes
 	else
 	{
 		if ( this->_childrenNodeIndicies == nullptr )
@@ -486,8 +500,11 @@ void QuadTree<T>::insert( BoundingBoxConsolidated<int> boundingBox )
 		int quadrant = this->getQuadrant( boundingBox ); // Gauranteed not to equal negative one based on the previous conditions we checked for
 		if ( this->_referenceNodes[this->_childrenNodeIndicies[quadrant]].getBounds() == boundingBox )
 		{
-			this->_boundingBoxes[quadrant] = boundingBox;
-			this->_boundingBoxCount += 1;
+			if ( !this->_boundingBoxes[quadrant].exists() )
+			{
+				this->_boundingBoxes[quadrant] = boundingBox;
+				this->_boundingBoxCount += 1;
+			}
 		}
 
 		// Add to child regardless
@@ -518,12 +535,18 @@ void QuadTree<T>::remove( const BoundingBoxConsolidated<int>& boundingBox )
 		return;
 	}
 
+	// If any of the size < minsize, return
+	if ( boundingBox.width < this->_MIN_CELL_SIZE || boundingBox.height < this->_MIN_CELL_SIZE )
+	{
+		return;
+	}
+
 
 	// If the rBoundingBlock is indeed within the bounds, consolidation must equal false because we are removing within (whether it was consolidated to begin with or not)
-	this->_consolidated = false;
 
-	// Base Case: Check to see if a high level tree has the single cell
-	if ( boundingBox.width == 1 && boundingBox.height == 1 )
+	// Base Case: Check to see if a high level tree has the single cell, should not be possible
+	//if ( boundingBox.width == this->_MIN_CELL_SIZE && boundingBox.height == this->_MIN_CELL_SIZE )
+	if ( this->_level == 0 )
 	{
 		for ( int i = 0; i < 4; i++ )
 		{
@@ -532,23 +555,11 @@ void QuadTree<T>::remove( const BoundingBoxConsolidated<int>& boundingBox )
 			{
 				this->_boundingBoxes[i].clear();
 				this->_boundingBoxCount -= 1;
+				this->_consolidated = false;
 
 				// Can break because 1x1 cell cannot reside in multiple bounding boxes
 				// Deltes a nxn >= 1x1 bounding box but not neccessarily the 1x1 bounding box, so can't return yet
 				break;
-			}
-		}
-
-
-		// If not check the children
-		if ( this->_childrenNodeIndicies != nullptr )
-		{
-			// Since the cell is one big, there is no chance that it will reside within multiple boundingboxes; So no need tosplit, nor check
-			int quadrant = this->getQuadrant( boundingBox );
-			if ( quadrant != -1 )
-			{
-				// If a quadrant is found, then the cell is definitely within the bounds, so consolidation will be false as there would be a "hole"
-				this->_referenceNodes[this->_childrenNodeIndicies[quadrant]].remove( boundingBox );
 			}
 		}
 		// Else the children Nodes don't exist, so the cell one is trying to remove does not exist; return.
@@ -559,10 +570,11 @@ void QuadTree<T>::remove( const BoundingBoxConsolidated<int>& boundingBox )
 		// Try to find any bounding box to delete that touches the rBoundingBox (there may be multiple, so don't break the for loop preemptively)
 		for ( int i = 0; i < 4; i++ )
 		{
-			if ( boundingBox.intersects( this->_boundingBoxes[i] ) ) // [!] Doesn't matter the id of the cell, just remove regardless
+			if ( boundingBox.intersects( this->_boundingBoxes[i] ) && this->_boundingBoxes[i].id == boundingBox.id ) // [!] Doesn't matter the id of the cell, just remove regardless
 			{
 				this->_boundingBoxes[i].clear();
 				this->_boundingBoxCount -= 1;
+				this->_consolidated = false;
 				// Cannot necessarilly return here because there may be smaller bounding boxes to remove and/or need to fragmentize the rBoundingBox
 			}
 		}
@@ -575,61 +587,32 @@ void QuadTree<T>::remove( const BoundingBoxConsolidated<int>& boundingBox )
 			// If the box does not fully reside in one quadrant, we need to split the box; there is probably calculations one can do to optimize the split, but for now, just split it in half both ways
 			if ( quadrant == -1 )
 			{
+				// [!] I believe the orientation is based on the quadrant, so need to fix!
+
 				// Divide bounding boxes
 				int x = boundingBox.x;
 				int y = boundingBox.y;
 				int id = boundingBox.id;
+				bool exist = boundingBox.exist;
+
+				int subWidth1 = boundingBox.width / 2;
+				int subHeight1 = boundingBox.height / 2;
+
+				int subWidth2 = boundingBox.width - subWidth1;
+				int subHeight2 = boundingBox.height - subHeight1;
+
+				const BoundingBoxConsolidated<int> rSubBoundingBox0 = BoundingBoxConsolidated<int>( x, y, subWidth1, subHeight1, id, exist );
+				const BoundingBoxConsolidated<int> rSubBoundingBox1 = BoundingBoxConsolidated<int>( x + subWidth1, y, subWidth2, subHeight1, id, exist );
+				const BoundingBoxConsolidated<int> rSubBoundingBox2 = BoundingBoxConsolidated<int>( x, y + subHeight1, subWidth1, subHeight2, id, exist );
+				const BoundingBoxConsolidated<int> rSubBoundingBox3 = BoundingBoxConsolidated<int>( x + subWidth1, y + subHeight1, subWidth2, subHeight2, id, exist );
+
+				this->remove( rSubBoundingBox0 );
+				this->remove( rSubBoundingBox1 );
+				this->remove( rSubBoundingBox2 );
+				this->remove( rSubBoundingBox3 );
 
 
-				// Deal with splitting too much
-				// If width equals 1, split between the top left and bottom left (as the right does not exist)
-				if ( boundingBox.width == 1 )
-				{
-
-					int subWidth1 = 1;
-					int subHeight1 = boundingBox.height / 2;
-					int subHeight2 = boundingBox.height - subHeight1;
-
-					const BoundingBoxConsolidated<int> rSubBoundingBox0 = BoundingBoxConsolidated<int>( x, y, subWidth1, subHeight1, id );
-					const BoundingBoxConsolidated<int> rSubBoundingBox2 = BoundingBoxConsolidated<int>( x, y + subHeight1, subWidth1, subHeight2, id );
-
-					this->remove( rSubBoundingBox0 );
-					this->remove( rSubBoundingBox2 );
-				}
-				// If height equals 1, split between the top left and top right (as the bottom does not exist)
-				else if ( boundingBox.height == 1 )
-				{
-
-					int subHeight1 = 1;
-					int subWidth1 = boundingBox.width / 2;
-					int subWidth2 = boundingBox.width - subWidth1;
-
-					const BoundingBoxConsolidated<int> rSubBoundingBox0 = BoundingBoxConsolidated<int>( x, y, subWidth1, subHeight1, id );
-					const BoundingBoxConsolidated<int> rSubBoundingBox1 = BoundingBoxConsolidated<int>( x + subWidth1, y, subWidth2, subHeight1, id );
-
-					this->remove( rSubBoundingBox0 );
-					this->remove( rSubBoundingBox1 );
-				}
-				// Split all 4 ways
-				else // [!] deals with 1,1 case
-				{
-					int subWidth1 = boundingBox.width / 2;
-					int subHeight1 = boundingBox.height / 2;
-
-					int subWidth2 = boundingBox.width - subWidth1;
-					int subHeight2 = boundingBox.height - subHeight1;
-
-					const BoundingBoxConsolidated<int> rSubBoundingBox0 = BoundingBoxConsolidated<int>( x, y, subWidth1, subHeight1, id );
-					const BoundingBoxConsolidated<int> rSubBoundingBox1 = BoundingBoxConsolidated<int>( x + subWidth1, y, subWidth2, subHeight1, id );
-					const BoundingBoxConsolidated<int> rSubBoundingBox2 = BoundingBoxConsolidated<int>( x, y + subHeight1, subWidth1, subHeight2, id );
-					const BoundingBoxConsolidated<int> rSubBoundingBox3 = BoundingBoxConsolidated<int>( x + subWidth1, y + subHeight1, subWidth2, subHeight2, id );
-
-					this->remove( rSubBoundingBox0 );
-					this->remove( rSubBoundingBox1 );
-					this->remove( rSubBoundingBox2 );
-					this->remove( rSubBoundingBox3 );
-				}
-				// Don't need to check if both width and height == 1 because that was already accounted for in our base case
+				// Don't need to check if both width and height == _MIN_CELL_SIZE because that was already accounted for in our base case
 			}
 			// The rBoundingBox fully resides in only one of the quadrants. Remove from that quadrant/CHILD
 			else
@@ -641,6 +624,34 @@ void QuadTree<T>::remove( const BoundingBoxConsolidated<int>& boundingBox )
 	}
 
 	return;
+}
+
+
+
+template<typename T>
+std::vector<BoundingBoxConsolidated<int>> QuadTree<T>::query( const BoundingBoxConsolidated<int>& boundingBox, std::vector<BoundingBoxConsolidated<int>>& returnBoxes )
+{
+	// Returns all objects that could possibly collide with the given object (as well as a copy of the passed object itself (the copy resides in the _objects) )
+	// Work around of the copies is to use pointers
+
+	if ( !boundingBox.intersects( this->_quadTreeBounds ) )
+	{
+		return;
+	}
+
+
+
+
+
+	int index = getQuadrant( boundingBox );
+	if ( this->_childrenNodeIndicies != nullptr )
+	{
+		this->_referenceNodes[this->_childrenNodeIndicies[index]].query( boundingBox, returnBoxes );
+	}
+
+	// concatenate/build up the list
+
+	return returnBoxes;
 }
 
 
@@ -693,22 +704,6 @@ bool QuadTree<T>::isCellOccupied( const BoundingBoxConsolidated<int>& boundingBo
 	return false;
 }
 
-
-template<typename T>
-std::vector<BoundingBoxConsolidated<int>> QuadTree<T>::query( const BoundingBoxConsolidated<int>& boundingBox, std::vector<BoundingBoxConsolidated<int>>& returnBoxes )
-{
-	// Returns all objects that could possibly collide with the given object (as well as a copy of the passed object itself (the copy resides in the _objects) )
-	// Work around of the copies is to use pointers
-	int index = getQuadrant( boundingBox );
-	if ( this->_childrenNodeIndicies != nullptr )
-	{
-		this->_referenceNodes[this->_childrenNodeIndicies[index]].query( boundingBox, returnBoxes );
-	}
-
-	// concatenate/build up the list
-
-	return returnBoxes;
-}
 
 
 template<typename T>
