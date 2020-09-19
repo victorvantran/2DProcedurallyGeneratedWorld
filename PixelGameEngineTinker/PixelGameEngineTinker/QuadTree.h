@@ -6,31 +6,27 @@
 #include <iterator>
 
 
-//[!] to stop the drawing, need to make childrenNodeIndicies == nullptr when they are all gone (maybe trakc how many nodes in quad tree and when remove function, if end up zero, then delete and nullptr?)
-// [!] problem; infinite recursion on insert and consolodate
-
-
 template<typename T>
 class QuadTree
 {
 public: // private
 	const static int _MAX_OBJECTS = 4;
 	const static int _MIN_LEVELS = 0; // (level => gridsize => pixelSize) 5 => 1024 =>64, 4 => 32 => 512, 3 => 16 => 256, 2 => 8 => 128, 1 => 4 => 64, 0 => 2 => 32
-	const static int _MAX_LEVELS = 5; // [!] need to fix max levels stuff
+	const static int _MAX_LEVELS = 5; // [!] need to fix max levels
 
 	int _myIndex;
 	int _parentIndex;
-	int _level; // consolodationLevel 5, 4, 3, 2, 1, 0
+	int _level;
 	int _quadrant;
 
 	BoundingBox<int> _quadTreeBounds;
 
 
 	bool _divided;
-	bool _consolidated; // if true, boundaries empty and = nullptr
+	bool _consolidated;
 	bool _shaded;
 
-	BoundingBoxConsolidated<int>* _boundingBoxes; // since structs take contiguous memory, just store 4 bounding boxses instead of an array of 16 int
+	BoundingBoxConsolidated<int>* _boundingBoxes;
 	int _boundingBoxCount;
 
 
@@ -38,8 +34,7 @@ public: // private
 
 	QuadTree<T>* _referenceNodes; // list of nodes to reference
 
-
-	// bounding boxes can be used to locate the tile contents with a reference to layer mapping
+	// Bounding boxes can be used to locate the tile contents with a reference to layer mapping
 	T* _map;
 
 protected:
@@ -60,6 +55,9 @@ public:
 	void consolidate( int level );
 	void insert( BoundingBoxConsolidated<int> boundingBox );
 	void remove( const BoundingBoxConsolidated<int>& rBoundingBox );
+
+	bool isCellOccupied( const BoundingBoxConsolidated<int>& BoundingBox );
+
 	std::vector<BoundingBoxConsolidated<int>> query( const BoundingBoxConsolidated<int>& boundingBox, std::vector<BoundingBoxConsolidated<int>>& returnObjects );
 
 
@@ -113,8 +111,6 @@ QuadTree<T>::QuadTree( int myIndex, int parentIndex, int level, int quadrant, Bo
 template<typename T>
 QuadTree<T>::~QuadTree()
 {
-	std::cout << "destruct" << std::endl;
-
 	this->clear();
 
 	delete this->_childrenNodeIndicies;
@@ -152,8 +148,6 @@ void QuadTree<T>::constructQuadTree( int myIndex, int parentIndex, int level, in
 template<typename T>
 void QuadTree<T>::clear()
 {
-	std::cout << "clear" << std::endl;
-
 	if ( this->_boundingBoxes != nullptr )
 	{
 		for ( int i = 0; i < 4; i++ )
@@ -177,8 +171,6 @@ void QuadTree<T>::clear()
 template<typename T>
 void QuadTree<T>::divide()
 {
-	std::cout << "divide" << std::endl;
-
 	// Splits the node into four subnodes each initialized with new bounds
 	/*
 	_________
@@ -238,7 +230,6 @@ void QuadTree<T>::divide()
 template<typename T>
 int QuadTree<T>::getQuadrant( const BoundingBoxConsolidated<int>& boundingBox )
 {
-	//std::cout << "getQuadrant" << std::endl;
 	// Given a boundingBox, returns the index of the nodes ( which quadrant the box belongs to )
 	float verticleMidpoint = this->_quadTreeBounds.x + ( this->_quadTreeBounds.width / 2 );
 	float horizontalMidpoint = this->_quadTreeBounds.y + ( this->_quadTreeBounds.height / 2 );
@@ -272,25 +263,31 @@ int QuadTree<T>::getQuadrant( const BoundingBoxConsolidated<int>& boundingBox )
 			return 3;
 		}
 	}
+
+	// Bounding Box not completely within a quadrant; used to indicate splitting when removing an area
+	return -1;
 }
+
+
+
+
 
 template<typename T>
 void QuadTree<T>::consolidate( int level )
 {
-	std::cout << "X" << std::endl;
-	std::cout << "consolidate" << std::endl;
-	std::cout << "Y" << std::endl;
-
 	// Check the four boundingBoxes. If two conditions are met:
 	// 1) they all have the same consolidation level
 	// 2) Given the position and size of the boundingBoxes from the array, determine if they "fill" the bounds of the QuadTree
-	if ( (
-		( _boundingBoxes[0].id == _boundingBoxes[1].id ) &&
-		( _boundingBoxes[2].id == _boundingBoxes[3].id ) &&
-		( _boundingBoxes[0].id == _boundingBoxes[3].id ) )
+	// Height check not necessary if our bounding box is a square, but for formality
+	if (
+		(
+			( _boundingBoxes[0].id == _boundingBoxes[1].id ) &&
+			( _boundingBoxes[2].id == _boundingBoxes[3].id ) &&
+			( _boundingBoxes[0].id == _boundingBoxes[3].id )
+			)
 		&&
 		(
-			( level == 0 ) ||
+			( level == this->_MIN_LEVELS ) ||
 			(
 				( _boundingBoxes[0].width == _boundingBoxes[1].width ) &&
 				( _boundingBoxes[2].width == _boundingBoxes[3].width ) &&
@@ -305,10 +302,9 @@ void QuadTree<T>::consolidate( int level )
 			_boundingBoxes[0].width == ( ( 2 << ( this->_level ) ) / 2 )
 			)
 		)
-
-		// height check not necessary if our bounding box is a square, but for formality
 	{
-		if ( this->_level < this->_MAX_LEVELS )
+		// Since level is lowest level, there is no children to check if all of them are consolidated
+		if ( this->_level == this->_MIN_LEVELS )
 		{
 			int posX = std::min<int>( std::min<int>( _boundingBoxes[0].x, _boundingBoxes[1].x ), std::min<int>( _boundingBoxes[2].x, _boundingBoxes[3].x ) ); // technically only need to check for 3 of them
 			int posY = std::min<int>( std::min<int>( _boundingBoxes[0].y, _boundingBoxes[1].y ), std::min<int>( _boundingBoxes[2].y, _boundingBoxes[3].y ) );
@@ -316,119 +312,190 @@ void QuadTree<T>::consolidate( int level )
 			int height = _boundingBoxes[0].height * 2;
 			int id = _boundingBoxes[0].id;
 
-			// [!] when we add encapsulate box, store the four sub bounding box
-			// [!] when we remove encapsulate, destroy this considiated bounding box, recursively find the bounding box to be destoryed, and add the other 3 instead
+
 			BoundingBoxConsolidated<int> encapsulateBox = BoundingBoxConsolidated<int>( posX, posY, width, height, id );
 			this->_consolidated = true;
-
-			this->_referenceNodes[this->_parentIndex].insert( encapsulateBox ); // make the encapsulate box hold pointer to other encapsulate box (so when removed, can re-add)
+			this->_referenceNodes[this->_parentIndex].insert( encapsulateBox );
 		}
-		else
+		// Since level is not lowest level, there is children to necessarilly check if all of them are consolidated
+		else if ( this->_level < this->_MAX_LEVELS )
 		{
-			return; // no need to consolidate at the root node beacuse there is no parent to insert the encapsulate box
-		}
-	}
-	else
-	{
-		if ( this->_level == this->_MIN_LEVELS )
-		{
-			return; // no need to divide anymore
-		}
-		else
-		{
-			if ( this->_childrenNodeIndicies == nullptr )
-			{
-				this->divide();
-			}
-
-			//this->_boundingBoxCount = 0; // if we add stuff, it would overwrite our childrenNodeIndicies history, but that's okay because our encapsulated bounding box will hold history
-			//this->_boundingBoxCount = 0;
-
-
-
 			for ( int i = 0; i < 4; i++ )
 			{
-				int index = this->getQuadrant( this->_boundingBoxes[i] );
-
-				BoundingBoxConsolidated<int> cachedBox = this->_boundingBoxes[i];
-				this->_boundingBoxes[i].clear();
-				this->_boundingBoxCount -= 1;
-				//this->_referenceNodes[this->_childrenNodeIndicies[index]].insert( this->_boundingBoxes[i] );
-				this->_referenceNodes[this->_childrenNodeIndicies[index]].insert( cachedBox );
+				if ( !this->_referenceNodes[this->_childrenNodeIndicies[i]].isConsolidated() )
+				{
+					return;
+				}
 			}
 
-			// [!] if added (do not clear) (because could have added back and if you cleared it, then you're screwed); that's also why we don' reset the boundingbox count to 0 afterwards
-			// keep a record; if the same, then remove it and decrement
+			int posX = std::min<int>( std::min<int>( _boundingBoxes[0].x, _boundingBoxes[1].x ), std::min<int>( _boundingBoxes[2].x, _boundingBoxes[3].x ) ); // technically only need to check for 3 of them
+			int posY = std::min<int>( std::min<int>( _boundingBoxes[0].y, _boundingBoxes[1].y ), std::min<int>( _boundingBoxes[2].y, _boundingBoxes[3].y ) );
+			int width = _boundingBoxes[0].width * 2;
+			int height = _boundingBoxes[0].height * 2;
+			int id = _boundingBoxes[0].id;
 
-			/*
-			for ( int i = 0; i < 4; i++ )
-			{
-				this->_boundingBoxes[i].clear();
-			}
-			*/
-			//this->_boundingBoxCount = 0;
+
+			BoundingBoxConsolidated<int> encapsulateBox = BoundingBoxConsolidated<int>( posX, posY, width, height, id );
+			this->_consolidated = true;
+			this->_referenceNodes[this->_parentIndex].insert( encapsulateBox );
 		}
-
+		// Else no need to consolidate at the root node beacuse there is no parent to insert the encapsulate box
 	}
 
 	return;
 }
 
 
+
+
 template<typename T>
 void QuadTree<T>::insert( BoundingBoxConsolidated<int> boundingBox )
 {
-	std::cout << "insert" << std::endl;
-
-	// Determine if the node has any children nodes conceived yet, and if the object can be added into one of them
-	// If there are not yet any concieved child nodes or the object cannot entirely fit into a child node, store it in the parent node
-	// After adding the object, determine if splitting needs to occur if the current number of object exceeds the maximum amount of objects
-	// Splitting will shift the objects of the parent node to the proper children node (or stay in the parent node if it cannot entirely fit in any children node)
-
-	// If child 0 exists, implies that all children nodes exist/conceived
-	// If children nodes exist, and the bounds belong in one of them given by the index, then insert in the proper node
+	// Recursively adds bounding boxes and consolidates
 
 
 
-	if ( !( this->_quadTreeBounds >= boundingBox ) )
+	// Cannot add what is out of boundss
+	if ( !boundingBox.intersects( this->_quadTreeBounds ) )
 	{
 		return;
 	}
 
 
-	if ( this->_childrenNodeIndicies != nullptr )
+
+	// If it is already consolidated, the bounding boxes is already included
+	if ( this->_consolidated || this->_boundingBoxCount == 4 ) // [!]
 	{
-		int index = this->getQuadrant( boundingBox );
-		if ( this->_referenceNodes[this->_childrenNodeIndicies[index]].isConsolidated() == false )
+		return;
+	}
+
+
+	// Check if a bounding box is already occupied
+	for ( int i = 0; i < 4; i++ )
+	{
+		if ( ( this->_boundingBoxes[i] == boundingBox ) )
 		{
-			this->_referenceNodes[this->_childrenNodeIndicies[index]].insert( boundingBox );
+			return;
+		}
+	}
+
+
+	// If any dimension size ( x or y ) < 1, return
+	if ( boundingBox.width < 1 || boundingBox.height < 1 )
+	{
+		return;
+	}
+
+
+	// If the boundingBox has any area that is outside the boundaries of quadTreeBounds, trim
+	if ( !( this->_quadTreeBounds >= boundingBox ) )
+	{
+		int trimX;
+		int trimY;
+		int trimWidth;
+		int trimHeight;
+
+		trimX = std::max<int>( this->_quadTreeBounds.x, boundingBox.x );
+		trimY = std::max<int>( this->_quadTreeBounds.y, boundingBox.y );
+
+		trimWidth = std::min<int>( this->_quadTreeBounds.x + this->_quadTreeBounds.width, boundingBox.x + boundingBox.width ) - trimX;
+		trimHeight = std::min<int>( this->_quadTreeBounds.y + this->_quadTreeBounds.height, boundingBox.y + boundingBox.height ) - trimY;
+
+
+		if ( trimWidth == 0 || trimHeight == 0 )
+		{
 			return;
 		}
 
+		const BoundingBoxConsolidated<int> trimmedBox = BoundingBoxConsolidated<int>( trimX, trimY, trimWidth, trimHeight, boundingBox.id );
+		this->insert( trimmedBox );
+		return;
 	}
 
 
-	// Find the first free bounding box (it could be in any order because of remove method removing any)
-	for ( int i = 0; i < 4; i++ )
+
+	int quadrant = this->getQuadrant( boundingBox );
+	if ( quadrant == -1 )
 	{
-		if ( this->_boundingBoxes[i].x == -1 ) // -1 indicates cleared
+		int x = boundingBox.x;
+		int y = boundingBox.y;
+		int id = boundingBox.id;
+
+		int subWidth1 = boundingBox.width / 2;
+		int subHeight1 = boundingBox.height / 2;
+
+		int subWidth2 = boundingBox.width - subWidth1;
+		int subHeight2 = boundingBox.height - subHeight1;
+
+		const BoundingBoxConsolidated<int> rSubBoundingBox0 = BoundingBoxConsolidated<int>( x, y, subWidth1, subHeight1, id );
+		const BoundingBoxConsolidated<int> rSubBoundingBox1 = BoundingBoxConsolidated<int>( x + subWidth1, y, subWidth2, subHeight1, id );
+		const BoundingBoxConsolidated<int> rSubBoundingBox2 = BoundingBoxConsolidated<int>( x, y + subHeight1, subWidth1, subHeight2, id );
+		const BoundingBoxConsolidated<int> rSubBoundingBox3 = BoundingBoxConsolidated<int>( x + subWidth1, y + subHeight1, subWidth2, subHeight2, id );
+
+		this->insert( rSubBoundingBox0 );
+		this->insert( rSubBoundingBox1 );
+		this->insert( rSubBoundingBox2 );
+		this->insert( rSubBoundingBox3 );
+
+		return;
+	}
+
+	// Else
+	// Our aBoundingBox is gauranteed to be encapsulated by the quadTreeBounds at this point; And it is gauranteed to not occupy a bounding box yet
+	// More than encapsulated, since we trimmed and split, it must be or not be the same as only one children bound ( we can break early )
+	// Create the bounding box if any children quadrant bounds is equal to the aBoundingBox; this means we can index our bounding box by the quadrant!
+	// [!] can update to make _boundingBoxes *{ data strcuture with id, configuration, exist }
+
+
+	// Level 0: Simply fill in the bounding boxes and end the recursion
+	if ( this->_level == 0 )
+	{
+		// Existing check already done
+		// Find the index by using the bounds, and the position of the single-cell bounding box
+
+		if ( this->_boundingBoxes[0].id == -1 && ( boundingBox.x == this->_quadTreeBounds.x ) && ( boundingBox.y == this->_quadTreeBounds.y ) )
 		{
-			this->_boundingBoxes[i] = boundingBox;
+			this->_boundingBoxes[0] = boundingBox;
 			this->_boundingBoxCount += 1;
-			break;
+		}
+		else if ( this->_boundingBoxes[1].id == -1 && ( boundingBox.x == ( this->_quadTreeBounds.x + 1 ) ) && ( boundingBox.y == this->_quadTreeBounds.y ) )
+		{
+			this->_boundingBoxes[1] = boundingBox;
+			this->_boundingBoxCount += 1;
+		}
+		else if ( this->_boundingBoxes[2].id == -1 && ( boundingBox.x == this->_quadTreeBounds.x ) && ( boundingBox.y == ( this->_quadTreeBounds.y + 1 ) ) )
+		{
+			this->_boundingBoxes[2] = boundingBox;
+			this->_boundingBoxCount += 1;
+		}
+		else if ( this->_boundingBoxes[3].id == -1 )
+		{
+			this->_boundingBoxes[3] = boundingBox;
+			this->_boundingBoxCount += 1;
 		}
 	}
-
-	// this->_boundingBoxCount += 1;
-
-
-	if ( this->_boundingBoxCount > 4 ) // [!] need to fix
+	// Level > 0: Fill the bounding boxes and recur to children nodes
+	else
 	{
-		std::cout << "_________________________________________________________" << std::endl;
-		//this->_boundingBoxCount = 0; // hacky non-crash, but i think will render fail
-		//this->_boundingBoxCount = 4;
+		if ( this->_childrenNodeIndicies == nullptr )
+		{
+			this->divide();
+		}
+
+
+		int quadrant = this->getQuadrant( boundingBox ); // Gauranteed not to equal negative one based on the previous conditions we checked for
+		if ( this->_referenceNodes[this->_childrenNodeIndicies[quadrant]].getBounds() == boundingBox )
+		{
+			this->_boundingBoxes[quadrant] = boundingBox;
+			this->_boundingBoxCount += 1;
+		}
+
+		// Add to child regardless
+		this->_referenceNodes[this->_childrenNodeIndicies[quadrant]].insert( boundingBox );
 	}
 
+
+	// Consolidate if met the requirements of max objects and level
 	if ( this->_boundingBoxCount >= this->_MAX_OBJECTS && this->_level >= this->_MIN_LEVELS )
 	{
 		this->consolidate( this->_level );
@@ -438,71 +505,192 @@ void QuadTree<T>::insert( BoundingBoxConsolidated<int> boundingBox )
 }
 
 
+
+
+
 template<typename T>
 void QuadTree<T>::remove( const BoundingBoxConsolidated<int>& boundingBox )
 {
-	//std::cout << "remove" << std::endl;
 
-	// maybe it exists  without it being restricted to trees of width/2
-	for ( int i = 0; i < 4; i++ )
+	// If COMPLETELY(not partially out of obunds) out of bounds; return
+	if ( !boundingBox.intersects( this->_quadTreeBounds ) )
 	{
-		if ( this->_boundingBoxes[i] == boundingBox && this->_boundingBoxes[i].id == boundingBox.id )
-		{
-			this->_boundingBoxes[i].clear();
-			this->_boundingBoxCount -= 1;
-			this->_consolidated = false;
-			std::cout << "erased from higher level" << std::endl;
-
-			return;
-		}
+		return;
 	}
 
 
+	// If the rBoundingBlock is indeed within the bounds, consolidation must equal false because we are removing within (whether it was consolidated to begin with or not)
+	this->_consolidated = false;
 
-	if ( boundingBox.width == ( this->_quadTreeBounds.width / 2 ) ) // [!] size instead of width/height [!] can get rid of this condition
+	// Base Case: Check to see if a high level tree has the single cell
+	if ( boundingBox.width == 1 && boundingBox.height == 1 )
 	{
 		for ( int i = 0; i < 4; i++ )
 		{
-			if ( this->_boundingBoxes[i] == boundingBox && this->_boundingBoxes[i].id == boundingBox.id )
+			// Check to see if its within a bounding box
+			if ( boundingBox.intersects( this->_boundingBoxes[i] ) && this->_boundingBoxes[i].id == boundingBox.id )
 			{
 				this->_boundingBoxes[i].clear();
 				this->_boundingBoxCount -= 1;
-				this->_consolidated = false;
-				std::cout << "erased from level 0" << std::endl;
-				return;
+
+				// Can break because 1x1 cell cannot reside in multiple bounding boxes
+				// Deltes a nxn >= 1x1 bounding box but not neccessarily the 1x1 bounding box, so can't return yet
+				break;
 			}
 		}
+
+
+		// If not check the children
+		if ( this->_childrenNodeIndicies != nullptr )
+		{
+			// Since the cell is one big, there is no chance that it will reside within multiple boundingboxes; So no need tosplit, nor check
+			int quadrant = this->getQuadrant( boundingBox );
+			if ( quadrant != -1 )
+			{
+				// If a quadrant is found, then the cell is definitely within the bounds, so consolidation will be false as there would be a "hole"
+				this->_referenceNodes[this->_childrenNodeIndicies[quadrant]].remove( boundingBox );
+			}
+		}
+		// Else the children Nodes don't exist, so the cell one is trying to remove does not exist; return.
 	}
+	// Recursive Case: The cell is bigger than 1x1; therefore, we need to remove any bounding boxes found in children nodes that happen to encapsulate any part of that cell (due to consolidation)
 	else
 	{
-		int i = this->getQuadrant( boundingBox );
-		if ( this->_referenceNodes != nullptr && this->_childrenNodeIndicies != nullptr && this->_referenceNodes[this->_childrenNodeIndicies[i]].getBounds() >= boundingBox )
+		// Try to find any bounding box to delete that touches the rBoundingBox (there may be multiple, so don't break the for loop preemptively)
+		for ( int i = 0; i < 4; i++ )
 		{
-			// clear the bounding box if found one (which implies it's consolidated?)
-			for ( int j = 0; j < 4; j++ )
+			if ( boundingBox.intersects( this->_boundingBoxes[i] ) ) // [!] Doesn't matter the id of the cell, just remove regardless
 			{
-				if ( this->_boundingBoxes[j] >= boundingBox && this->_boundingBoxes[j].id == boundingBox.id )
-				{
-					this->_boundingBoxes[j].clear();
-					this->_boundingBoxCount -= 1;
-					this->_consolidated = false;
-				}
+				this->_boundingBoxes[i].clear();
+				this->_boundingBoxCount -= 1;
+				// Cannot necessarilly return here because there may be smaller bounding boxes to remove and/or need to fragmentize the rBoundingBox
 			}
-			this->_consolidated = false; // consolidate = false anyway
-
-			// regardless if found one or not, keep checking the actual tree because the bounding box may have been overwritten
-			this->_referenceNodes[this->_childrenNodeIndicies[i]].remove( boundingBox );
-			return;
 		}
+
+		// Remember that it may not find a big/exact size bounding box to delete; still need to search deeper and fragmentize for potential small ones to remove
+		// Check to see if there are any child nodes to look deeper in
+		if ( this->_childrenNodeIndicies != nullptr )
+		{
+			int quadrant = this->getQuadrant( boundingBox );
+			// If the box does not fully reside in one quadrant, we need to split the box; there is probably calculations one can do to optimize the split, but for now, just split it in half both ways
+			if ( quadrant == -1 )
+			{
+				// Divide bounding boxes
+				int x = boundingBox.x;
+				int y = boundingBox.y;
+				int id = boundingBox.id;
+
+
+				// Deal with splitting too much
+				// If width equals 1, split between the top left and bottom left (as the right does not exist)
+				if ( boundingBox.width == 1 )
+				{
+
+					int subWidth1 = 1;
+					int subHeight1 = boundingBox.height / 2;
+					int subHeight2 = boundingBox.height - subHeight1;
+
+					const BoundingBoxConsolidated<int> rSubBoundingBox0 = BoundingBoxConsolidated<int>( x, y, subWidth1, subHeight1, id );
+					const BoundingBoxConsolidated<int> rSubBoundingBox2 = BoundingBoxConsolidated<int>( x, y + subHeight1, subWidth1, subHeight2, id );
+
+					this->remove( rSubBoundingBox0 );
+					this->remove( rSubBoundingBox2 );
+				}
+				// If height equals 1, split between the top left and top right (as the bottom does not exist)
+				else if ( boundingBox.height == 1 )
+				{
+
+					int subHeight1 = 1;
+					int subWidth1 = boundingBox.width / 2;
+					int subWidth2 = boundingBox.width - subWidth1;
+
+					const BoundingBoxConsolidated<int> rSubBoundingBox0 = BoundingBoxConsolidated<int>( x, y, subWidth1, subHeight1, id );
+					const BoundingBoxConsolidated<int> rSubBoundingBox1 = BoundingBoxConsolidated<int>( x + subWidth1, y, subWidth2, subHeight1, id );
+
+					this->remove( rSubBoundingBox0 );
+					this->remove( rSubBoundingBox1 );
+				}
+				// Split all 4 ways
+				else // [!] deals with 1,1 case
+				{
+					int subWidth1 = boundingBox.width / 2;
+					int subHeight1 = boundingBox.height / 2;
+
+					int subWidth2 = boundingBox.width - subWidth1;
+					int subHeight2 = boundingBox.height - subHeight1;
+
+					const BoundingBoxConsolidated<int> rSubBoundingBox0 = BoundingBoxConsolidated<int>( x, y, subWidth1, subHeight1, id );
+					const BoundingBoxConsolidated<int> rSubBoundingBox1 = BoundingBoxConsolidated<int>( x + subWidth1, y, subWidth2, subHeight1, id );
+					const BoundingBoxConsolidated<int> rSubBoundingBox2 = BoundingBoxConsolidated<int>( x, y + subHeight1, subWidth1, subHeight2, id );
+					const BoundingBoxConsolidated<int> rSubBoundingBox3 = BoundingBoxConsolidated<int>( x + subWidth1, y + subHeight1, subWidth2, subHeight2, id );
+
+					this->remove( rSubBoundingBox0 );
+					this->remove( rSubBoundingBox1 );
+					this->remove( rSubBoundingBox2 );
+					this->remove( rSubBoundingBox3 );
+				}
+				// Don't need to check if both width and height == 1 because that was already accounted for in our base case
+			}
+			// The rBoundingBox fully resides in only one of the quadrants. Remove from that quadrant/CHILD
+			else
+			{
+				this->_referenceNodes[this->_childrenNodeIndicies[quadrant]].remove( boundingBox );
+			}
+		}
+		// Else, there is not more child nodes to search through; return.
+	}
+
+	return;
+}
+
+
+
+template<typename T>
+bool QuadTree<T>::isCellOccupied( const BoundingBoxConsolidated<int>& boundingBox )
+{
+	// If out of bounds, techincally not occupied
+	if ( !boundingBox.intersects( this->_quadTreeBounds ) )
+	{
+		// throw error out of bounds
+		return false;
+	}
+
+	// If it is already consolidated, the bounding boxes is already occupied
+	if ( this->_consolidated )
+	{
+		return true;
+	}
+
+
+	// Check to see if the cell is occupied
+	for ( int i = 0; i < 4; i++ )
+	{
+		if ( ( this->_boundingBoxes[i] == boundingBox ) )
+		{
+			return true;
+		}
+	}
+
+	// If this level is not occupied, check the lower levels
+	if ( this->_childrenNodeIndicies != nullptr )
+	{
+		int quadrant = this->getQuadrant( boundingBox );
+		// If addition can be fully encapsulated to one quadrant, check only tha quadrant
+		if ( quadrant != -1 )
+		{
+			return this->_referenceNodes[this->_childrenNodeIndicies[quadrant]].isCellOccupied( boundingBox );
+		}
+		// If not, we need to divide and check occupy for each subdivision on THIS (but for now just say false)
 		else
 		{
-			// Trying to remove out of bounds
-			return;
+			// Divide
+			return false;
 		}
-
 	}
-	// Trying to remove something that is non existent
-	return;
+
+	// If no children, we reached level zero (implied by childrenNodeIndicies == nullptr),
+	// checked all its bounding boxes, still sees no occupation, then return false 
+	return false;
 }
 
 
