@@ -367,7 +367,7 @@ public:
 			Tile* chosenTile = this->_world->getTileFromIndex( tileChosen );
 			if ( chosenTile != nullptr )
 			{
-				chosenTile->exist = false;
+				chosenTile->setExist( false );
 			}
 		}
 
@@ -376,7 +376,7 @@ public:
 			Tile* chosenTile = this->_world->getTileFromIndex( tileChosen );
 			if ( chosenTile != nullptr )
 			{
-				std::cout << chosenTile->configuration << std::endl;
+				std::cout << chosenTile->getConfiguration() << std::endl;
 			}
 		}
 
@@ -386,7 +386,7 @@ public:
 			Tile* chosenTile = this->_world->getTileFromIndex( tileChosen );
 			if ( chosenTile != nullptr )
 			{
-				std::cout << chosenTile->exist << std::endl;
+				std::cout << chosenTile->getExist() << std::endl;
 			}
 		}
 
@@ -396,7 +396,7 @@ public:
 			Tile* chosenTile = this->_world->getTileFromIndex( tileChosen );
 			if ( chosenTile != nullptr )
 			{
-				std::cout << chosenTile->id << std::endl;
+				std::cout << chosenTile->getId() << std::endl;
 			}
 		}
 

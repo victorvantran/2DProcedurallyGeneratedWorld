@@ -298,7 +298,7 @@ mesh::Grid<T>::Grid( T* map, int gridWidth, int gridHeight )
 		for ( int y = 0; y < gridHeight; y++ )
 		{
 			olc::vf2d position{ ( float )x, ( float )y }; // top left
-			bool exist = map[y * gridWidth + x].exist; // ensure that T has exists() method
+			bool exist = map[y * gridWidth + x].getExist(); // ensure that T has exists() method
 			this->_controlIndicies[y * gridWidth + x] = ControlIndex( position, exist );
 		}
 	}
@@ -438,11 +438,11 @@ void mesh::MarchingSquares<T>::meshify( Layer<T>& layer )
 			{
 				// Do something special (or find borders if worldchunks are connected)
 				//continue;
-				layerMap[y * layerWidth + x].configuration = 15; // 15 is the all-solid configuration
+				layerMap[y * layerWidth + x].setConfiguration( 15 ); // 15 is the all-solid configuration
 			}
 			else
 			{
-				layerMap[y * layerWidth + x].configuration = cells[( y - 1 ) * ( layerWidth - 1 ) + ( x - 1 )].configuration;//this->_meshMapping[y * layerWidth + x];
+				layerMap[y * layerWidth + x].setConfiguration( cells[( y - 1 ) * ( layerWidth - 1 ) + ( x - 1 )].configuration );//this->_meshMapping[y * layerWidth + x]; // [!] need to add getters/setters for mesh
 			}
 		}
 	}
@@ -494,7 +494,7 @@ void mesh::MarchingSquares<T>::update( Layer<T>& layer )
 		for ( int y = 0; y < gridHeight; y++ )
 		{
 			olc::vf2d position{ ( float )x, ( float )y }; // top left
-			bool exist = map[y * gridWidth + x].exists(); // ensure that T has exists() method
+			bool exist = map[y * gridWidth + x].getExist(); // ensure that T has exists() method
 			this->_grid->getControlIndicies()[y * gridWidth + x].exist = exist;// = ControlIndex( position, exist );
 		}
 	}

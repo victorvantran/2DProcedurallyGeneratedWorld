@@ -1,71 +1,118 @@
 #include "Tile.h"
-
+#include "BoundingBox.h"
 
 Tile::Tile()
+	: TileRender( -1, BoundingBox<int>(), false ), _configuration( -1 ), _tileType( TileType::Empty )
 {
-	// Establishes essentially a blank, non-existent tile
-	this->id = 0;
-	this->configuration = 16;
-	this->exist = false;
-	this->tileType = TileType::Empty;
-
-	for ( int i = 0; i < sizeof(this->edgeId)/sizeof(this->edgeId[0]); i++ )
+	for ( int i = 0; i < sizeof( this->_edgeId ) / sizeof( this->_edgeId[0] ); i++ )
 	{
-		this->edgeId[i] = 0;
-		this->edgeExist[i] = true;
+		this->_edgeId[i] = -1;
+		this->_edgeExist[i] = false;
 	}
 }
 
 Tile::~Tile()
 {
-	//delete[] this->edgeId;
-	//delete[] this->edgeExist;
+	//delete[] this->_edgeId;
+	//delete[] this->_edgeExist;
 }
 
 
-bool Tile::isEmpty()
+Tile::Tile( int id, const BoundingBox<int>& bounds, bool exist, int configuration, TileType tileType )
+	: TileRender( id, bounds, exist ), _configuration( configuration ), _tileType( tileType )
 {
-	return this->exist &&
-		this->tileType == TileType::Empty;
+	for ( int i = 0; i < sizeof( this->_edgeId ) / sizeof( this->_edgeId[0] ); i++ )
+	{
+		this->_edgeId[i] = 0;
+		this->_edgeExist[i] = true;
+	}
 }
 
 
-bool Tile::isBlock()
+
+int Tile::getConfiguration() const
 {
-	return this->exist &&
-		this->tileType == TileType::Block;
+	return this->_configuration;
 }
 
 
-bool Tile::isOneWayPlatform()
+TileType Tile::getTileType() const
 {
-	return this->exist &&
-		this->tileType == TileType::OneWayPlatform;
+	return this->_tileType;
 }
 
 
-bool Tile::isObstacle()
+int Tile::setConfiguration( int configuration )
 {
-	return this->exist &&
-		this->tileType == TileType::Block || this->tileType == TileType::OneWayPlatform;
+	this->_configuration = configuration;
+	return this->_configuration;
 }
 
 
-bool Tile::isGround()
+TileType Tile::setTileType( TileType tileType )
 {
-	return this->exist &&
-		this->tileType == TileType::Block || this->tileType == TileType::OneWayPlatform;
+	this->_tileType = tileType;
+	return this->_tileType;
 }
 
 
-bool Tile::isLedge()
+bool Tile::isEmpty() const
 {
-	return this->exist &&
-		this->tileType == TileType::Block || this->tileType == TileType::OneWayPlatform;
+	return this->_exist &&
+		this->_tileType == TileType::Empty;
 }
 
 
-bool Tile::exists()
+bool Tile::isBlock() const
 {
-	return this->exist;
+	return this->_exist &&
+		this->_tileType == TileType::Block;
+}
+
+
+bool Tile::isOneWayPlatform() const
+{
+	return this->_exist &&
+		this->_tileType == TileType::OneWayPlatform;
+}
+
+
+bool Tile::isObstacle() const
+{
+	return this->_exist &&
+		this->_tileType == TileType::Block || this->_tileType == TileType::OneWayPlatform;
+}
+
+
+bool Tile::isGround() const
+{
+	return this->_exist &&
+		this->_tileType == TileType::Block || this->_tileType == TileType::OneWayPlatform;
+}
+
+
+bool Tile::isLedge() const
+{
+	return this->_exist &&
+		this->_tileType == TileType::Block || this->_tileType == TileType::OneWayPlatform;
+}
+
+
+
+void Tile::clear()
+{
+	this->_id = -1;
+	this->_bounds.clear();
+	this->_exist = false;
+
+	this->_configuration = -1;
+	this->_tileType = TileType::Empty;
+	//this->_isDynamic = false;
+
+
+	for ( int i = 0; i < sizeof( this->_edgeId ) / sizeof( this->_edgeId[0] ); i++ )
+	{
+		this->_edgeId[i] = -1;
+		this->_edgeExist[i] = false;
+	}
 }

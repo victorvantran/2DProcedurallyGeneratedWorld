@@ -337,7 +337,7 @@ bool aabb::DynamicObject::isCollidingUp( olc::vf2d prevPosition, olc::vf2d currP
 
 			checkTile = world.getTileFromIndex( checkTileIndex );
 
-			if ( checkTile != nullptr && checkTile->exists() )
+			if ( checkTile != nullptr && checkTile->getExist() )
 			{
 				if ( checkTile->isBlock() )
 				{
@@ -420,7 +420,7 @@ bool aabb::DynamicObject::isCollidingDown( olc::vf2d prevPosition, olc::vf2d cur
 			contactDown = ( float )checkTileIndex.y; // contactIndex ( the real contactDown = checkBottomLeft.y )
 			checkTile = world.getTileFromIndex( checkTileIndex );
 
-			if ( checkTile != nullptr && checkTile->exists() )
+			if ( checkTile != nullptr && checkTile->getExist() )
 			{
 				if ( checkTile->isBlock() ) 
 				{
@@ -515,7 +515,7 @@ bool aabb::DynamicObject::isCollidingLeft( olc::vf2d prevPosition, olc::vf2d cur
 
 			checkTile = world.getTileFromIndex( checkTileIndex );
 
-			if ( checkTile != nullptr && checkTile->exists() )
+			if ( checkTile != nullptr && checkTile->getExist() )
 			{
 				if ( checkTile->isBlock() )
 				{
@@ -591,7 +591,7 @@ bool aabb::DynamicObject::isCollidingRight( olc::vf2d prevPosition, olc::vf2d cu
 
 			checkTile = world.getTileFromIndex( checkTileIndex );
 
-			if ( checkTile != nullptr && checkTile->exists() )
+			if ( checkTile != nullptr && checkTile->getExist() )
 			{
 				if ( checkTile->isBlock() )
 				{

@@ -82,8 +82,8 @@ void Layer<T>::create( olc::vi2d layerDimension )
 	this->_pCells = new T[this->_layerDimension.x * this->_layerDimension.y];
 	for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
 	{
-		this->_pCells[i].id = 0;
-		this->_pCells[i].exist = false;
+		this->_pCells[i].setId( 0 );
+		this->_pCells[i].setExist( false );
 	}
 
 	return;
@@ -100,8 +100,8 @@ void Layer<T>::create( int layerX, int layerY )
 	this->_pCells = new T[this->_layerDimension.x * this->_layerDimension.y];
 	for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
 	{
-		this->_pCells[i].id = 0;
-		this->_pCells[i].exist = false;
+		this->_pCells[i].setId( 0 );
+		this->_pCells[i].setExist( false );
 	}
 
 	return;
@@ -138,9 +138,9 @@ void Layer<T>::copyMapping( std::vector<std::tuple<int, bool, TileType>> mapping
 	{
 		for ( int i = 0; i < this->_layerDimension.x * this->_layerDimension.y; i++ )
 		{
-			this->_pCells[i].id = std::get<0>( mapping[i] );
-			this->_pCells[i].exist = std::get<1>( mapping[i] );
-			this->_pCells[i].tileType = std::get<2>( mapping[i] );
+			this->_pCells[i].setId( std::get<0>( mapping[i] ) );
+			this->_pCells[i].setExist( std::get<1>( mapping[i] ) );
+			this->_pCells[i].setTileType( std::get<2>( mapping[i] ) );
 			/// Temporary
 			/*
 			if ( std::get<1>( mapping[i] ) )

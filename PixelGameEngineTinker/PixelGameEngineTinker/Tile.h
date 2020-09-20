@@ -1,7 +1,7 @@
 #pragma once
 
 #include "olcPixelGameEngine.h"
-
+#include "TileRender.h"
 
 enum class TileType
 {
@@ -11,29 +11,41 @@ enum class TileType
 	count
 };
 
-struct Tile
+class Tile : public TileRender
 {
-	int id = 0;
-	int configuration = 16;
-	bool exist = true;
+private:
+	int _configuration;
+	TileType _tileType;
 	// bool isDynamic;
-	TileType tileType;
 
-	int edgeId[4];
-	int edgeExist[4];
+	int _edgeId[4];
+	bool _edgeExist[4];
 
-
+public:
 	Tile();
 	~Tile();
 
-	bool isEmpty();
-	bool isBlock();
-	bool isOneWayPlatform();
+	Tile( int id, const BoundingBox<int>& bounds, bool exist, int configuration, TileType tileType );
 
-	bool isObstacle();
-	bool isGround();
-	bool isLedge();
+	// Constructor that accounts for edges
 
-	bool exists();
+	int getConfiguration() const;
+	TileType getTileType() const;
+
+	int setConfiguration( int configuration );
+	TileType setTileType( TileType tileType );
+
+
+	bool isEmpty() const;
+	bool isBlock() const;
+	bool isOneWayPlatform() const;
+
+	bool isObstacle() const;
+	bool isGround() const;
+	bool isLedge() const;
+
+
+
+	void clear();
 };
 

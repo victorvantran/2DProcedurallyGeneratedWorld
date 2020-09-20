@@ -180,7 +180,7 @@ public:
 				for ( int y = 0; y < gridHeight; y++ )
 				{
 					olc::vf2d position{ ( float )x, ( float )y }; // add 0.5f to center it
-					bool exist = map[y * gridWidth + x].exists(); //true; // [!] based on map[y * layerWidth + x]'s normalized perlin value. ARbritray 0.5f for now
+					bool exist = map[y * gridWidth + x].getExist(); //true; // [!] based on map[y * layerWidth + x]'s normalized perlin value. ARbritray 0.5f for now
 					this->controlNodes[y * gridWidth + x] = ControlNode( position, exist );
 				}
 			}
@@ -276,11 +276,11 @@ public:
 				{
 					// Do something special (or find borders if worldchunks are connected)
 					//continue;
-					layerMap[y * layerWidth + x].configuration = 15; // 15 is the all-solid configuration
+					layerMap[y * layerWidth + x].setConfiguration(15); // 15 is the all-solid configuration
 				}
 				else
 				{
-					layerMap[y * layerWidth + x].configuration = 1;
+					layerMap[y * layerWidth + x].setConfiguration(1);
 				}
 			}
 		}
