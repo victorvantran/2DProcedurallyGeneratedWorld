@@ -19,6 +19,18 @@ struct BoundingBox
 	bool intersects( const BoundingBox<T>& otherBoundingBox ) const;
 
 	void clear();
+
+
+	T getX() const;
+	T getY() const;
+	T getWidth() const;
+	T getHeight() const;
+
+
+	T setX( T x );
+	T setY( T y );
+	T setWidth( T width );
+	T setHeight( T height );
 };
 
 
@@ -31,11 +43,11 @@ BoundingBox<T>::BoundingBox( T x, T y, T width, T height )
 	this->height = height;
 }
 
+
 template<typename T>
 BoundingBox<T>::~BoundingBox()
 {
 }
-
 
 
 template<typename T>
@@ -47,7 +59,6 @@ bool BoundingBox<T>::operator==( const BoundingBox<T>& rhs ) const
 		this->height == rhs.height
 		);
 }
-
 
 
 template<typename T>
@@ -122,3 +133,61 @@ void BoundingBox<T>::clear()
 	return;
 }
 
+
+template<typename T>
+T BoundingBox<T>::getX() const
+{
+	return this->x;
+}
+
+template<typename T>
+T BoundingBox<T>::getY() const
+{
+	return this->y;
+}
+
+
+template<typename T>
+T BoundingBox<T>::getWidth() const
+{
+	return this->width;
+}
+
+
+template<typename T>
+T BoundingBox<T>::getHeight() const
+{
+	return this->height;
+}
+
+
+
+template<typename T>
+T BoundingBox<T>::setX( T x )
+{
+	this->x = x;
+	return this->x;
+}
+
+
+template<typename T>
+T BoundingBox<T>::setY( T y )
+{
+	this->y = y;
+	return this->y;
+}
+
+template<typename T>
+T BoundingBox<T>::setWidth( T width )
+{
+	this->width = width;
+	return this->width;
+}
+
+
+template<typename T>
+T BoundingBox<T>::setHeight( T height )
+{
+	this->height = height;
+	return this->height;
+}

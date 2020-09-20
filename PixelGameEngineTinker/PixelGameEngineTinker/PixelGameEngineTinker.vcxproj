@@ -214,6 +214,7 @@
     <ClInclude Include="Atlas.h" />
     <ClInclude Include="BoundingBox.h" />
     <ClInclude Include="BoundingBoxConsolidated.h" />
+    <ClInclude Include="Cell.h" />
     <ClInclude Include="Character.h" />
     <ClInclude Include="DynamicObject.h" />
     <ClInclude Include="Edge.h" />
@@ -226,14 +227,17 @@
     <ClInclude Include="settings.h" />
     <ClInclude Include="Layer.h" />
     <ClInclude Include="Tile.h" />
+    <ClInclude Include="TileRender.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="WorldChunk.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Atlas.cpp" />
+    <ClCompile Include="Cell.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="settings.cpp" />
     <ClCompile Include="Tile.cpp" />
+    <ClCompile Include="TileRender.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
