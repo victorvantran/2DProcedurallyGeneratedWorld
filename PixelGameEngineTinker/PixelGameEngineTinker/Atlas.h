@@ -1,39 +1,7 @@
 #pragma once
 
-#include "olcPixelGameEngine.h"
-
 
 class Atlas
 {
-private:
-	olc::Sprite *_spriteTileSheet;
-	olc::Decal* _decalTileSheet;
-	olc::vi2d _atlasDimension;
-
-	olc::Decal* _decalBackground;
-public:
-	std::vector<std::tuple<int32_t, int32_t>> mapping;
-
-	Atlas();
-	~Atlas();
-
-	Atlas( olc::Sprite* spriteSheet, olc::Decal* decalSheet, olc::vi2d atlasDimension, olc::Decal* decalBackground = nullptr );
-
-	void create( std::string sheetPath );
-	void create( olc::Sprite *spriteSheet );
-	void create( olc::Decal *decalSheet );
-	void create( olc::Sprite *spriteSheet, olc::Decal* decalSheet );
-
-	void fillMapping();
-
-	olc::rcode loadFromFile(std::string filename);
-	olc::rcode saveToFile(std::string filename);
-
-	olc::Sprite* getSpriteTileSheet();
-	olc::Decal* getDecalTileSheet();
-	olc::Decal* getDecalBackground();
-
-	olc::vi2d getAtlasDimension();
-
-	std::vector<std::tuple<int32_t, int32_t>> getMapping();
+	// array of pointers to all decals ( or a map )
 };

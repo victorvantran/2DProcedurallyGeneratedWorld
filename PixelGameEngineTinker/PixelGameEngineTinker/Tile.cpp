@@ -2,7 +2,7 @@
 #include "BoundingBox.h"
 
 Tile::Tile()
-	: TileRender( -1, BoundingBox<int>(), false ), _configuration( -1 ), _tileType( TileType::Empty )
+	: TileConsolidated( -1, BoundingBox<int>(), false ), _configuration( -1 ), _tileType( TileType::Empty )
 {
 	for ( int i = 0; i < sizeof( this->_edgeId ) / sizeof( this->_edgeId[0] ); i++ )
 	{
@@ -19,7 +19,7 @@ Tile::~Tile()
 
 
 Tile::Tile( int id, const BoundingBox<int>& bounds, bool exist, int configuration, TileType tileType )
-	: TileRender( id, bounds, exist ), _configuration( configuration ), _tileType( tileType )
+	: TileConsolidated( id, bounds, exist ), _configuration( configuration ), _tileType( tileType )
 {
 	for ( int i = 0; i < sizeof( this->_edgeId ) / sizeof( this->_edgeId[0] ); i++ )
 	{
@@ -36,23 +36,11 @@ int Tile::getConfiguration() const
 }
 
 
-TileType Tile::getTileType() const
-{
-	return this->_tileType;
-}
-
 
 int Tile::setConfiguration( int configuration )
 {
 	this->_configuration = configuration;
 	return this->_configuration;
-}
-
-
-TileType Tile::setTileType( TileType tileType )
-{
-	this->_tileType = tileType;
-	return this->_tileType;
 }
 
 

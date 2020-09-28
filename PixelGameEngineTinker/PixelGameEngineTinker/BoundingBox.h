@@ -18,14 +18,42 @@ struct BoundingBox
 
 	bool intersects( const BoundingBox<T>& otherBoundingBox ) const;
 
+	template<typename S>
+	bool intersects( const BoundingBox<S>& otherBoundingBox ) const
+	{
+		if ( ( this->x + this->width ) <= otherBoundingBox.x )
+		{
+			return false;
+		}
+		if ( ( otherBoundingBox.x + otherBoundingBox.width ) <= this->x )
+		{
+			return false;
+		}
+		if ( ( this->y + this->height ) <= otherBoundingBox.y )
+		{
+			return false;
+		}
+		if ( ( otherBoundingBox.y + otherBoundingBox.height ) <= this->y )
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+
+
+
 	void clear();
 
 
 	T getX() const;
 	T getY() const;
+	T getCenterX() const;
+	T getCenterY() const;
 	T getWidth() const;
 	T getHeight() const;
-
+	
 
 	T setX( T x );
 	T setY( T y );
@@ -66,8 +94,8 @@ bool BoundingBox<T>::operator>=( const BoundingBox<T>& rhs ) const
 {
 	return ( this->x <= rhs.x &&
 		this->y <= rhs.y &&
-		( this->x + this->width ) >= ( rhs.x + rhs.width ) &&
-		( this->y + this->height ) >= ( rhs.y + rhs.height )
+		(this->x + this->width) >= (rhs.x + rhs.width) &&
+		(this->y + this->height) >= (rhs.y + rhs.height)
 		);
 }
 
@@ -98,6 +126,7 @@ bool BoundingBox<T>::operator>( const BoundingBox<T>& rhs ) const
 
 	return true;
 }
+
 
 template<typename T>
 bool BoundingBox<T>::intersects( const BoundingBox<T>& otherBoundingBox ) const // intersect is stricter than merely touching
@@ -144,6 +173,19 @@ template<typename T>
 T BoundingBox<T>::getY() const
 {
 	return this->y;
+}
+
+
+template<typename T>
+T BoundingBox<T>::getCenterX() const
+{
+	return this->x + this->height / 2;
+}
+
+template<typename T>
+T BoundingBox<T>::getCenterY() const
+{
+	return this->y + this->height / 2;
 }
 
 

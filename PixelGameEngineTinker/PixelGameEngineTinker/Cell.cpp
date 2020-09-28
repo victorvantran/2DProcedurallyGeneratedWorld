@@ -1,7 +1,7 @@
 #include "Cell.h"
 
 Cell::Cell()
-	: _bounds( BoundingBox<int>() ), _exist( false )
+	: _id( -1 ), _bounds( BoundingBox<int>() ), _exist(false)
 {
 }
 
@@ -12,7 +12,7 @@ Cell::~Cell()
 
 
 Cell::Cell( int id, BoundingBox<int> bounds, bool exist )
-	: _id( id ), _bounds( bounds ), _exist( exist )
+	: _id(id), _bounds( bounds ), _exist( exist )
 {
 }
 
@@ -76,7 +76,7 @@ BoundingBox<int> Cell::setBounds( const BoundingBox<int>& bounds )
 
 int Cell::setWidth( int width )
 {
-	this->_bounds.setWidth( width );
+	this->_bounds.setWidth(width);
 	return width;
 }
 

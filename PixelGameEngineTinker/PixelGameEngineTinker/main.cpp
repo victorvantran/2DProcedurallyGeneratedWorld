@@ -1,571 +1,468 @@
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
-
-#include "settings.h"
-#include "GameState.h"
-#include "Screen.h"
-#include "Layer.h"
-#include "Tile.h"
 #include "World.h"
-#include "Character.h"
+#include "Tile.h"
+#include "TileConsolidated.h"
+#include "QuadTree.h"
 
-/// Override base class with your custom functionality
-class Game : public olc::PixelGameEngine
+
+#include "Assets.h"
+#include "Camera.h"
+
+// [!] probably one edge case that throws excpetion (need to find it eventually by running many test trials for the thorwn exception and videoing the smallest amount of inserts/removed to do it)
+
+// Override base class with your custom functionality
+class Example : public olc::PixelGameEngine
 {
+public:
+	const static int pixelSize = 1;
+	const static int screenWidth = 1920 / pixelSize; // cell
+	const static int screenHeight = 1200 / pixelSize; // cell
+	const static int tileSize = 16 / pixelSize;
+
+
+public:
+	olc::Decal* decalTileMap = nullptr;
+	olc::Decal* decalDirtTileConsolidationMap = nullptr;
+
+	World world;
+	Camera camera;
+
+	olc::vi2d decalGridDimension;
+
+	Tile* tiles; // exist, id, configuration
+	int* configurations;
+
+	olc::vi2d gridDimension;
+
+	int tileId = 0;
+
+	QuadTree<Tile, TileConsolidated>* quadTree;
+	QuadTree<Tile, TileConsolidated>* quadTrees;
 private:
-	GameState _gameState;
-	Screen* _pScreen;
-
-
-
-	//olc::ResourcePack _rpPlayer;
-	World* _world;
-	Layer<Tile>* _layerRandom;
-
-
-	/// Temporary Datatype for sprites for testing purposes
-	olc::Sprite* _spritePlayerMouse;
-	olc::Sprite* _spriteLoading;
-
-	olc::Sprite* _spriteTileSetTinkerWorld;
-
-	olc::Sprite* _spriteTileSetForest;
-	olc::Sprite* _spriteBackgroundForest;
-
-	olc::Sprite* _spritePlayerCharacter;
-
-	/// Temporary Datatype for decals for testing purposes
-	olc::Decal* _decalPlayerMouse;
-	olc::Decal* _decalLoading;
-
-	olc::Decal* _decalTileSetTinkerWorld;
-
-	olc::Decal* _decalTileSetForest;
-	olc::Decal* _decalBackgroundForest;
-
-	olc::Decal* _decalPlayerCharacter;
-
-
-	/// Temporary Player DataType
-	enum class KeyInput
-	{
-		UpKey = 0,
-		DownKey = 1,
-		LeftKey = 2,
-		RightKey = 3,
-		JumpKey = 4,
-		count
-	};
-
-	bool* _playerCurrInputs;
-	bool* _playerPrevInputs;
-
-	olc::vf2d _playerMouse;
-	olc::vf2d _playerCamera;
-
-	Character _playerCharacter;
-
-
-
-	Layer<Tile>* _layerLoading;
-
-
-	/// Temporary Atlas Datatype
-	Atlas* _atlasLoading;
-	Atlas* _atlasTinkerWorld;
-	Atlas _atlasForest;
-	///
-
-
-	// Debugging tools
-	bool _freeRoam = false;
-
-public:
-	Game()
-	{
-	}
-
-	~Game()
-	{
-		this->destroyGame();
-	}
-
 
 
 public:
-	void initializeGame()
+	Example()
 	{
-	/// initialize the screen
-	/// run through the first state of the game
+		// Name you application
 		sAppName = "Example";
-
-		this->initializeSprites();
-		this->initializeDecals();
-		this->initializeAtlases();
-		this->initializeLayers();
-		this->initializePlayer();
-		this->initializeWorld();
-
-		this->_gameState = GameState::TINKER_WORLD_LOADING;
-		this->_pScreen = new Screen();
-
-		// this->_rpPlayer.LoadPack(...);
-		return;
 	}
-
-	void destroyGame()
-	{
-	/// Free memory of what was used in Game::initalizeGame()
-		this->destroyAtlases();
-		this->destroyLayers();
-		this->destroySprites();
-		this->destroyDecals();
-		this->destroyPlayer();
-		this->destroyWorld();
-
-		delete this->_pScreen;
-		// this->_rpPlayer.ClearPack();
-		return;
-	}
-
-	void initializeSprites()
-	{
-	/// Initialize the datatype that holds all the sprites
-		this->_spritePlayerCharacter = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\character_2x4_8x8.png" );
-		this->_spritePlayerMouse = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\dwarven_gauntlet_cursor.png" );
-		this->_spriteLoading = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\worldmapgrid_480x270_8x8.png" );
-		this->_spriteTileSetTinkerWorld = new olc::Sprite("C:\\Users\\Victor\\Desktop\\Tinker\\platformer_25x16_8x8.png");
-		//this->_spriteTileSetForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_2x2_8x8_v2.png" );
-		this->_spriteTileSetForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\marching_forest_8x8_8x8_v3.png" );
-		//this->_spriteTileSetForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\beta_4x4_8x8.png" );
-		//this->_spriteBackgroundForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_background_v3_100x100_8x8.png" );;
-		this->_spriteBackgroundForest = new olc::Sprite( "C:\\Users\\Victor\\Desktop\\Tinker\\forest_background_240x135_8x8.png" );;
-
-		return;
-	}
-
-	void destroySprites()
-	{
-	/// Free memory occupied by the datatype that stores the sprites
-		return;
-	}
-
-	void initializeDecals()
-	{
-	/// Initialize the datatype that holds all the decals
-		this->_decalPlayerCharacter = new olc::Decal( this->_spritePlayerCharacter );
-		this->_decalPlayerMouse = new olc::Decal( this->_spritePlayerMouse );
-		this->_decalLoading = new olc::Decal( this->_spriteLoading );
-		this->_decalTileSetTinkerWorld = new olc::Decal( this->_spriteTileSetTinkerWorld );
-		this->_decalTileSetForest = new olc::Decal( this->_spriteTileSetForest);
-		this->_decalBackgroundForest = new olc::Decal( this->_spriteBackgroundForest );
-		return;
-	}
-
-	void destroyDecals()
-	{
-	/// Free memory occupied by the datatype that stores the decals
-		return;
-	}
-
-
-	void initializeAtlases()
-	{
-	// Information needed: png, resolution of png, and resolution of the tile
-	// For each tile [0,0], [1,0], [2,0], ..., [n,m], mark the location of the subarea (via bounding box) of the given png based on the resolution of the tile
-		this->_atlasLoading = new Atlas( this->_spriteLoading, this->_decalLoading, olc::vi2d(480, 270) );
-		this->_atlasTinkerWorld = new Atlas( this->_spriteTileSetTinkerWorld, this->_decalTileSetTinkerWorld, olc::vi2d( 25, 16 ) );
-		this->_atlasForest = Atlas( this->_spriteTileSetForest, this->_decalTileSetForest, olc::vi2d{ 8,8 }, this->_decalBackgroundForest );
-	}
-
-
-	void destroyAtlases()
-	{
-	/// Free memory of what was used in initializeAtlases()
-		delete this->_atlasLoading;
-		delete this->_atlasTinkerWorld;
-		return;
-	}
-
-
-	void initializeLayers()
-	{
-	/// Create the matrix of cells based on the screen and tile resolution
-		this->_layerLoading = new Layer<Tile>( olc::vi2d{ 480, 270 } );
-		return;
-	}
-
-	void destroyLayers()
-	{
-	/// Free memory of what was used in initializeLayers()
-		delete this->_layerLoading;
-		return;
-	}
-
-
-	void initializePlayer()
-	{
-	///
-		this->_playerCurrInputs = new bool[(int)KeyInput::count];
-		this->_playerPrevInputs = new bool[( int )KeyInput::count];
-		this->_playerMouse = olc::vf2d{ 0.0f, 0.0f };
-		this->_playerCamera = olc::vf2d{ 0.0f, 0.0f };
-
-		//this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 70.0f, 16.0f } );
-		this->_playerCharacter = Character( this->_playerCurrInputs, this->_playerPrevInputs, olc::vf2d{ 65.0f, 14.0f }, this->_decalPlayerCharacter );
-	}
-
-
-	void destroyPlayer()
-	{
-	///
-		delete[] this->_playerCurrInputs;
-		delete[] this->_playerPrevInputs;
-
-	}
-
-	void initializeWorld()
-	{
-	///
-		this->_world = new World();
-	}
-
-
-	void destroyWorld()
-	{
-	///
-		delete this->_world;
-	}
-
-
-
-	GameState getGameState()
-	{
-	/// Returns the current gamestate
-		return this->_gameState;
-	}
-
-
-	void runGameStateLoading( float fElapsedTime )
-	///
-	{
-		return;
-	}
-
-
-	void runGameStateTitle( float fElapsedTime )
-	{
-	///
-		return;
-	}
-
-
-	void runGameStateTinker( float fElapsedTime )
-	{
-	///
-
-		updatePlayer( fElapsedTime );
-
-		Clear( olc::DARK_BLUE );
-
-		//SetPixelMode( olc::Pixel::ALPHA );
-		this->_pScreen->drawLayer( this->_layerLoading, this->_atlasLoading, this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f ); // [col, row] 128,72
-		//SetPixelMode( olc::Pixel::NORMAL );
-
-		this->drawPlayerMouse();
-		return;
-	}
-
-
-
-	void runGameStateTinkerForestWorldLoading( float fElapsedTime )
-	{
-	/// Generate forests
-		//this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
-		//this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ settings::WORLD_CHUNK::DIMENSION.x, 0 }, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
-		//this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ 0, settings::WORLD_CHUNK::DIMENSION.y }, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
-		//this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + settings::WORLD_CHUNK::DIMENSION, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
-
-		this->_gameState = GameState::TINKER_WORLD;
-		return;
-	}
-
-
-	void runGameStateTinkerForestWorld( float fElapsedTime )
-	{
-	/// Render forest world
-		updatePlayer( fElapsedTime );
-
-
-		Clear( olc::DARK_CYAN );
-
-		//this->_pScreen->drawWorldChunk( *this->_world->getWorldChunks()[0], this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
-		this->_pScreen->drawWorld( *this->_world, this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
-
-
-		//olc::vf2d mouse = olc::vf2d{ ( float )this->GetMouseX(), ( float )this->GetMouseY() };
-		//std::cout << "[" << ( int )( ( this->_playerCamera.x * 8.0f + GetMouseX() ) / 8.0f ) << "," << ( int )( ( this->_playerCamera.y * 8.0f + GetMouseY() ) / 8.0f ) << "]" << std::endl;
-	
-		
-		// absolute pixel = {this->_playerCamera.x * 8.0f + mouse.x, this->_playerCamera.y * 8.0f + mouse.y ) / 8.0f}
-
-		this->drawPlayerMouse();
-
-		return;
-	}
-
-
-
-	void runGameStateTinkerWorldLoading( float fElapsedTime )
-	{
-	///
-		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION, settings::WORLD_CHUNK::DIMENSION, 0, 0.2f, this->_atlasForest );
-		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ settings::WORLD_CHUNK::DIMENSION.x, 0 }, settings::WORLD_CHUNK::DIMENSION, 0, 0.2f, this->_atlasForest );
-		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ 0, settings::WORLD_CHUNK::DIMENSION.y }, settings::WORLD_CHUNK::DIMENSION, 0, 0.2f, this->_atlasForest );
-		this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + settings::WORLD_CHUNK::DIMENSION, settings::WORLD_CHUNK::DIMENSION, 0, 0.2f, this->_atlasForest );
-
-
-
-		//this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION, settings::WORLD_CHUNK::DIMENSION, (int)std::log2( settings::WORLD_CHUNK::DIMENSION .x ) - 1, 0.2f, this->_atlasForest );
-		//this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ settings::WORLD_CHUNK::DIMENSION.x, 0 }, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
-		//this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + olc::vi2d{ 0, settings::WORLD_CHUNK::DIMENSION.y }, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
-		//this->_world->generateTestForest( settings::WORLD_CHUNK::POSITION + settings::WORLD_CHUNK::DIMENSION, settings::WORLD_CHUNK::DIMENSION, ( int )std::log2( settings::WORLD_CHUNK::DIMENSION.x ) - 1, 0.2f, this->_atlasForest );
-
-
-		this->_gameState = GameState::TINKER_WORLD;
-		return;
-	}
-
-
-	void runGameStateTinkerWorld( float fElapsedTime )
-	{
-	///
-		this->updatePlayer( fElapsedTime );
-		this->_playerCharacter.updateCharacter( fElapsedTime, *this->_world );
-
-
-		Clear( olc::DARK_CYAN );
-
-		if ( !this->_freeRoam )
-		{
-			this->_playerCamera = this->_playerCharacter.getCurrPosition() - ( ( settings::RESOLUTION::SCREEN_DIMENSION / settings::ATLAS::TILE_DIMENSION ) / 2 ); // Make camera centered on character ( - (screendimension/tilesize)/2 )
-		}
-		//std::cout << "[" << ( int )( ( this->_playerCamera.x * 8.0f + GetMouseX() ) / 8.0f ) << "," << ( int )( ( this->_playerCamera.y * 8.0f + GetMouseY() ) / 8.0f ) << "]" << std::endl;
-
-
-
-		this->_world->getWorldChunks().at( 0 )->updateMesh();
-		this->_pScreen->drawWorld( *this->_world, this->_playerCamera, olc::vi2d{ 96, 54 }, 1.0f );
-
-		this->_pScreen->drawCharacter( this->_playerCharacter, this->_playerCamera );
-
-
-		// Mouse debug
-		olc::vi2d tileChosen = olc::vi2d{ ( int )( ( this->_playerCamera.x * 8.0f + GetMouseX() ) / 8.0f ), ( int )( ( this->_playerCamera.y * 8.0f + GetMouseY() ) / 8.0f ) };
-		if ( this->GetMouse( 0 ).bPressed || this->GetMouse( 0 ).bHeld )
-		{
-			Tile* chosenTile = this->_world->getTileFromIndex( tileChosen );
-			if ( chosenTile != nullptr )
-			{
-				chosenTile->setExist( false );
-			}
-		}
-
-		if ( this->GetMouse( 1 ).bPressed )
-		{
-			Tile* chosenTile = this->_world->getTileFromIndex( tileChosen );
-			if ( chosenTile != nullptr )
-			{
-				std::cout << chosenTile->getConfiguration() << std::endl;
-			}
-		}
-
-
-		if ( this->GetKey( olc::Key::E ).bPressed )
-		{
-			Tile* chosenTile = this->_world->getTileFromIndex( tileChosen );
-			if ( chosenTile != nullptr )
-			{
-				std::cout << chosenTile->getExist() << std::endl;
-			}
-		}
-
-
-		if ( this->GetKey( olc::Key::I ).bPressed )
-		{
-			Tile* chosenTile = this->_world->getTileFromIndex( tileChosen );
-			if ( chosenTile != nullptr )
-			{
-				std::cout << chosenTile->getId() << std::endl;
-			}
-		}
-
-		this->DrawString( olc::vi2d{ this->GetMouseX(), this->GetMouseY() }, "[" + std::to_string( tileChosen.x ) + "," + std::to_string( tileChosen.y ) + "]", olc::YELLOW, 1 );
-
-
-
-
-
-		// Confirmed slight decal offset; not a problem with collision detection
-		/*
-		if ( this->GetMouse( 1 ).bPressed )
-		{
-			float x = ( this->_playerCamera.x * 8.0f + GetMouseX() ) / 8.0f;
-			float y = ( this->_playerCamera.y * 8.0f + GetMouseY() ) / 8.0f;
-
-			if ( x >= this->_playerCharacter.getCurrPosition().x - this->_playerCharacter.getHalfSize().x && 
-				x <= this->_playerCharacter.getCurrPosition().x + this->_playerCharacter.getHalfSize().x &&
-				y >= this->_playerCharacter.getCurrPosition().y - this->_playerCharacter.getHalfSize().y &&
-				y <= this->_playerCharacter.getCurrPosition().y + this->_playerCharacter.getHalfSize().y )
-			{
-				std::cout << "Clicked on character" << std::endl;
-			}
-
-		}
-		*/
-
-
-		this->DrawCircle( settings::RESOLUTION::SCREEN_DIMENSION /2, 1, olc::WHITE );
-
-
-		return;
-	}
-
-public:
-	void updatePlayer( float deltaTime )
-	{
-		this->updatePlayerMouse();
-		this->resetPlayerInputs();
-		this->updatePlayerInputs();
-		this->updatePlayerCamera( deltaTime );
-
-		return;
-	}
-
-	void updatePlayerMouse()
-	{
-	///
-		this->_playerMouse = olc::vf2d{ (float)this->GetMouseX(), (float)this->GetMouseY() };
-
-		return;
-	}
-
-
-	void updatePlayerInputs()
-	{
-	/// Updates the array of bool values that represent a key being pressed
-		if ( this->GetKey( olc::Key::W ).bPressed || this->GetKey( olc::Key::W ).bHeld )
-		{
-			this->_playerCurrInputs[( int )KeyInput::UpKey] = true;
-		}
-		if ( this->GetKey( olc::Key::S ).bPressed || this->GetKey( olc::Key::S ).bHeld )
-		{
-			this->_playerCurrInputs[( int )KeyInput::DownKey] = true;
-		}
-		if ( this->GetKey( olc::Key::A ).bPressed || this->GetKey( olc::Key::A ).bHeld )
-		{
-			this->_playerCurrInputs[( int )KeyInput::LeftKey] = true;
-		}
-		if ( this->GetKey( olc::Key::D ).bPressed || this->GetKey( olc::Key::D ).bHeld )
-		{
-			this->_playerCurrInputs[( int )KeyInput::RightKey] = true;
-		}
-		if ( this->GetKey( olc::Key::SPACE ).bPressed || this->GetKey( olc::Key::SPACE ).bHeld ||
-			this->GetKey( olc::Key::W ).bPressed || this->GetKey( olc::Key::W ).bHeld
-			)
-		{
-			this->_playerCurrInputs[( int )KeyInput::JumpKey] = true;
-		}
-
-		return;
-	}
-
-	void resetPlayerInputs()
-	{
-	/// Resets the array of bool values that represent a key being pressed
-		for ( int i = 0; i < ( int )KeyInput::count; i++ )
-		{
-			this->_playerCurrInputs[i] = false;
-		}
-
-		return;
-	}
-
-
-	void updatePlayerCamera( float fElapsedTime )
-	{
-		float speed = 40.0f; // 1.0f is 1 tile size
-		if ( this->IsFocused() )
-		{
-			if ( this->GetKey( olc::Key::F ).bPressed )
-			{
-				this->_freeRoam = !this->_freeRoam;
-			}
-
-			if ( this->GetKey( olc::Key::UP ).bPressed || this->GetKey( olc::Key::UP ).bHeld )
-			{
-				this->_playerCamera.y += -speed * fElapsedTime;
-			}
-
-			if ( this->GetKey( olc::Key::DOWN ).bPressed || this->GetKey( olc::Key::DOWN ).bHeld )
-			{
-				this->_playerCamera.y += speed * fElapsedTime;
-			}
-
-
-			if ( this->GetKey( olc::Key::LEFT ).bPressed || this->GetKey( olc::Key::LEFT ).bHeld )
-			{
-				this->_playerCamera.x += -speed * fElapsedTime;
-			}
-
-
-			if ( this->GetKey( olc::Key::RIGHT ).bPressed || this->GetKey( olc::Key::RIGHT ).bHeld )
-			{
-				this->_playerCamera.x += speed * fElapsedTime;
-			}
-		}
-	}
-
-
-	void drawPlayerMouse()
-	{
-	///
-		this->DrawDecal( this->_playerMouse, this->_decalPlayerMouse );
-		return;
-	}
-
 
 public:
 	bool OnUserCreate() override
 	{
-		/// Called once at the start, so create things here
-		this->initializeGame();
+
+
+		createSpritesAndDecals();
+		createConfigurations();
+		createMap();
+
+
 		return true;
 	}
 
 	bool OnUserUpdate( float fElapsedTime ) override
 	{
-		switch ( this->getGameState() )
+		float mouseX = ( float )GetMouseX();
+		float mouseY = ( float )GetMouseY();
+
+		float panSpeed = 10.0f;
+		if ( GetKey( olc::Key::UP ).bPressed || GetKey( olc::Key::UP ).bHeld )
 		{
-		case GameState::LOADING: this->runGameStateLoading( fElapsedTime ); break;
-		case GameState::TITLE: this->runGameStateTitle( fElapsedTime ); break;
-		case GameState::TINKER: this->runGameStateTinker( fElapsedTime ); break;
-		case GameState::TINKER_WORLD_LOADING: this->runGameStateTinkerWorldLoading( fElapsedTime ); break;
-		case GameState::TINKER_WORLD: this->runGameStateTinkerWorld( fElapsedTime ); break;
+			camera.panY( -panSpeed * fElapsedTime );
 		}
+		if ( GetKey( olc::Key::DOWN ).bPressed || GetKey( olc::Key::DOWN ).bHeld )
+		{
+			camera.panY( panSpeed * fElapsedTime );
+		}
+		if ( GetKey( olc::Key::LEFT ).bPressed || GetKey( olc::Key::LEFT ).bHeld )
+		{
+			camera.panX( -panSpeed * fElapsedTime );
+		}
+		if ( GetKey( olc::Key::RIGHT ).bPressed || GetKey( olc::Key::RIGHT ).bHeld )
+		{
+			camera.panX( panSpeed * fElapsedTime );
+		}
+
+
+		float tilePositionX;
+		float tilePositionY;
+
+		this->camera.screenToWorld( GetMouseX(), GetMouseY(), tilePositionX, tilePositionY );
+
+		olc::vi2d tileIndex = olc::vi2d{
+			( int )( tilePositionX ),
+			( int )( tilePositionY )
+		};
+
+		if ( GetKey( olc::Key::Q ).bPressed || GetKey( olc::Key::Q ).bHeld )
+		{
+			std::cout << "Exist: " << tiles[tileIndex.y * gridDimension.x + tileIndex.x].getExist() << std::endl;
+			std::cout << "ID: " << tiles[tileIndex.y * gridDimension.x + tileIndex.x].getId() << std::endl;
+
+		}
+
+		// Zoom in
+		if ( GetKey( olc::Key::Z ).bPressed || GetKey( olc::Key::Z ).bHeld )
+		{
+			float zoomScale = 1.0f + (1.0f * fElapsedTime);
+			this->camera.zoom( zoomScale );
+		}
+
+		// Zoom out
+		if ( GetKey( olc::Key::X ).bPressed || GetKey( olc::Key::X ).bHeld )
+		{
+			float zoomScale = 1.0f - ( 1.0f * fElapsedTime );
+			this->camera.zoom( zoomScale );
+		}
+
+		if ( GetKey( olc::Key::D ).bPressed )
+		{
+			tileId = 0;
+		}
+		else if ( GetKey( olc::Key::S ).bPressed )
+		{
+			tileId = 1;
+		}
+
+		if ( GetKey( olc::Key::P ).bPressed || GetKey( olc::Key::P ).bHeld )
+		{
+			quadTree->insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 1, 1 ), true ) );
+			//updateTileConfiguration( tileIndex, true );
+		}
+
+		if ( GetMouse( 0 ).bPressed || GetMouse( 0 ).bHeld )
+			//if ( GetMouse( 0 ).bPressed )
+		{
+			quadTree->insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 3, 3 ), true ) );
+			//updateTileConfiguration( tileIndex, true );
+		}
+
+		if ( GetMouse( 1 ).bPressed || GetMouse( 1 ).bHeld )
+			//if ( GetMouse( 1 ).bPressed )
+		{
+			quadTree->remove( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
+			//updateTileConfiguration( tileIndex, true );
+		}
+
+		if ( GetKey( olc::Key::SPACE ).bPressed || GetKey( olc::Key::SPACE ).bHeld )
+		{
+			std::cout << countQuadTree( 0 ) << std::endl;
+
+		}
+
+		Clear( olc::BLACK );
+
+		//drawAllSingleTiles( this->tiles );
+		//drawQuadTree( this->quadTrees, 0, this->camera );
+		this->world.updateWorldChunks( this->camera.getView() );
+		this->camera.renderWorld( this->world );
+		this->camera.renderQuadTree( this->quadTrees[0] );
+		this->camera.renderCamera();
+
+		drawTileIndexString( tileIndex );
 
 		return true;
 	}
+
+
+	void createMap()
+	{
+		int screenCellWidth = screenWidth / tileSize;
+		int screenCellHeight = screenHeight / tileSize;
+		//camera = Camera( BoundingBox<float>( 0.0f, 0.0f, screenCellWidth, screenCellHeight ), 1.0f, 1.0f );
+		camera = Camera( BoundingBox<float>( 0.0f, 0.0f, 32, 32 ), 1.0f, 1.0f );
+
+		// [!] add minLevels to tree constructor
+		int rootQuadTreePositionX = 0;
+		int rootQuadTreePositionY = 0;
+		int rootQuadTreeSize = 2 << QuadTree<Tile, TileConsolidated>::_MAX_LEVELS;
+
+		gridDimension = olc::vi2d{ rootQuadTreeSize, rootQuadTreeSize };
+
+		tiles = new Tile[rootQuadTreeSize * rootQuadTreeSize];
+
+
+
+		int numQuadTrees = 0;
+		for ( int i = 0; i <= QuadTree<Tile, TileConsolidated>::_MAX_LEVELS; i++ )
+		{
+			numQuadTrees += ( 4 << ( i * 2 ) ) / 4;
+		}
+
+		quadTrees = new QuadTree<Tile, TileConsolidated>[numQuadTrees];
+		quadTrees[0].constructQuadTree(
+			0,
+			-1,
+			QuadTree<Tile, TileConsolidated>::_MAX_LEVELS,
+			0,
+			BoundingBox<int>( rootQuadTreePositionX, rootQuadTreePositionY, rootQuadTreeSize, rootQuadTreeSize ),
+			this->quadTrees,
+			this->tiles
+		);
+		quadTree = &quadTrees[0];
+
+		// Connect trees
+		for ( int i = 0; i < numQuadTrees; i++ ) // can leave out the leaves if want to iterate less
+		{
+			quadTrees[i].divide();
+		}
+		return;
+	}
+
+
+
+	void createConfigurations()
+	{
+		decalGridDimension = olc::vi2d{ 8, 8 }; // x*y = #of members in a single family
+
+		// initially calculate all configurations
+		for ( int x = 0; x < gridDimension.x; x++ )
+		{
+			for ( int y = 0; y < gridDimension.y; y++ )
+			{
+				updateTileConfiguration( olc::vi2d{ x, y }, true );
+			}
+		}
+
+		configurations = new int[256];
+		configurations[0] = 0;		configurations[1] = 0;		configurations[2] = 1;		configurations[3] = 1;		configurations[4] = 0;		configurations[5] = 0;		configurations[6] = 1;		configurations[7] = 1;
+		configurations[8] = 2;		configurations[9] = 2;		configurations[10] = 3;		configurations[11] = 3;		configurations[12] = 2;		configurations[13] = 2;		configurations[14] = 4;		configurations[15] = 4;
+		configurations[16] = 0;		configurations[17] = 0;		configurations[18] = 1;		configurations[19] = 1;		configurations[20] = 0;		configurations[21] = 0;		configurations[22] = 1;		configurations[23] = 1;
+		configurations[24] = 2;		configurations[25] = 2;		configurations[26] = 3;		configurations[27] = 3;		configurations[28] = 2;		configurations[29] = 2;		configurations[30] = 4;		configurations[31] = 4;
+		configurations[32] = 5;		configurations[33] = 5;		configurations[34] = 6;		configurations[35] = 6;		configurations[36] = 5;		configurations[37] = 5;		configurations[38] = 6;		configurations[39] = 6;
+		configurations[40] = 7;		configurations[41] = 7;		configurations[42] = 8;		configurations[43] = 8;		configurations[44] = 7;		configurations[45] = 7;		configurations[46] = 9;		configurations[47] = 9;
+		configurations[48] = 5;		configurations[49] = 5;		configurations[50] = 6;		configurations[51] = 6;		configurations[52] = 5;		configurations[53] = 5;		configurations[54] = 6;		configurations[55] = 6;
+		configurations[56] = 10;	configurations[57] = 10;	configurations[58] = 11;	configurations[59] = 11;	configurations[60] = 10;	configurations[61] = 10;	configurations[62] = 12;	configurations[63] = 12;
+		configurations[64] = 0;		configurations[65] = 0;		configurations[66] = 1;		configurations[67] = 1;		configurations[68] = 0;		configurations[69] = 0;		configurations[70] = 1;		configurations[71] = 1;
+		configurations[72] = 2;		configurations[73] = 2;		configurations[74] = 3;		configurations[75] = 3;		configurations[76] = 2;		configurations[77] = 2;		configurations[78] = 4;		configurations[79] = 4;
+		configurations[80] = 0;		configurations[81] = 0;		configurations[82] = 1;		configurations[83] = 1;		configurations[84] = 0;		configurations[85] = 0;		configurations[86] = 1;		configurations[87] = 1;
+		configurations[88] = 2;		configurations[89] = 2;		configurations[90] = 3;		configurations[91] = 3;		configurations[92] = 2;		configurations[93] = 2;		configurations[94] = 4;		configurations[95] = 4;
+		configurations[96] = 5;		configurations[97] = 5;		configurations[98] = 6;		configurations[99] = 6;		configurations[100] = 5;	configurations[101] = 5;	configurations[102] = 6;	configurations[103] = 6;
+		configurations[104] = 7;	configurations[105] = 7;	configurations[106] = 8;	configurations[107] = 8;	configurations[108] = 7;	configurations[109] = 7;	configurations[110] = 9;	configurations[111] = 9;
+		configurations[112] = 5;	configurations[113] = 5;	configurations[114] = 6;	configurations[115] = 6;	configurations[116] = 5;	configurations[117] = 5;	configurations[118] = 6;	configurations[119] = 6;
+		configurations[120] = 10;	configurations[121] = 10;	configurations[122] = 11;	configurations[123] = 11;	configurations[124] = 10;	configurations[125] = 10;	configurations[126] = 12;	configurations[127] = 12;
+		configurations[128] = 14;	configurations[129] = 14;	configurations[130] = 13;	configurations[131] = 16;	configurations[132] = 14;	configurations[133] = 14;	configurations[134] = 13;	configurations[135] = 16;
+		configurations[136] = 17;	configurations[137] = 17;	configurations[138] = 15;	configurations[139] = 18;	configurations[140] = 17;	configurations[141] = 17;	configurations[142] = 19;	configurations[143] = 20;
+		configurations[144] = 14;	configurations[145] = 14;	configurations[146] = 13;	configurations[147] = 16;	configurations[148] = 14;	configurations[149] = 14;	configurations[150] = 13;	configurations[151] = 16;
+		configurations[152] = 17;	configurations[153] = 17;	configurations[154] = 15;	configurations[155] = 18;	configurations[156] = 17;	configurations[157] = 17;	configurations[158] = 19;	configurations[159] = 20;
+		configurations[160] = 21;	configurations[161] = 21;	configurations[162] = 22;	configurations[163] = 23;	configurations[164] = 21;	configurations[165] = 21;	configurations[166] = 22;	configurations[167] = 23;
+		configurations[168] = 24;	configurations[169] = 24;	configurations[170] = 25;	configurations[171] = 26;	configurations[172] = 24;	configurations[173] = 24;	configurations[174] = 27;	configurations[175] = 28;
+		configurations[176] = 21;	configurations[177] = 21;	configurations[178] = 22;	configurations[179] = 23;	configurations[180] = 21;	configurations[181] = 21;	configurations[182] = 22;	configurations[183] = 23;
+		configurations[184] = 29;	configurations[185] = 29;	configurations[186] = 30;	configurations[187] = 31;	configurations[188] = 29;	configurations[189] = 29;	configurations[190] = 32;	configurations[191] = 33;
+		configurations[192] = 14;	configurations[193] = 14;	configurations[194] = 13;	configurations[195] = 16;	configurations[196] = 14;	configurations[197] = 14;	configurations[198] = 13;	configurations[199] = 16;
+		configurations[200] = 17;	configurations[201] = 17;	configurations[202] = 15;	configurations[203] = 18;	configurations[204] = 17;	configurations[205] = 17;	configurations[206] = 19;	configurations[207] = 20;
+		configurations[208] = 14;	configurations[209] = 14;	configurations[210] = 13;	configurations[211] = 16;	configurations[212] = 14;	configurations[213] = 14;	configurations[214] = 13;	configurations[215] = 16;
+		configurations[216] = 17;	configurations[217] = 17;	configurations[218] = 15;	configurations[219] = 18;	configurations[220] = 17;	configurations[221] = 17;	configurations[222] = 19;	configurations[223] = 20;
+		configurations[224] = 34;	configurations[225] = 34;	configurations[226] = 35;	configurations[227] = 36;	configurations[228] = 34;	configurations[229] = 34;	configurations[230] = 35;	configurations[231] = 36;
+		configurations[232] = 37;	configurations[233] = 37;	configurations[234] = 38;	configurations[235] = 39;	configurations[236] = 37;	configurations[237] = 37;	configurations[238] = 40;	configurations[239] = 41;
+		configurations[240] = 34;	configurations[241] = 34;	configurations[242] = 35;	configurations[243] = 36;	configurations[244] = 34;	configurations[245] = 34;	configurations[246] = 35;	configurations[247] = 36;
+		configurations[248] = 42;	configurations[249] = 42;	configurations[250] = 43;	configurations[251] = 44;	configurations[252] = 42;	configurations[253] = 42;	configurations[254] = 45;	configurations[255] = 46;
+
+		return;
+	}
+
+
+	void createSpritesAndDecals()
+	{
+		Assets::get().loadSprites();
+		Assets::get().loadDecals();
+
+		decalTileMap = Assets::get().getDecal( "ForestTileMap" );
+		decalDirtTileConsolidationMap = Assets::get().getDecal( "ForestConsolidationTileMap" );
+		
+		return;
+	}
+
+
+	void updateTileConfiguration( olc::vi2d tileIndex, bool origin )
+	{
+		if ( !( tileIndex.x >= 0 && tileIndex.x < gridDimension.x &&
+			tileIndex.y >= 0 && tileIndex.y < gridDimension.y &&
+			( origin || tiles[tileIndex.y * gridDimension.x + tileIndex.x].getExist() ) ) )
+		{
+			return;
+		}
+
+		int tileId = tiles[tileIndex.y * gridDimension.x + tileIndex.x].getId();
+
+		olc::vi2d topLeftIndex = olc::vi2d{ tileIndex.x - 1, tileIndex.y - 1 };
+		olc::vi2d centerTopIndex = olc::vi2d{ tileIndex.x, tileIndex.y - 1 };
+		olc::vi2d topRightIndex = olc::vi2d{ tileIndex.x + 1, tileIndex.y - 1 };
+		olc::vi2d centerRightIndex = olc::vi2d{ tileIndex.x + 1, tileIndex.y };
+		olc::vi2d bottomRightIndex = olc::vi2d{ tileIndex.x + 1, tileIndex.y + 1 };
+		olc::vi2d centerBottomIndex = olc::vi2d{ tileIndex.x, tileIndex.y + 1 };
+		olc::vi2d bottomLeftIndex = olc::vi2d{ tileIndex.x - 1, tileIndex.y + 1 };
+		olc::vi2d centerLeftIndex = olc::vi2d{ tileIndex.x - 1, tileIndex.y };
+
+
+		int configuration = 0;
+
+		if ( topLeftIndex.x >= 0 && topLeftIndex.x < gridDimension.x &&
+			topLeftIndex.y >= 0 && topLeftIndex.y < gridDimension.y &&
+			tiles[topLeftIndex.y * gridDimension.x + topLeftIndex.x].getExist() &&
+			tileId == tiles[topLeftIndex.y * gridDimension.x + topLeftIndex.x].getId()
+			)
+		{
+			configuration += 1;
+		}
+		if ( centerTopIndex.x >= 0 && centerTopIndex.x < gridDimension.x &&
+			centerTopIndex.y >= 0 && centerTopIndex.y < gridDimension.y &&
+			tiles[centerTopIndex.y * gridDimension.x + centerTopIndex.x].getExist() &&
+			tileId == tiles[centerTopIndex.y * gridDimension.x + centerTopIndex.x].getId()
+			)
+		{
+			configuration += 2;
+		}
+		if ( topRightIndex.x >= 0 && topRightIndex.x < gridDimension.x &&
+			topRightIndex.y >= 0 && topRightIndex.y < gridDimension.y &&
+			tiles[topRightIndex.y * gridDimension.x + topRightIndex.x].getExist() &&
+			tileId == tiles[topRightIndex.y * gridDimension.x + topRightIndex.x].getId()
+
+			)
+		{
+			configuration += 4;
+		}
+		if ( centerRightIndex.x >= 0 && centerRightIndex.x < gridDimension.x &&
+			centerRightIndex.y >= 0 && centerRightIndex.y < gridDimension.y &&
+			tiles[centerRightIndex.y * gridDimension.x + centerRightIndex.x].getExist() &&
+			tileId == tiles[centerRightIndex.y * gridDimension.x + centerRightIndex.x].getId()
+			)
+		{
+			configuration += 8;
+		}
+		if ( bottomRightIndex.x >= 0 && bottomRightIndex.x < gridDimension.x &&
+			bottomRightIndex.y >= 0 && bottomRightIndex.y < gridDimension.y &&
+			tiles[bottomRightIndex.y * gridDimension.x + bottomRightIndex.x].getExist() &&
+			tileId == tiles[bottomRightIndex.y * gridDimension.x + bottomRightIndex.x].getId()
+			)
+		{
+			configuration += 16;
+		}
+		if ( centerBottomIndex.x >= 0 && centerBottomIndex.x < gridDimension.x &&
+			centerBottomIndex.y >= 0 && centerBottomIndex.y < gridDimension.y &&
+			tiles[centerBottomIndex.y * gridDimension.x + centerBottomIndex.x].getExist() &&
+			tileId == tiles[centerBottomIndex.y * gridDimension.x + centerBottomIndex.x].getId()
+			)
+		{
+			configuration += 32;
+		}
+		if ( bottomLeftIndex.x >= 0 && bottomLeftIndex.x < gridDimension.x &&
+			bottomLeftIndex.y >= 0 && bottomLeftIndex.y < gridDimension.y &&
+			tiles[bottomLeftIndex.y * gridDimension.x + bottomLeftIndex.x].getExist() &&
+			tileId == tiles[bottomLeftIndex.y * gridDimension.x + bottomLeftIndex.x].getId()
+			)
+		{
+			configuration += 64;
+		}
+		if ( centerLeftIndex.x >= 0 && centerLeftIndex.x < gridDimension.x &&
+			centerLeftIndex.y >= 0 && centerLeftIndex.y < gridDimension.y &&
+			tiles[centerLeftIndex.y * gridDimension.x + centerLeftIndex.x].getExist() &&
+			tileId == tiles[centerLeftIndex.y * gridDimension.x + centerLeftIndex.x].getId()
+			)
+		{
+			configuration += 128;
+		}
+
+		if ( origin )
+		{
+			updateTileConfiguration( topLeftIndex, false );
+			updateTileConfiguration( centerTopIndex, false );
+			updateTileConfiguration( topRightIndex, false );
+			updateTileConfiguration( centerRightIndex, false );
+			updateTileConfiguration( bottomRightIndex, false );
+			updateTileConfiguration( centerBottomIndex, false );
+			updateTileConfiguration( bottomLeftIndex, false );
+			updateTileConfiguration( centerLeftIndex, false );
+		}
+
+		// tiles[tileIndex.y * gridDimension.x + tileIndex.x].setConfiguration( configurations[configuration] ); // [!] adjust sizing 
+		return;
+	}
+
+
+	int countQuadTree( int quadTreeIndex, int counter = 0 )
+	{
+		//std::cout << quadTreeIndex << std::endl;
+		if ( this->quadTrees[quadTreeIndex].isConsolidated() )
+		{
+			return 0; // the whole consolidated bounds is accounted for counted by its parent
+		}
+		else
+		{
+			counter = this->quadTrees[quadTreeIndex].getCellCount();
+		}
+
+		int level = this->quadTrees[quadTreeIndex].getLevel();
+		if ( level > QuadTree<Tile, TileConsolidated>::_MIN_LEVELS )
+			//int* childrenNodeIndicies = this->quadTrees[quadTreeIndex].getChildrenNodeIndicies();
+			//if ( childrenNodeIndicies != nullptr )
+		{
+			int* childrenNodeIndicies = this->quadTrees[quadTreeIndex].getChildrenNodeIndicies();
+			for ( int i = 0; i < 4; i++ )
+			{
+				if ( childrenNodeIndicies[i] != -1 )
+				{
+					counter += countQuadTree( childrenNodeIndicies[i] );
+				}
+			}
+		}
+
+		return counter;
+	}
+
+
+	void drawAllSingleTiles( Tile* tiles )
+	{
+		int rootQuadTreeSize = 2 << QuadTree<Tile, TileConsolidated>::_MAX_LEVELS;
+
+		for ( int x = 0; x < rootQuadTreeSize; x++ )
+		{
+			for ( int y = 0; y < rootQuadTreeSize; y++ )
+			{
+				Tile tile = tiles[y * rootQuadTreeSize + x];
+				if ( tile.getExist() )
+				{
+					olc::vi2d decalSourcePos = olc::vi2d{ tile.getId() == 0 ? 7 : 15, 7 }; // dirt, stone
+
+					DrawPartialDecal(
+						olc::vi2d{ tile.getX(), tile.getY() } *tileSize,
+						decalTileMap,
+						olc::vi2d{ decalSourcePos }  *tileSize * pixelSize,
+						olc::vi2d{ 1, 1 } *tileSize,
+						olc::vf2d{ 1.0f,1.0f }
+					);
+				}
+			}
+		}
+
+		return;
+	}
+
+
+	void drawTileIndexString( const olc::vi2d& tileIndex )
+	{
+		DrawStringDecal(
+			olc::vi2d( GetMouseX(), GetMouseY() ),
+			"[" + std::to_string( tileIndex.x ) + "," + std::to_string( -tileIndex.y ) + "]",
+			olc::WHITE,
+			olc::vf2d( 2.0f, 2.0f )
+		);
+	}
 };
+
+
 
 int main()
 {
-	Game demo;
-	{
-		if ( demo.Construct( settings::RESOLUTION::SCREEN_DIMENSION.x, settings::RESOLUTION::SCREEN_DIMENSION.y, settings::RESOLUTION::PIXEL_SCALE.x, settings::RESOLUTION::PIXEL_SCALE.y ) )
-		{
-			demo.Start();
-		}
-		return 0;
-	}
+	Example demo;
+	//if ( demo.Construct( 1920, 1200, 1, 1 ) )
+	//if ( demo.Construct( 1920/2, 1200/2, 2, 2 ) )
+	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize ) )
+		//if ( demo.Construct( 768, 432, 1, 1 ) )
+		//if ( demo.Construct( 960, 600, 1, 1 ) )
+	//if ( demo.Construct( 1600, 900, 1, 1 ) )
+		demo.Start();
+	return 0;
 }

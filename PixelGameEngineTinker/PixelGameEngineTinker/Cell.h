@@ -1,6 +1,9 @@
 #pragma once
 #include "olcPixelGameEngine.h"
+
 #include "BoundingBox.h"
+
+
 
 class Cell
 {
@@ -8,7 +11,7 @@ protected:
 	int _id;
 	BoundingBox<int> _bounds;
 	bool _exist;
-
+	
 	Cell();
 	~Cell();
 

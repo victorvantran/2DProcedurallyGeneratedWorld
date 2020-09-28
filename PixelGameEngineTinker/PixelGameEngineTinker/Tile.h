@@ -1,7 +1,7 @@
 #pragma once
 
 #include "olcPixelGameEngine.h"
-#include "TileRender.h"
+#include "TileConsolidated.h"
 
 enum class TileType
 {
@@ -11,7 +11,7 @@ enum class TileType
 	count
 };
 
-class Tile : public TileRender
+class Tile : public TileConsolidated
 {
 private:
 	int _configuration;
@@ -30,11 +30,8 @@ public:
 	// Constructor that accounts for edges
 
 	int getConfiguration() const;
-	TileType getTileType() const;
 
 	int setConfiguration( int configuration );
-	TileType setTileType( TileType tileType );
-
 
 	bool isEmpty() const;
 	bool isBlock() const;
