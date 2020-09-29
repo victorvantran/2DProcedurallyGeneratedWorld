@@ -64,6 +64,24 @@ public:
 
 	bool OnUserUpdate( float fElapsedTime ) override
 	{
+
+		// Data Management Debug
+		if ( GetKey( olc::Key::T ).bPressed )
+		{
+			world.saveWorldMap();
+		}
+		if ( GetKey( olc::Key::Y ).bPressed )
+		{
+			world.loadWorldMap();
+		}
+		if ( GetKey( olc::Key::U ).bPressed )
+		{
+			world.viewWorldMap();
+		}
+
+
+
+		// Camera Debug
 		float mouseX = ( float )GetMouseX();
 		float mouseY = ( float )GetMouseY();
 
@@ -86,27 +104,11 @@ public:
 		}
 
 
-		float tilePositionX;
-		float tilePositionY;
-
-		this->camera.screenToWorld( GetMouseX(), GetMouseY(), tilePositionX, tilePositionY );
-
-		olc::vi2d tileIndex = olc::vi2d{
-			( int )( tilePositionX ),
-			( int )( tilePositionY )
-		};
-
-		if ( GetKey( olc::Key::Q ).bPressed || GetKey( olc::Key::Q ).bHeld )
-		{
-			std::cout << "Exist: " << tiles[tileIndex.y * gridDimension.x + tileIndex.x].getExist() << std::endl;
-			std::cout << "ID: " << tiles[tileIndex.y * gridDimension.x + tileIndex.x].getId() << std::endl;
-
-		}
 
 		// Zoom in
 		if ( GetKey( olc::Key::Z ).bPressed || GetKey( olc::Key::Z ).bHeld )
 		{
-			float zoomScale = 1.0f + (1.0f * fElapsedTime);
+			float zoomScale = 1.0f + ( 1.0f * fElapsedTime );
 			this->camera.zoom( zoomScale );
 		}
 
@@ -125,6 +127,20 @@ public:
 		{
 			tileId = 1;
 		}
+
+
+
+		// Insert to world Debug 
+		float tilePositionX;
+		float tilePositionY;
+
+		this->camera.screenToWorld( GetMouseX(), GetMouseY(), tilePositionX, tilePositionY );
+
+		olc::vi2d tileIndex = olc::vi2d{
+			( int )( tilePositionX ),
+			( int )( tilePositionY )
+		};
+
 
 		if ( GetKey( olc::Key::P ).bPressed || GetKey( olc::Key::P ).bHeld )
 		{
@@ -151,6 +167,9 @@ public:
 			std::cout << countQuadTree( 0 ) << std::endl;
 
 		}
+
+
+
 
 		Clear( olc::BLACK );
 
@@ -271,7 +290,7 @@ public:
 
 		decalTileMap = Assets::get().getDecal( "ForestTileMap" );
 		decalDirtTileConsolidationMap = Assets::get().getDecal( "ForestConsolidationTileMap" );
-		
+
 		return;
 	}
 
@@ -384,7 +403,6 @@ public:
 
 	int countQuadTree( int quadTreeIndex, int counter = 0 )
 	{
-		//std::cout << quadTreeIndex << std::endl;
 		if ( this->quadTrees[quadTreeIndex].isConsolidated() )
 		{
 			return 0; // the whole consolidated bounds is accounted for counted by its parent
