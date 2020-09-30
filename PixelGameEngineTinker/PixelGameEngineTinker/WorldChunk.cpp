@@ -22,7 +22,7 @@ WorldChunk::WorldChunk( int indexX, int indexY, int cellSize )
 
 
 
-void WorldChunk::update( int indexX, int indexY )
+void WorldChunk::delimit( int indexX, int indexY )
 {
 	// pass tile by reference
 	// copy contents of tile into this->_tiles

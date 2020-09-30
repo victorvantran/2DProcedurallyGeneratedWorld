@@ -9,6 +9,9 @@ enum class TileType
 	Block = 1,
 	OneWayPlatform = 2,
 	count
+	// liquid
+	// climbable
+	// Triangle
 };
 
 class Tile : public TileConsolidated

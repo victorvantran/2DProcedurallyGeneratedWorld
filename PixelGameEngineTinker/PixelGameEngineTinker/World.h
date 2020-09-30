@@ -15,6 +15,9 @@ private:
 	int _numChunkWidth;
 	int _numChunkHeight;
 	int _numWorldChunks;
+
+	int _prevCameraIndexX;
+	int _prevCameraIndexY;
 public:
 	World();
 	~World();
@@ -29,7 +32,9 @@ public:
 	void saveWorldChunk();
 	void loadWorldChunk();
 
-	void updateWorldChunks( const BoundingBox<float>& cameraView ); // Camera locality
+
+	void initializeDelimits( const BoundingBox<float>& cameraView );
+	void delimitWorldChunks( const BoundingBox<float>& cameraView ); // Camera locality
 	bool inBounds( const BoundingBox<float>& cameraView, const WorldChunk& worldChunk );
 
 

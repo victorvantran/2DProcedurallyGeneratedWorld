@@ -29,7 +29,7 @@ public:
 
 	// Delete the default assignment operator created by the compiler.
 	// We do not want to create shallow re-assignments of member variables (subseqently reloading)
-	void operator=( const Assets& ) = delete;
+	Assets& operator=( const Assets& ) = delete;
 
 	static Assets& get()
 	{

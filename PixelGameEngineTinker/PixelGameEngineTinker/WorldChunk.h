@@ -36,7 +36,7 @@ public:
 
 	WorldChunk( int indexX, int indexY, int size );
 
-	void update( int indexX, int indexY );
+	void delimit( int indexX, int indexY );
 
 
 	int getChunkIndexX() const;

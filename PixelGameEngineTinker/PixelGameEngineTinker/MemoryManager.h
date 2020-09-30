@@ -62,23 +62,6 @@ private:
 		}
 	}
 
-	// WorldMapping
-	//
-	//Maps the worldChunk index to the displacement of where its data is
-	//8 bytes for the number of possible items ( uint64_t )
-	//For each item:
-	//	4 bytes for indexX ( int )
-	//	4 bytes for indexY ( int )
-	//	8 bytes for the offset ( uint64_t )
-	//
-	//There are a possible of 2^64 chunks in a world with this current map implementation
-	//
-	//But the cache memory storage to hold the map, say 1 MB, would only hold ( ( 1000*1000 - 8 )/16 ) = 62499 chunks
-	//
-	//We can repartition tthe map to point to smaller submaps of a certain size, making a tree of maps to solve memory issue ( Over-engineering this project )
-	//
-	//This means that we would have to load in worldMappings during gameplay, but that is negligble to the amount of loading from world chunk data
-	//
 
 
 public:
@@ -128,6 +111,39 @@ public:
 	}
 	*/
 
+
+	// WorldMapping
+	//
+	// Maps the worldChunk index to the displacement of where its data is
+	// 8 bytes for the number of possible items ( uint64_t )
+	// For each item:
+	//	4 bytes for indexX ( int )
+	//	4 bytes for indexY ( int )
+	//	8 bytes for the offset ( uint64_t )
+	//
+	// There are a possible of 2^64 chunks in a world with this current map implementation
+	//
+	// But the cache memory storage to hold the map, say 1 MB, would only hold ( ( 1000*1000 - 8 )/16 ) = 62499 chunks
+	//
+	// We can repartition tthe map to point to smaller submaps of a certain size, making a tree of maps to solve memory issue ( Over-engineering this project )
+	//
+	// This means that we would have to load in worldMappings during gameplay, but that is negligble to the amount of loading from world chunk data
+	//
+
+
+	// Tiles
+	// Since each worldChunk usually has a small number of unique blocks, we can palette them
+	// Each world chunk will hold a dictionary that stores a small "key" (may be a few bits ( but at max ) #bits = log2(chunkWidth*chunkHeight) ) to the value representing the actual id
+	// Pros:
+	//	less memory
+	//	ability to scale tileID
+	// Cons:
+	//	more code overhead
+	//	more cpu ( bit shifting, etc. )
+	//	portability of code
+
+
+
 	static void saveMap( const char* filePath, std::map<std::tuple<int, int>, uint64_t>& map )
 	{
 		std::ofstream out( filePath, std::ios::out | std::ios::binary );
@@ -140,12 +156,12 @@ public:
 			for ( std::map<std::tuple<int, int>, uint64_t>::iterator it = map.begin(); it != map.end(); it++ )
 			{
 				// Since we are filling int and uint64_t perfectly, there is no need to do checking for signed/unsigned situations
-				int indexX = std::get<0>( it->first ); // 4 bytes
-				int indexY = std::get<1>( it->first ); // 4 bytes
-				uint64_t offset = it->second; // 8 bytes
-				out.write( reinterpret_cast< const char* >( &indexX ), 4 );
-				out.write( reinterpret_cast< const char* >( &indexY ), 4 );
-				out.write( reinterpret_cast< const char* >( &offset ), 8 );
+				int indexX = std::get<0>( it->first );
+				int indexY = std::get<1>( it->first );
+				uint64_t offset = it->second;
+				out.write( reinterpret_cast< const char* >( &indexX ), sizeof( indexX ) );  // 4 bytes
+				out.write( reinterpret_cast< const char* >( &indexY ), sizeof( indexY ) );  // 4 bytes
+				out.write( reinterpret_cast< const char* >( &offset ), sizeof( offset ) );  // 8 bytes
 			}
 		}
 
@@ -178,8 +194,8 @@ public:
 				int indexY;
 				uint64_t offset;
 				std::memcpy( &indexX, mapItemBuffer + 0, 4 );
-				std::memcpy( &indexY, mapItemBuffer + 4, 4 );
-				std::memcpy( &offset, mapItemBuffer + 8, 8 );
+				std::memcpy( &indexY, mapItemBuffer + ( sizeof( indexX ) ), sizeof( indexY ) );
+				std::memcpy( &offset, mapItemBuffer + ( sizeof( indexX ) + sizeof( indexY ) ), sizeof( offset ) );
 
 				std::tuple<int, int> index = std::tuple<int, int>{ indexX, indexY };
 				map.emplace( index, offset );
@@ -188,6 +204,7 @@ public:
 		}
 
 		is.close();
+
 		return;
 	}
 

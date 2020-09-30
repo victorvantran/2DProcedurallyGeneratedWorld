@@ -38,17 +38,12 @@ private:
 
 	bool _divided;
 	bool _consolidated;
-	bool _shaded;
-
-
-	TConsolidated _cell[4];
 	int _cellCount;
 
+	TConsolidated _cell[4];
 	int _childrenIndex[4];
 
-	QuadTree<T, TConsolidated>* _referenceNodes; // list of nodes to reference
-
-	// Bounding boxes can be used to locate the tile contents with a reference to layer mapping
+	QuadTree<T, TConsolidated>* _referenceNodes;
 	T* _map;
 
 protected:
@@ -94,33 +89,10 @@ public:
 
 template<typename T, typename TConsolidated>
 QuadTree<T, TConsolidated>::QuadTree()
+	: _myIndex( -1 ), _parentIndex( -1 ), _level( -1 ), _quadrant( -1 ), _quadTreeBounds( BoundingBox<int>() ), _divided( false ), _consolidated( false ), _cellCount( 0 ),
+	_cell{}, _childrenIndex{ -1, -1, -1, -1 }, _referenceNodes( nullptr ), _map( nullptr )
 {
-	this->_myIndex = -1;
-	this->_parentIndex = -1;
-	this->_level = -1;
-	this->_quadrant = -1;
-	this->_quadTreeBounds;
-	this->_divided = false;
-	this->_consolidated = false;
-	this->_shaded = false;
 
-
-	this->_cellCount = 0;
-
-
-	for ( int i = 0; i < 4; i++ )
-	{
-		this->_cell[i] = TConsolidated();
-	}
-
-	for ( int i = 0; i < 4; i++ )
-	{
-		this->_childrenIndex[i] = -1;
-	}
-
-
-	this->_referenceNodes = nullptr;
-	this->_map = nullptr;
 }
 
 
@@ -147,7 +119,6 @@ void QuadTree<T, TConsolidated>::constructQuadTree( int myIndex, int parentIndex
 	this->_quadTreeBounds = quadTreeBounds;
 	this->_divided = false;
 	this->_consolidated = false;
-	this->_shaded = false;
 
 	this->_cellCount = 0;
 
@@ -155,7 +126,6 @@ void QuadTree<T, TConsolidated>::constructQuadTree( int myIndex, int parentIndex
 	{
 		this->_childrenIndex[i] = -1;
 	}
-
 
 	this->_referenceNodes = referenceNodes;
 	this->_map = map;
@@ -171,6 +141,29 @@ void QuadTree<T, TConsolidated>::clear()
 
 
 
+	///
+
+	this->_myIndex = -1;
+	this->_parentIndex = -1;
+	this->_level = -1;
+	this->_quadrant = -1;
+	this->_quadTreeBounds;
+	this->_divided = false;
+	this->_consolidated = false;
+	this->_cellCount = 0;
+	
+	for ( int i = 0; i < 4; i++ )
+	{
+		this->_cell[i] = TConsolidated();
+	}
+
+	for ( int i = 0; i < 4; i++ )
+	{
+		this->_childrenIndex[i] = -1;
+	}
+
+	this->_referenceNodes = nullptr;
+	this->_map = nullptr;
 	return;
 }
 

@@ -85,7 +85,7 @@ public:
 		float mouseX = ( float )GetMouseX();
 		float mouseY = ( float )GetMouseY();
 
-		float panSpeed = 10.0f;
+		float panSpeed = 20.0f;
 		if ( GetKey( olc::Key::UP ).bPressed || GetKey( olc::Key::UP ).bHeld )
 		{
 			camera.panY( -panSpeed * fElapsedTime );
@@ -102,6 +102,27 @@ public:
 		{
 			camera.panX( panSpeed * fElapsedTime );
 		}
+
+
+		if ( GetKey( olc::Key::F1 ).bPressed )
+		{
+			camera.panY( -panSpeed*10000 * fElapsedTime );
+		}
+		if ( GetKey( olc::Key::F2 ).bPressed )
+		{
+			camera.panY( panSpeed*10000 * fElapsedTime );
+		}
+		if ( GetKey( olc::Key::F3 ).bPressed )
+		{
+			camera.panX( -panSpeed*10000 * fElapsedTime );
+		}
+		if ( GetKey( olc::Key::F4 ).bPressed )
+		{
+			camera.panX( panSpeed*10000 * fElapsedTime );
+		}
+
+
+
 
 
 
@@ -151,7 +172,7 @@ public:
 		if ( GetMouse( 0 ).bPressed || GetMouse( 0 ).bHeld )
 			//if ( GetMouse( 0 ).bPressed )
 		{
-			quadTree->insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 3, 3 ), true ) );
+			quadTree->insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
 			//updateTileConfiguration( tileIndex, true );
 		}
 
@@ -175,7 +196,7 @@ public:
 
 		//drawAllSingleTiles( this->tiles );
 		//drawQuadTree( this->quadTrees, 0, this->camera );
-		this->world.updateWorldChunks( this->camera.getView() );
+		this->world.delimitWorldChunks( this->camera.getView() );
 		this->camera.renderWorld( this->world );
 		this->camera.renderQuadTree( this->quadTrees[0] );
 		this->camera.renderCamera();
@@ -188,10 +209,18 @@ public:
 
 	void createMap()
 	{
+		this->world = World();
+
+
 		int screenCellWidth = screenWidth / tileSize;
 		int screenCellHeight = screenHeight / tileSize;
 		//camera = Camera( BoundingBox<float>( 0.0f, 0.0f, screenCellWidth, screenCellHeight ), 1.0f, 1.0f );
-		camera = Camera( BoundingBox<float>( 0.0f, 0.0f, 32, 32 ), 1.0f, 1.0f );
+		this->camera = Camera( BoundingBox<float>( 0.0f, 0.0f, 32, 32 ), 1.0f, 1.0f );
+
+		this->world.initializeDelimits( this->camera.getView() );
+
+
+
 
 		// [!] add minLevels to tree constructor
 		int rootQuadTreePositionX = 0;
