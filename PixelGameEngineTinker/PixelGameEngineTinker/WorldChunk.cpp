@@ -90,8 +90,10 @@ void WorldChunk::clear()
 	this->_chunkIndexX = 0;
 	this->_chunkIndexY = 0;
 	
-	// need to clear the quadtree
+	// Clears the quad tree's bounds and consolidations
 	this->_quadTrees[0].clear();
+
+	// Do not need to waste resources clearing the tiles for now because it will be overwritten
 	return;
 }
 

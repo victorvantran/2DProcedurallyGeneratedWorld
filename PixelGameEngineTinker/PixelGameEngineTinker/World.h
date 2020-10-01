@@ -6,7 +6,7 @@
 class World
 {
 private:
-	const static int _chunkRadius = 1; // [!] Assets
+	const static int _chunkRadius = 2; // [!] Assets
 	const static int _chunkCellSize = 32; // Assets (log(2) 32 = 5) == QuadTree // CellDomain // [!] Assets
 	//WorldChunk _worldChunks[( 1 + 2 * ( _chunkRadius ) ) * ( 1 + 2 * ( _chunkRadius ) )]; // [!] Assets // Too much to put on stack, must be on heap
 	WorldChunk* _worldChunks = nullptr;

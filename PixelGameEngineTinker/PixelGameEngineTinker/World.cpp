@@ -41,6 +41,7 @@ void World::remove( const TileConsolidated& tileConsolidated )
 
 void World::saveWorldMap()
 {
+	// Overwrite the entire worldMap.dat file
 	MemoryManager::saveMap( "./worldMap.dat", this->_worldMap ); // [!] singleton
 	return;
 }
@@ -48,6 +49,7 @@ void World::saveWorldMap()
 
 void World::loadWorldMap()
 {
+	// Load the items ( index : offset ) from worldMap.dat into this->_worldMap  
 	MemoryManager::loadMap( "./worldMap.dat", this->_worldMap ); // [!] singleton
 	return;
 }
@@ -62,7 +64,12 @@ void World::viewWorldMap()
 
 void World::updateWorldMap( int indexX, int indexY )
 {
-	this->_worldMap.emplace( std::tuple<int, int>{ indexX, indexY }, this->_worldMap.size() );
+	// Update the worldMap on the drive by appending new data ( index : offset ) 
+	if ( this->_worldMap.find( std::tuple<int, int>{ indexX, indexY } ) != this->_worldMap.end() )
+	{
+		return;
+	}
+	MemoryManager::updateMap( "./worldMap.dat", indexX, indexY, this->_worldMap.size() );
 	return;
 }
 
@@ -75,20 +82,19 @@ bool World::findWorldMap( int indexX, int indexY ) const
 
 void World::saveWorldChunk( const WorldChunk& worldChunk )
 {
-
 	return;
 }
 
 
 void World::loadWorldChunk( WorldChunk& worldChunk )
 {
-	worldChunk.clear();
 	return;
 }
 
 
 void World::delimitWorldChunk( WorldChunk& worldChunk, int chunkIndexX, int chunkIndexY )
 {
+	// Clears the worldChunk and updates its proper index in preparation to load in new data	
 	worldChunk.clear();
 	worldChunk.delimit( chunkIndexX, chunkIndexY );
 	return;
@@ -98,10 +104,9 @@ void World::delimitWorldChunk( WorldChunk& worldChunk, int chunkIndexX, int chun
 void World::initializeDelimits( const BoundingBox<float>& cameraView )
 {
 	// Based on the initial camera's position, delimit the surrounding worldChunks
-
+	// Load in camera
 	int cameraIndexX = cameraView.getCenterX() >= 0 ? ( int )( cameraView.getCenterX() / this->_chunkCellSize ) : ( int )( ( cameraView.getCenterX() - this->_chunkCellSize ) / this->_chunkCellSize );
 	int cameraIndexY = cameraView.getCenterY() >= 0 ? ( int )( cameraView.getCenterY() / this->_chunkCellSize ) : ( int )( ( cameraView.getCenterY() - this->_chunkCellSize ) / this->_chunkCellSize );
-
 
 	for ( int x = 0; x < this->_numChunkWidth; x++ )
 	{
@@ -109,8 +114,17 @@ void World::initializeDelimits( const BoundingBox<float>& cameraView )
 		{
 			int deltaIndexX = x - this->_chunkRadius;
 			int deltaIndexY = y - this->_chunkRadius;
-			delimitWorldChunk( this->_worldChunks[y * this->_numChunkWidth + x], cameraIndexX + deltaIndexX, cameraIndexY + deltaIndexY );
-			updateWorldMap( this->_worldChunks[y * this->_numChunkWidth + x].getChunkIndexX(), this->_worldChunks[y * this->_numChunkWidth + x].getChunkIndexY() );
+
+			int newChunkIndexX = cameraIndexX + deltaIndexX;
+			int newChunkIndexY = cameraIndexY + deltaIndexY;
+
+			this->delimitWorldChunk( this->_worldChunks[y * this->_numChunkWidth + x], newChunkIndexX, newChunkIndexY );
+			
+			if ( this->_worldMap.find( std::tuple<int, int>{newChunkIndexX, newChunkIndexY} ) == this->_worldMap.end() )
+			{
+				this->updateWorldMap( newChunkIndexX, newChunkIndexY );
+				this->_worldMap.emplace( std::tuple<int, int>{ newChunkIndexX, newChunkIndexY }, this->_worldMap.size() );
+			}
 		}
 	}
 
@@ -126,7 +140,10 @@ void World::initializeWorldChunks()
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
 		this->_worldChunks[i].construct();
+		// [!] Load in world chunks here ( from history or procedural )
+		// [!] if ( this->_worldMap.find( std::tuple<int, int>{newChunkIndexX, newChunkIndexY} ) == this->_worldMap.end() ) ? procedural : history
 	}
+
 	return;
 }
 
@@ -156,16 +173,22 @@ void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
 				int newChunkIndexX = cameraIndexX + -( worldChunkIndexX - this->_prevCameraIndexX );
 				int newChunkIndexY = cameraIndexY + -( worldChunkIndexY - this->_prevCameraIndexY );
 
-				delimitWorldChunk( this->_worldChunks[y * this->_numChunkWidth + x], newChunkIndexX, newChunkIndexY );
-
-
-
+				// Delimit
+				this->delimitWorldChunk( this->_worldChunks[y * this->_numChunkWidth + x], newChunkIndexX, newChunkIndexY );
+				
+				// Construct
 				this->_worldChunks[y * this->_numChunkWidth + x].construct();
 
 
+				// Savemap if found new chunk that is not been discovered yet ( does not exist in worldMap )
+				if ( this->_worldMap.find( std::tuple<int, int>{newChunkIndexX, newChunkIndexY} ) == this->_worldMap.end() )
+				{
+					this->updateWorldMap( newChunkIndexX, newChunkIndexY );
+					this->_worldMap.emplace( std::tuple<int, int>{ newChunkIndexX, newChunkIndexY }, this->_worldMap.size() );
+					// [!] Procedural generation here
+				}
+				// [!] Else we load in the worldChunk data here
 
-
-				updateWorldMap( worldChunkIndexX, worldChunkIndexY );
 			}
 		}
 	}
@@ -175,7 +198,6 @@ void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
 
 	return;
 }
-
 
 
 void World::replaceWorldChunk( WorldChunk& worldChunk, int newIndexX, int newIndexY )
@@ -202,7 +224,6 @@ int World::getChunkRadius() const
 {
 	return this->_chunkRadius;
 }
-
 
 
 int World::getNumWorldChunks() const

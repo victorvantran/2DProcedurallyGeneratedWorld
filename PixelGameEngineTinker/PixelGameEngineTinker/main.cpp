@@ -15,9 +15,10 @@
 class Example : public olc::PixelGameEngine
 {
 public:
+	// [!] need to chagne absolute position and zoom of the camera in accordance to pixelSize
 	const static int pixelSize = 1;
-	const static int screenWidth = 1920 / pixelSize; // cell
-	const static int screenHeight = 1200 / pixelSize; // cell
+	const static int screenWidth = 1920 / pixelSize;
+	const static int screenHeight = 1200 / pixelSize;
 	const static int tileSize = 16 / pixelSize;
 
 
@@ -83,7 +84,7 @@ public:
 		float mouseX = ( float )GetMouseX();
 		float mouseY = ( float )GetMouseY();
 
-		float panSpeed = 20.0f;
+		float panSpeed = 50.0f;
 		if ( GetKey( olc::Key::UP ).bPressed || GetKey( olc::Key::UP ).bHeld )
 		{
 			camera.panY( -panSpeed * fElapsedTime );
@@ -153,6 +154,8 @@ public:
 		float tilePositionX;
 		float tilePositionY;
 
+
+		// [!] NEED TO FIX TO ACCOUNT FOR NEGATIVE ( LIKE HOW I DID FOR DELIMITER CAMERA )
 		this->camera.screenToWorld( GetMouseX(), GetMouseY(), tilePositionX, tilePositionY );
 
 		olc::vi2d tileIndex = olc::vi2d{
@@ -164,7 +167,7 @@ public:
 		if ( GetKey( olc::Key::P ).bPressed || GetKey( olc::Key::P ).bHeld )
 		{
 			//quadTree->insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 1, 1 ), true ) );
-			world.insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 1, 1 ), true ) );
+			world.insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 32, 32*32 ), true ) );
 			//updateTileConfiguration( tileIndex, true );
 		}
 
@@ -202,6 +205,8 @@ public:
 		this->camera.renderWorld( this->world );
 		this->camera.renderCamera();
 
+
+
 		drawTileIndexString( tileIndex );
 
 		return true;
@@ -211,6 +216,8 @@ public:
 	void createMap()
 	{
 		//this->world = World(); // stop calling stuff twice
+		world.loadWorldMap();
+
 		int screenCellWidth = screenWidth / tileSize;
 		int screenCellHeight = screenHeight / tileSize;
 		//camera = Camera( BoundingBox<float>( 0.0f, 0.0f, screenCellWidth, screenCellHeight ), 1.0f, 1.0f );

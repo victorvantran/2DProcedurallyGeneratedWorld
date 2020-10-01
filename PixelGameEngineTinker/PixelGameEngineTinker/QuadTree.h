@@ -242,7 +242,7 @@ void QuadTree<T, TConsolidated>::divide()
 	this->_childrenIndex[3] = initialShift + recursiveShift + 3;
 
 
-	std::cout << "[" << this->_childrenIndex[0] << "," << this->_childrenIndex[1] << "," << this->_childrenIndex[2] << "," << this->_childrenIndex[3] << "]" << std::endl;
+	// std::cout << "[" << this->_childrenIndex[0] << "," << this->_childrenIndex[1] << "," << this->_childrenIndex[2] << "," << this->_childrenIndex[3] << "]" << std::endl;
 
 	this->_referenceNodes[this->_childrenIndex[0]].constructQuadTree( this->_childrenIndex[0], this->_myIndex, this->_level - 1, 0, BoundingBox<int>( x, y, subWidth, subHeight ), this->_referenceNodes, this->_map );
 	this->_referenceNodes[this->_childrenIndex[1]].constructQuadTree( this->_childrenIndex[1], this->_myIndex, this->_level - 1, 1, BoundingBox<int>( x + subWidth, y, subWidth, subHeight ), this->_referenceNodes, this->_map );

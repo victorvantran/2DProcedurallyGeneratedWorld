@@ -7,6 +7,9 @@
 #include <map>
 //#include "Data.h"
 
+
+// [!] note endianness
+
 class MemoryManager
 {
 private:
@@ -146,25 +149,41 @@ public:
 
 	static void saveMap( const char* filePath, std::map<std::tuple<int, int>, uint64_t>& map )
 	{
+		// Overwties/saves the entire map
 		std::ofstream out( filePath, std::ios::out | std::ios::binary );
 
 		if ( out )
 		{
-			uint64_t mapSize = map.size();
-			out.write( reinterpret_cast< const char* >( &mapSize ), 8 );
-
 			for ( std::map<std::tuple<int, int>, uint64_t>::iterator it = map.begin(); it != map.end(); it++ )
 			{
 				// Since we are filling int and uint64_t perfectly, there is no need to do checking for signed/unsigned situations
 				int indexX = std::get<0>( it->first );
 				int indexY = std::get<1>( it->first );
 				uint64_t offset = it->second;
+
 				out.write( reinterpret_cast< const char* >( &indexX ), sizeof( indexX ) );  // 4 bytes
 				out.write( reinterpret_cast< const char* >( &indexY ), sizeof( indexY ) );  // 4 bytes
 				out.write( reinterpret_cast< const char* >( &offset ), sizeof( offset ) );  // 8 bytes
 			}
 		}
+		out.flush();
+		out.close();
 
+		return;
+	}
+
+
+	static void updateMap( const char* filePath, int newChunkIndexX, int newChunkIndexY, uint64_t mapSize )
+	{
+		// Appends new data ( index, mapSize to be used as offset ) to the worldMap dictionary file 
+		std::ofstream out( filePath, std::ios::app | std::ios::binary );
+		if ( out )
+		{
+			out.write( reinterpret_cast< const char* >( &newChunkIndexX ), 4 );  // 4 bytes
+			out.write( reinterpret_cast< const char* >( &newChunkIndexY ), 4 );  // 4 bytes
+			out.write( reinterpret_cast< const char* >( &mapSize ), 8 );  // 8 bytes
+		}
+		out.flush();
 		out.close();
 
 		return;
@@ -173,36 +192,29 @@ public:
 
 	static void loadMap( const char* filePath, std::map<std::tuple<int, int>, uint64_t>& map )
 	{
-		std::ifstream is( filePath );
+		std::ifstream is( filePath, std::ios::in | std::ios::binary );
 
 		if ( is )
 		{
 			map.clear();
-
-			char* mapSizeBuffer = new char[8];
-			is.read( mapSizeBuffer, 8 );
-			uint64_t mapSize;
-			std::memcpy( &mapSize, mapSizeBuffer + 0, 8 );
-			delete[] mapSizeBuffer;
-
 			char* mapItemBuffer = new char[16];
-			for ( int i = 0; i < mapSize; i++ )
+
+			while ( is.read( mapItemBuffer, 16 ) )
 			{
-				is.read( mapItemBuffer, 16 );
-				// Since we are filling int and uint64_t perfectly, there is no need to do checking for signed/unsigned situations
 				int indexX;
 				int indexY;
 				uint64_t offset;
 				std::memcpy( &indexX, mapItemBuffer + 0, 4 );
-				std::memcpy( &indexY, mapItemBuffer + ( sizeof( indexX ) ), sizeof( indexY ) );
-				std::memcpy( &offset, mapItemBuffer + ( sizeof( indexX ) + sizeof( indexY ) ), sizeof( offset ) );
+				std::memcpy( &indexY, mapItemBuffer + 4, 4 );
+				std::memcpy( &offset, mapItemBuffer + 8, 8 );
 
 				std::tuple<int, int> index = std::tuple<int, int>{ indexX, indexY };
 				map.emplace( index, offset );
 			}
 			delete[] mapItemBuffer;
-		}
 
+		}
+		is.clear();
 		is.close();
 
 		return;
