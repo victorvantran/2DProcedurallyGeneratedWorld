@@ -71,6 +71,8 @@ public:
 
 	int* getChildrenNodeIndicies();
 	QuadTree<T, TConsolidated>* getReferenceNodes();
+	QuadTree<T, TConsolidated>& getRootNode();
+
 
 	BoundingBox<int> getBounds();
 
@@ -138,10 +140,11 @@ template<typename T, typename TConsolidated>
 void QuadTree<T, TConsolidated>::clear()
 {
 	// Clear all the Tiles and Consolidated Tiles within the QuadTree
+	if ( !this->_divided )
+	{
+		return;
+	}
 
-
-
-	///
 
 	this->_myIndex = -1;
 	this->_parentIndex = -1;
@@ -164,6 +167,16 @@ void QuadTree<T, TConsolidated>::clear()
 
 	this->_referenceNodes = nullptr;
 	this->_map = nullptr;
+
+	if ( this->_level > QuadTree<T, TConsolidated>::_MIN_LEVELS )
+	{
+		this->_referenceNodes[this->_childrenIndex[0]].clear();
+		this->_referenceNodes[this->_childrenIndex[1]].clear();
+		this->_referenceNodes[this->_childrenIndex[2]].clear();
+		this->_referenceNodes[this->_childrenIndex[3]].clear();
+	}
+
+
 	return;
 }
 
@@ -180,6 +193,12 @@ void QuadTree<T, TConsolidated>::divide()
 	|___|___|
 
 	*/
+
+	if ( this->_divided )
+	{
+		return;
+	}
+
 	int x = this->_quadTreeBounds.getX();
 	int y = this->_quadTreeBounds.getY();
 	int subWidth = this->_quadTreeBounds.getWidth() / 2;
@@ -189,6 +208,9 @@ void QuadTree<T, TConsolidated>::divide()
 	this->_cell[1] = TConsolidated( -1, BoundingBox<int>( x + subWidth, y, subWidth, subHeight ), false );
 	this->_cell[2] = TConsolidated( -1, BoundingBox<int>( x, y + subHeight, subWidth, subHeight ), false );
 	this->_cell[3] = TConsolidated( -1, BoundingBox<int>( x + subWidth, y + subHeight, subWidth, subHeight ), false );
+
+	this->_divided = true;
+
 
 	// Do not further split for the lowest level
 	if ( this->_level == QuadTree<T, TConsolidated>::_MIN_LEVELS )
@@ -219,12 +241,15 @@ void QuadTree<T, TConsolidated>::divide()
 	this->_childrenIndex[2] = initialShift + recursiveShift + 2;
 	this->_childrenIndex[3] = initialShift + recursiveShift + 3;
 
+
+	std::cout << "[" << this->_childrenIndex[0] << "," << this->_childrenIndex[1] << "," << this->_childrenIndex[2] << "," << this->_childrenIndex[3] << "]" << std::endl;
+
 	this->_referenceNodes[this->_childrenIndex[0]].constructQuadTree( this->_childrenIndex[0], this->_myIndex, this->_level - 1, 0, BoundingBox<int>( x, y, subWidth, subHeight ), this->_referenceNodes, this->_map );
 	this->_referenceNodes[this->_childrenIndex[1]].constructQuadTree( this->_childrenIndex[1], this->_myIndex, this->_level - 1, 1, BoundingBox<int>( x + subWidth, y, subWidth, subHeight ), this->_referenceNodes, this->_map );
 	this->_referenceNodes[this->_childrenIndex[2]].constructQuadTree( this->_childrenIndex[2], this->_myIndex, this->_level - 1, 2, BoundingBox<int>( x, y + subHeight, subWidth, subHeight ), this->_referenceNodes, this->_map );
 	this->_referenceNodes[this->_childrenIndex[3]].constructQuadTree( this->_childrenIndex[3], this->_myIndex, this->_level - 1, 3, BoundingBox<int>( x + subWidth, y + subHeight, subWidth, subHeight ), this->_referenceNodes, this->_map );
 
-	this->_divided = true;
+	//this->_divided = true;
 	return;
 }
 
@@ -447,15 +472,17 @@ void QuadTree<T, TConsolidated>::insert( const TConsolidated& aRenderCell )
 		{
 			if ( !this->_cell[i].getExist() && aBoundingBox.intersects( this->_cell[i].getBounds() ) /*&& this->_cell[i].getId() == rId*/ ) // [!] why does cell[i] have the same id???
 			{
+				// Localizing the offset solves the issue of different quadrants introducing negative/wrong values when indexing.
+				int localCellIndexX = this->_cell[i].getBounds().getX() - this->_referenceNodes[0].getBounds().getX();
+				int localCellIndexY = this->_cell[i].getBounds().getY() - this->_referenceNodes[0].getBounds().getY(); 
+
 				this->_cell[i].setId( aRenderCell.getId() );
 				this->_cell[i].setExist( true );
 				this->_cellCount += 1;
 
-
-				this->_map[( this->_cell[i].getBounds().getY() * QuadTree<T, TConsolidated>::_MAP_WIDTH + this->_cell[i].getBounds().getX() )].setId( rId );
-				this->_map[( this->_cell[i].getBounds().getY() * QuadTree<T, TConsolidated>::_MAP_WIDTH + this->_cell[i].getBounds().getX() )].setExist( true );
-				this->_map[( this->_cell[i].getBounds().getY() * QuadTree<T, TConsolidated>::_MAP_WIDTH + this->_cell[i].getBounds().getX() )].setBounds( aBoundingBox );
-
+				this->_map[( localCellIndexY * QuadTree<T, TConsolidated>::_MAP_WIDTH + localCellIndexX )].setId( rId );
+				this->_map[( localCellIndexY * QuadTree<T, TConsolidated>::_MAP_WIDTH + localCellIndexX )].setExist( true );
+				this->_map[( localCellIndexY * QuadTree<T, TConsolidated>::_MAP_WIDTH + localCellIndexX )].setBounds( aBoundingBox );
 			}
 		}
 	}
@@ -520,11 +547,15 @@ void QuadTree<T, TConsolidated>::remove( const TConsolidated& rRenderCell )
 		{
 			if ( this->_cell[i].getExist() && rBoundingBox.intersects( this->_cell[i].getBounds() ) && this->_cell[i].getId() == rId ) // what are the bigger cell's id when mixutre? [!]
 			{
+				// Localizing the offset solves the issue of different quadrants introducing negative/wrong values when indexing.
+				int localCellIndexX = this->_cell[i].getBounds().getX() - this->_referenceNodes[0].getBounds().getX();
+				int localCellIndexY = this->_cell[i].getBounds().getY() - this->_referenceNodes[0].getBounds().getY();
+				
 				this->_cell[i].setId( -1 );
 				this->_cell[i].setExist( false );
 				this->_cellCount -= 1;
 				this->_consolidated = false;
-				this->_map[( this->_cell[i].getBounds().getY() * QuadTree<T, TConsolidated>::_MAP_WIDTH + this->_cell[i].getBounds().getX() )].setExist( false );
+				this->_map[( localCellIndexY * QuadTree<T, TConsolidated>::_MAP_WIDTH + localCellIndexX )].setExist( false );
 			}
 		}
 		return;
@@ -578,8 +609,6 @@ void QuadTree<T, TConsolidated>::remove( const TConsolidated& rRenderCell )
 
 	return;
 }
-
-
 
 
 
@@ -649,6 +678,13 @@ template<typename T, typename TConsolidated>
 QuadTree<T, TConsolidated>* QuadTree<T, TConsolidated>::getReferenceNodes()
 {
 	return this->_referenceNodes;
+}
+
+
+template<typename T, typename TConsolidated>
+QuadTree<T, TConsolidated>& QuadTree<T, TConsolidated>::getRootNode()
+{
+	return this->_referenceNodes[0];
 }
 
 

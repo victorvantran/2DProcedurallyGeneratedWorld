@@ -37,8 +37,6 @@ public:
 
 	int tileId = 0;
 
-	QuadTree<Tile, TileConsolidated>* quadTree;
-	QuadTree<Tile, TileConsolidated>* quadTrees;
 private:
 
 
@@ -106,19 +104,19 @@ public:
 
 		if ( GetKey( olc::Key::F1 ).bPressed )
 		{
-			camera.panY( -panSpeed*10000 * fElapsedTime );
+			camera.panY( -panSpeed*100 );
 		}
 		if ( GetKey( olc::Key::F2 ).bPressed )
 		{
-			camera.panY( panSpeed*10000 * fElapsedTime );
+			camera.panY( panSpeed*100 );
 		}
 		if ( GetKey( olc::Key::F3 ).bPressed )
 		{
-			camera.panX( -panSpeed*10000 * fElapsedTime );
+			camera.panX( -panSpeed*100 );
 		}
 		if ( GetKey( olc::Key::F4 ).bPressed )
 		{
-			camera.panX( panSpeed*10000 * fElapsedTime );
+			camera.panX( panSpeed*100 );
 		}
 
 
@@ -165,27 +163,31 @@ public:
 
 		if ( GetKey( olc::Key::P ).bPressed || GetKey( olc::Key::P ).bHeld )
 		{
-			quadTree->insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 1, 1 ), true ) );
+			//quadTree->insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 1, 1 ), true ) );
+			world.insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 1, 1 ), true ) );
 			//updateTileConfiguration( tileIndex, true );
 		}
 
 		if ( GetMouse( 0 ).bPressed || GetMouse( 0 ).bHeld )
 			//if ( GetMouse( 0 ).bPressed )
 		{
-			quadTree->insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
+			world.insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
+
+			//quadTree->insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
 			//updateTileConfiguration( tileIndex, true );
 		}
 
 		if ( GetMouse( 1 ).bPressed || GetMouse( 1 ).bHeld )
 			//if ( GetMouse( 1 ).bPressed )
 		{
-			quadTree->remove( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
+			world.remove( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
+			//quadTree->remove( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
 			//updateTileConfiguration( tileIndex, true );
 		}
 
 		if ( GetKey( olc::Key::SPACE ).bPressed || GetKey( olc::Key::SPACE ).bHeld )
 		{
-			std::cout << countQuadTree( 0 ) << std::endl;
+			//std::cout << countQuadTree( 0 ) << std::endl;
 
 		}
 
@@ -198,7 +200,6 @@ public:
 		//drawQuadTree( this->quadTrees, 0, this->camera );
 		this->world.delimitWorldChunks( this->camera.getView() );
 		this->camera.renderWorld( this->world );
-		this->camera.renderQuadTree( this->quadTrees[0] );
 		this->camera.renderCamera();
 
 		drawTileIndexString( tileIndex );
@@ -209,54 +210,15 @@ public:
 
 	void createMap()
 	{
-		this->world = World();
-
-
+		//this->world = World(); // stop calling stuff twice
 		int screenCellWidth = screenWidth / tileSize;
 		int screenCellHeight = screenHeight / tileSize;
 		//camera = Camera( BoundingBox<float>( 0.0f, 0.0f, screenCellWidth, screenCellHeight ), 1.0f, 1.0f );
 		this->camera = Camera( BoundingBox<float>( 0.0f, 0.0f, 32, 32 ), 1.0f, 1.0f );
 
 		this->world.initializeDelimits( this->camera.getView() );
+		this->world.initializeWorldChunks();
 
-
-
-
-		// [!] add minLevels to tree constructor
-		int rootQuadTreePositionX = 0;
-		int rootQuadTreePositionY = 0;
-		int rootQuadTreeSize = 2 << QuadTree<Tile, TileConsolidated>::_MAX_LEVELS;
-
-		gridDimension = olc::vi2d{ rootQuadTreeSize, rootQuadTreeSize };
-
-		tiles = new Tile[rootQuadTreeSize * rootQuadTreeSize];
-
-
-
-		int numQuadTrees = 0;
-		for ( int i = 0; i <= QuadTree<Tile, TileConsolidated>::_MAX_LEVELS; i++ )
-		{
-			numQuadTrees += ( 4 << ( i * 2 ) ) / 4;
-		}
-
-		quadTrees = new QuadTree<Tile, TileConsolidated>[numQuadTrees];
-		quadTrees[0].constructQuadTree(
-			0,
-			-1,
-			QuadTree<Tile, TileConsolidated>::_MAX_LEVELS,
-			0,
-			BoundingBox<int>( rootQuadTreePositionX, rootQuadTreePositionY, rootQuadTreeSize, rootQuadTreeSize ),
-			this->quadTrees,
-			this->tiles
-		);
-		quadTree = &quadTrees[0];
-
-		// Connect trees
-		for ( int i = 0; i < numQuadTrees; i++ ) // can leave out the leaves if want to iterate less
-		{
-			quadTrees[i].divide();
-		}
-		return;
 	}
 
 
@@ -429,7 +391,7 @@ public:
 		return;
 	}
 
-
+	/*
 	int countQuadTree( int quadTreeIndex, int counter = 0 )
 	{
 		if ( this->quadTrees[quadTreeIndex].isConsolidated() )
@@ -458,7 +420,7 @@ public:
 
 		return counter;
 	}
-
+	*/
 
 	void drawAllSingleTiles( Tile* tiles )
 	{

@@ -167,6 +167,9 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk ) const
 		olc::GREEN
 	);
 
+	this->renderQuadTree( worldChunk.getQuadTreeRoot() );
+
+
 	return;
 }
 
@@ -174,6 +177,8 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk ) const
 void Camera::renderQuadTree( QuadTree<Tile, TileConsolidated>& quadTree ) const
 {
 	int tileSize = 16; // [!] make it global variable in singleton
+
+	//std::cout << quadTree.getIndex() << std::endl;
 
 	QuadTree<Tile, TileConsolidated> currQuadTree = quadTree.getReferenceNodes()[quadTree.getIndex()];
 	const BoundingBox<int> bounds = currQuadTree.getBounds();

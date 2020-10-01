@@ -2,28 +2,53 @@
 
 World::World()
 	: _numChunkWidth( 1 + this->_chunkRadius * 2 ), _numChunkHeight( 1 + this->_chunkRadius * 2 ), _numWorldChunks( this->_numChunkWidth* this->_numChunkHeight ),
-	_prevCameraIndexX( 0 ), _prevCameraIndexY( 0 )
+	_prevCameraIndexX( 0 ), _prevCameraIndexY( 0 ),
+	_worldChunks( new WorldChunk[( 1 + 2 * ( _chunkRadius ) ) * ( 1 + 2 * ( _chunkRadius ) )] )
 {
-
 }
 
 
 World::~World()
 {
+	delete[] this->_worldChunks;
+}
 
+
+void World::insert( const TileConsolidated& tileConsolidated )
+{
+	// We can leverage the robustness of the quad tree and just try to add onto all the worldChunks
+	for ( int i = 0; i < this->_numWorldChunks; i++ )
+	{
+		this->_worldChunks[i].insert( tileConsolidated );
+	}
+
+
+	return;
+}
+
+
+void World::remove( const TileConsolidated& tileConsolidated )
+{
+	// We can leverage the robustness of the quad tree and just try to remove onto all the worldChunks
+	for ( int i = 0; i < this->_numWorldChunks; i++ )
+	{
+		this->_worldChunks[i].remove( tileConsolidated );
+	}
+
+	return;
 }
 
 
 void World::saveWorldMap()
 {
-	MemoryManager::saveMap( "./worldMap.dat", this->_worldMap );
+	MemoryManager::saveMap( "./worldMap.dat", this->_worldMap ); // [!] singleton
 	return;
 }
 
 
 void World::loadWorldMap()
 {
-	MemoryManager::loadMap( "./worldMap.dat", this->_worldMap );
+	MemoryManager::loadMap( "./worldMap.dat", this->_worldMap ); // [!] singleton
 	return;
 }
 
@@ -48,14 +73,24 @@ bool World::findWorldMap( int indexX, int indexY ) const
 }
 
 
-void World::saveWorldChunk()
+void World::saveWorldChunk( const WorldChunk& worldChunk )
 {
+
 	return;
 }
 
 
-void World::loadWorldChunk()
+void World::loadWorldChunk( WorldChunk& worldChunk )
 {
+	worldChunk.clear();
+	return;
+}
+
+
+void World::delimitWorldChunk( WorldChunk& worldChunk, int chunkIndexX, int chunkIndexY )
+{
+	worldChunk.clear();
+	worldChunk.delimit( chunkIndexX, chunkIndexY );
 	return;
 }
 
@@ -67,19 +102,31 @@ void World::initializeDelimits( const BoundingBox<float>& cameraView )
 	int cameraIndexX = cameraView.getCenterX() >= 0 ? ( int )( cameraView.getCenterX() / this->_chunkCellSize ) : ( int )( ( cameraView.getCenterX() - this->_chunkCellSize ) / this->_chunkCellSize );
 	int cameraIndexY = cameraView.getCenterY() >= 0 ? ( int )( cameraView.getCenterY() / this->_chunkCellSize ) : ( int )( ( cameraView.getCenterY() - this->_chunkCellSize ) / this->_chunkCellSize );
 
+
 	for ( int x = 0; x < this->_numChunkWidth; x++ )
 	{
 		for ( int y = 0; y < this->_numChunkHeight; y++ )
 		{
 			int deltaIndexX = x - this->_chunkRadius;
 			int deltaIndexY = y - this->_chunkRadius;
-			this->_worldChunks[y * this->_numChunkWidth + x].delimit( cameraIndexX + deltaIndexX, cameraIndexY + deltaIndexY );
+			delimitWorldChunk( this->_worldChunks[y * this->_numChunkWidth + x], cameraIndexX + deltaIndexX, cameraIndexY + deltaIndexY );
 			updateWorldMap( this->_worldChunks[y * this->_numChunkWidth + x].getChunkIndexX(), this->_worldChunks[y * this->_numChunkWidth + x].getChunkIndexY() );
 		}
 	}
 
 	this->_prevCameraIndexX = cameraIndexX;
 	this->_prevCameraIndexY = cameraIndexY;
+
+	return;
+}
+
+
+void World::initializeWorldChunks()
+{
+	for ( int i = 0; i < this->_numWorldChunks; i++ )
+	{
+		this->_worldChunks[i].construct();
+	}
 	return;
 }
 
@@ -108,7 +155,16 @@ void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
 			{
 				int newChunkIndexX = cameraIndexX + -( worldChunkIndexX - this->_prevCameraIndexX );
 				int newChunkIndexY = cameraIndexY + -( worldChunkIndexY - this->_prevCameraIndexY );
-				this->_worldChunks[y * this->_numChunkWidth + x].delimit( newChunkIndexX, newChunkIndexY );
+
+				delimitWorldChunk( this->_worldChunks[y * this->_numChunkWidth + x], newChunkIndexX, newChunkIndexY );
+
+
+
+				this->_worldChunks[y * this->_numChunkWidth + x].construct();
+
+
+
+
 				updateWorldMap( worldChunkIndexX, worldChunkIndexY );
 			}
 		}
@@ -117,6 +173,15 @@ void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
 	this->_prevCameraIndexX = cameraIndexX;
 	this->_prevCameraIndexY = cameraIndexY;
 
+	return;
+}
+
+
+
+void World::replaceWorldChunk( WorldChunk& worldChunk, int newIndexX, int newIndexY )
+{
+	this->saveWorldChunk( worldChunk );
+	this->loadWorldChunk( worldChunk );
 	return;
 }
 

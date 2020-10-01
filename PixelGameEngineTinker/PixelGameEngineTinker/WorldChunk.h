@@ -12,8 +12,11 @@ private:
 	int _chunkIndexY; // position = chunkIndex * size
 	int _cellSize;
 
-	QuadTree<Tile, TileConsolidated> _quadTree;
+	QuadTree<Tile, TileConsolidated> _quadTrees[341]; // [!] singleton
+	Tile _tiles[32*32];
+	//Tile _tiles[(2 << QuadTree<Tile,TileConsolidated>::_MAX_LEVELS) * ( 2 << QuadTree<Tile, TileConsolidated>::_MAX_LEVELS )]; // [!] singleton
 
+	//QuadTree<Tile, TileConsolidated> _quadTree;
 public:
 
 
@@ -36,7 +39,15 @@ public:
 
 	WorldChunk( int indexX, int indexY, int size );
 
+
+	void construct();
+	void reconstruct();
+
+	void insert( const TileConsolidated& tileConsolidated );
+	void remove( const TileConsolidated& tileConsolidated );
+
 	void delimit( int indexX, int indexY );
+	void clear();
 
 
 	int getChunkIndexX() const;
@@ -47,6 +58,6 @@ public:
 	int getPositionX() const;
 	int getPositionY() const;
 
-
+	QuadTree<Tile, TileConsolidated>& getQuadTreeRoot();
 };
 

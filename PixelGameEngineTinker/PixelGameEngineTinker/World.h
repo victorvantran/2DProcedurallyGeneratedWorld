@@ -8,7 +8,8 @@ class World
 private:
 	const static int _chunkRadius = 1; // [!] Assets
 	const static int _chunkCellSize = 32; // Assets (log(2) 32 = 5) == QuadTree // CellDomain // [!] Assets
-	WorldChunk _worldChunks[( 1 + 2 * ( _chunkRadius ) ) * ( 1 + 2 * ( _chunkRadius ) )]; // [!] Assets
+	//WorldChunk _worldChunks[( 1 + 2 * ( _chunkRadius ) ) * ( 1 + 2 * ( _chunkRadius ) )]; // [!] Assets // Too much to put on stack, must be on heap
+	WorldChunk* _worldChunks = nullptr;
 
 	std::map<std::tuple<int, int>, uint64_t> _worldMap;
 
@@ -22,6 +23,10 @@ public:
 	World();
 	~World();
 
+	void insert( const TileConsolidated& tileConsolidated );
+	void remove( const TileConsolidated& tileConsolidated );
+
+
 	void saveWorldMap();
 	void loadWorldMap();
 	void viewWorldMap();
@@ -29,12 +34,20 @@ public:
 	void updateWorldMap( int indexX, int indexY );
 	bool findWorldMap( int indexX, int indexY ) const;
 
-	void saveWorldChunk();
-	void loadWorldChunk();
-
 
 	void initializeDelimits( const BoundingBox<float>& cameraView );
+	void initializeWorldChunks();
+
+	void delimitWorldChunk( WorldChunk& worldChunk, int newIndexX, int newIndexY );
 	void delimitWorldChunks( const BoundingBox<float>& cameraView ); // Camera locality
+
+
+	void replaceWorldChunk( WorldChunk& worldChunk, int newIndexX, int newIndexY );
+	void saveWorldChunk( const WorldChunk& worldChunk );
+	void loadWorldChunk( WorldChunk& worldChunk );
+
+
+
 	bool inBounds( const BoundingBox<float>& cameraView, const WorldChunk& worldChunk );
 
 
