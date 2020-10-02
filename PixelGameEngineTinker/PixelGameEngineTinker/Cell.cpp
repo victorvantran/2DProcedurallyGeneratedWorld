@@ -1,7 +1,7 @@
 #include "Cell.h"
 
 Cell::Cell()
-	: _id( -1 ), _bounds( BoundingBox<int>() ), _exist(false)
+	: _id( 0 ), _bounds( BoundingBox<int>() ), _exist(false)
 {
 }
 

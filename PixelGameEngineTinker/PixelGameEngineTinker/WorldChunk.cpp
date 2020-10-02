@@ -2,7 +2,7 @@
 
 
 WorldChunk::WorldChunk()
-	: _chunkIndexX( 0 ), _chunkIndexY( 0 ), _cellSize( 32 ) // [!] singleton global
+	: _chunkIndexX( 0 ), _chunkIndexY( 0 ), _size( 32 ) // [!] singleton global
 {
 }
 
@@ -13,8 +13,8 @@ WorldChunk::~WorldChunk()
 }
 
 
-WorldChunk::WorldChunk( int indexX, int indexY, int cellSize )
-	: _chunkIndexX( indexX ), _chunkIndexY( indexY ), _cellSize( cellSize )
+WorldChunk::WorldChunk( int indexX, int indexY, int size )
+	: _chunkIndexX( indexX ), _chunkIndexY( indexY ), _size( size )
 {
 
 }
@@ -22,8 +22,8 @@ WorldChunk::WorldChunk( int indexX, int indexY, int cellSize )
 
 void WorldChunk::construct()
 {
-	int rootQuadTreePositionX = this->_chunkIndexX * this->_cellSize;
-	int rootQuadTreePositionY = this->_chunkIndexY * this->_cellSize;
+	int rootQuadTreePositionX = this->_chunkIndexX * this->_size;
+	int rootQuadTreePositionY = this->_chunkIndexY * this->_size;
 
 	//std::cout << "[" << rootQuadTreePositionX << "," << rootQuadTreePositionY << "]" << std::endl;
 	//std::cout << this->_cellSize << std::endl;
@@ -33,9 +33,9 @@ void WorldChunk::construct()
 	this->_quadTrees[0].constructQuadTree(
 		0,
 		-1,
-		QuadTree<Tile, TileConsolidated>::_MAX_LEVELS,
+		QuadTree<Tile, TileRender>::_MAX_LEVELS,
 		0,
-		BoundingBox<int>( rootQuadTreePositionX, rootQuadTreePositionY, this->_cellSize, this->_cellSize ),
+		BoundingBox<int>( rootQuadTreePositionX, rootQuadTreePositionY, this->_size, this->_size ),
 		this->_quadTrees,
 		this->_tiles
 	);
@@ -53,16 +53,16 @@ void WorldChunk::construct()
 
 void WorldChunk::reconstruct()
 {
-	int rootQuadTreePositionX = this->_chunkIndexX * this->_cellSize;
-	int rootQuadTreePositionY = this->_chunkIndexY * this->_cellSize;
+	int rootQuadTreePositionX = this->_chunkIndexX * this->_size;
+	int rootQuadTreePositionY = this->_chunkIndexY * this->_size;
 
 	// Intialize quadTrees
 	this->_quadTrees[0].constructQuadTree(
 		0,
 		-1,
-		QuadTree<Tile, TileConsolidated>::_MAX_LEVELS,
+		QuadTree<Tile, TileRender>::_MAX_LEVELS,
 		0,
-		BoundingBox<int>( rootQuadTreePositionX, rootQuadTreePositionY, this->_cellSize, this->_cellSize ),
+		BoundingBox<int>( rootQuadTreePositionX, rootQuadTreePositionY, this->_size, this->_size ),
 		this->_quadTrees,
 		this->_tiles
 	);
@@ -71,16 +71,55 @@ void WorldChunk::reconstruct()
 }
 
 
-void WorldChunk::insert( const TileConsolidated& tileConsolidated )
+void WorldChunk::insert( int x, int y, int width, int height, uint64_t id )
 {
-	this->_quadTrees[0].insert( tileConsolidated );
+	// insert to Tiles[] (game logic)
+	int localCellStartIndexX = x - this->_chunkIndexX * this->_size;
+	int localCellStartIndexY = y - this->_chunkIndexY * this->_size;
+
+	int localCellIndexX;
+	int localCellIndexY;
+	for ( int x = 0; x < width; x++ )
+	{
+		for ( int y = 0; y < height; y++ )
+		{
+			localCellIndexX = localCellStartIndexX + x;
+			localCellIndexY = localCellStartIndexY + y;
+
+			if ( localCellIndexX >= 0 && localCellIndexY >= 0 && localCellIndexX < this->_size && localCellIndexY < this->_size )
+			{
+				Tile* selectedTile = &this->_tiles[localCellIndexY * this->_size + localCellIndexX];
+				if ( selectedTile->isVoid() )
+				{
+					selectedTile->setId( id );
+				}
+			}
+		}
+	}
+
+	// insert to QuadTree (render)
+	this->_quadTrees[0].insert( TileRender( id, BoundingBox<int>( x, y, width, height ), true) );
 	return;
 }
 
 
-void WorldChunk::remove( const TileConsolidated& tileConsolidated )
+void WorldChunk::remove( int x, int y, int width, int height, uint64_t id )
 {
-	this->_quadTrees[0].remove( tileConsolidated );
+	// remove from Tiles[] (game logic)
+	int localCellStartIndexX = x - this->_chunkIndexX * this->_size;
+	int localCellStartIndexY = y - this->_chunkIndexY * this->_size;
+
+	if ( localCellStartIndexX >= 0 && localCellStartIndexY >= 0 && localCellStartIndexX < this->_size && localCellStartIndexY < this->_size )
+	{
+		Tile* selectedTile = &this->_tiles[localCellStartIndexY * this->_size + localCellStartIndexX];
+		if ( selectedTile->getId() == id )
+		{
+			selectedTile->setId( 0 ); // [!] Void
+		}
+	}
+
+	// remove from quadTree (render)
+	this->_quadTrees[0].remove( TileRender( id, BoundingBox<int>( x, y, width, height ), true ) );
 	return;
 }
 
@@ -127,7 +166,7 @@ int WorldChunk::getChunkIndexY() const
 int WorldChunk::getRelativeChunkIndexX( const BoundingBox<float>& boundingBox ) const
 {
 	// Returns the chunk index X relative to a bounding box's position
-	int boxIndexX = ( int )( boundingBox.getCenterX() / this->_cellSize );
+	int boxIndexX = ( int )( boundingBox.getCenterX() / this->_size );
 	return this->_chunkIndexX - boxIndexX;
 }
 
@@ -135,30 +174,30 @@ int WorldChunk::getRelativeChunkIndexX( const BoundingBox<float>& boundingBox ) 
 int WorldChunk::getRelativeChunkIndexY( const BoundingBox<float>& boundingBox ) const
 {
 	// Returns the chunk index Y relative to a bounding box's position
-	int boxIndexY = ( int )( boundingBox.getCenterY() / this->_cellSize );
+	int boxIndexY = ( int )( boundingBox.getCenterY() / this->_size );
 	return this->_chunkIndexY - boxIndexY;
 }
 
 
 int WorldChunk::getSize() const
 {
-	return this->_cellSize;
+	return this->_size;
 }
 
 
 int WorldChunk::getPositionX() const
 {
-	return this->_chunkIndexX * this->_cellSize;
+	return this->_chunkIndexX * this->_size;
 }
 
 
 int WorldChunk::getPositionY() const
 {
-	return this->_chunkIndexY * this->_cellSize;
+	return this->_chunkIndexY * this->_size;
 }
 
 
-QuadTree<Tile, TileConsolidated>& WorldChunk::getQuadTreeRoot()
+QuadTree<Tile, TileRender>& WorldChunk::getQuadTreeRoot()
 {
 	return this->_quadTrees[0];
 }

@@ -4,7 +4,7 @@
 #include "World.h"
 #include "WorldChunk.h"
 #include "QuadTree.h"
-#include "TileConsolidated.h"
+#include "TileRender.h"
 #include "Tile.h"
 
 
@@ -32,7 +32,7 @@ public:
 
 	void renderWorld( World& world ) const;
 	void renderWorldChunk( WorldChunk& worldChunk ) const;
-	void renderQuadTree( QuadTree<Tile, TileConsolidated>& quadTree ) const;
+	void renderQuadTree( QuadTree<Tile, TileRender>& quadTree ) const;
 	void renderCamera() const;
 
 	void pan( float x, float y );
@@ -175,14 +175,14 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk ) const
 
 
 
-void Camera::renderQuadTree( QuadTree<Tile, TileConsolidated>& quadTree ) const
+void Camera::renderQuadTree( QuadTree<Tile, TileRender>& quadTree ) const
 {
 	int tileSize = 16; // [!] make it global variable in singleton
 	int chunkSize = 32; // [!] singleton 
 
 	//std::cout << quadTree.getIndex() << std::endl;
 
-	QuadTree<Tile, TileConsolidated> currQuadTree = quadTree.getReferenceNodes()[quadTree.getIndex()];
+	QuadTree<Tile, TileRender> currQuadTree = quadTree.getReferenceNodes()[quadTree.getIndex()];
 	const BoundingBox<int> bounds = currQuadTree.getBounds();
 	// No need to render if the camera can not see it
 
@@ -198,7 +198,7 @@ void Camera::renderQuadTree( QuadTree<Tile, TileConsolidated>& quadTree ) const
 	if ( currQuadTree.isConsolidated() )
 	{
 
-		if ( this->_view.intersects( currQuadTree.getBounds() ) )
+		if ( this->_view.intersects( currQuadTree.getBounds() ) && currQuadTree.getCells()[0].getId() != 0 )
 		{
 			int id = currQuadTree.getCells()[0].getId();
 
@@ -229,7 +229,7 @@ void Camera::renderQuadTree( QuadTree<Tile, TileConsolidated>& quadTree ) const
 			pge->FillRect(
 				startPos,
 				olc::vf2d{ 1.0f * scale * this->_zoomX * tileSize  , 1.0f * scale * this->_zoomY * tileSize },
-				id == 0 ? olc::DARK_GREEN : olc::DARK_GREY //olc::WHITE
+				id == 2 ? olc::DARK_GREEN : olc::DARK_GREY
 			);
 
 
@@ -242,12 +242,12 @@ void Camera::renderQuadTree( QuadTree<Tile, TileConsolidated>& quadTree ) const
 	// Fill the small bounding boxes (cells) that are not possibly consolidated
 	else
 	{
-		TileConsolidated* cells = currQuadTree.getCells();
+		TileRender* cells = currQuadTree.getCells();
 		for ( int i = 0; i < 4; i++ )
 		{
 
 
-			if ( cells[i].getExist() && this->_view.intersects( cells[i].getBounds() ) )
+			if ( cells[i].getExist() && cells[i].getId() != 0 &&  this->_view.intersects( cells[i].getBounds() ) )
 			{
 				olc::vi2d decalSourcePos = olc::vi2d{ cells[i].getId() == 0 ? 7 : 15, 7 }; // dirt, stone
 
@@ -268,7 +268,7 @@ void Camera::renderQuadTree( QuadTree<Tile, TileConsolidated>& quadTree ) const
 				pge->FillRect(
 					startPos,
 					olc::vi2d{ ( int )( tileSize * this->_zoomX ), ( int )( tileSize * this->_zoomY ) }, //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
-					cells[i].getId() == 0 ? olc::DARK_GREEN : olc::DARK_GREY
+					cells[i].getId() == 2 ? olc::DARK_GREEN : olc::DARK_GREY
 				);
 
 
@@ -294,167 +294,6 @@ void Camera::renderQuadTree( QuadTree<Tile, TileConsolidated>& quadTree ) const
 	return;
 }
 
-
-
-/*
-void Camera::renderQuadTree( QuadTree<Tile, TileConsolidated>& quadTree ) const
-{
-	int tileSize = 16; // [!] make it global variable in singleton
-	int chunkSize = 32; // [!] singleton 
-
-	//std::cout << quadTree.getIndex() << std::endl;
-
-	QuadTree<Tile, TileConsolidated> currQuadTree = quadTree.getReferenceNodes()[quadTree.getIndex()];
-	const BoundingBox<int> bounds = currQuadTree.getBounds();
-	// No need to render if the camera can not see it
-
-
-
-
-	if ( !this->_view.intersects( bounds ) )
-	{
-		return;
-	}
-
-	// Fill Consolidated
-	if ( currQuadTree.isConsolidated() )
-	{
-
-		if ( this->_view.intersects( currQuadTree.getBounds() ) )
-		{
-			int id = currQuadTree.getCells()[0].getId();
-
-
-			int level = currQuadTree.getLevel();
-			int scale = 2 << ( level );
-
-			int decalPositionX = 0;
-			for ( int i = 0; i < level; i++ )
-			{
-				decalPositionX += ( 2 << i );
-			}
-
-			int decalPositionY = id * 32;
-
-			float cameraOffsetX = this->_view.x;
-			float cameraOffsetY = this->_view.y;
-
-			float zoomOffsetX = ( ( cameraOffsetX - this->_view.width ) / 2.0f );
-			float zoomOffsetY = ( ( cameraOffsetY - this->_view.height ) / 2.0f );
-
-			float screenStartX = ( ( float )bounds.getX() - cameraOffsetX );
-			float screenStartY = ( ( float )bounds.getY() - cameraOffsetY );
-
-			float screenEndX = ( ( float )bounds.getX() + ( float )scale - cameraOffsetX );
-			float screenEndY = ( ( float )bounds.getY() + ( float )scale - cameraOffsetY );
-
-			
-			//olc::vi2d startPos = olc::vi2d{ ( int )( screenStartX * this->_zoomX * tileSize ), ( int )( screenStartY * this->_zoomY * tileSize ) };
-			//		olc::vi2d startPos = olc::vi2d{ ( int )( ( screenStartX - zoomOffsetX ) * this->_zoomX * tileSize ), ( int )( ( screenStartY - zoomOffsetY )* this->_zoomY * tileSize ) };
-
-			//olc::vi2d size = olc::vi2d{ scale * tileSize, scale * tileSize }; //olc::vi2d{ ( int )( (screenEndX - screenStartX) * tileSize ), ( int )( (screenEndY - screenStartY) * tileSize ) };
-
-			//pge->DrawPartialDecal(
-			//	startPos,
-			//	decalDirtTileConsolidationMap,
-			//	olc::vi2d{ olc::vi2d{ decalPositionX, decalPositionY } * tileSize * pixelSize }, // 16x16 decal unit
-			//	size,
-			//	olc::vf2d{ 1.0f * this->_zoomX , 1.0f * this->_zoomY } //- olc::vf2d{ 1.0f/tileSize, 1.0f/tileSize }
-			//);
-			
-
-			float worldPositionX = currQuadTree.getBounds().getX();
-			float worldPositionY = currQuadTree.getBounds().getY();
-
-			int pixelX;
-			int pixelY;
-
-			worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
-			olc::vi2d startPos = olc::vi2d{ pixelX, pixelY };
-
-
-			pge->FillRect(
-				startPos,
-				olc::vf2d{ 1.0f * scale * this->_zoomX * tileSize  , 1.0f * scale * this->_zoomY * tileSize },
-				id == 0 ? olc::DARK_GREEN : olc::DARK_GREY //olc::WHITE
-			);
-
-
-		}
-
-
-		
-		return;
-	}
-	// Fill the small bounding boxes (cells) that are not possibly consolidated
-	else
-	{
-		TileConsolidated* cells = currQuadTree.getCells();
-		for ( int i = 0; i < 4; i++ )
-		{
-
-
-			if ( cells[i].getExist() && this->_view.intersects( cells[i].getBounds() ) )
-			{
-				olc::vi2d decalSourcePos = olc::vi2d{ cells[i].getId() == 0 ? 7 : 15, 7 }; // dirt, stone
-
-
-
-				float worldPositionX = cells[i].getBounds().getX();
-				float worldPositionY = cells[i].getBounds().getY();
-
-				int pixelX;
-				int pixelY;
-
-				worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
-				olc::vi2d startPos = olc::vi2d{ pixelX, pixelY };
-
-
-				olc::vi2d size = olc::vi2d{ tileSize, tileSize }; //olc::vi2d{ ( int )( ( screenEndX - screenStartX ) * tileSize ), ( int )( ( screenEndY - screenStartY ) * tileSize ) };
-				olc::vf2d scale = olc::vf2d{ 1.0f * this->_zoomX, 1.0f * this->_zoomY };
-
-
-				// Draw in the camera space domain
-
-				
-				// DrawPartialDecal(
-				//	startPos,
-				//	decalTileMap,
-				//	olc::vi2d{ decalSourcePos * tileSize * pixelSize }, // 16x16 decal unit
-				//	size,
-				//	olc::vf2d{ 1.0f * this->_zoomX, 1.0f * this->_zoomY } //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
-				//);
-
-				
-				pge->FillRect(
-					startPos,
-					olc::vi2d{ (int) (tileSize * this->_zoomX ), (int) (tileSize * this->_zoomY ) }, //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
-					cells[i].getId() == 0 ? olc::DARK_GREEN : olc::DARK_GREY
-				);
-				
-
-			}
-		}
-
-		// Fill other psosible consolidated (or not-consolidated) boundingboxes
-		// Get node indicies
-		int* childrenNodeIndicies = currQuadTree.getChildrenNodeIndicies();
-		if ( childrenNodeIndicies != nullptr )
-		{
-			for ( int i = 0; i < 4; i++ )
-			{
-				if ( childrenNodeIndicies[i] != -1 )
-				{
-					this->renderQuadTree( quadTree.getReferenceNodes()[childrenNodeIndicies[i]] );
-				}
-			}
-		}
-
-	}
-
-	return;
-}
-*/
 
 
 void Camera::renderCamera() const

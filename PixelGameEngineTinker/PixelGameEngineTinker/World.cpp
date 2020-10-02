@@ -14,27 +14,32 @@ World::~World()
 }
 
 
-void World::insert( const TileConsolidated& tileConsolidated )
+
+
+void World::insert( int x, int y, int width, int height, uint64_t id )
 {
 	// We can leverage the robustness of the quad tree and just try to add onto all the worldChunks
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
-		this->_worldChunks[i].insert( tileConsolidated );
+		if ( BoundingBox<int>( x, y, width, height ).intersects( this->_worldChunks[i].getQuadTreeRoot().getBounds() ) )
+		{
+			this->_worldChunks[i].insert( x, y, width, height, id );
+		}
 	}
-
-
 	return;
 }
 
 
-void World::remove( const TileConsolidated& tileConsolidated )
+void World::remove( int x, int y, int width, int height, uint64_t id )
 {
 	// We can leverage the robustness of the quad tree and just try to remove onto all the worldChunks
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
-		this->_worldChunks[i].remove( tileConsolidated );
+		if ( BoundingBox<int>( x, y, 1, 1 ).intersects( this->_worldChunks[i].getQuadTreeRoot().getBounds() ) )
+		{
+			this->_worldChunks[i].remove( x, y, width, height, id );
+		}
 	}
-
 	return;
 }
 

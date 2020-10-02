@@ -5,7 +5,8 @@
 #include <iostream>
 #include <string>
 #include <map>
-//#include "Data.h"
+
+#include "Tile.h"
 
 
 // [!] note endianness
@@ -145,6 +146,27 @@ public:
 	//	more cpu ( bit shifting, etc. )
 	//	portability of code
 
+
+
+	static void saveWorldChunk( const char* filePath, Tile* tile, int numTiles )
+	{
+		std::ofstream out( filePath, std::ios::out | std::ios::binary );
+
+		if ( out )
+		{
+			for ( int i = 0; i < numTiles; i++ )
+			{
+				// TileContents
+				int id = tile[i].getId();
+				out.write( reinterpret_cast< const char* >( &id ), 1 );
+
+			}
+		}
+
+		out.close();
+
+		return;
+	}
 
 
 	static void saveMap( const char* filePath, std::map<std::tuple<int, int>, uint64_t>& map )

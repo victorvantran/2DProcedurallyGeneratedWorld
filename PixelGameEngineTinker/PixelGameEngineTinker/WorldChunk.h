@@ -2,7 +2,7 @@
 
 #include "QuadTree.h"
 #include "Tile.h"
-#include "TileConsolidated.h"
+#include "TileRender.h"
 
 class WorldChunk
 {
@@ -10,13 +10,13 @@ private:
 	// Cell domain
 	int _chunkIndexX; 
 	int _chunkIndexY; // position = chunkIndex * size
-	int _cellSize;
+	int _size;
 
-	QuadTree<Tile, TileConsolidated> _quadTrees[341]; // [!] singleton
+	QuadTree<Tile, TileRender> _quadTrees[341]; // [!] singleton
 	Tile _tiles[32*32];
-	//Tile _tiles[(2 << QuadTree<Tile,TileConsolidated>::_MAX_LEVELS) * ( 2 << QuadTree<Tile, TileConsolidated>::_MAX_LEVELS )]; // [!] singleton
+	//Tile _tiles[(2 << QuadTree<Tile,TileRender>::_MAX_LEVELS) * ( 2 << QuadTree<Tile, TileRender>::_MAX_LEVELS )]; // [!] singleton
 
-	//QuadTree<Tile, TileConsolidated> _quadTree;
+	//QuadTree<Tile, TileRender> _quadTree;
 public:
 
 
@@ -43,8 +43,8 @@ public:
 	void construct();
 	void reconstruct();
 
-	void insert( const TileConsolidated& tileConsolidated );
-	void remove( const TileConsolidated& tileConsolidated );
+	void insert( int x, int y, int width, int height, uint64_t id );
+	void remove( int x, int y, int width, int height, uint64_t id );
 
 	void delimit( int indexX, int indexY );
 	void clear();
@@ -58,6 +58,6 @@ public:
 	int getPositionX() const;
 	int getPositionY() const;
 
-	QuadTree<Tile, TileConsolidated>& getQuadTreeRoot();
+	QuadTree<Tile, TileRender>& getQuadTreeRoot();
 };
 

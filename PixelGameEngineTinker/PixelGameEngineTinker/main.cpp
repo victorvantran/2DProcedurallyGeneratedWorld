@@ -2,8 +2,9 @@
 #include "olcPixelGameEngine.h"
 #include "World.h"
 #include "Tile.h"
-#include "TileConsolidated.h"
+#include "TileRender.h"
 #include "QuadTree.h"
+
 
 
 #include "Assets.h"
@@ -36,7 +37,7 @@ public:
 
 	olc::vi2d gridDimension;
 
-	int tileId = 0;
+	int tileId = 1; // [!] never insert a void block (0) unless you know how to remove it without seeing it
 
 private:
 
@@ -84,7 +85,7 @@ public:
 		float mouseX = ( float )GetMouseX();
 		float mouseY = ( float )GetMouseY();
 
-		float panSpeed = 50.0f;
+		float panSpeed = 20.0f;
 		if ( GetKey( olc::Key::UP ).bPressed || GetKey( olc::Key::UP ).bHeld )
 		{
 			camera.panY( -panSpeed * fElapsedTime );
@@ -141,7 +142,7 @@ public:
 
 		if ( GetKey( olc::Key::D ).bPressed )
 		{
-			tileId = 0;
+			tileId = 2;
 		}
 		else if ( GetKey( olc::Key::S ).bPressed )
 		{
@@ -166,25 +167,28 @@ public:
 
 		if ( GetKey( olc::Key::P ).bPressed || GetKey( olc::Key::P ).bHeld )
 		{
-			//quadTree->insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 1, 1 ), true ) );
-			world.insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 32, 32*32 ), true ) );
+			world.insert( tileIndex.x, tileIndex.y, 1, 1, tileId );
+
+			//quadTree->insert( TileRender( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 1, 1 ), true ) );
+			//world.insert( TileRender( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 1, 1 ), true ) );
 			//updateTileConfiguration( tileIndex, true );
 		}
 
 		if ( GetMouse( 0 ).bPressed || GetMouse( 0 ).bHeld )
 			//if ( GetMouse( 0 ).bPressed )
 		{
-			world.insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
-
-			//quadTree->insert( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
+			world.insert( tileIndex.x, tileIndex.y, 5, 5, tileId );
+			//world.insert( TileRender( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
+			//quadTree->insert( TileRender( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
 			//updateTileConfiguration( tileIndex, true );
 		}
 
 		if ( GetMouse( 1 ).bPressed || GetMouse( 1 ).bHeld )
 			//if ( GetMouse( 1 ).bPressed )
 		{
-			world.remove( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
-			//quadTree->remove( TileConsolidated( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
+			world.remove( tileIndex.x, tileIndex.y, 5, 5, tileId );
+			//world.remove( TileRender( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
+			//quadTree->remove( TileRender( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
 			//updateTileConfiguration( tileIndex, true );
 		}
 
@@ -297,7 +301,7 @@ public:
 	{
 		if ( !( tileIndex.x >= 0 && tileIndex.x < gridDimension.x &&
 			tileIndex.y >= 0 && tileIndex.y < gridDimension.y &&
-			( origin || tiles[tileIndex.y * gridDimension.x + tileIndex.x].getExist() ) ) )
+			( origin || !tiles[tileIndex.y * gridDimension.x + tileIndex.x].isVoid() ) ) )
 		{
 			return;
 		}
@@ -318,7 +322,7 @@ public:
 
 		if ( topLeftIndex.x >= 0 && topLeftIndex.x < gridDimension.x &&
 			topLeftIndex.y >= 0 && topLeftIndex.y < gridDimension.y &&
-			tiles[topLeftIndex.y * gridDimension.x + topLeftIndex.x].getExist() &&
+			tiles[topLeftIndex.y * gridDimension.x + topLeftIndex.x].getId() != 0 &&
 			tileId == tiles[topLeftIndex.y * gridDimension.x + topLeftIndex.x].getId()
 			)
 		{
@@ -326,7 +330,7 @@ public:
 		}
 		if ( centerTopIndex.x >= 0 && centerTopIndex.x < gridDimension.x &&
 			centerTopIndex.y >= 0 && centerTopIndex.y < gridDimension.y &&
-			tiles[centerTopIndex.y * gridDimension.x + centerTopIndex.x].getExist() &&
+			!tiles[centerTopIndex.y * gridDimension.x + centerTopIndex.x].isVoid() &&
 			tileId == tiles[centerTopIndex.y * gridDimension.x + centerTopIndex.x].getId()
 			)
 		{
@@ -334,7 +338,7 @@ public:
 		}
 		if ( topRightIndex.x >= 0 && topRightIndex.x < gridDimension.x &&
 			topRightIndex.y >= 0 && topRightIndex.y < gridDimension.y &&
-			tiles[topRightIndex.y * gridDimension.x + topRightIndex.x].getExist() &&
+			!tiles[topRightIndex.y * gridDimension.x + topRightIndex.x].isVoid() &&
 			tileId == tiles[topRightIndex.y * gridDimension.x + topRightIndex.x].getId()
 
 			)
@@ -343,7 +347,7 @@ public:
 		}
 		if ( centerRightIndex.x >= 0 && centerRightIndex.x < gridDimension.x &&
 			centerRightIndex.y >= 0 && centerRightIndex.y < gridDimension.y &&
-			tiles[centerRightIndex.y * gridDimension.x + centerRightIndex.x].getExist() &&
+			!tiles[centerRightIndex.y * gridDimension.x + centerRightIndex.x].isVoid() &&
 			tileId == tiles[centerRightIndex.y * gridDimension.x + centerRightIndex.x].getId()
 			)
 		{
@@ -351,7 +355,7 @@ public:
 		}
 		if ( bottomRightIndex.x >= 0 && bottomRightIndex.x < gridDimension.x &&
 			bottomRightIndex.y >= 0 && bottomRightIndex.y < gridDimension.y &&
-			tiles[bottomRightIndex.y * gridDimension.x + bottomRightIndex.x].getExist() &&
+			!tiles[bottomRightIndex.y * gridDimension.x + bottomRightIndex.x].isVoid() &&
 			tileId == tiles[bottomRightIndex.y * gridDimension.x + bottomRightIndex.x].getId()
 			)
 		{
@@ -359,7 +363,7 @@ public:
 		}
 		if ( centerBottomIndex.x >= 0 && centerBottomIndex.x < gridDimension.x &&
 			centerBottomIndex.y >= 0 && centerBottomIndex.y < gridDimension.y &&
-			tiles[centerBottomIndex.y * gridDimension.x + centerBottomIndex.x].getExist() &&
+			!tiles[centerBottomIndex.y * gridDimension.x + centerBottomIndex.x].isVoid() &&
 			tileId == tiles[centerBottomIndex.y * gridDimension.x + centerBottomIndex.x].getId()
 			)
 		{
@@ -367,7 +371,7 @@ public:
 		}
 		if ( bottomLeftIndex.x >= 0 && bottomLeftIndex.x < gridDimension.x &&
 			bottomLeftIndex.y >= 0 && bottomLeftIndex.y < gridDimension.y &&
-			tiles[bottomLeftIndex.y * gridDimension.x + bottomLeftIndex.x].getExist() &&
+			!tiles[bottomLeftIndex.y * gridDimension.x + bottomLeftIndex.x].isVoid() &&
 			tileId == tiles[bottomLeftIndex.y * gridDimension.x + bottomLeftIndex.x].getId()
 			)
 		{
@@ -375,7 +379,7 @@ public:
 		}
 		if ( centerLeftIndex.x >= 0 && centerLeftIndex.x < gridDimension.x &&
 			centerLeftIndex.y >= 0 && centerLeftIndex.y < gridDimension.y &&
-			tiles[centerLeftIndex.y * gridDimension.x + centerLeftIndex.x].getExist() &&
+			!tiles[centerLeftIndex.y * gridDimension.x + centerLeftIndex.x].isVoid() &&
 			tileId == tiles[centerLeftIndex.y * gridDimension.x + centerLeftIndex.x].getId()
 			)
 		{
@@ -411,7 +415,7 @@ public:
 		}
 
 		int level = this->quadTrees[quadTreeIndex].getLevel();
-		if ( level > QuadTree<Tile, TileConsolidated>::_MIN_LEVELS )
+		if ( level > QuadTree<Tile, TileRender>::_MIN_LEVELS )
 			//int* childrenNodeIndicies = this->quadTrees[quadTreeIndex].getChildrenNodeIndicies();
 			//if ( childrenNodeIndicies != nullptr )
 		{
@@ -431,22 +435,23 @@ public:
 
 	void drawAllSingleTiles( Tile* tiles )
 	{
-		int rootQuadTreeSize = 2 << QuadTree<Tile, TileConsolidated>::_MAX_LEVELS;
+		int rootQuadTreeSize = 2 << QuadTree<Tile, TileRender>::_MAX_LEVELS;
 
 		for ( int x = 0; x < rootQuadTreeSize; x++ )
 		{
 			for ( int y = 0; y < rootQuadTreeSize; y++ )
 			{
 				Tile tile = tiles[y * rootQuadTreeSize + x];
-				if ( tile.getExist() )
+				if ( !tile.isVoid() )
 				{
 					olc::vi2d decalSourcePos = olc::vi2d{ tile.getId() == 0 ? 7 : 15, 7 }; // dirt, stone
 
 					DrawPartialDecal(
-						olc::vi2d{ tile.getX(), tile.getY() } *tileSize,
+						//olc::vi2d{ tile.getX(), tile.getY() } * tileSize, [!]
+						olc::vi2d{ x, y } *tileSize,
 						decalTileMap,
-						olc::vi2d{ decalSourcePos }  *tileSize * pixelSize,
-						olc::vi2d{ 1, 1 } *tileSize,
+						olc::vi2d{ decalSourcePos } * tileSize * pixelSize,
+						olc::vi2d{ 1, 1 } * tileSize,
 						olc::vf2d{ 1.0f,1.0f }
 					);
 				}

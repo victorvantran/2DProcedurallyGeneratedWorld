@@ -1,9 +1,33 @@
 #pragma once
+#include <stdint.h>
 
-#include "olcPixelGameEngine.h"
-#include "TileConsolidated.h"
+enum class TileName
+{
+	Void = 0,
+	Water = 1,
+	Stone = 2,
+	Dirt = 3,
+	Sand = 4,
+	Gravel = 5,
+	Clay = 6,
 
-enum class TileType
+
+
+
+	Oak_Wood,
+	Birch_Wood,
+	Aspen_Wood,
+	Redwood_Wood,
+	Maple_Wood,
+	Evergreen_Wood,
+
+
+
+	count
+};
+
+
+enum class TileTypez
 {
 	Empty = 0,
 	Block = 1,
@@ -14,27 +38,30 @@ enum class TileType
 	// Triangle
 };
 
-class Tile : public TileConsolidated
+class Tile
 {
 private:
-	int _configuration;
-	TileType _tileType;
-	// bool isDynamic;
+	uint64_t _id;
 
-	int _edgeId[4];
-	bool _edgeExist[4];
+	int _configuration;
+	//TileType _tileType;
+	// bool isDynamic;
 
 public:
 	Tile();
 	~Tile();
 
-	Tile( int id, const BoundingBox<int>& bounds, bool exist, int configuration, TileType tileType );
+	Tile( uint64_t id );
 
 	// Constructor that accounts for edges
 
+	void setId( uint64_t id );
+	int setConfiguration( int configuration );
+
+	uint64_t getId() const;
 	int getConfiguration() const;
 
-	int setConfiguration( int configuration );
+	bool isVoid() const;
 
 	bool isEmpty() const;
 	bool isBlock() const;
@@ -43,8 +70,6 @@ public:
 	bool isObstacle() const;
 	bool isGround() const;
 	bool isLedge() const;
-
-
 
 	void clear();
 };

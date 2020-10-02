@@ -23,9 +23,8 @@ public:
 	World();
 	~World();
 
-	void insert( const TileConsolidated& tileConsolidated );
-	void remove( const TileConsolidated& tileConsolidated );
-
+	void insert( int x, int y, int width, int height, uint64_t id );
+	void remove( int x, int y, int width, int height, uint64_t id );
 
 	void saveWorldMap();
 	void loadWorldMap();
