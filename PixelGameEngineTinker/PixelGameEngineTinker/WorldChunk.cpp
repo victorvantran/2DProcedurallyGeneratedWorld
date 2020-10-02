@@ -109,12 +109,23 @@ void WorldChunk::remove( int x, int y, int width, int height, uint64_t id )
 	int localCellStartIndexX = x - this->_chunkIndexX * this->_size;
 	int localCellStartIndexY = y - this->_chunkIndexY * this->_size;
 
-	if ( localCellStartIndexX >= 0 && localCellStartIndexY >= 0 && localCellStartIndexX < this->_size && localCellStartIndexY < this->_size )
+	int localCellIndexX;
+	int localCellIndexY;
+	for ( int x = 0; x < width; x++ )
 	{
-		Tile* selectedTile = &this->_tiles[localCellStartIndexY * this->_size + localCellStartIndexX];
-		if ( selectedTile->getId() == id )
+		for ( int y = 0; y < height; y++ )
 		{
-			selectedTile->setId( 0 ); // [!] Void
+			localCellIndexX = localCellStartIndexX + x;
+			localCellIndexY = localCellStartIndexY + y;
+
+			if ( localCellIndexX >= 0 && localCellIndexY >= 0 && localCellIndexX < this->_size && localCellIndexY < this->_size )
+			{
+				Tile* selectedTile = &this->_tiles[localCellIndexY * this->_size + localCellIndexX];
+				if ( selectedTile->getId() == id )
+				{
+					selectedTile->setId( 0 ); // [!] void
+				}
+			}
 		}
 	}
 
@@ -194,6 +205,12 @@ int WorldChunk::getPositionX() const
 int WorldChunk::getPositionY() const
 {
 	return this->_chunkIndexY * this->_size;
+}
+
+
+Tile* WorldChunk::getTiles()
+{
+	return this->_tiles;
 }
 
 

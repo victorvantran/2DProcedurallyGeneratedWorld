@@ -35,6 +35,9 @@ public:
 	void renderQuadTree( QuadTree<Tile, TileRender>& quadTree ) const;
 	void renderCamera() const;
 
+	void renderTilesDebug( WorldChunk& worldChunk ) const;
+
+
 	void pan( float x, float y );
 	void panX( float x );
 	void panY( float y );
@@ -138,6 +141,7 @@ void Camera::renderWorld( World& world ) const
 	for ( int i = 0; i < numWorldChunks; i++ )
 	{
 		this->renderWorldChunk( worldChunks[i] );
+		//this->renderTilesDebug( worldChunks[i] );
 	}
 
 	return;
@@ -146,7 +150,6 @@ void Camera::renderWorld( World& world ) const
 
 void Camera::renderWorldChunk( WorldChunk& worldChunk ) const
 {
-
 	int tileSize = 16; // [!] make it from a "global" variable
 
 	int chunkSize = worldChunk.getSize();
@@ -311,6 +314,67 @@ void Camera::renderCamera() const
 	return;
 }
 
+
+
+
+void Camera::renderTilesDebug( WorldChunk& worldChunk ) const
+{
+	// Draw Tiles
+	int tileSize = 16;
+	int tileCellSize = 1; // [!] make it from a "global" variable
+
+	int chunkSize = worldChunk.getSize();
+	float worldPositionX = worldChunk.getChunkIndexX() * chunkSize;
+	float worldPositionY = worldChunk.getChunkIndexY() * chunkSize;
+
+	int tilePixelX;
+	int tilePixelY;
+
+
+	olc::vi2d tileStartPos;
+	olc::vi2d tilePixelSize = olc::vi2d{ ( int )( tileCellSize * ( this->_zoomX * tileSize ) ), ( int )( tileCellSize * ( this->_zoomY * tileSize ) ) };
+
+	Tile* tiles = worldChunk.getTiles();
+
+	for ( int x = 0; x < chunkSize; x++ )
+	{
+		for ( int y = 0; y < chunkSize; y++ )
+		{
+			Tile tile = tiles[y * chunkSize + x];
+			if ( !tile.isVoid() )
+			{
+				//worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
+				worldToScreen( worldPositionX + x, worldPositionY + y , tilePixelX, tilePixelY );
+				tileStartPos = olc::vi2d{ tilePixelX, tilePixelY };
+
+				pge->FillRect(
+					//startPos + olc::vi2d{ x, y } * tileSize,
+					tileStartPos,
+					tilePixelSize,
+					tile.getId() == 2 ? olc::DARK_GREEN : olc::DARK_GREY
+				);
+
+			}
+		}
+	}
+
+
+	// Draw Quadrant
+	int chunkPixelX;
+	int chunkPixelY;
+	worldToScreen( worldPositionX, worldPositionY, chunkPixelX, chunkPixelY );
+
+	olc::vi2d chunkStartPos = olc::vi2d{ chunkPixelX, chunkPixelY };
+	olc::vi2d chunkPixelSize = olc::vi2d{ ( int )( chunkSize * ( this->_zoomX * tileSize ) ), ( int )( chunkSize * ( this->_zoomY * tileSize ) ) };
+
+	pge->DrawRect(
+		chunkStartPos,
+		chunkPixelSize,
+		olc::GREEN
+	);
+
+	return;
+}
 
 
 void Camera::pan( float x, float y )

@@ -58,6 +58,7 @@ public:
 	int getPositionX() const;
 	int getPositionY() const;
 
+	Tile* getTiles();
 	QuadTree<Tile, TileRender>& getQuadTreeRoot();
 };
 
