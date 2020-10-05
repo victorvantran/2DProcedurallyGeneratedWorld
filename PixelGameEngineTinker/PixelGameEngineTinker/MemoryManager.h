@@ -270,13 +270,16 @@ public:
 		{
 			offset = i * 8;
 			std::memcpy( &tileId, &( *tileIdsBuffer ) + offset, 8 ); // [!] is tilesIdBuffer constant?
-			worldChunk.insert( 
-				worldChunk.getChunkIndexX() * worldChunk.getSize() + ( i % worldChunk.getSize() ),
-				worldChunk.getChunkIndexY() * worldChunk.getSize() + ( i / worldChunk.getSize() ),
-				1,
-				1,
-				tileId
-			);
+			if ( tileId != 0 )
+			{
+				worldChunk.insert(
+					worldChunk.getChunkIndexX() * worldChunk.getSize() + ( i % worldChunk.getSize() ),
+					worldChunk.getChunkIndexY() * worldChunk.getSize() + ( i / worldChunk.getSize() ),
+					1,
+					1,
+					tileId
+				);
+			}
 		}
 		delete[] tileIdsBuffer;
 

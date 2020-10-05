@@ -22,11 +22,9 @@ WorldChunk::WorldChunk( int indexX, int indexY, int size )
 
 void WorldChunk::construct()
 {
+	// Used solely for initializing the first chunks renders
 	int rootQuadTreePositionX = this->_chunkIndexX * this->_size;
 	int rootQuadTreePositionY = this->_chunkIndexY * this->_size;
-
-	//std::cout << "[" << rootQuadTreePositionX << "," << rootQuadTreePositionY << "]" << std::endl;
-	//std::cout << this->_cellSize << std::endl;
 
 	// Intialize quadTrees
 	this->_tileRenders[0].constructQuadTree(
@@ -49,11 +47,12 @@ void WorldChunk::construct()
 }
 
 
-void WorldChunk::reconstruct()
+void WorldChunk::wipeRender()
 {
+	// [!] look to see if we can make it more efficient that construct
 	int rootQuadTreePositionX = this->_chunkIndexX * this->_size;
 	int rootQuadTreePositionY = this->_chunkIndexY * this->_size;
-
+	
 	// Intialize quadTrees
 	this->_tileRenders[0].constructQuadTree(
 		0,
@@ -64,6 +63,12 @@ void WorldChunk::reconstruct()
 		this->_tileRenders,
 		this->_tiles
 	);
+	
+	// The difference between construct and reconstruct is quick reassignment, unless of course, shallow copy does this for us. Then just use construct
+	for ( int i = 0; i < sizeof( this->_tileRenders ) / sizeof( this->_tileRenders[0] ); i++ )
+	{
+		this->_tileRenders[i].divide();
+	}
 
 	return;
 }

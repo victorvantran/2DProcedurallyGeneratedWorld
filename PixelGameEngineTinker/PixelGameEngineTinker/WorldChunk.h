@@ -41,7 +41,7 @@ public:
 
 
 	void construct();
-	void reconstruct();
+	void wipeRender();
 	void fill( uint64_t id );
 
 	void insert( int x, int y, int width, int height, uint64_t id );

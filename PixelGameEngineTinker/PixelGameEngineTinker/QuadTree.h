@@ -144,8 +144,7 @@ void QuadTree<T, TRender>::clear()
 	{
 		return;
 	}
-
-
+	
 	this->_myIndex = -1;
 	this->_parentIndex = -1;
 	this->_level = -1;
@@ -241,15 +240,11 @@ void QuadTree<T, TRender>::divide()
 	this->_childrenIndex[2] = initialShift + recursiveShift + 2;
 	this->_childrenIndex[3] = initialShift + recursiveShift + 3;
 
-
-	// std::cout << "[" << this->_childrenIndex[0] << "," << this->_childrenIndex[1] << "," << this->_childrenIndex[2] << "," << this->_childrenIndex[3] << "]" << std::endl;
-
 	this->_referenceNodes[this->_childrenIndex[0]].constructQuadTree( this->_childrenIndex[0], this->_myIndex, this->_level - 1, 0, BoundingBox<int>( x, y, subWidth, subHeight ), this->_referenceNodes, this->_map );
 	this->_referenceNodes[this->_childrenIndex[1]].constructQuadTree( this->_childrenIndex[1], this->_myIndex, this->_level - 1, 1, BoundingBox<int>( x + subWidth, y, subWidth, subHeight ), this->_referenceNodes, this->_map );
 	this->_referenceNodes[this->_childrenIndex[2]].constructQuadTree( this->_childrenIndex[2], this->_myIndex, this->_level - 1, 2, BoundingBox<int>( x, y + subHeight, subWidth, subHeight ), this->_referenceNodes, this->_map );
 	this->_referenceNodes[this->_childrenIndex[3]].constructQuadTree( this->_childrenIndex[3], this->_myIndex, this->_level - 1, 3, BoundingBox<int>( x + subWidth, y + subHeight, subWidth, subHeight ), this->_referenceNodes, this->_map );
 
-	//this->_divided = true;
 	return;
 }
 
@@ -504,7 +499,6 @@ void QuadTree<T, TRender>::insert( const TRender& aRenderCell )
 		// Add to children regardless
 		this->_referenceNodes[this->_childrenIndex[quadrant]].insert( aRenderCell ); /// 
 	}
-
 
 	// Consolidate if met the requirements of max objects and level
 	if ( this->_cellCount >= this->_MAX_OBJECTS && this->_level >= this->_MIN_LEVELS && this->_level < QuadTree<T, TRender>::_MAX_LEVELS )

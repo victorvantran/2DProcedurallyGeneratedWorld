@@ -14,8 +14,6 @@ World::~World()
 }
 
 
-
-
 void World::insert( int x, int y, int width, int height, uint64_t id )
 {
 	// We can leverage the robustness of the quad tree and just try to add onto all the worldChunks
@@ -101,9 +99,10 @@ void World::loadWorldChunk( WorldChunk& worldChunk )
 
 void World::delimitWorldChunk( WorldChunk& worldChunk, int chunkIndexX, int chunkIndexY )
 {
-	// Clears the worldChunk and updates its proper index in preparation to load in new data	
+	// Clears the worldChunk, updates its proper index, and wipes the render in preparation to load in new data	and new render
 	worldChunk.clear();
 	worldChunk.delimit( chunkIndexX, chunkIndexY );
+	worldChunk.wipeRender();
 	return;
 }
 
@@ -127,8 +126,6 @@ void World::initializeDelimits( const BoundingBox<float>& cameraView )
 
 			this->delimitWorldChunk( this->_worldChunks[y * this->_numChunkWidth + x], newChunkIndexX, newChunkIndexY );
 
-
-
 			if ( this->_worldAtlas.find( std::tuple<int, int>{newChunkIndexX, newChunkIndexY} ) == this->_worldAtlas.end() )
 			{
 				this->updateWorldAtlas( newChunkIndexX, newChunkIndexY );
@@ -150,7 +147,6 @@ void World::initializeWorldChunks()
 	{
 		this->_worldChunks[i].construct();
 		this->loadWorldChunk( this->_worldChunks[i] );
-
 		// [!] Load in world chunks here ( from history or procedural )
 		// [!] if ( this->_worldAtlas.find( std::tuple<int, int>{newChunkIndexX, newChunkIndexY} ) == this->_worldAtlas.end() ) ? procedural : history
 	}
@@ -188,13 +184,9 @@ void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
 				// Save world chunk
 				this->saveWorldChunk( *worldChunk );
 
-
 				// Delimit
 				this->delimitWorldChunk( this->_worldChunks[y * this->_numChunkWidth + x], newChunkIndexX, newChunkIndexY );
 				
-				// Construct
-				this->_worldChunks[y * this->_numChunkWidth + x].construct();
-
 				// Update the world atlas if found new chunk that is not been discovered yet
 				if ( this->_worldAtlas.find( std::tuple<int, int>{newChunkIndexX, newChunkIndexY} ) == this->_worldAtlas.end() )
 				{
@@ -203,17 +195,17 @@ void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
 					///this->_worldChunks[y * this->_numChunkWidth + x].fill( 1 ); // [!] test
 					// [!] Procedural generation here
 				}
-				// [!] Else we load in the worldChunk data here
+				// Else we load in the worldChunk data here
 				else
 				{
 					this->loadWorldChunk( *worldChunk );
-					////this->_worldChunks[y * this->_numChunkWidth + x].fill( 3 ); // [!] test
 				}
 
 			}
 		}
 	}
 
+	// Update camera index
 	this->_prevCameraIndexX = cameraIndexX;
 	this->_prevCameraIndexY = cameraIndexY;
 
