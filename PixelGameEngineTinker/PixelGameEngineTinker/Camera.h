@@ -19,8 +19,6 @@ private:
 	float _zoomX;
 	float _zoomY;
 
-
-
 public:
 	Camera();
 	~Camera();
@@ -29,14 +27,12 @@ public:
 	void screenToWorld( int pixelX, int pixelY, float& cellX, float& cellY ) const; // int to float ( camera offest determines displacement )
 	void worldToScreen( float cellX, float cellY, int& pixelX, int& pixelY ) const; // float to int ( camera offset determines displacement )
 
-
 	void renderWorld( World& world ) const;
 	void renderWorldChunk( WorldChunk& worldChunk ) const;
-	void renderQuadTree( QuadTree<Tile, TileRender>& quadTree ) const;
+	void renderTileRenders( QuadTree<Tile, TileRender>& quadTree ) const;
 	void renderCamera() const;
 
 	void renderTilesDebug( WorldChunk& worldChunk ) const;
-
 
 	void pan( float x, float y );
 	void panX( float x );
@@ -86,19 +82,6 @@ Camera::~Camera()
 void Camera::screenToWorld( int pixelX, int pixelY, float& cellX, float& cellY ) const
 {
 	// int to float ( camera offest determines displacement )
-	/*
-	int tileSize = 16; // [!] global singleton
-	cellX = ( float )( ( ( float )pixelX / ( float )( this->_zoomX * tileSize ) ) + ( this->_view.x - this->_view.width / 2.0f ) );
-	cellY = ( float )( ( ( float )pixelY / ( float )( this->_zoomY * tileSize ) ) + ( this->_view.y - this->_view.height / 2.0f ) );
-	*/
-
-	/*
-	int tileSize = 16; // [!] global singleton
-	cellX = ( float )( ( ( float )( pixelX - this->_absolutePixelOffsetX ) / ( float )( this->_zoomX * tileSize ) ) + ( this->_view.x - this->_view.width / 2.0f ) );
-	cellY = ( float )( ( ( float )( pixelY - this->_absolutePixelOffsetY ) / ( float )( this->_zoomY * tileSize ) ) + ( this->_view.y - this->_view.height / 2.0f ) );
-	*/
-
-
 	int tileSize = 16; // [!] global singleton
 	cellX = ( float )( ( ( float )( pixelX - this->_absolutePixelOffsetX ) / ( float )( this->_zoomX * tileSize ) ) + ( this->_view.x ) );
 	cellY = ( float )( ( ( float )( pixelY - this->_absolutePixelOffsetY ) / ( float )( this->_zoomY * tileSize ) ) + ( this->_view.y ) );
@@ -109,24 +92,7 @@ void Camera::screenToWorld( int pixelX, int pixelY, float& cellX, float& cellY )
 void Camera::worldToScreen( float cellX, float cellY, int& pixelX, int& pixelY ) const
 {
 	// float to int ( camera offset determines displacement )
-	/*
 	int tileSize = 16; // [!] global singleton
-
-	pixelX = ( int )( ( cellX - ( this->_view.x - this->_view.width / 2.0f ) ) * ( this->_zoomX * tileSize ) );
-	pixelY = ( int )( ( cellY - ( this->_view.y - this->_view.height / 2.0f ) ) * ( this->_zoomY * tileSize ) );
-	*/
-
-
-	/*
-	int tileSize = 16; // [!] global singleton
-
-	pixelX = ( int )( ( cellX - ( this->_view.x - this->_view.width / 2.0f ) ) * ( this->_zoomX * tileSize ) ) + this->_absolutePixelOffsetX;
-	pixelY = ( int )( ( cellY - ( this->_view.y - this->_view.height / 2.0f ) ) * ( this->_zoomY * tileSize ) ) + this->_absolutePixelOffsetY;
-	*/
-
-
-	int tileSize = 16; // [!] global singleton
-
 	pixelX = ( int )( ( cellX - ( this->_view.x ) ) * ( this->_zoomX * tileSize ) ) + this->_absolutePixelOffsetX;
 	pixelY = ( int )( ( cellY - ( this->_view.y ) ) * ( this->_zoomY * tileSize ) ) + this->_absolutePixelOffsetY;
 	return;
@@ -170,28 +136,21 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk ) const
 		olc::GREEN
 	);
 
-	this->renderQuadTree( worldChunk.getQuadTreeRoot() );
-
-
+	this->renderTileRenders( worldChunk.getTileRendersRoot() );
 	return;
 }
 
 
 
-void Camera::renderQuadTree( QuadTree<Tile, TileRender>& quadTree ) const
+void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders ) const
 {
 	int tileSize = 16; // [!] make it global variable in singleton
 	int chunkSize = 32; // [!] singleton 
 
-	//std::cout << quadTree.getIndex() << std::endl;
-
-	QuadTree<Tile, TileRender> currQuadTree = quadTree.getReferenceNodes()[quadTree.getIndex()];
+	QuadTree<Tile, TileRender> currQuadTree = tileRenders.getReferenceNodes()[tileRenders.getIndex()];
 	const BoundingBox<int> bounds = currQuadTree.getBounds();
+
 	// No need to render if the camera can not see it
-
-
-
-
 	if ( !this->_view.intersects( bounds ) )
 	{
 		return;
@@ -204,8 +163,6 @@ void Camera::renderQuadTree( QuadTree<Tile, TileRender>& quadTree ) const
 		if ( this->_view.intersects( currQuadTree.getBounds() ) && currQuadTree.getCells()[0].getId() != 0 )
 		{
 			int id = currQuadTree.getCells()[0].getId();
-
-
 			int level = currQuadTree.getLevel();
 			int scale = 2 << ( level );
 
@@ -214,31 +171,21 @@ void Camera::renderQuadTree( QuadTree<Tile, TileRender>& quadTree ) const
 			{
 				decalPositionX += ( 2 << i );
 			}
-
 			int decalPositionY = id * 32;
-
-
 
 			float worldPositionX = currQuadTree.getBounds().getX();
 			float worldPositionY = currQuadTree.getBounds().getY();
-
 			int pixelX;
 			int pixelY;
-
 			worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
 			olc::vi2d startPos = olc::vi2d{ pixelX, pixelY };
-
-
+			
 			pge->FillRect(
 				startPos,
 				olc::vf2d{ 1.0f * scale * this->_zoomX * tileSize  , 1.0f * scale * this->_zoomY * tileSize },
-				id == 2 ? olc::DARK_GREEN : olc::DARK_GREY
+				id == 1 ? olc::DARK_CYAN : ( id == 2 ? olc::DARK_GREY : olc::DARK_GREEN )
 			);
-
-
 		}
-
-
 
 		return;
 	}
@@ -248,33 +195,25 @@ void Camera::renderQuadTree( QuadTree<Tile, TileRender>& quadTree ) const
 		TileRender* cells = currQuadTree.getCells();
 		for ( int i = 0; i < 4; i++ )
 		{
-
-
 			if ( cells[i].getExist() && cells[i].getId() != 0 &&  this->_view.intersects( cells[i].getBounds() ) )
 			{
+				int id = cells[i].getId();
 				olc::vi2d decalSourcePos = olc::vi2d{ cells[i].getId() == 0 ? 7 : 15, 7 }; // dirt, stone
 
 				float worldPositionX = cells[i].getBounds().getX();
 				float worldPositionY = cells[i].getBounds().getY();
-
 				int pixelX;
 				int pixelY;
-
 				worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
 				olc::vi2d startPos = olc::vi2d{ pixelX, pixelY };
-
-
 				olc::vi2d size = olc::vi2d{ tileSize, tileSize }; //olc::vi2d{ ( int )( ( screenEndX - screenStartX ) * tileSize ), ( int )( ( screenEndY - screenStartY ) * tileSize ) };
 				olc::vf2d scale = olc::vf2d{ 1.0f * this->_zoomX, 1.0f * this->_zoomY };
-
-
+			
 				pge->FillRect(
 					startPos,
 					olc::vi2d{ ( int )( tileSize * this->_zoomX ), ( int )( tileSize * this->_zoomY ) }, //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
-					cells[i].getId() == 2 ? olc::DARK_GREEN : olc::DARK_GREY
+					id == 1 ? olc::DARK_CYAN : ( id == 2 ? olc::DARK_GREY : olc::DARK_GREEN )
 				);
-
-
 			}
 		}
 
@@ -287,16 +226,14 @@ void Camera::renderQuadTree( QuadTree<Tile, TileRender>& quadTree ) const
 			{
 				if ( childrenNodeIndicies[i] != -1 )
 				{
-					this->renderQuadTree( quadTree.getReferenceNodes()[childrenNodeIndicies[i]] );
+					this->renderTileRenders( tileRenders.getReferenceNodes()[childrenNodeIndicies[i]] );
 				}
 			}
 		}
-
 	}
 
 	return;
 }
-
 
 
 void Camera::renderCamera() const
@@ -310,11 +247,8 @@ void Camera::renderCamera() const
 		olc::WHITE
 	);
 
-	
 	return;
 }
-
-
 
 
 void Camera::renderTilesDebug( WorldChunk& worldChunk ) const
@@ -326,16 +260,12 @@ void Camera::renderTilesDebug( WorldChunk& worldChunk ) const
 	int chunkSize = worldChunk.getSize();
 	float worldPositionX = worldChunk.getChunkIndexX() * chunkSize;
 	float worldPositionY = worldChunk.getChunkIndexY() * chunkSize;
-
 	int tilePixelX;
 	int tilePixelY;
-
-
 	olc::vi2d tileStartPos;
 	olc::vi2d tilePixelSize = olc::vi2d{ ( int )( tileCellSize * ( this->_zoomX * tileSize ) ), ( int )( tileCellSize * ( this->_zoomY * tileSize ) ) };
 
 	Tile* tiles = worldChunk.getTiles();
-
 	for ( int x = 0; x < chunkSize; x++ )
 	{
 		for ( int y = 0; y < chunkSize; y++ )
@@ -343,27 +273,24 @@ void Camera::renderTilesDebug( WorldChunk& worldChunk ) const
 			Tile tile = tiles[y * chunkSize + x];
 			if ( !tile.isVoid() )
 			{
-				//worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
+				int id = tile.getId();
 				worldToScreen( worldPositionX + x, worldPositionY + y , tilePixelX, tilePixelY );
 				tileStartPos = olc::vi2d{ tilePixelX, tilePixelY };
 
 				pge->FillRect(
-					//startPos + olc::vi2d{ x, y } * tileSize,
 					tileStartPos,
 					tilePixelSize,
-					tile.getId() == 2 ? olc::DARK_GREEN : olc::DARK_GREY
+					id == 1 ? olc::DARK_CYAN : ( id == 2 ? olc::DARK_GREY : olc::DARK_GREEN )
 				);
 
 			}
 		}
 	}
 
-
 	// Draw Quadrant
 	int chunkPixelX;
 	int chunkPixelY;
 	worldToScreen( worldPositionX, worldPositionY, chunkPixelX, chunkPixelY );
-
 	olc::vi2d chunkStartPos = olc::vi2d{ chunkPixelX, chunkPixelY };
 	olc::vi2d chunkPixelSize = olc::vi2d{ ( int )( chunkSize * ( this->_zoomX * tileSize ) ), ( int )( chunkSize * ( this->_zoomY * tileSize ) ) };
 
@@ -401,41 +328,24 @@ void Camera::panY( float y )
 
 void Camera::zoom( float s )
 {
-
-
-
-
 	int centerCameraPixelXBeforeZoom;
 	int centerCameraPixelYBeforeZoom;
-
 	this->worldToScreen( this->_view.getCenterX(), this->_view.getCenterY(), centerCameraPixelXBeforeZoom, centerCameraPixelYBeforeZoom );
 
 	float cameraCenterXBeforeZoom;
 	float cameraCenterYBeforeZoom;
-
 	this->screenToWorld( centerCameraPixelXBeforeZoom, centerCameraPixelYBeforeZoom, cameraCenterXBeforeZoom, cameraCenterYBeforeZoom );
-
-
-
 
 	this->_zoomX *= s;
 	this->_zoomY *= s;
 
-
-
-
-	int centerCameraPixelXAfterZoom; // same?
+	int centerCameraPixelXAfterZoom;
 	int centerCameraPixelYAfterZoom;
-
 	this->worldToScreen( this->_view.getCenterX(), this->_view.getCenterY(), centerCameraPixelXAfterZoom, centerCameraPixelYAfterZoom );
-
-	//
 
 	float cameraCenterXAfterZoom;
 	float cameraCenterYAfterZoom;
-
 	this->screenToWorld( centerCameraPixelXBeforeZoom, centerCameraPixelYBeforeZoom, cameraCenterXAfterZoom, cameraCenterYAfterZoom );
-
 
 	this->_view.width = this->_view.width * ( 1.0f / s );
 	this->_view.height = this->_view.height * ( 1.0f / s );

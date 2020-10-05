@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-enum class TileName
+enum class TileName // uint64_t MAX
 {
 	Void = 0,
 	Water = 1,

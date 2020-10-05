@@ -12,7 +12,7 @@ private:
 	int _chunkIndexY; // position = chunkIndex * size
 	int _size;
 
-	QuadTree<Tile, TileRender> _quadTrees[341]; // [!] singleton
+	QuadTree<Tile, TileRender> _tileRenders[341]; // [!] singleton
 	Tile _tiles[32*32];
 	//Tile _tiles[(2 << QuadTree<Tile,TileRender>::_MAX_LEVELS) * ( 2 << QuadTree<Tile, TileRender>::_MAX_LEVELS )]; // [!] singleton
 
@@ -42,9 +42,16 @@ public:
 
 	void construct();
 	void reconstruct();
+	void fill( uint64_t id );
 
 	void insert( int x, int y, int width, int height, uint64_t id );
 	void remove( int x, int y, int width, int height, uint64_t id );
+	void insertTiles( int x, int y, int width, int height, uint64_t id );
+	void removeTiles( int x, int y, int width, int height, uint64_t id );
+	void insertTileRenders( int x, int y, int width, int height, uint64_t id );
+	void removeTileRenders( int x, int y, int width, int height, uint64_t id );
+	
+	const std::map<uint64_t, unsigned short> createPalette() const;
 
 	void delimit( int indexX, int indexY );
 	void clear();
@@ -59,6 +66,7 @@ public:
 	int getPositionY() const;
 
 	Tile* getTiles();
-	QuadTree<Tile, TileRender>& getQuadTreeRoot();
+	QuadTree<Tile, TileRender>& getTileRendersRoot();
+
 };
 

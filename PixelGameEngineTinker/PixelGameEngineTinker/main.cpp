@@ -52,34 +52,29 @@ public:
 public:
 	bool OnUserCreate() override
 	{
-
-
 		createSpritesAndDecals();
 		createConfigurations();
 		createMap();
 
-
 		return true;
 	}
 
+
 	bool OnUserUpdate( float fElapsedTime ) override
 	{
-
 		// Data Management Debug
 		if ( GetKey( olc::Key::T ).bPressed )
 		{
-			world.saveWorldMap();
+			world.saveWorldAtlas();
 		}
 		if ( GetKey( olc::Key::Y ).bPressed )
 		{
-			world.loadWorldMap();
+			world.loadWorldAtlas();
 		}
 		if ( GetKey( olc::Key::U ).bPressed )
 		{
-			world.viewWorldMap();
+			world.viewWorldAtlas();
 		}
-
-
 
 		// Camera Debug
 		float mouseX = ( float )GetMouseX();
@@ -103,7 +98,6 @@ public:
 			camera.panX( panSpeed * fElapsedTime );
 		}
 
-
 		if ( GetKey( olc::Key::F1 ).bPressed )
 		{
 			camera.panY( -panSpeed*100 );
@@ -121,11 +115,6 @@ public:
 			camera.panX( panSpeed*100 );
 		}
 
-
-
-
-
-
 		// Zoom in
 		if ( GetKey( olc::Key::Z ).bPressed || GetKey( olc::Key::Z ).bHeld )
 		{
@@ -140,21 +129,22 @@ public:
 			this->camera.zoom( zoomScale );
 		}
 
-		if ( GetKey( olc::Key::D ).bPressed )
-		{
-			tileId = 2;
-		}
-		else if ( GetKey( olc::Key::S ).bPressed )
+		if ( GetKey( olc::Key::W ).bPressed )
 		{
 			tileId = 1;
 		}
-
-
+		else if ( GetKey( olc::Key::S ).bPressed )
+		{
+			tileId = 2;
+		}
+		else if ( GetKey( olc::Key::D ).bPressed )
+		{
+			tileId = 3;
+		}
 
 		// Insert to world Debug 
 		float tilePositionX;
 		float tilePositionY;
-
 
 		// [!] NEED TO FIX TO ACCOUNT FOR NEGATIVE ( LIKE HOW I DID FOR DELIMITER CAMERA )
 		this->camera.screenToWorld( GetMouseX(), GetMouseY(), tilePositionX, tilePositionY );
@@ -168,48 +158,31 @@ public:
 		if ( GetKey( olc::Key::P ).bPressed || GetKey( olc::Key::P ).bHeld )
 		{
 			world.insert( tileIndex.x, tileIndex.y, 1, 1, tileId );
-
-			//quadTree->insert( TileRender( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 1, 1 ), true ) );
-			//world.insert( TileRender( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 1, 1 ), true ) );
-			//updateTileConfiguration( tileIndex, true );
 		}
 
 		if ( GetMouse( 0 ).bPressed || GetMouse( 0 ).bHeld )
 			//if ( GetMouse( 0 ).bPressed )
 		{
 			world.insert( tileIndex.x, tileIndex.y, 5, 5, tileId );
-			//world.insert( TileRender( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
-			//quadTree->insert( TileRender( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
-			//updateTileConfiguration( tileIndex, true );
 		}
 
 		if ( GetMouse( 1 ).bPressed || GetMouse( 1 ).bHeld )
 			//if ( GetMouse( 1 ).bPressed )
 		{
 			world.remove( tileIndex.x, tileIndex.y, 5, 5, tileId );
-			//world.remove( TileRender( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
-			//quadTree->remove( TileRender( tileId, BoundingBox<int>( tileIndex.x, tileIndex.y, 5, 5 ), true ) );
-			//updateTileConfiguration( tileIndex, true );
 		}
 
 		if ( GetKey( olc::Key::SPACE ).bPressed || GetKey( olc::Key::SPACE ).bHeld )
 		{
 			//std::cout << countQuadTree( 0 ) << std::endl;
-
 		}
 
-
-
-
+		// Render
 		Clear( olc::BLACK );
 
-		//drawAllSingleTiles( this->tiles );
-		//drawQuadTree( this->quadTrees, 0, this->camera );
 		this->world.delimitWorldChunks( this->camera.getView() );
 		this->camera.renderWorld( this->world );
 		this->camera.renderCamera();
-
-
 
 		drawTileIndexString( tileIndex );
 
@@ -220,7 +193,7 @@ public:
 	void createMap()
 	{
 		//this->world = World(); // stop calling stuff twice
-		world.loadWorldMap();
+		world.loadWorldAtlas();
 
 		int screenCellWidth = screenWidth / tileSize;
 		int screenCellHeight = screenHeight / tileSize;
@@ -231,7 +204,6 @@ public:
 		this->world.initializeWorldChunks();
 
 	}
-
 
 
 	void createConfigurations()

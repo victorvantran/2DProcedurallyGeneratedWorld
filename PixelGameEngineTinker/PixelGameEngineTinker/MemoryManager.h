@@ -7,7 +7,7 @@
 #include <map>
 
 #include "Tile.h"
-
+#include "WorldChunk.h"
 
 // [!] note endianness
 
@@ -147,29 +147,145 @@ public:
 	//	portability of code
 
 
-
-	static void saveWorldChunk( const char* filePath, Tile* tile, int numTiles )
+	static void saveWorldChunkCrude( const char* filePath, WorldChunk& worldChunk, uint64_t newChunkOffset )
 	{
-		std::ofstream out( filePath, std::ios::out | std::ios::binary );
+		const uint32_t worldChunkNumBytes = 32 * 32 * 8; // [!] should be pre calcualted
+		uint64_t numChunks = 0;
+		Tile* tileIds = worldChunk.getTiles();
 
-		if ( out )
+		// Open world.dat (should already exist)
+		std::fstream worldData( filePath, std::ios::out | std::ios::in | std::ios::binary );
+		// If the world is new and the file is blank, fill the first 8 bytes with numChunks as cache
+		if ( worldData.peek() == std::fstream::traits_type::eof() )
 		{
-			for ( int i = 0; i < numTiles; i++ )
-			{
-				// TileContents
-				int id = tile[i].getId();
-				out.write( reinterpret_cast< const char* >( &id ), 1 );
-
-			}
+			worldData.clear();
+			worldData.write( reinterpret_cast< const char* >( &numChunks ), sizeof( numChunks ) );
+		}
+		// Read the num of chunks in the file and assign numChunks to it
+		else
+		{
+			unsigned char numChunkCacheBuffer[sizeof( numChunks )];
+			worldData.read( reinterpret_cast< char* >( numChunkCacheBuffer ), sizeof( numChunks ) );
+			std::memcpy( &numChunks, numChunkCacheBuffer, sizeof( numChunks ) );
+			worldData.clear();
 		}
 
-		out.close();
+		// If the data for a chunk has already been written
+		if ( ( newChunkOffset + 1 ) <= numChunks )
+		{
+			uint64_t chunkByteOffset = newChunkOffset * worldChunkNumBytes; // [!] overflow possibility
+			worldData.seekp( sizeof( newChunkOffset ) + chunkByteOffset, std::ios::beg );
 
+			// Write the worldChunk tiles
+			uint64_t* tileIdsBuffer = new uint64_t[32 * 32]; // [!] chunkSize
+			for ( int i = 0; i < 32 * 32; i++ )
+			{
+				tileIdsBuffer[i] = tileIds[i].getId();
+			}
+			worldData.write( reinterpret_cast< const char* >( &( *tileIdsBuffer ) ), 32 * 32 * 8 ); // [!] chunkSize
+			worldData.flush();
+			delete[] tileIdsBuffer;
+		}
+		// If the data for a chunk is not written and may need to fill in data
+		else if ( ( newChunkOffset + 1 ) > numChunks )
+		{
+			// Go to the numChunks
+			worldData.seekp( sizeof( numChunks ) + ( numChunks * worldChunkNumBytes ), std::ios::beg ); // [!!!]
+
+			// Fill zeros in
+			uint64_t numFillChunks = newChunkOffset - numChunks;
+			unsigned char zeroBuffer[worldChunkNumBytes]{};
+			for ( uint64_t i = 0; i < numFillChunks; i++ )
+			{
+				worldData.write( reinterpret_cast< const char* >( &zeroBuffer ), worldChunkNumBytes );
+				worldData.flush();
+			}
+
+			// Write the worldChunk tiles data PlaceHolder
+			uint64_t* tileIdsBuffer = new uint64_t[32 * 32]; // [!] chunkSize
+			for ( int i = 0; i < 32 * 32; i++ )
+			{
+				tileIdsBuffer[i] = tileIds[i].getId();
+			}
+			worldData.write( reinterpret_cast< const char* >( &( *tileIdsBuffer ) ), 32 * 32 * 8 ); // [!] chunkSize
+			worldData.flush();
+			delete[] tileIdsBuffer;
+
+			// Update the cached numChunks
+			numChunks = newChunkOffset + 1;
+			worldData.seekp( 0, std::ios::beg );
+			worldData.write( reinterpret_cast< const char* >( &numChunks ), sizeof( numChunks ) );
+			worldData.flush();
+		}
+
+		worldData.close();
 		return;
 	}
 
 
-	static void saveMap( const char* filePath, std::map<std::tuple<int, int>, uint64_t>& map )
+	static void loadWorldChunkCrude( const char* filePath, WorldChunk& worldChunk, uint64_t loadChunkOffset )
+	{
+		uint32_t worldChunkNumBytes = 32 * 32 * 8; // [!] should be pre calcualted
+		uint64_t numChunks = 0;
+		Tile* tileIds = worldChunk.getTiles();
+		uint64_t loadChunkByteOffset = loadChunkOffset * worldChunkNumBytes;
+
+		// Open world.dat ( should already exist )
+		std::fstream worldData( filePath, std::ios::out | std::ios::in | std::ios::binary );
+		// If the world is new and the file is blank, fill the first 8 bytes with numChunks as cache
+		if ( worldData.peek() == std::fstream::traits_type::eof() )
+		{
+			std::cout << "empty file" << std::endl;
+			worldData.clear();
+			return;
+		}
+		// Read the num of chunks in the file and assign numChunks to it
+		else
+		{
+			char numChunkCacheBuffer[sizeof( numChunks )];
+			worldData.read( reinterpret_cast< char* >( numChunkCacheBuffer ), sizeof( numChunks ) );
+			worldData.clear();
+			std::memcpy( &numChunks, numChunkCacheBuffer, sizeof( numChunks ) );
+		}
+
+		// Cannot load from data that is not written yet
+		if ( numChunks <= loadChunkOffset )
+		{
+			std::cout << "numChunks < loadChunkOffset" << std::endl;
+			return;
+		}
+
+		// Seek the byteoffset
+		worldData.seekg( sizeof( numChunks ) + loadChunkByteOffset, worldData.beg );
+
+		// Load tiles into tilearray
+		char* tileIdsBuffer = new char[32 * 32 * 8];
+		worldData.read( tileIdsBuffer, 32 * 32 * 8 );
+		worldData.clear();
+		
+		uint64_t tileId = 0;
+		uint64_t offset = 0;
+
+		for ( int i = 0; i < 32 * 32; i++ ) // [!] chunkSize
+		{
+			offset = i * 8;
+			std::memcpy( &tileId, &( *tileIdsBuffer ) + offset, 8 ); // [!] is tilesIdBuffer constant?
+			worldChunk.insert( 
+				worldChunk.getChunkIndexX() * worldChunk.getSize() + ( i % worldChunk.getSize() ),
+				worldChunk.getChunkIndexY() * worldChunk.getSize() + ( i / worldChunk.getSize() ),
+				1,
+				1,
+				tileId
+			);
+		}
+		delete[] tileIdsBuffer;
+
+		worldData.close();
+		return;
+	}
+
+
+	static void saveWorldAtlas( const char* filePath, std::map<std::tuple<int, int>, uint64_t>& map )
 	{
 		// Overwties/saves the entire map
 		std::ofstream out( filePath, std::ios::out | std::ios::binary );
@@ -195,7 +311,7 @@ public:
 	}
 
 
-	static void updateMap( const char* filePath, int newChunkIndexX, int newChunkIndexY, uint64_t mapSize )
+	static void updateWorldAtlas( const char* filePath, int newChunkIndexX, int newChunkIndexY, uint64_t mapSize )
 	{
 		// Appends new data ( index, mapSize to be used as offset ) to the worldMap dictionary file 
 		std::ofstream out( filePath, std::ios::app | std::ios::binary );
@@ -212,7 +328,7 @@ public:
 	}
 
 
-	static void loadMap( const char* filePath, std::map<std::tuple<int, int>, uint64_t>& map )
+	static void loadWorldAtlas( const char* filePath, std::map<std::tuple<int, int>, uint64_t>& map )
 	{
 		std::ifstream is( filePath, std::ios::in | std::ios::binary );
 
@@ -243,12 +359,41 @@ public:
 	}
 
 
-	static void  viewMap( std::map<std::tuple<int, int>, uint64_t>& map )
+	static void  viewWorldAtlas( std::map<std::tuple<int, int>, uint64_t>& map )
 	{
 		for ( std::map<std::tuple<int, int>, uint64_t>::iterator it = map.begin(); it != map.end(); it++ )
 		{
 			std::cout << "[" << std::get<0>( it->first ) << "," << std::get<1>( it->first ) << "] " << ": " << it->second << std::endl;
 		}
+		return;
+	}
+
+
+
+
+
+
+
+
+
+
+	static void saveTiles( const char* filePath, Tile* tile, int numTiles )
+	{
+		std::ofstream out( filePath, std::ios::out | std::ios::binary );
+
+		if ( out )
+		{
+			for ( int i = 0; i < numTiles; i++ )
+			{
+				// TileContents
+				int id = tile[i].getId();
+				out.write( reinterpret_cast< const char* >( &id ), 1 );
+
+			}
+		}
+
+		out.close();
+
 		return;
 	}
 
