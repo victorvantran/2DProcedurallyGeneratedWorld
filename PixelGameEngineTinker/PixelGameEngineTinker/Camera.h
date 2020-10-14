@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Settings.h"
 #include "BoundingBox.h"
 #include "World.h"
 #include "WorldChunk.h"
@@ -11,10 +12,10 @@
 class Camera : public olc::PGEX
 {
 private:
-	BoundingBox<float> _view; // view is cell-domain
+	BoundingBox<float> _view; // cell-domain
 
-	int _absolutePixelOffsetX = 16 * ( 120 / 2 ) - 16 * ( 32 / 2 ); //16 * ( 120 / 2 ) - 16 * ( 32 / 2 );  // tileSize * ( screenCellWidth / 2 ) - tileSize * ( cameraCellWidth / 2 ) [!] need to change based on pixelSize
-	int _absolutePixelOffsetY = 16 * ( 75 / 2 ) - 16 * ( 32 / 2 );
+	int _absolutePixelOffsetX = Settings::Camera::ABSOLUTE_PIXEL_OFFSET_X;  //16 * ( 120 / 2 ) - 16 * ( 32 / 2 );  // tileSize * ( screenCellWidth / 2 ) - tileSize * ( cameraCellWidth / 2 ) [!] need to change based on pixelSize
+	int _absolutePixelOffsetY = Settings::Camera::ABSOLUTE_PIXEL_OFFSET_Y;
 
 	float _zoomX;
 	float _zoomY;
@@ -139,7 +140,6 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk ) const
 	this->renderTileRenders( worldChunk.getTileRendersRoot() );
 	return;
 }
-
 
 
 void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders ) const

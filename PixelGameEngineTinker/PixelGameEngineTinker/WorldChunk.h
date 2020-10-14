@@ -1,5 +1,8 @@
 #pragma once
 
+#include <vector>
+#include <set>
+#include "Settings.h"
 #include "QuadTree.h"
 #include "Tile.h"
 #include "TileRender.h"
@@ -10,34 +13,18 @@ private:
 	// Cell domain
 	int _chunkIndexX; 
 	int _chunkIndexY; // position = chunkIndex * size
-	int _size;
+	static const int _size = Settings::WorldChunk::SIZE;
+	static const int _numTileRenders = Settings::WorldChunk::NUM_TILE_RENDERS;
 
-	QuadTree<Tile, TileRender> _tileRenders[341]; // [!] singleton
-	Tile _tiles[32*32];
-	//Tile _tiles[(2 << QuadTree<Tile,TileRender>::_MAX_LEVELS) * ( 2 << QuadTree<Tile, TileRender>::_MAX_LEVELS )]; // [!] singleton
+	QuadTree<Tile, TileRender> _tileRenders[WorldChunk::_numTileRenders];
+	Tile _tiles[WorldChunk::_size * WorldChunk::_size];
 
-	//QuadTree<Tile, TileRender> _quadTree;
 public:
 
-
-	// Position
-	// Size
-	// 
-	// Tile array
-
-	// Array of pointers to neighboring worldChunks?
-
-
-	// getPosition
-	// getSize
-	// Tile* getTiles
-	// Tile getTile( int x, int y )
-
-	
 	WorldChunk();
 	~WorldChunk();
 
-	WorldChunk( int indexX, int indexY, int size );
+	WorldChunk( int indexX, int indexY );
 
 
 	void construct();
@@ -62,11 +49,14 @@ public:
 	int getRelativeChunkIndexX( const BoundingBox<float>& boundingBox ) const;
 	int getRelativeChunkIndexY( const BoundingBox<float>& boundingBox ) const;
 	int getSize() const;
+	int getNumTileRenders() const;
 	int getPositionX() const;
 	int getPositionY() const;
 
 	Tile* getTiles();
+	// Tile getTile( int x, int y )
 	QuadTree<Tile, TileRender>& getTileRendersRoot();
 
+	std::vector<std::uint64_t> getPalette();
 };
 

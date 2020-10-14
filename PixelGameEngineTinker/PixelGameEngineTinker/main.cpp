@@ -1,13 +1,11 @@
 #define OLC_PGE_APPLICATION
+
 #include "olcPixelGameEngine.h"
+#include "Settings.h"
+#include "Assets.h"
 #include "World.h"
 #include "Tile.h"
 #include "TileRender.h"
-#include "QuadTree.h"
-
-
-
-#include "Assets.h"
 #include "Camera.h"
 
 // [!] probably one edge case that throws excpetion (need to find it eventually by running many test trials for the thorwn exception and videoing the smallest amount of inserts/removed to do it)
@@ -17,10 +15,10 @@ class Example : public olc::PixelGameEngine
 {
 public:
 	// [!] need to chagne absolute position and zoom of the camera in accordance to pixelSize
-	const static int pixelSize = 1;
-	const static int screenWidth = 1920 / pixelSize;
-	const static int screenHeight = 1200 / pixelSize;
-	const static int tileSize = 16 / pixelSize;
+	const static int pixelSize = Settings::Screen::PIXEL_SIZE;
+	const static int screenWidth = Settings::Screen::SCREEN_PIXEL_WIDTH;
+	const static int screenHeight = Settings::Screen::SCREEN_PIXEL_HEIGHT;
+	const static int cellSize = Settings::Screen::CELL_PIXEL_SIZE;
 
 
 public:
@@ -97,6 +95,11 @@ public:
 		{
 			camera.panX( panSpeed * fElapsedTime );
 		}
+		if ( GetKey( olc::Key::T ).bPressed || GetKey( olc::Key::T ).bHeld )
+		{
+			camera.pan( panSpeed * fElapsedTime, panSpeed * fElapsedTime );
+		}
+
 
 		if ( GetKey( olc::Key::F1 ).bPressed )
 		{
@@ -190,13 +193,13 @@ public:
 	}
 
 
-	void createMap()
+	void createMap() // create World?
 	{
 		//this->world = World(); // stop calling stuff twice
 		world.loadWorldAtlas();
 
-		int screenCellWidth = screenWidth / tileSize;
-		int screenCellHeight = screenHeight / tileSize;
+		int screenCellWidth = screenWidth / cellSize;
+		int screenCellHeight = screenHeight / cellSize;
 		//camera = Camera( BoundingBox<float>( 0.0f, 0.0f, screenCellWidth, screenCellHeight ), 1.0f, 1.0f );
 		this->camera = Camera( BoundingBox<float>( 0.0f, 0.0f, 32, 32 ), 1.0f, 1.0f );
 
@@ -259,6 +262,7 @@ public:
 
 	void createSpritesAndDecals()
 	{
+		// [!] For now load everything. But as our game gets bigger, we would want to load assets as needed
 		Assets::get().loadSprites();
 		Assets::get().loadDecals();
 
@@ -371,65 +375,6 @@ public:
 		}
 
 		// tiles[tileIndex.y * gridDimension.x + tileIndex.x].setConfiguration( configurations[configuration] ); // [!] adjust sizing 
-		return;
-	}
-
-	/*
-	int countQuadTree( int quadTreeIndex, int counter = 0 )
-	{
-		if ( this->quadTrees[quadTreeIndex].isConsolidated() )
-		{
-			return 0; // the whole consolidated bounds is accounted for counted by its parent
-		}
-		else
-		{
-			counter = this->quadTrees[quadTreeIndex].getCellCount();
-		}
-
-		int level = this->quadTrees[quadTreeIndex].getLevel();
-		if ( level > QuadTree<Tile, TileRender>::_MIN_LEVELS )
-			//int* childrenNodeIndicies = this->quadTrees[quadTreeIndex].getChildrenNodeIndicies();
-			//if ( childrenNodeIndicies != nullptr )
-		{
-			int* childrenNodeIndicies = this->quadTrees[quadTreeIndex].getChildrenNodeIndicies();
-			for ( int i = 0; i < 4; i++ )
-			{
-				if ( childrenNodeIndicies[i] != -1 )
-				{
-					counter += countQuadTree( childrenNodeIndicies[i] );
-				}
-			}
-		}
-
-		return counter;
-	}
-	*/
-
-	void drawAllSingleTiles( Tile* tiles )
-	{
-		int rootQuadTreeSize = 2 << QuadTree<Tile, TileRender>::_MAX_LEVELS;
-
-		for ( int x = 0; x < rootQuadTreeSize; x++ )
-		{
-			for ( int y = 0; y < rootQuadTreeSize; y++ )
-			{
-				Tile tile = tiles[y * rootQuadTreeSize + x];
-				if ( !tile.isVoid() )
-				{
-					olc::vi2d decalSourcePos = olc::vi2d{ tile.getId() == 0 ? 7 : 15, 7 }; // dirt, stone
-
-					DrawPartialDecal(
-						//olc::vi2d{ tile.getX(), tile.getY() } * tileSize, [!]
-						olc::vi2d{ x, y } *tileSize,
-						decalTileMap,
-						olc::vi2d{ decalSourcePos } * tileSize * pixelSize,
-						olc::vi2d{ 1, 1 } * tileSize,
-						olc::vf2d{ 1.0f,1.0f }
-					);
-				}
-			}
-		}
-
 		return;
 	}
 

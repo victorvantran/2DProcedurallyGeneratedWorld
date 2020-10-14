@@ -2,8 +2,9 @@
 
 
 WorldChunk::WorldChunk()
-	: _chunkIndexX( 0 ), _chunkIndexY( 0 ), _size( 32 ) // [!] singleton global
+	: _chunkIndexX( 0 ), _chunkIndexY( 0 )
 {
+
 }
 
 
@@ -13,8 +14,8 @@ WorldChunk::~WorldChunk()
 }
 
 
-WorldChunk::WorldChunk( int indexX, int indexY, int size )
-	: _chunkIndexX( indexX ), _chunkIndexY( indexY ), _size( size )
+WorldChunk::WorldChunk( int indexX, int indexY )
+	: _chunkIndexX( indexX ), _chunkIndexY( indexY )
 {
 
 }
@@ -30,7 +31,7 @@ void WorldChunk::construct()
 	this->_tileRenders[0].constructQuadTree(
 		0,
 		-1,
-		QuadTree<Tile, TileRender>::_MAX_LEVELS,
+		QuadTree<Tile, TileRender>::_MAX_LEVEL,
 		0,
 		BoundingBox<int>( rootQuadTreePositionX, rootQuadTreePositionY, this->_size, this->_size ),
 		this->_tileRenders,
@@ -57,7 +58,7 @@ void WorldChunk::wipeRender()
 	this->_tileRenders[0].constructQuadTree(
 		0,
 		-1,
-		QuadTree<Tile, TileRender>::_MAX_LEVELS,
+		QuadTree<Tile, TileRender>::_MAX_LEVEL,
 		0,
 		BoundingBox<int>( rootQuadTreePositionX, rootQuadTreePositionY, this->_size, this->_size ),
 		this->_tileRenders,
@@ -246,6 +247,12 @@ int WorldChunk::getSize() const
 }
 
 
+int WorldChunk::getNumTileRenders() const
+{
+	return this->_numTileRenders;
+}
+
+
 int WorldChunk::getPositionX() const
 {
 	return this->_chunkIndexX * this->_size;
@@ -269,3 +276,30 @@ QuadTree<Tile, TileRender>& WorldChunk::getTileRendersRoot()
 	return this->_tileRenders[0];
 }
 
+
+
+
+std::vector<std::uint64_t> WorldChunk::getPalette()
+{
+	// Create a vector of unique tileIds to be used as mappings of smaller-bit keys.
+	std::set<std::uint64_t> history;
+	std::vector<std::uint64_t> palette;
+	std::uint16_t numTiles = this->_size * this->_size;
+
+	std::uint64_t tileId;
+	for ( int i = numTiles - 1; i >= 0; i-- )
+	{
+		tileId = this->_tiles[i].getId();
+		if ( history.find( tileId ) == history.end() )
+		{
+			history.insert( tileId );
+		}
+	}
+
+	for ( std::uint64_t tileId : history )
+	{
+		palette.push_back( tileId );
+	}
+
+	return palette;
+}

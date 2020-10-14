@@ -1,5 +1,6 @@
 #include "World.h"
 
+
 World::World()
 	: _numChunkWidth( 1 + this->_chunkRadius * 2 ), _numChunkHeight( 1 + this->_chunkRadius * 2 ), _numWorldChunks( this->_numChunkWidth* this->_numChunkHeight ),
 	_prevCameraIndexX( 0 ), _prevCameraIndexY( 0 ),
@@ -167,6 +168,9 @@ void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
 		return;
 	}
 
+	bool delimit = false;
+	auto t1 = std::chrono::high_resolution_clock::now();
+
 	for ( int x = 0; x < this->_numChunkWidth; x++ )
 	{
 		for ( int y = 0; y < this->_numChunkHeight; y++ )
@@ -178,6 +182,8 @@ void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
 			// If the worldChunk is out of range relative to the camera
 			if ( std::abs( cameraIndexX - worldChunkIndexX ) > this->_chunkRadius || std::abs( cameraIndexY - worldChunkIndexY ) > this->_chunkRadius )
 			{
+				delimit = true;
+
 				int newChunkIndexX = cameraIndexX + -( worldChunkIndexX - this->_prevCameraIndexX );
 				int newChunkIndexY = cameraIndexY + -( worldChunkIndexY - this->_prevCameraIndexY );
 
@@ -204,6 +210,14 @@ void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
 			}
 		}
 	}
+	auto t2 = std::chrono::high_resolution_clock::now();
+	if ( delimit )
+	{
+		std::cout << "Delta t2-t1: "
+			<< std::chrono::duration_cast< std::chrono::nanoseconds >( t2 - t1 ).count()
+			<< " nanoseconds" << std::endl;
+	}
+
 
 	// Update camera index
 	this->_prevCameraIndexX = cameraIndexX;

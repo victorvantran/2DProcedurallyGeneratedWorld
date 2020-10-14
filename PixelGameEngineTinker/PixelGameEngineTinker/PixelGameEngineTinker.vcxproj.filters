@@ -78,6 +78,9 @@
     <ClInclude Include="Tile.h">
       <Filter>Header Files\World</Filter>
     </ClInclude>
+    <ClInclude Include="Settings.h">
+      <Filter>Header Files\Assets</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cell.cpp">

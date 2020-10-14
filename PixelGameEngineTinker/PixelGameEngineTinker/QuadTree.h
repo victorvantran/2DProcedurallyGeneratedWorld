@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Settings.h"
 #include "TileRender.h"
 #include "Tile.h"
 #include "BoundingBox.h"
@@ -19,13 +20,12 @@ template<typename T, typename TRender>
 class QuadTree
 {
 public:
-	const static int _MAX_OBJECTS = 4;
-	const static int _MIN_LEVELS = 0; // ( level => gridsize => numCell ) 5 => 1024 =>64, 4 => 32 => 512, 3 => 16 => 256, 2 => 8 => 128, 1 => 4 => 64, 0 => 2 => 32
-	const static int _MAX_LEVELS = 4;
-	const static int _MIN_CELL_SIZE = ( 2 << QuadTree<T, TRender>::_MIN_LEVELS ) / 2;
+	static const int _MIN_LEVEL = Settings::QuadTree::MIN_LEVEL; // ( level => gridsize => numCell ) 5 => 1024 =>64, 4 => 32 => 512, 3 => 16 => 256, 2 => 8 => 128, 1 => 4 => 64, 0 => 2 => 32
+	static const int _MAX_LEVEL = Settings::QuadTree::MAX_LEVEL;
+	static const int _MIN_CELL_SIZE = ( 2 << QuadTree<T, TRender>::_MIN_LEVEL ) / 2;
 
-	const static int _MAP_WIDTH = ( 2 << QuadTree<T, TRender>::_MAX_LEVELS );
-	const static int _MAP_HEIGHT = ( 2 << QuadTree<T, TRender>::_MAX_LEVELS );
+	static const int _MAP_WIDTH = ( 2 << QuadTree<T, TRender>::_MAX_LEVEL );
+	static const int _MAP_HEIGHT = ( 2 << QuadTree<T, TRender>::_MAX_LEVEL );
 
 private:
 	int _myIndex;
@@ -167,7 +167,7 @@ void QuadTree<T, TRender>::clear()
 	this->_referenceNodes = nullptr;
 	this->_map = nullptr;
 
-	if ( this->_level > QuadTree<T, TRender>::_MIN_LEVELS )
+	if ( this->_level > QuadTree<T, TRender>::_MIN_LEVEL )
 	{
 		this->_referenceNodes[this->_childrenIndex[0]].clear();
 		this->_referenceNodes[this->_childrenIndex[1]].clear();
@@ -212,23 +212,23 @@ void QuadTree<T, TRender>::divide()
 
 
 	// Do not further split for the lowest level
-	if ( this->_level == QuadTree<T, TRender>::_MIN_LEVELS )
+	if ( this->_level == QuadTree<T, TRender>::_MIN_LEVEL )
 	{
 		return;
 	}
 
 	// Calculate initial Shift
 	int initialShift = 0;
-	for ( int i = this->_level; i <= this->_MAX_LEVELS; i++ )
+	for ( int i = this->_level; i <= this->_MAX_LEVEL; i++ )
 	{
-		initialShift += ( 4 << ( ( this->_MAX_LEVELS - i ) * 2 ) ) / 4; // 4^(5 - parentLevel)
+		initialShift += ( 4 << ( ( this->_MAX_LEVEL - i ) * 2 ) ) / 4; // 4^(5 - parentLevel)
 	}
 
 	// Calculate recursive Shift
 	int recursiveShift = 0;
 	QuadTree<T, TRender>* ancestor = this;
 	int j = 1;
-	for ( int i = this->_level; i <= this->_MAX_LEVELS; i++ )
+	for ( int i = this->_level; i <= this->_MAX_LEVEL; i++ )
 	{
 		recursiveShift += ancestor->getMyQuadrant() * ( ( 4 << ( j * 2 ) ) / 4 );
 		ancestor = &this->_referenceNodes[ancestor->getParentIndex()]; // index is the quadrant
@@ -330,7 +330,7 @@ void QuadTree<T, TRender>::consolidate( int level )
 			)
 		&&
 		(
-			( level == this->_MIN_LEVELS ) ||
+			( level == this->_MIN_LEVEL ) ||
 			(
 				( _cell[0].getWidth() == _cell[1].getWidth() ) &&
 				( _cell[2].getWidth() == _cell[3].getWidth() ) &&
@@ -459,7 +459,7 @@ void QuadTree<T, TRender>::insert( const TRender& aRenderCell )
 	// Create the bounding box if any children quadrant bounds is equal to the aBoundingBox; this means we can index our bounding box by the quadrant!
 
 	// Level Min: Simply fill in the bounding boxes and end the recursion
-	if ( this->_level == this->_MIN_LEVELS )
+	if ( this->_level == this->_MIN_LEVEL )
 	{
 		// Find the index by using the bounds, and the position of the single-cell bounding box
 		int rId = aRenderCell.getId();
@@ -501,7 +501,7 @@ void QuadTree<T, TRender>::insert( const TRender& aRenderCell )
 	}
 
 	// Consolidate if met the requirements of max objects and level
-	if ( this->_cellCount >= this->_MAX_OBJECTS && this->_level >= this->_MIN_LEVELS && this->_level < QuadTree<T, TRender>::_MAX_LEVELS )
+	if ( this->_cellCount >= 4 && this->_level >= this->_MIN_LEVEL && this->_level < QuadTree<T, TRender>::_MAX_LEVEL )
 	{
 		this->consolidate( this->_level );
 	}
@@ -534,7 +534,7 @@ void QuadTree<T, TRender>::remove( const TRender& rRenderCell )
 	}
 
 	// Base case: remove the single-unit bounding box, and relay the changes to the subsequent tile
-	if ( this->_level == QuadTree<T, TRender>::_MIN_LEVELS )
+	if ( this->_level == QuadTree<T, TRender>::_MIN_LEVEL )
 	{
 		int rId = rRenderCell.getId();
 		for ( int i = 0; i < 4; i++ )
@@ -598,7 +598,7 @@ void QuadTree<T, TRender>::remove( const TRender& rRenderCell )
 		this->remove( rSubRenderCell2 );
 		this->remove( rSubRenderCell3 );
 	}
-	else if ( this->_level > QuadTree<T, TRender>::_MIN_LEVELS )
+	else if ( this->_level > QuadTree<T, TRender>::_MIN_LEVEL )
 	{
 		this->_referenceNodes[this->_childrenIndex[quadrant]].remove( rRenderCell );
 	}
@@ -640,7 +640,7 @@ bool QuadTree<T, TRender>::isCellOccupied( const TRender& renderCell )
 	}
 
 	// If this level is not occupied, check the lower levels
-	if ( this->_level > QuadTree<T, TRender>::_MIN_LEVELS ) ///
+	if ( this->_level > QuadTree<T, TRender>::_MIN_LEVEL ) ///
 	{
 		int quadrant = this->getQuadrant( renderCell );
 		// If addition can be fully encapsulated to one quadrant, check only tha quadrant

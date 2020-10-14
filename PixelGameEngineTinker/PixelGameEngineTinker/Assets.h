@@ -20,8 +20,6 @@ private:
 
 	std::map<std::string, olc::Sprite*> _mapSprites;
 	std::map<std::string, olc::Decal*> _mapDecals;
-
-
 public:
 	// Delete the default copy constructor created by the compiler.
 	// We do not want to create shallow copies of this and subsequently reload the assets
@@ -87,8 +85,6 @@ void Assets::loadSprites()
 		//this->_mapSprites.at(spriteName) = sprite;
 		this->_mapSprites.emplace( spriteName, sprite );
 	};
-
-
 
 	load( "ForestTileMap", "C:\\Users\\Victor\\Desktop\\Tinker\\tilemap_16x16_16x16.png" );
 	load( "ForestConsolidationTileMap", "C:\\Users\\Victor\\Desktop\\Tinker\\forest_consolidation_2x2_to_32x32_1x2.png" );

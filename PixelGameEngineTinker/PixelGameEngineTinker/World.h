@@ -1,13 +1,15 @@
 #pragma once
 
+#include "Settings.h"
 #include "WorldChunk.h"
 #include "MemoryManager.h"
+#include <chrono>
 
 class World
 {
 private:
-	const static int _chunkRadius = 2; // [!] Assets
-	const static int _chunkCellSize = 32; // Assets (log(2) 32 = 5) == QuadTree // CellDomain // [!] Assets
+	const static int _chunkRadius = Settings::World::CHUNK_RADIUS;
+	const static int _chunkCellSize = Settings::World::CHUNK_CELL_SIZE;
 	//WorldChunk _worldChunks[( 1 + 2 * ( _chunkRadius ) ) * ( 1 + 2 * ( _chunkRadius ) )]; // [!] Assets // Too much to put on stack, must be on heap
 	WorldChunk* _worldChunks = nullptr;
 

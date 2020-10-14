@@ -36,6 +36,7 @@
     <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="QuadTree.h" />
     <ClInclude Include="Screen.h" />
+    <ClInclude Include="Settings.h" />
     <ClInclude Include="TileRender.h" />
     <ClInclude Include="Tile.h" />
     <ClInclude Include="World.h" />
