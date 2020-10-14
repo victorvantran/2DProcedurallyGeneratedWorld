@@ -11,6 +11,6 @@ public:
 	~TileRender();
 
 
-	TileRender( int id, const BoundingBox<int>& bounds, bool exist );
+	TileRender( int id, const BoundingBox<int>& bounds );
 
 };

@@ -203,10 +203,10 @@ void QuadTree<T, TRender>::divide()
 	int subWidth = this->_quadTreeBounds.getWidth() / 2;
 	int subHeight = this->_quadTreeBounds.getHeight() / 2;
 
-	this->_cell[0] = TRender( -1, BoundingBox<int>( x, y, subWidth, subHeight ), false );
-	this->_cell[1] = TRender( -1, BoundingBox<int>( x + subWidth, y, subWidth, subHeight ), false );
-	this->_cell[2] = TRender( -1, BoundingBox<int>( x, y + subHeight, subWidth, subHeight ), false );
-	this->_cell[3] = TRender( -1, BoundingBox<int>( x + subWidth, y + subHeight, subWidth, subHeight ), false );
+	this->_cell[0] = TRender( 0, BoundingBox<int>( x, y, subWidth, subHeight ) );
+	this->_cell[1] = TRender( 0, BoundingBox<int>( x + subWidth, y, subWidth, subHeight ) );
+	this->_cell[2] = TRender( 0, BoundingBox<int>( x, y + subHeight, subWidth, subHeight ) );
+	this->_cell[3] = TRender( 0, BoundingBox<int>( x + subWidth, y + subHeight, subWidth, subHeight ) );
 
 	this->_divided = true;
 
@@ -304,7 +304,7 @@ void QuadTree<T, TRender>::consolidate( int level )
 	// Height check not necessary if our bounding box is a square, but for formality
 	if (
 		(
-			_cell[0].getId() != -1
+			_cell[0].getId() != 0
 		)
 		&&
 		(
@@ -352,7 +352,7 @@ void QuadTree<T, TRender>::consolidate( int level )
 		bool exist = _cell[0].getExist();
 
 
-		TRender renderCell = TRender( id, BoundingBox<int>( posX, posY, width, height ), exist );
+		TRender renderCell = TRender( id, BoundingBox<int>( posX, posY, width, height ) );
 
 		this->_consolidated = true;
 		this->_referenceNodes[this->_parentIndex].insert( renderCell );
@@ -423,7 +423,7 @@ void QuadTree<T, TRender>::insert( const TRender& aRenderCell )
 			return;
 		}
 
-		this->insert( TRender( aRenderCell.getId(), BoundingBox<int>( trimX, trimY, trimWidth, trimHeight ), aRenderCell.getExist() ) );
+		this->insert( TRender( aRenderCell.getId(), BoundingBox<int>( trimX, trimY, trimWidth, trimHeight ) ) );
 		return;
 	}
 
@@ -440,10 +440,10 @@ void QuadTree<T, TRender>::insert( const TRender& aRenderCell )
 		int subWidth2 = aBoundingBox.getWidth() - subWidth1;
 		int subHeight2 = aBoundingBox.getHeight() - subHeight1;
 
-		const TRender aSubRenderCell0 = TRender( id, BoundingBox<int>( x, y, subWidth1, subHeight1 ), exist );
-		const TRender aSubRenderCell1 = TRender( id, BoundingBox<int>( x + subWidth1, y, subWidth2, subHeight1 ), exist );
-		const TRender aSubRenderCell2 = TRender( id, BoundingBox<int>( x, y + subHeight1, subWidth1, subHeight2 ), exist );
-		const TRender aSubRenderCell3 = TRender( id, BoundingBox<int>( x + subWidth1, y + subHeight1, subWidth2, subHeight2 ), exist );
+		const TRender aSubRenderCell0 = TRender( id, BoundingBox<int>( x, y, subWidth1, subHeight1 ) );
+		const TRender aSubRenderCell1 = TRender( id, BoundingBox<int>( x + subWidth1, y, subWidth2, subHeight1 ) );
+		const TRender aSubRenderCell2 = TRender( id, BoundingBox<int>( x, y + subHeight1, subWidth1, subHeight2 ) );
+		const TRender aSubRenderCell3 = TRender( id, BoundingBox<int>( x + subWidth1, y + subHeight1, subWidth2, subHeight2 ) );
 
 		this->insert( aSubRenderCell0 );
 		this->insert( aSubRenderCell1 );
@@ -472,7 +472,6 @@ void QuadTree<T, TRender>::insert( const TRender& aRenderCell )
 				int localCellIndexY = this->_cell[i].getBounds().getY() - this->_referenceNodes[0].getBounds().getY(); 
 
 				this->_cell[i].setId( aRenderCell.getId() );
-				this->_cell[i].setExist( true );
 				this->_cellCount += 1;
 
 				//this->_map[( localCellIndexY * QuadTree<T, TRender>::_MAP_WIDTH + localCellIndexX )].setId( rId );
@@ -491,7 +490,6 @@ void QuadTree<T, TRender>::insert( const TRender& aRenderCell )
 			if ( !this->_cell[quadrant].getExist() )
 			{
 				this->_cell[quadrant].setId( aRenderCell.getId() );
-				this->_cell[quadrant].setExist( true );
 				this->_cellCount += 1;
 			}
 		}
@@ -545,8 +543,7 @@ void QuadTree<T, TRender>::remove( const TRender& rRenderCell )
 				int localCellIndexX = this->_cell[i].getBounds().getX() - this->_referenceNodes[0].getBounds().getX();
 				int localCellIndexY = this->_cell[i].getBounds().getY() - this->_referenceNodes[0].getBounds().getY();
 				
-				this->_cell[i].setId( -1 );
-				this->_cell[i].setExist( false );
+				this->_cell[i].setId( 0 );
 				this->_cellCount -= 1;
 				this->_consolidated = false;
 				// this->_map[( localCellIndexY * QuadTree<T, TRender>::_MAP_WIDTH + localCellIndexX )].setExist( false );
@@ -563,8 +560,7 @@ void QuadTree<T, TRender>::remove( const TRender& rRenderCell )
 		{
 			if ( this->_cell[i].getExist() && rBoundingBox.intersects( this->_cell[i].getBounds() ) && this->_cell[i].getId() == rRenderCell.getId() ) 
 			{
-				this->_cell[i].setId( -1 );
-				this->_cell[i].setExist( false );
+				this->_cell[i].setId( 0 );
 				this->_cellCount -= 1;
 				this->_consolidated = false;
 			}
@@ -588,10 +584,10 @@ void QuadTree<T, TRender>::remove( const TRender& rRenderCell )
 		int subWidth2 = rBoundingBox.getWidth() - subWidth1;
 		int subHeight2 = rBoundingBox.getHeight() - subHeight1;
 
-		const TRender rSubRenderCell0 = TRender( id, BoundingBox<int>( x, y, subWidth1, subHeight1 ), exist );
-		const TRender rSubRenderCell1 = TRender( id, BoundingBox<int>( x + subWidth1, y, subWidth2, subHeight1 ), exist );
-		const TRender rSubRenderCell2 = TRender( id, BoundingBox<int>( x, y + subHeight1, subWidth1, subHeight2 ), exist );
-		const TRender rSubRenderCell3 = TRender( id, BoundingBox<int>( x + subWidth1, y + subHeight1, subWidth2, subHeight2 ), exist );
+		const TRender rSubRenderCell0 = TRender( id, BoundingBox<int>( x, y, subWidth1, subHeight1 ) );
+		const TRender rSubRenderCell1 = TRender( id, BoundingBox<int>( x + subWidth1, y, subWidth2, subHeight1 ) );
+		const TRender rSubRenderCell2 = TRender( id, BoundingBox<int>( x, y + subHeight1, subWidth1, subHeight2 ) );
+		const TRender rSubRenderCell3 = TRender( id, BoundingBox<int>( x + subWidth1, y + subHeight1, subWidth2, subHeight2 ) );
 
 		this->remove( rSubRenderCell0 );
 		this->remove( rSubRenderCell1 );

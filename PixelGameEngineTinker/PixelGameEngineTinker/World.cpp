@@ -43,58 +43,17 @@ void World::remove( int x, int y, int width, int height, uint64_t id )
 }
 
 
-void World::saveWorldAtlas()
+
+void World::saveWorldChunk( WorldChunk* worldChunk )
 {
-	// Overwrite the entire worldMap.dat file
-	MemoryManager::saveWorldAtlas( "./worldAtlas.dat", this->_worldAtlas ); // [!] singleton
+	MemoryManager::saveWorldChunk( worldChunk ); // [!] save and load have memory leaks!
 	return;
 }
 
 
-void World::loadWorldAtlas()
+bool World::loadWorldChunk( WorldChunk* worldChunk )
 {
-	// Load the items ( index : offset ) from worldMap.dat into this->_worldAtlas
-	MemoryManager::loadWorldAtlas( "./worldAtlas.dat", this->_worldAtlas ); // [!] singleton
-	return;
-}
-
-
-void World::viewWorldAtlas()
-{
-	MemoryManager::viewWorldAtlas( this->_worldAtlas );
-	return;
-}
-
-
-void World::updateWorldAtlas( int indexX, int indexY )
-{
-	// Update the worldAtlas on the drive by appending new data ( index : offset ) 
-	if ( this->_worldAtlas.find( std::tuple<int, int>{ indexX, indexY } ) == this->_worldAtlas.end() )
-	{
-		MemoryManager::updateWorldAtlas( "./worldAtlas.dat", indexX, indexY, this->_worldAtlas.size() );
-	}
-	return;
-}
-
-
-bool World::findWorldMap( int indexX, int indexY ) const
-{
-	return this->_worldAtlas.find( std::tuple<int, int>{ indexX, indexY } ) != this->_worldAtlas.end();
-}
-
-
-void World::saveWorldChunk( WorldChunk& worldChunk )
-{
-	//MemoryManager::saveWorldChunkCrude( "./world.dat", worldChunk, this->_worldAtlas );
-	MemoryManager::saveWorldChunkCrude( "./world.dat", worldChunk, this->_worldAtlas.at( std::tuple<int, int>{worldChunk.getChunkIndexX(), worldChunk.getChunkIndexY()} ) );
-	return;
-}
-
-
-void World::loadWorldChunk( WorldChunk& worldChunk )
-{
-	MemoryManager::loadWorldChunkCrude( "./world.dat", worldChunk, this->_worldAtlas.at( std::tuple<int, int>{worldChunk.getChunkIndexX(), worldChunk.getChunkIndexY()} ) );
-	return;
+	return MemoryManager::loadWorldChunk( worldChunk ); // [!] save and load have memory leaks!
 }
 
 
@@ -126,12 +85,6 @@ void World::initializeDelimits( const BoundingBox<float>& cameraView )
 			int newChunkIndexY = cameraIndexY + deltaIndexY;
 
 			this->delimitWorldChunk( this->_worldChunks[y * this->_numChunkWidth + x], newChunkIndexX, newChunkIndexY );
-
-			if ( this->_worldAtlas.find( std::tuple<int, int>{newChunkIndexX, newChunkIndexY} ) == this->_worldAtlas.end() )
-			{
-				this->updateWorldAtlas( newChunkIndexX, newChunkIndexY );
-				this->_worldAtlas.emplace( std::tuple<int, int>{ newChunkIndexX, newChunkIndexY }, this->_worldAtlas.size() );
-			}
 		}
 	}
 
@@ -147,13 +100,15 @@ void World::initializeWorldChunks()
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
 		this->_worldChunks[i].construct();
-		this->loadWorldChunk( this->_worldChunks[i] );
-		// [!] Load in world chunks here ( from history or procedural )
-		// [!] if ( this->_worldAtlas.find( std::tuple<int, int>{newChunkIndexX, newChunkIndexY} ) == this->_worldAtlas.end() ) ? procedural : history
+		if ( !this->loadWorldChunk( &this->_worldChunks[i] ) )
+		{
+			// [!] Procedural generation here
+		}
 	}
 
 	return;
 }
+
 
 
 void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
@@ -175,7 +130,7 @@ void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
 	{
 		for ( int y = 0; y < this->_numChunkHeight; y++ )
 		{
-			WorldChunk* worldChunk = &this->_worldChunks[y * this->_numChunkWidth + x];
+			WorldChunk *worldChunk = &this->_worldChunks[y * this->_numChunkWidth + x];
 			int worldChunkIndexX = worldChunk->getChunkIndexX();
 			int worldChunkIndexY = worldChunk->getChunkIndexY();
 
@@ -188,24 +143,17 @@ void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
 				int newChunkIndexY = cameraIndexY + -( worldChunkIndexY - this->_prevCameraIndexY );
 
 				// Save world chunk
-				this->saveWorldChunk( *worldChunk );
+				this->saveWorldChunk( worldChunk );
 
 				// Delimit
 				this->delimitWorldChunk( this->_worldChunks[y * this->_numChunkWidth + x], newChunkIndexX, newChunkIndexY );
-				
-				// Update the world atlas if found new chunk that is not been discovered yet
-				if ( this->_worldAtlas.find( std::tuple<int, int>{newChunkIndexX, newChunkIndexY} ) == this->_worldAtlas.end() )
+
+				// [!] instead of having a worldatlas to grow, we can just check if it is among the surrounding
+				if ( !this->loadWorldChunk( worldChunk ) )
 				{
-					this->updateWorldAtlas( newChunkIndexX, newChunkIndexY );
-					this->_worldAtlas.emplace( std::tuple<int, int>{ newChunkIndexX, newChunkIndexY }, this->_worldAtlas.size() );
-					///this->_worldChunks[y * this->_numChunkWidth + x].fill( 1 ); // [!] test
 					// [!] Procedural generation here
 				}
-				// Else we load in the worldChunk data here
-				else
-				{
-					this->loadWorldChunk( *worldChunk );
-				}
+
 
 			}
 		}
@@ -227,12 +175,6 @@ void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
 }
 
 
-void World::replaceWorldChunk( WorldChunk& worldChunk, int newIndexX, int newIndexY ) // [!] may not need
-{
-	this->saveWorldChunk( worldChunk );
-	this->loadWorldChunk( worldChunk );
-	return;
-}
 
 
 WorldChunk& World::getWorldChunk( int x, int y )

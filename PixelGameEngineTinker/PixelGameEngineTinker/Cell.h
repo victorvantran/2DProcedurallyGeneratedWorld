@@ -10,12 +10,11 @@ class Cell
 protected:
 	int _id;
 	BoundingBox<int> _bounds;
-	bool _exist;
 	
 	Cell();
 	~Cell();
 
-	Cell( int id, BoundingBox<int> _bounds, bool _exist );
+	Cell( int id, BoundingBox<int> _bounds );
 
 public:
 	int getId() const;
@@ -32,7 +31,6 @@ public:
 	BoundingBox<int> setBounds( const BoundingBox<int>& _bounds );
 	int setWidth( int width );
 	int setHeight( int height );
-	bool setExist( bool exist );
 
 
 	void clear();

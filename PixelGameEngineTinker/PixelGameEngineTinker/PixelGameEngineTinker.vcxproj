@@ -45,6 +45,7 @@
   <ItemGroup>
     <ClCompile Include="Cell.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="sqlite\sqlite3.c" />
     <ClCompile Include="TileRender.cpp" />
     <ClCompile Include="Tile.cpp" />
     <ClCompile Include="World.cpp" />

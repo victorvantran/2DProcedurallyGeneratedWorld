@@ -52,7 +52,7 @@ public:
 	{
 		createSpritesAndDecals();
 		createConfigurations();
-		createMap();
+		createWorld();
 
 		return true;
 	}
@@ -61,6 +61,7 @@ public:
 	bool OnUserUpdate( float fElapsedTime ) override
 	{
 		// Data Management Debug
+		/*
 		if ( GetKey( olc::Key::T ).bPressed )
 		{
 			world.saveWorldAtlas();
@@ -73,6 +74,7 @@ public:
 		{
 			world.viewWorldAtlas();
 		}
+		*/
 
 		// Camera Debug
 		float mouseX = ( float )GetMouseX();
@@ -193,10 +195,11 @@ public:
 	}
 
 
-	void createMap() // create World?
+	void createWorld() // create World?
 	{
 		//this->world = World(); // stop calling stuff twice
-		world.loadWorldAtlas();
+		MemoryManager::initializeWorldDatabase();
+
 
 		int screenCellWidth = screenWidth / cellSize;
 		int screenCellHeight = screenHeight / cellSize;

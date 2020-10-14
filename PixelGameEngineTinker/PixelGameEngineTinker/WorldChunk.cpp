@@ -122,7 +122,7 @@ void WorldChunk::insertTiles( int x, int y, int width, int height, uint64_t id )
 
 void WorldChunk::insertTileRenders( int x, int y, int width, int height, uint64_t id )
 {
-	this->_tileRenders[0].insert( TileRender( id, BoundingBox<int>( x, y, width, height ), true ) );
+	this->_tileRenders[0].insert( TileRender( id, BoundingBox<int>( x, y, width, height ) ) );
 	return;
 }
 
@@ -167,7 +167,7 @@ void WorldChunk::removeTiles( int x, int y, int width, int height, uint64_t id )
 
 void WorldChunk::removeTileRenders( int x, int y, int width, int height, uint64_t id )
 {
-	this->_tileRenders[0].remove( TileRender( id, BoundingBox<int>( x, y, width, height ), true ) );
+	this->_tileRenders[0].remove( TileRender( id, BoundingBox<int>( x, y, width, height ) ) );
 	return;
 }
 
