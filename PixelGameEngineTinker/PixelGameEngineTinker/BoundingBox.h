@@ -57,6 +57,8 @@ struct BoundingBox
 
 	T setX( T x );
 	T setY( T y );
+	T setCenterX( T x );
+	T setCenterY( T y );
 	T setWidth( T width );
 	T setHeight( T height );
 };
@@ -216,6 +218,22 @@ template<typename T>
 T BoundingBox<T>::setY( T y )
 {
 	this->y = y;
+	return this->y;
+}
+
+
+template<typename T>
+T BoundingBox<T>::setCenterX( T x )
+{
+	this->x = x - ( this->width / 2.0f );
+	return this->x;
+}
+
+
+template<typename T>
+T BoundingBox<T>::setCenterY( T y )
+{
+	this->y = y - ( this->height / 2.0f );
 	return this->y;
 }
 

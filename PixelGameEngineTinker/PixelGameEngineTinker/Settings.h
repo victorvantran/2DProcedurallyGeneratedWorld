@@ -64,8 +64,14 @@ public:
 	// Camera
 	struct Camera
 	{
-		static const int ABSOLUTE_PIXEL_OFFSET_X = Screen::CELL_PIXEL_SIZE * ( Screen::SCREEN_CELL_WIDTH / 2 ) - Screen::CELL_PIXEL_SIZE * ( WorldChunk::SIZE / 2 );
-		static const int ABSOLUTE_PIXEL_OFFSET_Y = Screen::CELL_PIXEL_SIZE * ( Screen::SCREEN_CELL_HEIGHT / 2 ) - Screen::CELL_PIXEL_SIZE * ( WorldChunk::SIZE / 2 );
+		static const int FOCAL_POINT_CELL_WIDTH = World::CHUNK_CELL_SIZE;
+		static const int FOCAL_POINT_CELL_HEIGHT = World::CHUNK_CELL_SIZE;
+
+		static const int VIEW_CELL_WIDTH = Screen::SCREEN_CELL_WIDTH;
+		static const int VIEW_CELL_HEIGHT = Screen::SCREEN_CELL_HEIGHT;
+
+		static const int ABSOLUTE_PIXEL_OFFSET_X = Screen::CELL_PIXEL_SIZE * ( Screen::SCREEN_CELL_WIDTH / 2 ) - Screen::CELL_PIXEL_SIZE * ( FOCAL_POINT_CELL_WIDTH / 2 );
+		static const int ABSOLUTE_PIXEL_OFFSET_Y = Screen::CELL_PIXEL_SIZE * ( Screen::SCREEN_CELL_HEIGHT / 2 ) - Screen::CELL_PIXEL_SIZE * ( FOCAL_POINT_CELL_HEIGHT / 2 );
 	};
 
 

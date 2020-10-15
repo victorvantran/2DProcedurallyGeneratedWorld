@@ -142,13 +142,21 @@ private:
 
 
 public:
+	/*
+		World
+			WorldChunks
+				Tiles
+				Palette
+	
+	
+	*/
 
-	//[!] care for signed/unsigned
+
 
 	// WorldMapping
 	//
 	// Maps the worldChunk index to the displacement of where its data is
-	// 8 bytes for the number of possible items ( uint64_t )
+	// 8 bytes for the number of possible unique tiles ( uint64_t )
 	// For each item:
 	//	4 bytes for indexX ( int )
 	//	4 bytes for indexY ( int )

@@ -60,22 +60,6 @@ public:
 
 	bool OnUserUpdate( float fElapsedTime ) override
 	{
-		// Data Management Debug
-		/*
-		if ( GetKey( olc::Key::T ).bPressed )
-		{
-			world.saveWorldAtlas();
-		}
-		if ( GetKey( olc::Key::Y ).bPressed )
-		{
-			world.loadWorldAtlas();
-		}
-		if ( GetKey( olc::Key::U ).bPressed )
-		{
-			world.viewWorldAtlas();
-		}
-		*/
-
 		// Camera Debug
 		float mouseX = ( float )GetMouseX();
 		float mouseY = ( float )GetMouseY();
@@ -185,9 +169,9 @@ public:
 		// Render
 		Clear( olc::BLACK );
 
-		this->world.delimitWorldChunks( this->camera.getView() );
+		this->world.delimitWorldChunks( this->camera.getFocalPoint() );
 		this->camera.renderWorld( this->world );
-		this->camera.renderCamera();
+		// this->camera.renderCamera();
 
 		drawTileIndexString( tileIndex );
 
@@ -203,10 +187,12 @@ public:
 
 		int screenCellWidth = screenWidth / cellSize;
 		int screenCellHeight = screenHeight / cellSize;
-		//camera = Camera( BoundingBox<float>( 0.0f, 0.0f, screenCellWidth, screenCellHeight ), 1.0f, 1.0f );
-		this->camera = Camera( BoundingBox<float>( 0.0f, 0.0f, 32, 32 ), 1.0f, 1.0f );
+		this->camera = Camera(
+			BoundingBox<float>( 0.0f, 0.0f, Settings::Camera::FOCAL_POINT_CELL_WIDTH, Settings::Camera::FOCAL_POINT_CELL_HEIGHT ),
+			BoundingBox<float>( 0.0f, 0.0f, Settings::Camera::VIEW_CELL_WIDTH, Settings::Camera::VIEW_CELL_HEIGHT ),
+			1.0f, 1.0f );
 
-		this->world.initializeDelimits( this->camera.getView() );
+		this->world.initializeDelimits( this->camera.getFocalPoint() );
 		this->world.initializeWorldChunks();
 
 	}
