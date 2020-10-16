@@ -7,6 +7,9 @@
 #include "Tile.h"
 #include "TileRender.h"
 
+
+class WorldChunkMemory; // Forward Declaration
+
 class WorldChunk
 {
 private:
@@ -58,5 +61,8 @@ public:
 	QuadTree<Tile, TileRender>& getTileRendersRoot();
 
 	std::vector<std::uint64_t> getPalette();
+
+
+	WorldChunkMemory* createMemory();
 };
 

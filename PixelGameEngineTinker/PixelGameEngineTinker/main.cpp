@@ -8,6 +8,11 @@
 #include "TileRender.h"
 #include "Camera.h"
 
+#include "WorldMemoryManager.h"
+
+#include <thread>
+#include <future>
+
 // [!] probably one edge case that throws excpetion (need to find it eventually by running many test trials for the thorwn exception and videoing the smallest amount of inserts/removed to do it)
 
 // Override base class with your custom functionality
@@ -161,15 +166,67 @@ public:
 			world.remove( tileIndex.x, tileIndex.y, 5, 5, tileId );
 		}
 
-		if ( GetKey( olc::Key::SPACE ).bPressed || GetKey( olc::Key::SPACE ).bHeld )
-		{
-			//std::cout << countQuadTree( 0 ) << std::endl;
-		}
+
 
 		// Render
 		Clear( olc::BLACK );
 
+		//auto future = std::async( &World::delimitWorldChunks, &this->world, this->camera.getFocalPoint() );
+		//return future.get();
+
+		//std::thread t( &World::delimitWorldChunks, &this->world, this->camera.getFocalPoint() );
+		//t.detach();
+		
 		this->world.delimitWorldChunks( this->camera.getFocalPoint() );
+
+
+
+		/*
+		//if ( GetKey( olc::Key::K ).bPressed || GetKey( olc::Key::K ).bHeld )
+		if ( GetKey( olc::Key::K ).bPressed )
+		{
+			WorldChunk* worldChunk = new WorldChunk( 1, 1 );
+			std::thread addThread( &WorldMemoryManager::add, &this->worldMemoryManager, worldChunk->createMemory() );
+			addThread.detach();
+
+
+			delete worldChunk;
+			
+			//WorldChunkMemory* worldChunkMemory = new WorldChunkMemory();
+			//std::thread addThread( &WorldMemoryManager::add, &this->worldMemoryManager, worldChunkMemory );
+			//addThread.detach();
+			
+		}
+
+		
+		if ( GetKey( olc::Key::L ).bPressed || GetKey( olc::Key::L ).bHeld )
+		{
+			std::thread saveThread( &WorldMemoryManager::saveWorldGeography, &this->worldMemoryManager );
+			saveThread.detach();
+		}
+		*/
+		
+		/*
+		std::thread saveThread( &WorldMemoryManager::saveWorldGeography, &this->worldMemoryManager );
+		saveThread.detach();
+		*/
+
+
+		
+		if ( GetKey( olc::Key::L ).bPressed || GetKey( olc::Key::L ).bHeld )
+		{
+			std::thread saveThread( &WorldMemoryManager::saveWorldGeography, this->world.getMemoryManager() );
+			saveThread.detach();
+		}
+		
+		
+		
+		/*
+		std::thread saveThread( &WorldMemoryManager::saveWorldGeography, this->world.getMemoryManager() );
+		saveThread.detach();
+		*/
+
+		
 		this->camera.renderWorld( this->world );
 		// this->camera.renderCamera();
 

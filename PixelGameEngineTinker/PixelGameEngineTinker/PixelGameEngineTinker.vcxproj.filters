@@ -81,6 +81,12 @@
     <ClInclude Include="Settings.h">
       <Filter>Header Files\Assets</Filter>
     </ClInclude>
+    <ClInclude Include="WorldMemoryManager.h">
+      <Filter>Header Files\MemoryManagement</Filter>
+    </ClInclude>
+    <ClInclude Include="WorldChunkMemory.h">
+      <Filter>Header Files\MemoryManagement</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cell.cpp">
@@ -102,6 +108,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sqlite\sqlite3.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WorldChunkMemory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="WorldMemoryManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

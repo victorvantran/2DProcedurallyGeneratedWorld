@@ -1,10 +1,11 @@
 #include "World.h"
-
+#include "WorldChunkMemory.h"
 
 World::World()
 	: _numChunkWidth( 1 + this->_chunkRadius * 2 ), _numChunkHeight( 1 + this->_chunkRadius * 2 ), _numWorldChunks( this->_numChunkWidth* this->_numChunkHeight ),
 	_prevCameraIndexX( 0 ), _prevCameraIndexY( 0 ),
-	_worldChunks( new WorldChunk[( 1 + 2 * ( _chunkRadius ) ) * ( 1 + 2 * ( _chunkRadius ) )] )
+	_worldChunks( new WorldChunk[( 1 + 2 * ( _chunkRadius ) ) * ( 1 + 2 * ( _chunkRadius ) )] ),
+	_worldMemoryManager( new WorldMemoryManager() )
 {
 }
 
@@ -12,6 +13,7 @@ World::World()
 World::~World()
 {
 	delete[] this->_worldChunks;
+	delete this->_worldMemoryManager;
 }
 
 
@@ -43,16 +45,58 @@ void World::remove( int x, int y, int width, int height, uint64_t id )
 }
 
 
-
 void World::saveWorldChunk( WorldChunk* worldChunk )
 {
-	MemoryManager::saveWorldChunk( worldChunk ); // [!] save and load have memory leaks!
+	///std::thread t( MemoryManager::saveWorldChunk, worldChunk );
+	///t.detach();
+
+	WorldChunkMemory* worldChunkMemory = worldChunk->createMemory();
+
+
+	//std::cout << "(" << worldChunkMemory->getChunkIndexX() << "," << worldChunkMemory->getChunkIndexY() << ")" << std::endl;
+
+
+	std::thread addThread( &WorldMemoryManager::add, this->_worldMemoryManager, worldChunkMemory );
+
+	//std::thread addThread( [&] ( WorldMemoryManager* wmm ) { wmm->add( worldChunkMemory ); }, this->_worldMemoryManager );
+
+	addThread.detach();
+
+
+
+	//std::thread t( MemoryManager::saveWorldChunk, worldChunk );
+	//t.join();
+	
+	//MemoryManager::saveWorldChunk( worldChunk ); // [!] save and load have memory leaks!
+	
+	//auto future = std::async( MemoryManager::saveWorldChunk, worldChunk );
+
+
+
+
+
 	return;
+	//return;
 }
 
 
 bool World::loadWorldChunk( WorldChunk* worldChunk )
 {
+	///auto future = std::async( MemoryManager::loadWorldChunk, worldChunk );
+	///return future.get();
+
+	
+	//return false;
+
+	//std::thread t( MemoryManager::loadWorldChunk, worldChunk );
+	//t.detach();
+
+	//std::packaged_task<bool( MemoryManager*, WorldChunk* )> task( MemoryManager::loadWorldChunk, nullptr, worldChunk );
+
+
+
+	//return false;
+
 	return MemoryManager::loadWorldChunk( worldChunk ); // [!] save and load have memory leaks!
 }
 
@@ -110,7 +154,6 @@ void World::initializeWorldChunks()
 }
 
 
-
 void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
 {
 	// Based on the updated camera's position, delimit the surrounding worldChunks
@@ -143,7 +186,8 @@ void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
 				int newChunkIndexY = cameraIndexY + -( worldChunkIndexY - this->_prevCameraIndexY );
 
 				// Save world chunk
-				this->saveWorldChunk( worldChunk );
+				this->saveWorldChunk( worldChunk ); // save in all one go!
+
 
 				// Delimit
 				this->delimitWorldChunk( this->_worldChunks[y * this->_numChunkWidth + x], newChunkIndexX, newChunkIndexY );
@@ -153,7 +197,8 @@ void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
 				{
 					// [!] Procedural generation here
 				}
-
+				
+				//break;
 
 			}
 		}
@@ -173,8 +218,6 @@ void World::delimitWorldChunks( const BoundingBox<float>& cameraView )
 
 	return;
 }
-
-
 
 
 WorldChunk& World::getWorldChunk( int x, int y )
@@ -210,4 +253,10 @@ int World::getNumChunkWidth() const
 int World::getNumChunkHeight() const
 {
 	return this->_numChunkHeight;
+}
+
+
+WorldMemoryManager* World::getMemoryManager()
+{
+	return this->_worldMemoryManager;
 }

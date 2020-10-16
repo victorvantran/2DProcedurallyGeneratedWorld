@@ -1,4 +1,5 @@
 #include "WorldChunk.h"
+#include "WorldChunkMemory.h"
 
 
 WorldChunk::WorldChunk()
@@ -302,4 +303,10 @@ std::vector<std::uint64_t> WorldChunk::getPalette()
 	}
 
 	return palette;
+}
+
+
+WorldChunkMemory* WorldChunk::createMemory()
+{
+	return new WorldChunkMemory( this );
 }

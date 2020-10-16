@@ -1,8 +1,6 @@
 #pragma once
 #include "olcPixelGameEngine.h"
-
 #include "BoundingBox.h"
-
 
 
 class Cell
@@ -25,14 +23,10 @@ public:
 	int getHeight() const;
 	bool getExist() const;
 
-
-
 	int setId( int id );
 	BoundingBox<int> setBounds( const BoundingBox<int>& _bounds );
 	int setWidth( int width );
 	int setHeight( int height );
 
-
 	void clear();
 };
-

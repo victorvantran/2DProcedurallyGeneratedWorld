@@ -17,13 +17,22 @@
 
 #include "sqlite/sqlite3.h"
 
-
+#include <thread>
+#include <mutex>
 
 // [!] note endianness
 
 class MemoryManager
 {
 private:
+	static std::mutex saveWorldChunkMutex;
+
+
+
+
+
+
+
 	MemoryManager();
 
 	static const std::uint32_t WORLD_CHUNK_NUM_BYTES = Settings::MemoryManager::WORLD_CHUNK_NUM_BYTES;
@@ -328,6 +337,11 @@ public:
 	{
 		// Saves the worldChunk into the database based on its index. The worldChunk will have tileData and paletteData used to recreate the world when loaded back in.
 
+		std::cout << "START SAVE" << std::endl;
+
+		std::lock_guard<std::mutex> guard( MemoryManager::saveWorldChunkMutex );
+
+
 		std::uint16_t numTiles = Settings::World::NUM_CELLS_PER_CHUNK;
 
 		// Get tiles and palette from the worldChunk
@@ -357,6 +371,12 @@ public:
 		char* errorMessage = NULL;
 		int rc;
 
+
+		//std::lock_guard<std::mutex> guard( MemoryManager::saveWorldChunkMutex );
+
+		std::cout << "ISOLATED" << std::endl;
+		std::cout << "(" << chunkIndexX << "," << chunkIndexY << ")" << std::endl;
+
 		sqlite3_open( "./world.db", &database );
 
 		command =
@@ -364,15 +384,48 @@ public:
 			"VALUES ( ?1, ?2, ?3, ?4 )\n"
 			"ON CONFLICT( chunk_index_x, chunk_index_y ) DO UPDATE SET tiles = ?3, palette = ?4;";
 		rc = sqlite3_prepare_v2( database, command, -1, &statement, NULL );
+
+		if ( rc != SQLITE_OK )
+		{
+			std::cout << "code: a" << std::endl;
+		}
 		rc = sqlite3_bind_int( statement, 1, chunkIndexX );
+		if ( rc != SQLITE_OK )
+		{
+			std::cout << "code: b" << std::endl;
+		}
 		rc = sqlite3_bind_int( statement, 2, chunkIndexY );
+		if ( rc != SQLITE_OK )
+		{
+			std::cout << "code: c" << std::endl;
+		}
 		rc = sqlite3_bind_blob( statement, 3, tilesBlob, tilesBlobNumBytes, SQLITE_STATIC );
+		if ( rc != SQLITE_OK )
+		{
+			std::cout << "code: d" << std::endl;
+		}
 		rc = sqlite3_bind_blob( statement, 4, paletteBlob, paletteBlobNumBytes, SQLITE_STATIC );
+		if ( rc != SQLITE_OK )
+		{
+			std::cout << "code: e" << std::endl;
+		}
 		rc = sqlite3_step( statement );
+		if ( rc != SQLITE_OK && rc != SQLITE_DONE )
+		{
+			std::cout << "code: " << rc << std::endl;
+		}
 		rc = sqlite3_finalize( statement );
+		if ( rc != SQLITE_OK && rc != SQLITE_DONE )
+		{
+			std::cout << "codef: " << rc << std::endl;
+		}
+
 
 		sqlite3_close( database );
 		// Mutex_open
+
+
+		std::cout << "END SAVE" << std::endl;
 
 		// Delete allocated memory
 		delete[] tilesBlob;
@@ -385,6 +438,7 @@ public:
 	static bool loadWorldChunk( WorldChunk* worldChunk )
 	{
 		// Loads the worldChunk from the database using tileData and paletteData to recreate
+		std::lock_guard<std::mutex> guard( MemoryManager::saveWorldChunkMutex );
 
 		sqlite3* database = NULL;
 		sqlite3_stmt* statement = NULL;

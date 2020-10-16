@@ -41,15 +41,20 @@
     <ClInclude Include="Tile.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="WorldChunk.h" />
+    <ClInclude Include="WorldChunkMemory.h" />
+    <ClInclude Include="WorldMemoryManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cell.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MemoryManager.cpp" />
     <ClCompile Include="sqlite\sqlite3.c" />
     <ClCompile Include="TileRender.cpp" />
     <ClCompile Include="Tile.cpp" />
     <ClCompile Include="World.cpp" />
     <ClCompile Include="WorldChunk.cpp" />
+    <ClCompile Include="WorldChunkMemory.cpp" />
+    <ClCompile Include="WorldMemoryManager.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
