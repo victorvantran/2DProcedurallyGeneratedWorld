@@ -11,11 +11,11 @@ private:
 	int _chunkIndexX;
 	int _chunkIndexY;
 
-	unsigned char* _tilesBlob; // = createTilesBlob( tiles, palette );
-	std::uint64_t* _paletteBlob; // = createPaletteBlob( palette );
+	unsigned char* _tilesBlob;
+	std::uint64_t* _paletteBlob;
 
-	std::uint16_t _tilesBlobNumBytes; // = ( int )ceil( ( float )tilesBlobNumBits / 8.0f );
-	std::uint16_t _paletteBlobNumBytes; // = palette.size() * 8;
+	std::uint16_t _tilesBlobNumBytes;
+	std::uint16_t _paletteBlobNumBytes;
 public:
 	WorldChunkMemory();
 	WorldChunkMemory( WorldChunk* worldChunk );

@@ -60,9 +60,6 @@
     <ClInclude Include="Cell.h">
       <Filter>Header Files\World</Filter>
     </ClInclude>
-    <ClInclude Include="World.h">
-      <Filter>Header Files\World</Filter>
-    </ClInclude>
     <ClInclude Include="WorldChunk.h">
       <Filter>Header Files\World</Filter>
     </ClInclude>
@@ -81,10 +78,13 @@
     <ClInclude Include="Settings.h">
       <Filter>Header Files\Assets</Filter>
     </ClInclude>
-    <ClInclude Include="WorldMemoryManager.h">
+    <ClInclude Include="WorldChunkMemory.h">
       <Filter>Header Files\MemoryManagement</Filter>
     </ClInclude>
-    <ClInclude Include="WorldChunkMemory.h">
+    <ClInclude Include="WorldChunkRecall.h">
+      <Filter>Header Files\MemoryManagement</Filter>
+    </ClInclude>
+    <ClInclude Include="World.h">
       <Filter>Header Files\MemoryManagement</Filter>
     </ClInclude>
   </ItemGroup>
@@ -93,9 +93,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="World.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WorldChunk.cpp">
@@ -116,7 +113,7 @@
     <ClCompile Include="WorldChunkMemory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="WorldMemoryManager.cpp">
+    <ClCompile Include="World.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

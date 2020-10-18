@@ -1,5 +1,5 @@
 #include "WorldChunkMemory.h"
-#include "WorldMemoryManager.h"
+#include "World.h"
 #include "WorldChunk.h"
 
 WorldChunkMemory::WorldChunkMemory()
@@ -29,8 +29,8 @@ WorldChunkMemory::WorldChunkMemory( WorldChunk* worldChunk )
 	this->_tilesBlobNumBytes = ( int )ceil( ( float )tilesBlobNumBits / 8.0f );
 	this->_paletteBlobNumBytes = palette.size() * 8;
 
-	this->_tilesBlob = WorldMemoryManager::createTilesBlob( tiles, palette );
-	this->_paletteBlob = WorldMemoryManager::createPaletteBlob( palette );
+	this->_tilesBlob = World::createTilesBlob( tiles, palette );
+	this->_paletteBlob = World::createPaletteBlob( palette );
 }
 
 

@@ -8,7 +8,8 @@
 #include "TileRender.h"
 #include "Camera.h"
 
-#include "WorldMemoryManager.h"
+
+#include "MemoryManager.h"
 
 #include <thread>
 #include <future>
@@ -179,6 +180,10 @@ public:
 		
 		this->world.delimitWorldChunks( this->camera.getFocalPoint() );
 
+		// this->world.getMemoryManager()->cameraCenter = this->camera.getFocalPoint();
+
+
+
 
 
 		/*
@@ -212,13 +217,13 @@ public:
 		*/
 
 
-		
+		/*
 		if ( GetKey( olc::Key::L ).bPressed || GetKey( olc::Key::L ).bHeld )
 		{
 			std::thread saveThread( &WorldMemoryManager::saveWorldGeography, this->world.getMemoryManager() );
 			saveThread.detach();
 		}
-		
+		*/
 		
 		
 		/*
@@ -228,6 +233,10 @@ public:
 
 		
 		this->camera.renderWorld( this->world );
+
+
+		this->world.cameraCenter = this->camera.getFocalPoint();
+
 		// this->camera.renderCamera();
 
 		drawTileIndexString( tileIndex );
@@ -239,7 +248,7 @@ public:
 	void createWorld() // create World?
 	{
 		//this->world = World(); // stop calling stuff twice
-		MemoryManager::initializeWorldDatabase();
+		MemoryManager::initializeWorldDatabase(); // [!]
 
 
 		int screenCellWidth = screenWidth / cellSize;
@@ -249,8 +258,14 @@ public:
 			BoundingBox<float>( 0.0f, 0.0f, Settings::Camera::VIEW_CELL_WIDTH, Settings::Camera::VIEW_CELL_HEIGHT ),
 			1.0f, 1.0f );
 
+
+
+		// Initialize world [!]
 		this->world.initializeDelimits( this->camera.getFocalPoint() );
 		this->world.initializeWorldChunks();
+
+		this->world.startWorldMemorySystem();
+
 
 	}
 
