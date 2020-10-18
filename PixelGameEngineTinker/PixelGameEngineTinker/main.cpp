@@ -176,7 +176,6 @@ public:
 
 		std::thread updateFocalChunkThread( &World::updateFocalChunk, &this->world, this->camera.getFocalPoint() );
 		updateFocalChunkThread.detach();
-		//this->world.updateFocalChunk( this->camera.getFocalPoint() );
 
 
 		drawTileIndexString( tileIndex );
@@ -187,9 +186,6 @@ public:
 
 	void createWorld() // create World?
 	{
-		//this->world = World(); // stop calling stuff twice
-		// MemoryManager::initializeWorldDatabase(); // [!]
-
 
 		int screenCellWidth = screenWidth / cellSize;
 		int screenCellHeight = screenHeight / cellSize;

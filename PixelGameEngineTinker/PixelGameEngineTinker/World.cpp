@@ -64,7 +64,6 @@ unsigned char World::copyBits( unsigned char& destination, unsigned dStartIndex,
 }
 
 
-
 World::World()
 	: _numChunkWidth( 1 + this->_chunkRadius * 2 ), _numChunkHeight( 1 + this->_chunkRadius * 2 ), _numWorldChunks( this->_numChunkWidth* this->_numChunkHeight ),
 	_prevFocalChunkIndexX( 0 ), _prevFocalChunkIndexY( 0 ),
@@ -77,9 +76,9 @@ World::World()
 
 World::~World()
 {
-	delete[] this->_worldChunks;
-
 	this->stopWorldMemorySystem();
+	delete[] this->_worldChunks;
+	this->_worldChunks = nullptr;
 }
 
 
@@ -122,63 +121,13 @@ void World::initializeDatabase()
 }
 
 
-void World::updateFocalChunk( BoundingBox<float> focalPoint )
-{
-	std::lock_guard<std::mutex> lockLoad( this->_loadWordChunksMutex );
-
-	this->_focalChunk = focalPoint;
-	return;
-}
-
-
-void World::insert( int x, int y, int width, int height, uint64_t id )
-{
-	std::lock_guard<std::mutex> lockModify( this->_modifyWordChunksMutex );
-
-	for ( int i = 0; i < this->_numWorldChunks; i++ )
-	{
-		if ( BoundingBox<int>( x, y, width, height ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
-		{
-			this->_worldChunks[i].insert( x, y, width, height, id );
-		}
-	}
-	return;
-}
-
-
-void World::remove( int x, int y, int width, int height, uint64_t id )
-{
-	std::lock_guard<std::mutex> lockModify( this->_modifyWordChunksMutex );
-
-	for ( int i = 0; i < this->_numWorldChunks; i++ )
-	{
-		if ( BoundingBox<int>( x, y, width, height ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
-		{
-			this->_worldChunks[i].remove( x, y, width, height, id );
-		}
-	}
-	return;
-}
-
-
-void World::delimitWorldChunk( WorldChunk& worldChunk, int chunkIndexX, int chunkIndexY )
-{
-	// Clears the worldChunk, updates its proper index, and wipes the render in preparation to load in new data	and new render
-	//std::lock_guard<std::mutex> lockModify( this->_modifyWordChunksMutex );
-
-	worldChunk.clear();
-	worldChunk.delimit( chunkIndexX, chunkIndexY );
-	worldChunk.wipeRender();
-	return;
-}
-
-
-void World::initializeDelimits( const BoundingBox<float>& cameraView )
+void World::initializeDelimits( const BoundingBox<float>& focalPoint )
 {
 	// Based on the initial camera's position, delimit the surrounding worldChunks
+
 	// Load in camera
-	int cameraIndexX = cameraView.getCenterX() >= 0 ? ( int )( cameraView.getCenterX() / this->_chunkCellSize ) : ( int )( ( cameraView.getCenterX() - this->_chunkCellSize ) / this->_chunkCellSize );
-	int cameraIndexY = cameraView.getCenterY() >= 0 ? ( int )( cameraView.getCenterY() / this->_chunkCellSize ) : ( int )( ( cameraView.getCenterY() - this->_chunkCellSize ) / this->_chunkCellSize );
+	int cameraIndexX = focalPoint.getCenterX() >= 0 ? ( int )( focalPoint.getCenterX() / this->_chunkCellSize ) : ( int )( ( focalPoint.getCenterX() - this->_chunkCellSize ) / this->_chunkCellSize );
+	int cameraIndexY = focalPoint.getCenterY() >= 0 ? ( int )( focalPoint.getCenterY() / this->_chunkCellSize ) : ( int )( ( focalPoint.getCenterY() - this->_chunkCellSize ) / this->_chunkCellSize );
 
 	for ( int x = 0; x < this->_numChunkWidth; x++ )
 	{
@@ -194,6 +143,8 @@ void World::initializeDelimits( const BoundingBox<float>& cameraView )
 		}
 	}
 
+
+
 	this->_prevFocalChunkIndexX = cameraIndexX;
 	this->_prevFocalChunkIndexY = cameraIndexY;
 
@@ -201,17 +152,119 @@ void World::initializeDelimits( const BoundingBox<float>& cameraView )
 }
 
 
-void World::initializeWorldChunks() // [!] fix
+void World::initializeWorldChunks()
 {
+	// Load in the tiles of the initial starting chunks
+
+	std::lock_guard<std::mutex> lockLoad( this->_loadWordChunksMutex );
+	std::lock_guard<std::mutex> lockDatabase( this->_worldDatabaseMutex );
+
+	sqlite3* database = NULL;
+	sqlite3_stmt* statement = NULL;
+	const char* command = NULL;
+	char* errorMessage = NULL;
+	int rc;
+
+	sqlite3_open( "./world.db", &database );
+
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
 		this->_worldChunks[i].construct();
-		//if ( !this->loadWorldChunk( &this->_worldChunks[i] ) )
-		//{
-			// [!] Procedural generation here
-		//}
+
+		int index = i;
+		int chunkIndexX = this->_worldChunks[i].getChunkIndexX();
+		int chunkIndexY = this->_worldChunks[i].getChunkIndexY();
+
+		// Check if world chunk ( chunkIndexX, chunkIndexY ) exists
+		command =
+			"SELECT EXISTS( SELECT 1 FROM world_geography WHERE chunk_index_x = ?1 AND chunk_index_y = ?2 );";
+		rc = sqlite3_prepare_v2( database, command, -1, &statement, NULL );
+		rc = sqlite3_bind_int( statement, 1, chunkIndexX );
+		rc = sqlite3_bind_int( statement, 2, chunkIndexY );
+		rc = sqlite3_step( statement );
+
+
+		// If it does not exists, return or throw error
+		bool exists = sqlite3_column_int( statement, 0 );
+		if ( !exists )
+		{
+			rc = sqlite3_step( statement );
+			rc = sqlite3_finalize( statement );
+
+			std::cout << "Chunk does has not existed beforehand. Procedural generation" << std::endl;
+			// [!] procedural generation here
+
+			continue;
+		}
+		rc = sqlite3_step( statement ); // Extra step for null
+		rc = sqlite3_finalize( statement );
+
+		// Select tile_data and palette based on primary key ( chunkIndexX, chunkIndexY )
+		command =
+			"SELECT tiles, palette\n"
+			"FROM world_geography\n"
+			"WHERE chunk_index_x = ? AND chunk_index_y = ?;";
+		rc = sqlite3_prepare_v2( database, command, -1, &statement, NULL );
+		rc = sqlite3_bind_int( statement, 1, chunkIndexX );
+		rc = sqlite3_bind_int( statement, 2, chunkIndexY );
+		rc = sqlite3_step( statement );
+
+		// Create tilesData used as reference when reconstructing the worldChunk's tiles
+		std::uint16_t numBytesTiles = sqlite3_column_bytes( statement, 0 );
+		unsigned char* tilesData = new unsigned char[numBytesTiles];
+		std::memcpy( tilesData, sqlite3_column_blob( statement, 0 ), numBytesTiles );
+
+		// Create paletteData used as reference when reconstructing the worldChunk's tiles
+		std::uint16_t numBytesPalette = sqlite3_column_bytes( statement, 1 );
+		std::uint16_t numUniqueKeys = numBytesPalette / sizeof( std::uint64_t );
+		std::uint64_t* paletteData = new std::uint64_t[numUniqueKeys];
+		std::memcpy( paletteData, sqlite3_column_blob( statement, 1 ), numBytesPalette );
+
+		rc = sqlite3_step( statement ); // Extra step for null
+		rc = sqlite3_finalize( statement );
+
+		loadTiles( this->_worldChunks[i], tilesData, numBytesTiles, paletteData, numBytesPalette );
+
+		delete[] tilesData;
+		delete[] paletteData;
 	}
 
+	sqlite3_close( database );
+
+	return;
+}
+
+
+void World::insert( int x, int y, int width, int height, uint64_t id )
+{
+	// Insert a tile ( or tiles ) into the proper world chunk.
+
+	std::lock_guard<std::mutex> lockModify( this->_modifyWordChunksMutex );
+
+	for ( int i = 0; i < this->_numWorldChunks; i++ )
+	{
+		if ( BoundingBox<int>( x, y, width, height ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
+		{
+			this->_worldChunks[i].insert( x, y, width, height, id );
+		}
+	}
+	return;
+}
+
+
+void World::remove( int x, int y, int width, int height, uint64_t id )
+{
+	// Remove a tile ( or tiles ) from the proper world chunk.
+
+	std::lock_guard<std::mutex> lockModify( this->_modifyWordChunksMutex );
+
+	for ( int i = 0; i < this->_numWorldChunks; i++ )
+	{
+		if ( BoundingBox<int>( x, y, width, height ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
+		{
+			this->_worldChunks[i].remove( x, y, width, height, id );
+		}
+	}
 	return;
 }
 
@@ -252,8 +305,6 @@ int World::getNumChunkHeight() const
 }
 
 
-
-// Memory
 void World::startWorldMemorySystem()
 {
 	this->_saveWorldGeographyThread = std::thread( &World::saveWorldGeographyTask, this );
@@ -274,23 +325,6 @@ void World::stopWorldMemorySystem()
 }
 
 
-void World::addMemory( WorldChunkMemory* worldChunkMemory )
-{
-	std::lock_guard<std::mutex> lockSave( this->_saveWordChunksMutex );
-
-	// Overloaded
-	if ( this->_saveWorldChunks.size() >= _MAX_SAVED_CHUNKS )
-	{
-		delete worldChunkMemory;
-		return;
-	}
-
-
-	this->_saveWorldChunks.push_back( worldChunkMemory );
-	return;
-}
-
-
 void World::saveWorldGeographyTask()
 {
 	this->_runningSaveWorldGeography = true;
@@ -305,6 +339,8 @@ void World::saveWorldGeographyTask()
 
 void World::saveWorldGeography()
 {
+	// Saves all the worldChunks that have been built up in the queue into the SQLite database
+
 	std::lock_guard<std::mutex> lockSave( this->_saveWordChunksMutex );
 
 	if ( this->_saveWorldChunks.empty() )
@@ -313,7 +349,7 @@ void World::saveWorldGeography()
 	}
 
 	//std::lock_guard<std::mutex> lockDatabase( _worldDatabaseMutex );
-	std::unique_lock<std::mutex> lockDatabase( _worldDatabaseMutex );
+	std::unique_lock<std::mutex> lockDatabase( this->_worldDatabaseMutex );
 
 	sqlite3* database = NULL;
 	sqlite3_stmt* statement = NULL;
@@ -467,6 +503,23 @@ std::uint64_t* World::createPaletteBlob( std::vector<std::uint64_t>& palette )
 }
 
 
+void World::addMemory( WorldChunkMemory* worldChunkMemory )
+{
+	std::lock_guard<std::mutex> lockSave( this->_saveWordChunksMutex );
+
+	// Overloaded
+	if ( this->_saveWorldChunks.size() >= _MAX_SAVED_CHUNKS )
+	{
+		delete worldChunkMemory;
+		return;
+	}
+
+
+	this->_saveWorldChunks.push_back( worldChunkMemory );
+	return;
+}
+
+
 void World::loadWorldGeographyTask()
 {
 	this->_runningLoadWorldGeography = true;
@@ -479,20 +532,22 @@ void World::loadWorldGeographyTask()
 }
 
 
-void World::loadWorldGeography( const BoundingBox<float>& cameraFocalPoint )
+void World::loadWorldGeography( const BoundingBox<float>& focalPoint )
 {
+	// Load the proper worldChunks from the SQLite database 
+
 	std::lock_guard<std::mutex> lockLoad( this->_loadWordChunksMutex );
 
 	// Check to see if there is an update
-	int cameraIndexX = cameraFocalPoint.getCenterX() >= 0 ? ( int )( cameraFocalPoint.getCenterX() / this->_chunkCellSize ) : ( int )( ( cameraFocalPoint.getCenterX() - this->_chunkCellSize ) / this->_chunkCellSize );
-	int cameraIndexY = cameraFocalPoint.getCenterY() >= 0 ? ( int )( cameraFocalPoint.getCenterY() / this->_chunkCellSize ) : ( int )( ( cameraFocalPoint.getCenterY() - this->_chunkCellSize ) / this->_chunkCellSize );
+	int cameraIndexX = focalPoint.getCenterX() >= 0 ? ( int )( focalPoint.getCenterX() / this->_chunkCellSize ) : ( int )( ( focalPoint.getCenterX() - this->_chunkCellSize ) / this->_chunkCellSize );
+	int cameraIndexY = focalPoint.getCenterY() >= 0 ? ( int )( focalPoint.getCenterY() / this->_chunkCellSize ) : ( int )( ( focalPoint.getCenterY() - this->_chunkCellSize ) / this->_chunkCellSize );
 	if ( this->_prevFocalChunkIndexX == cameraIndexX && this->_prevFocalChunkIndexY == cameraIndexY )
 	{
 		return;
 	}
 
 	// Delimit
-	std::vector<std::tuple<std::uint64_t, int, int>> chunkRecalls = this->delimitWorldChunks( cameraFocalPoint );
+	std::vector<std::tuple<std::uint64_t, int, int>> chunkRecalls = this->delimitWorldChunks( focalPoint );
 	if ( chunkRecalls.empty() )
 	{
 		return;
@@ -608,14 +663,27 @@ void World::loadWorldGeography( const BoundingBox<float>& cameraFocalPoint )
 }
 
 
-std::vector<std::tuple<std::uint64_t, int, int>> World::delimitWorldChunks( const BoundingBox<float>& cameraView )
+void World::updateFocalChunk( BoundingBox<float> focalPoint )
 {
+	// Update the focalChunk of the world relative to a camera's focal point.
+	// Inhibit changing the focalChunk while loading for any nasty race conditions.
+
+	std::lock_guard<std::mutex> lockLoad( this->_loadWordChunksMutex );
+	this->_focalChunk = focalPoint;
+	return;
+}
+
+
+std::vector<std::tuple<std::uint64_t, int, int>> World::delimitWorldChunks( const BoundingBox<float>& focalPoint )
+{
+	// Based on the focalPoint, prepare all the world chunks that need to be delimited and updated 
+
 	// Build recall Vector
 	std::vector<std::tuple<std::uint64_t, int, int>> chunkRecalls;
 
 	// Based on the updated camera's position, delimit the surrounding worldChunks
-	int cameraIndexX = cameraView.getCenterX() >= 0 ? ( int )( cameraView.getCenterX() / this->_chunkCellSize ) : ( int )( ( cameraView.getCenterX() - this->_chunkCellSize ) / this->_chunkCellSize );
-	int cameraIndexY = cameraView.getCenterY() >= 0 ? ( int )( cameraView.getCenterY() / this->_chunkCellSize ) : ( int )( ( cameraView.getCenterY() - this->_chunkCellSize ) / this->_chunkCellSize );
+	int cameraIndexX = focalPoint.getCenterX() >= 0 ? ( int )( focalPoint.getCenterX() / this->_chunkCellSize ) : ( int )( ( focalPoint.getCenterX() - this->_chunkCellSize ) / this->_chunkCellSize );
+	int cameraIndexY = focalPoint.getCenterY() >= 0 ? ( int )( focalPoint.getCenterY() / this->_chunkCellSize ) : ( int )( ( focalPoint.getCenterY() - this->_chunkCellSize ) / this->_chunkCellSize );
 
 	// No need to delimit if the camera index has not changed
 	if ( this->_prevFocalChunkIndexX == cameraIndexX && this->_prevFocalChunkIndexY == cameraIndexY )
@@ -650,7 +718,18 @@ std::vector<std::tuple<std::uint64_t, int, int>> World::delimitWorldChunks( cons
 }
 
 
-void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::uint16_t tilesNumBytes, std::uint64_t* paletteData, std::uint16_t numBytesPalette )
+void World::delimitWorldChunk( WorldChunk& worldChunk, int chunkIndexX, int chunkIndexY )
+{
+	// Clears the worldChunk, updates its proper index, and wipes the render in preparation to load in new data	and new render
+
+	worldChunk.clear();
+	worldChunk.delimit( chunkIndexX, chunkIndexY );
+	worldChunk.wipeRender();
+	return;
+}
+
+
+void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::uint16_t numBytesTiles, std::uint64_t* paletteData, std::uint16_t numBytesPalette )
 {
 	// Load from tilesData which is an array of bytes representing the tiles of the worldChunk given by tilesBlob. We need unpack this condensed "bit-addressable" 
 	// array of keys to the 64bit tileId values.
@@ -663,7 +742,7 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 	uint16_t key = 0;
 	std::uint8_t accumulator = 0;
 	std::uint8_t numBitsPerKey = ( ceil( log2( numUniqueKeys ) ) ) > 0 ? ( ceil( log2( numUniqueKeys ) ) ) : 1; // [!] // max is 10 bits
-	uint16_t byteOffset = tilesNumBytes - 1;
+	uint16_t byteOffset = numBytesTiles - 1;
 	std::uint8_t remainingSegmentBits = numBitsPerSegment;
 	std::string keyDisplacements;
 	for ( int i = numTiles - 1; i >= 0; i-- )

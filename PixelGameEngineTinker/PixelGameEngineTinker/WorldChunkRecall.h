@@ -12,8 +12,6 @@ private:
 
 	std::uint64_t* _paletteData;
 	std::uint16_t _numBytesPalette;
-
-
 public:
 	WorldChunkRecall( std::uint64_t index, unsigned char* tilesData, std::uint16_t numBytesTiles, std::uint64_t* paletteData, std::uint16_t numBytesPalette )
 		: _index( index ),
@@ -26,7 +24,10 @@ public:
 	~WorldChunkRecall()
 	{
 		delete[] this->_tilesData;
+		this->_tilesData = nullptr;
+
 		delete[] this->_paletteData;
+		this->_paletteData = nullptr;
 	}
 
 

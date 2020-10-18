@@ -37,7 +37,10 @@ WorldChunkMemory::WorldChunkMemory( WorldChunk* worldChunk )
 WorldChunkMemory::~WorldChunkMemory()
 {
 	delete[] this->_tilesBlob;
+	this->_tilesBlob = nullptr;
+
 	delete[] this->_paletteBlob;
+	this->_paletteBlob = nullptr;
 }
 
 
