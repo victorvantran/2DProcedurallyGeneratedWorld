@@ -63,9 +63,6 @@
     <ClInclude Include="WorldChunk.h">
       <Filter>Header Files\World</Filter>
     </ClInclude>
-    <ClInclude Include="MemoryManager.h">
-      <Filter>Header Files\MemoryManagement</Filter>
-    </ClInclude>
     <ClInclude Include="QuadTree.h">
       <Filter>Header Files\Render</Filter>
     </ClInclude>
@@ -105,9 +102,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sqlite\sqlite3.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MemoryManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="WorldChunkMemory.cpp">

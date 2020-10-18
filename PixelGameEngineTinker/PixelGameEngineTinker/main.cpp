@@ -9,8 +9,6 @@
 #include "Camera.h"
 
 
-#include "MemoryManager.h"
-
 #include <thread>
 #include <future>
 
@@ -172,72 +170,14 @@ public:
 		// Render
 		Clear( olc::BLACK );
 
-		//auto future = std::async( &World::delimitWorldChunks, &this->world, this->camera.getFocalPoint() );
-		//return future.get();
 
-		//std::thread t( &World::delimitWorldChunks, &this->world, this->camera.getFocalPoint() );
-		//t.detach();
-		
-		this->world.delimitWorldChunks( this->camera.getFocalPoint() );
-
-		// this->world.getMemoryManager()->cameraCenter = this->camera.getFocalPoint();
-
-
-
-
-
-		/*
-		//if ( GetKey( olc::Key::K ).bPressed || GetKey( olc::Key::K ).bHeld )
-		if ( GetKey( olc::Key::K ).bPressed )
-		{
-			WorldChunk* worldChunk = new WorldChunk( 1, 1 );
-			std::thread addThread( &WorldMemoryManager::add, &this->worldMemoryManager, worldChunk->createMemory() );
-			addThread.detach();
-
-
-			delete worldChunk;
-			
-			//WorldChunkMemory* worldChunkMemory = new WorldChunkMemory();
-			//std::thread addThread( &WorldMemoryManager::add, &this->worldMemoryManager, worldChunkMemory );
-			//addThread.detach();
-			
-		}
-
-		
-		if ( GetKey( olc::Key::L ).bPressed || GetKey( olc::Key::L ).bHeld )
-		{
-			std::thread saveThread( &WorldMemoryManager::saveWorldGeography, &this->worldMemoryManager );
-			saveThread.detach();
-		}
-		*/
-		
-		/*
-		std::thread saveThread( &WorldMemoryManager::saveWorldGeography, &this->worldMemoryManager );
-		saveThread.detach();
-		*/
-
-
-		/*
-		if ( GetKey( olc::Key::L ).bPressed || GetKey( olc::Key::L ).bHeld )
-		{
-			std::thread saveThread( &WorldMemoryManager::saveWorldGeography, this->world.getMemoryManager() );
-			saveThread.detach();
-		}
-		*/
-		
-		
-		/*
-		std::thread saveThread( &WorldMemoryManager::saveWorldGeography, this->world.getMemoryManager() );
-		saveThread.detach();
-		*/
-
-		
 		this->camera.renderWorld( this->world );
 
 
-		this->world.cameraCenter = this->camera.getFocalPoint();
+		std::thread updateFocalChunkThread( &World::updateFocalChunk, &this->world, this->camera.getFocalPoint() );
+		updateFocalChunkThread.detach();
+		//this->world.updateFocalChunk( this->camera.getFocalPoint() );
 
-		// this->camera.renderCamera();
 
 		drawTileIndexString( tileIndex );
 
@@ -248,7 +188,7 @@ public:
 	void createWorld() // create World?
 	{
 		//this->world = World(); // stop calling stuff twice
-		MemoryManager::initializeWorldDatabase(); // [!]
+		// MemoryManager::initializeWorldDatabase(); // [!]
 
 
 		int screenCellWidth = screenWidth / cellSize;
@@ -261,6 +201,7 @@ public:
 
 
 		// Initialize world [!]
+		this->world.initializeDatabase();
 		this->world.initializeDelimits( this->camera.getFocalPoint() );
 		this->world.initializeWorldChunks();
 

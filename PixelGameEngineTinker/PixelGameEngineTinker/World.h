@@ -15,7 +15,7 @@
 #include <fstream>
 
 #include "WorldChunk.h"
-
+#include "WorldChunkRecall.h"
 
 class WorldChunkMemory; // Forward Declaration
 
@@ -24,7 +24,7 @@ class World
 {
 public:
 	// Temp
-	BoundingBox<float> cameraCenter;
+	BoundingBox<float> _focalChunk;
 
 private:
 
@@ -85,14 +85,19 @@ public:
 	~World();
 
 
+	void initializeDatabase();
+
 	void insert( int x, int y, int width, int height, uint64_t id );
 	void remove( int x, int y, int width, int height, uint64_t id );
+
+
+	void updateFocalChunk( BoundingBox<float> focalPoint );
 
 	void initializeDelimits( const BoundingBox<float>& cameraView );
 	void initializeWorldChunks();
 
 	void delimitWorldChunk( WorldChunk& worldChunk, int newIndexX, int newIndexY );
-	std::tuple<int, int, std::vector<std::tuple<int, int, int>>> delimitWorldChunks( const BoundingBox<float>& cameraView ); // new camx, new camy, WorldChunkRecall
+	std::vector<std::tuple<std::uint64_t, int, int>> delimitWorldChunks( const BoundingBox<float>& cameraView ); // WorldChunkRecall
 
 
 	WorldChunk* getWorldChunks();
@@ -107,19 +112,11 @@ public:
 
 
 
-
-
-
-
-
-
-
 	void startWorldMemorySystem();
 	void stopWorldMemorySystem();
 
 
 	void addMemory( WorldChunkMemory* worldChunkMemory );
-	void addRecall( WorldChunk* worldChunk ); 
 	
 
 	void saveWorldGeographyTask();
@@ -132,7 +129,7 @@ public:
 	static unsigned char* createTilesBlob( Tile* tiles, std::vector<std::uint64_t>& palette );
 	static std::uint64_t* createPaletteBlob( std::vector<std::uint64_t>& palette );
 
-	static void loadTiles( unsigned char* tilesData, std::uint16_t tilesNumBytes, std::uint64_t* paletteData, std::uint16_t numUniqueKeys, WorldChunk* worldChunk );
+	static void loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::uint16_t tilesNumBytes, std::uint64_t* paletteData, std::uint16_t numUniqueKeys );
 
 
 
