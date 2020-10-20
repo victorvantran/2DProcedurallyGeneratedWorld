@@ -44,6 +44,7 @@
     <ClInclude Include="QuadTree.h" />
     <ClInclude Include="Screen.h" />
     <ClInclude Include="Settings.h" />
+    <ClInclude Include="SpriteTilesMap.h" />
     <ClInclude Include="TileRender.h" />
     <ClInclude Include="Tile.h" />
     <ClInclude Include="WorldChunk.h" />
@@ -52,8 +53,10 @@
     <ClInclude Include="World.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Assets.cpp" />
     <ClCompile Include="Cell.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Settings.cpp" />
     <ClCompile Include="sqlite\sqlite3.c" />
     <ClCompile Include="TileRender.cpp" />
     <ClCompile Include="Tile.cpp" />

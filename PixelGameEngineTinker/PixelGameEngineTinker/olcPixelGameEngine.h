@@ -497,6 +497,7 @@ namespace olc
 		ImageLoader() = default;
 		virtual ~ImageLoader() = default;
 		virtual olc::rcode LoadImageResource(olc::Sprite* spr, const std::string& sImageFile, olc::ResourcePack* pack) = 0;
+		virtual olc::rcode LoadImageResource( olc::Sprite* spr, char* data, std::uint64_t numBytes, olc::ResourcePack* pack ) = 0; // [!] 
 		virtual olc::rcode SaveImageResource(olc::Sprite* spr, const std::string& sImageFile) = 0;
 	};
 
@@ -509,12 +510,14 @@ namespace olc
 	public:
 		Sprite();
 		Sprite(const std::string& sImageFile, olc::ResourcePack* pack = nullptr);
+		Sprite( char* data, std::uint64_t numBytes, olc::ResourcePack* pack = nullptr ); // [!]
 		Sprite(int32_t w, int32_t h);
 		Sprite(const olc::Sprite&) = delete;
 		~Sprite();
 
 	public:
 		olc::rcode LoadFromFile(const std::string& sImageFile, olc::ResourcePack* pack = nullptr);
+		olc::rcode LoadFromFile( char* data, std::uint64_t numBytes, olc::ResourcePack* pack = nullptr ); // [!]
 		olc::rcode LoadFromPGESprFile(const std::string& sImageFile, olc::ResourcePack* pack = nullptr);
 		olc::rcode SaveToPGESprFile(const std::string& sImageFile);
 
@@ -985,6 +988,11 @@ namespace olc
 		LoadFromFile(sImageFile, pack);
 	}
 
+	Sprite::Sprite( char* data, std::uint64_t numBytes, olc::ResourcePack* pack ) // [!]
+	{
+		LoadFromFile( data, numBytes, pack );
+	}
+
 	Sprite::Sprite(int32_t w, int32_t h)
 	{
 		if (pColData) delete[] pColData;
@@ -1126,6 +1134,14 @@ namespace olc
 		UNUSED(pack);
 		return loader->LoadImageResource(this, sImageFile, pack);
 	}
+
+
+	olc::rcode Sprite::LoadFromFile( char* data, std::uint64_t numBytes, olc::ResourcePack* pack ) // [!]
+	{
+		UNUSED( pack );
+		return loader->LoadImageResource( this, data, numBytes, pack );
+	}
+
 
 	olc::Sprite* Sprite::Duplicate()
 	{
@@ -3088,6 +3104,35 @@ namespace olc
 			delete bmp;
 			return olc::rcode::OK;
 		}
+
+
+		olc::rcode LoadImageResource( olc::Sprite* spr, char* data, std::uint64_t numBytes, olc::ResourcePack* pack ) override // [!]
+		{
+			// It does, so clear out existing sprite
+			if ( spr->pColData != nullptr ) delete[] spr->pColData;
+
+			// Open file
+			UNUSED( pack );
+			Gdiplus::Bitmap* bmp = nullptr;
+
+			bmp = Gdiplus::Bitmap::FromStream( SHCreateMemStream( ( BYTE* )data, UINT( numBytes ) ) );
+		
+			if ( bmp->GetLastStatus() != Gdiplus::Ok ) return olc::rcode::FAIL;
+			spr->width = bmp->GetWidth();
+			spr->height = bmp->GetHeight();
+			spr->pColData = new Pixel[spr->width * spr->height];
+
+			for ( int y = 0; y < spr->height; y++ )
+				for ( int x = 0; x < spr->width; x++ )
+				{
+					Gdiplus::Color c;
+					bmp->GetPixel( x, y, &c );
+					spr->SetPixel( x, y, olc::Pixel( c.GetRed(), c.GetGreen(), c.GetBlue(), c.GetAlpha() ) );
+				}
+			delete bmp;
+			return olc::rcode::OK;
+		}
+
 
 		olc::rcode SaveImageResource(olc::Sprite* spr, const std::string& sImageFile) override
 		{

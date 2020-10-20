@@ -1,12 +1,15 @@
 #pragma once
 
+#include <cstdint>
 #include "Settings.h"
 #include "BoundingBox.h"
 #include "World.h"
+#include "SpriteTilesMap.h"
 #include "WorldChunk.h"
 #include "QuadTree.h"
 #include "TileRender.h"
 #include "Tile.h"
+
 
 
 class Camera : public olc::PGEX
@@ -30,9 +33,9 @@ public:
 	void screenToWorld( int pixelX, int pixelY, float& cellX, float& cellY ) const; // int to float ( camera offest determines displacement )
 	void worldToScreen( float cellX, float cellY, int& pixelX, int& pixelY ) const; // float to int ( camera offset determines displacement )
 
-	void renderWorld( World& world ) const;
-	void renderWorldChunk( WorldChunk& worldChunk ) const;
-	void renderTileRenders( QuadTree<Tile, TileRender>& quadTree ) const;
+	void renderWorld( World* world ) const;
+	void renderWorldChunk( WorldChunk& worldChunk, const SpriteTilesMap& spriteTilesMap ) const;
+	void renderTileRenders( QuadTree<Tile, TileRender>& quadTree, const SpriteTilesMap& spriteTilesMap ) const;
 	void renderCamera() const;
 
 	void renderTilesDebug( WorldChunk& worldChunk ) const;
@@ -101,14 +104,14 @@ void Camera::worldToScreen( float cellX, float cellY, int& pixelX, int& pixelY )
 }
 
 
-void Camera::renderWorld( World& world ) const
+void Camera::renderWorld( World* world) const
 {
-	WorldChunk* worldChunks = world.getWorldChunks();
-	int numWorldChunks = world.getNumWorldChunks();
+	WorldChunk* worldChunks = world->getWorldChunks();
+	int numWorldChunks = world->getNumWorldChunks();
 
 	for ( int i = 0; i < numWorldChunks; i++ )
 	{
-		this->renderWorldChunk( worldChunks[i] );
+		this->renderWorldChunk( worldChunks[i], world->getSpriteTilesMap() );
 		//this->renderTilesDebug( worldChunks[i] );
 	}
 
@@ -116,7 +119,7 @@ void Camera::renderWorld( World& world ) const
 }
 
 
-void Camera::renderWorldChunk( WorldChunk& worldChunk ) const
+void Camera::renderWorldChunk( WorldChunk& worldChunk, const SpriteTilesMap& spriteTilesMap ) const
 {
 	int tileSize = Settings::Screen::CELL_PIXEL_SIZE;; // [!] make it from a "global" variable
 
@@ -138,14 +141,15 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk ) const
 		olc::GREEN
 	);
 
-	this->renderTileRenders( worldChunk.getTileRendersRoot() );
+	this->renderTileRenders( worldChunk.getTileRendersRoot(), spriteTilesMap );
 	return;
 }
 
 
-void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders ) const
+void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const SpriteTilesMap& spriteTilesMap ) const
 {
 	int tileSize = Settings::Screen::CELL_PIXEL_SIZE; // [!] make it global variable in singleton
+	//int tileSize = Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE;
 	int chunkSize = Settings::World::CHUNK_CELL_SIZE; // [!] singleton 
 
 	QuadTree<Tile, TileRender> currQuadTree = tileRenders.getReferenceNodes()[tileRenders.getIndex()];
@@ -160,19 +164,22 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders ) const
 	// Fill Consolidated
 	if ( currQuadTree.isConsolidated() )
 	{
-
 		if ( this->_view.intersects( currQuadTree.getBounds() ) && currQuadTree.getCells()[0].getId() != 0 )
 		{
-			int id = currQuadTree.getCells()[0].getId();
+			std::uint64_t id = currQuadTree.getCells()[0].getId();
+			if ( spriteTilesMap.getDecal( id ) == nullptr )
+			{
+				return;
+			}
+
 			int level = currQuadTree.getLevel();
 			int scale = 2 << ( level );
 
-			int decalPositionX = 0;
+			int decalPositionY = 0;
 			for ( int i = 0; i < level; i++ )
 			{
-				decalPositionX += ( 2 << i );
+				decalPositionY += (16  * ( 2 << i ) );
 			}
-			int decalPositionY = id * 32;
 
 			float worldPositionX = currQuadTree.getBounds().getX();
 			float worldPositionY = currQuadTree.getBounds().getY();
@@ -180,12 +187,32 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders ) const
 			int pixelY;
 			worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
 			olc::vi2d startPos = olc::vi2d{ pixelX, pixelY };
+
+			pge->DrawPartialDecal(
+				startPos,
+				//olc::vi2d{ ( int )( tileSize * this->_zoomX ), ( int )( tileSize * this->_zoomY ) } * scale, //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
+				olc::vf2d{ this->_zoomX * tileSize, this->_zoomY * tileSize } * scale,
+				spriteTilesMap.getDecal( id ),
+				olc::vf2d{ 0, 128 + (float)decalPositionY }, // [!] temp based on configuration
+				olc::vf2d{ 1, 1 } * Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE * scale //
+			);
 			
+			
+			/*
 			pge->FillRect(
 				startPos,
-				olc::vf2d{ 1.0f * scale * this->_zoomX * tileSize  , 1.0f * scale * this->_zoomY * tileSize },
-				id == 1 ? olc::DARK_CYAN : ( id == 2 ? olc::DARK_GREY : olc::DARK_GREEN )
+				olc::vi2d{ ( int )( tileSize * this->_zoomX ), ( int )( tileSize * this->_zoomY ) } * scale, //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
+				olc::DARK_MAGENTA
 			);
+			*/
+			/*
+			pge->DrawRect
+			(
+				startPos,
+				olc::vi2d{ ( int )( tileSize * this->_zoomX ), ( int )( tileSize * this->_zoomY ) } *scale, //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
+				olc::DARK_MAGENTA
+			);
+			*/
 		}
 
 		return;
@@ -193,30 +220,52 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders ) const
 	// Fill the small bounding boxes (cells) that are not possibly consolidated
 	else
 	{
-		TileRender* cells = currQuadTree.getCells();
-		for ( int i = 0; i < 4; i++ )
+		if ( currQuadTree.getLevel() == QuadTree<Tile, TileRender>::_MIN_LEVEL )
 		{
-			if ( cells[i].getExist() && cells[i].getId() != 0 && this->_view.intersects( cells[i].getBounds() ) )
+			TileRender* cells = currQuadTree.getCells();
+			for ( int i = 0; i < 4; i++ )
 			{
-				int id = cells[i].getId();
-				olc::vi2d decalSourcePos = olc::vi2d{ cells[i].getId() == 0 ? 7 : 15, 7 }; // dirt, stone
+				if ( cells[i].getExist() && cells[i].getId() != 0 && this->_view.intersects( cells[i].getBounds() ) )
+				{
+					std::uint64_t id = cells[i].getId();
+					if ( spriteTilesMap.getDecal( id ) == nullptr )
+					{
+						continue;
+					}
 
-				float worldPositionX = cells[i].getBounds().getX();
-				float worldPositionY = cells[i].getBounds().getY();
-				int pixelX;
-				int pixelY;
-				worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
-				olc::vi2d startPos = olc::vi2d{ pixelX, pixelY };
-				olc::vi2d size = olc::vi2d{ tileSize, tileSize }; //olc::vi2d{ ( int )( ( screenEndX - screenStartX ) * tileSize ), ( int )( ( screenEndY - screenStartY ) * tileSize ) };
-				olc::vf2d scale = olc::vf2d{ 1.0f * this->_zoomX, 1.0f * this->_zoomY };
-			
-				pge->FillRect(
-					startPos,
-					olc::vi2d{ ( int )( tileSize * this->_zoomX ), ( int )( tileSize * this->_zoomY ) }, //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
-					id == 1 ? olc::DARK_CYAN : ( id == 2 ? olc::DARK_GREY : olc::DARK_GREEN )
-				);
+
+					float worldPositionX = cells[i].getBounds().getX();
+					float worldPositionY = cells[i].getBounds().getY();
+					int pixelX;
+					int pixelY;
+					worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
+					olc::vi2d startPos = olc::vi2d{ pixelX, pixelY };
+					olc::vi2d size = olc::vi2d{ tileSize, tileSize }; //olc::vi2d{ ( int )( ( screenEndX - screenStartX ) * tileSize ), ( int )( ( screenEndY - screenStartY ) * tileSize ) };
+					olc::vf2d scale = olc::vf2d{ 1.0f * this->_zoomX, 1.0f * this->_zoomY };
+
+					/*
+					pge->FillRect(
+						startPos,
+						olc::vi2d{ ( int )( tileSize * this->_zoomX ), ( int )( tileSize * this->_zoomY ) }, //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
+						olc::DARK_MAGENTA
+					);
+					*/
+
+					pge->DrawPartialDecal(
+						startPos,
+						//olc::vi2d{ ( int )( tileSize * this->_zoomX ), ( int )( tileSize * this->_zoomY ) }, //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
+						olc::vf2d{ ( tileSize * this->_zoomX ), ( tileSize * this->_zoomY ) }, //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
+						spriteTilesMap.getDecal( id ),
+						olc::vf2d{ 0, 128 }, // [!] temp based on configuration
+						olc::vf2d{ 1, 1 } *Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE //
+					);
+				
+				}
 			}
+
+			return;
 		}
+		
 
 		// Fill other psosible consolidated (or not-consolidated) boundingboxes
 		// Get node indicies
@@ -227,7 +276,7 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders ) const
 			{
 				if ( childrenNodeIndicies[i] != -1 )
 				{
-					this->renderTileRenders( tileRenders.getReferenceNodes()[childrenNodeIndicies[i]] );
+					this->renderTileRenders( tileRenders.getReferenceNodes()[childrenNodeIndicies[i]], spriteTilesMap );
 				}
 			}
 		}

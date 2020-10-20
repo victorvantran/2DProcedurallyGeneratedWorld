@@ -2,16 +2,21 @@
 
 #include <cstdint>
 #include <map>
+#include <set>
 #include <vector>
-#include <mutex>
 #include <string>
+
+#include <mutex>
 #include <atomic>
+#include <condition_variable>
 
 #include "sqlite/sqlite3.h"
 
+#include "Assets.h"
 #include "Tile.h"
 #include "WorldChunk.h"
 #include "WorldChunkRecall.h"
+#include "SpriteTilesMap.h"
 
 #include <iostream>
 #include <fstream>
@@ -28,7 +33,6 @@ private:
 	const static int _chunkCellSize = Settings::World::CHUNK_CELL_SIZE;
 
 	WorldChunk* _worldChunks = nullptr;
-	std::mutex _modifyWordChunksMutex;
 
 	int _numChunkWidth;
 	int _numChunkHeight;
@@ -42,16 +46,25 @@ private:
 
 	// Memory
 	std::mutex _worldDatabaseMutex;
+	std::mutex _modifyWordChunksMutex; // [!] get rid of saveworldchunksmutex and load, and set it to modify/access
 
 	std::vector<WorldChunkMemory*> _saveWorldChunks;
 	std::atomic<bool> _runningSaveWorldGeography;
 	std::thread _saveWorldGeographyThread;
-	std::mutex _saveWordChunksMutex;
-	std::uint8_t _MAX_SAVED_CHUNKS = 50; // [!] Settings
+	std::mutex _saveWorldChunksMutex;
 
 	std::atomic<bool> _runningLoadWorldGeography;
 	std::thread _loadWorldGeographyThread;
-	std::mutex _loadWordChunksMutex;
+	std::mutex _loadWorldChunksMutex;
+
+	SpriteTilesMap _spriteTilesMap;
+
+	std::atomic<bool> _runningLoadSpriteTiles;
+	std::thread _loadSpriteTilesThread;
+	std::mutex _mutexModifyTileSprites;
+	std::condition_variable _condModifyTileSprites;
+
+
 private:
 	static unsigned char copyBits( unsigned char& destination, unsigned char copy, unsigned startIndex, unsigned char endIndex );
 	static unsigned char copyBits( unsigned char& destination, unsigned dStartIndex, unsigned char dEndIndex, unsigned char copy, unsigned cStartIndex, unsigned char cEndIndex );
@@ -93,5 +106,14 @@ public:
 	void updateFocalChunk( BoundingBox<float> focalPoint );
 	std::vector<std::tuple<std::uint64_t, int, int>> delimitWorldChunks( const BoundingBox<float>& cameraView );
 	void delimitWorldChunk( WorldChunk& worldChunk, int newIndexX, int newIndexY );
-	static void loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::uint16_t tilesNumBytes, std::uint64_t* paletteData, std::uint16_t numUniqueKeys );
+	void loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::uint16_t tilesNumBytes, std::uint64_t* paletteData, std::uint16_t numUniqueKeys );
+
+	// TileDecals
+	void loadSpriteTilesTask();
+	void loadSpriteTiles();
+	void addSpriteTiles( std::uint64_t tileId );
+	const SpriteTilesMap& getSpriteTilesMap();
+	void updateDecals();
+
+	void DEBUG_PRINT_TILE_SPRITES();
 };

@@ -493,7 +493,7 @@ void QuadTree<T, TRender>::insert( const TRender& aRenderCell )
 				this->_cellCount += 1;
 			}
 		}
-
+		
 		// Add to children regardless
 		this->_referenceNodes[this->_childrenIndex[quadrant]].insert( aRenderCell ); /// 
 	}

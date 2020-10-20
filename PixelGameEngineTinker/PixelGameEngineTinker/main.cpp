@@ -26,11 +26,8 @@ public:
 
 
 public:
-	olc::Decal* decalTileMap = nullptr;
-	olc::Decal* decalDirtTileConsolidationMap = nullptr;
-
-	World world;
-	Camera camera;
+	World* world = nullptr;
+	Camera* camera = nullptr;
 
 	olc::vi2d decalGridDimension;
 
@@ -40,7 +37,6 @@ public:
 	olc::vi2d gridDimension;
 
 	int tileId = 1; // [!] never insert a void block (0) unless you know how to remove it without seeing it
-
 private:
 
 
@@ -54,10 +50,9 @@ public:
 public:
 	bool OnUserCreate() override
 	{
-		createSpritesAndDecals();
+		loadAssets();
 		createConfigurations();
 		createWorld();
-
 		return true;
 	}
 
@@ -71,55 +66,55 @@ public:
 		float panSpeed = 20.0f;
 		if ( GetKey( olc::Key::UP ).bPressed || GetKey( olc::Key::UP ).bHeld )
 		{
-			camera.panY( -panSpeed * fElapsedTime );
+			camera->panY( -panSpeed * fElapsedTime );
 		}
 		if ( GetKey( olc::Key::DOWN ).bPressed || GetKey( olc::Key::DOWN ).bHeld )
 		{
-			camera.panY( panSpeed * fElapsedTime );
+			camera->panY( panSpeed * fElapsedTime );
 		}
 		if ( GetKey( olc::Key::LEFT ).bPressed || GetKey( olc::Key::LEFT ).bHeld )
 		{
-			camera.panX( -panSpeed * fElapsedTime );
+			camera->panX( -panSpeed * fElapsedTime );
 		}
 		if ( GetKey( olc::Key::RIGHT ).bPressed || GetKey( olc::Key::RIGHT ).bHeld )
 		{
-			camera.panX( panSpeed * fElapsedTime );
+			camera->panX( panSpeed * fElapsedTime );
 		}
 		if ( GetKey( olc::Key::T ).bPressed || GetKey( olc::Key::T ).bHeld )
 		{
-			camera.pan( panSpeed * fElapsedTime, panSpeed * fElapsedTime );
+			camera->pan( panSpeed * fElapsedTime, panSpeed * fElapsedTime );
 		}
 
 
 		if ( GetKey( olc::Key::F1 ).bPressed )
 		{
-			camera.panY( -panSpeed*100 );
+			camera->panY( -panSpeed*100 );
 		}
 		if ( GetKey( olc::Key::F2 ).bPressed )
 		{
-			camera.panY( panSpeed*100 );
+			camera->panY( panSpeed*100 );
 		}
 		if ( GetKey( olc::Key::F3 ).bPressed )
 		{
-			camera.panX( -panSpeed*100 );
+			camera->panX( -panSpeed*100 );
 		}
 		if ( GetKey( olc::Key::F4 ).bPressed )
 		{
-			camera.panX( panSpeed*100 );
+			camera->panX( panSpeed*100 );
 		}
 
 		// Zoom in
 		if ( GetKey( olc::Key::Z ).bPressed || GetKey( olc::Key::Z ).bHeld )
 		{
 			float zoomScale = 1.0f + ( 1.0f * fElapsedTime );
-			this->camera.zoom( zoomScale );
+			this->camera->zoom( zoomScale );
 		}
 
 		// Zoom out
 		if ( GetKey( olc::Key::X ).bPressed || GetKey( olc::Key::X ).bHeld )
 		{
 			float zoomScale = 1.0f - ( 1.0f * fElapsedTime );
-			this->camera.zoom( zoomScale );
+			this->camera->zoom( zoomScale );
 		}
 
 		if ( GetKey( olc::Key::W ).bPressed )
@@ -140,7 +135,7 @@ public:
 		float tilePositionY;
 
 		// [!] NEED TO FIX TO ACCOUNT FOR NEGATIVE ( LIKE HOW I DID FOR DELIMITER CAMERA )
-		this->camera.screenToWorld( GetMouseX(), GetMouseY(), tilePositionX, tilePositionY );
+		this->camera->screenToWorld( GetMouseX(), GetMouseY(), tilePositionX, tilePositionY );
 
 		olc::vi2d tileIndex = olc::vi2d{
 			( int )( tilePositionX ),
@@ -150,19 +145,19 @@ public:
 
 		if ( GetKey( olc::Key::P ).bPressed || GetKey( olc::Key::P ).bHeld )
 		{
-			world.insert( tileIndex.x, tileIndex.y, 1, 1, tileId );
+			world->insert( tileIndex.x, tileIndex.y, 1, 1, tileId );
 		}
 
 		if ( GetMouse( 0 ).bPressed || GetMouse( 0 ).bHeld )
 			//if ( GetMouse( 0 ).bPressed )
 		{
-			world.insert( tileIndex.x, tileIndex.y, 5, 5, tileId );
+			world->insert( tileIndex.x, tileIndex.y, 5, 5, tileId );
 		}
 
 		if ( GetMouse( 1 ).bPressed || GetMouse( 1 ).bHeld )
 			//if ( GetMouse( 1 ).bPressed )
 		{
-			world.remove( tileIndex.x, tileIndex.y, 5, 5, tileId );
+			world->remove( tileIndex.x, tileIndex.y, 5, 5, tileId );
 		}
 
 
@@ -171,14 +166,24 @@ public:
 		Clear( olc::BLACK );
 
 
-		this->camera.renderWorld( this->world );
+		this->camera->renderWorld( this->world );
 
-
-		std::thread updateFocalChunkThread( &World::updateFocalChunk, &this->world, this->camera.getFocalPoint() );
+		// [!] update with notification coming from any pan of the camera. But for now, this will do; (causes the lag)
+		std::thread updateFocalChunkThread( &World::updateFocalChunk, this->world, this->camera->getFocalPoint() );
+		//updateFocalChunkThread.join();
 		updateFocalChunkThread.detach();
+		
 
+		this->world->updateDecals();
+
+		// DEBUG
 
 		drawTileIndexString( tileIndex );
+
+		if ( GetKey( olc::Key::M ).bPressed )
+		{
+			world->DEBUG_PRINT_TILE_SPRITES();
+		}
 
 		return true;
 	}
@@ -186,24 +191,21 @@ public:
 
 	void createWorld() // create World?
 	{
+		this->world = new World();
 
 		int screenCellWidth = screenWidth / cellSize;
 		int screenCellHeight = screenHeight / cellSize;
-		this->camera = Camera(
+		this->camera = new Camera(
 			BoundingBox<float>( 0.0f, 0.0f, Settings::Camera::FOCAL_POINT_CELL_WIDTH, Settings::Camera::FOCAL_POINT_CELL_HEIGHT ),
 			BoundingBox<float>( 0.0f, 0.0f, Settings::Camera::VIEW_CELL_WIDTH, Settings::Camera::VIEW_CELL_HEIGHT ),
 			1.0f, 1.0f );
 
-
-
 		// Initialize world [!]
-		this->world.initializeDatabase();
-		this->world.initializeDelimits( this->camera.getFocalPoint() );
-		this->world.initializeWorldChunks();
+		this->world->initializeDatabase();
+		this->world->initializeDelimits( this->camera->getFocalPoint() );
+		this->world->initializeWorldChunks();
 
-		this->world.startWorldMemorySystem();
-
-
+		this->world->startWorldMemorySystem();
 	}
 
 
@@ -258,15 +260,9 @@ public:
 	}
 
 
-	void createSpritesAndDecals()
+	void loadAssets()
 	{
-		// [!] For now load everything. But as our game gets bigger, we would want to load assets as needed
-		Assets::get().loadSprites();
-		Assets::get().loadDecals();
-
-		decalTileMap = Assets::get().getDecal( "ForestTileMap" );
-		decalDirtTileConsolidationMap = Assets::get().getDecal( "ForestConsolidationTileMap" );
-
+		Assets::get();
 		return;
 	}
 

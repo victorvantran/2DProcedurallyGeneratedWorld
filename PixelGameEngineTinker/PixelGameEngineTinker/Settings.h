@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-
+#include <string>
 
 class Settings
 {
@@ -19,6 +19,12 @@ public:
 		[ MemoryManager, sizeOf( tileId ) ]
 	*/
 
+
+	// Assets
+	struct Assets
+	{
+		 static const std::string SPRITES_FILE_PATH;
+	};
 
 	// Screen
 	struct Screen
@@ -42,6 +48,9 @@ public:
 		static const int CHUNK_CELL_SIZE = 32; // chunk cell size ( n x n ) // [hardcode]
 		static const int NUM_CELLS_PER_CHUNK = CHUNK_CELL_SIZE * CHUNK_CELL_SIZE;
 		static const int CHUNK_RADIUS = 2;
+
+		static const int MAX_SAVED_CHUNKS = 50; // Maximum number of chunks in queue to save before discarding
+		static const int SPRITE_TILE_REFRESH_RATE = 300; // Every 5 minutes, refresh the tileDecals if it has not yet from condition variable notification
 	};
 
 
@@ -57,7 +66,7 @@ public:
 	struct QuadTree
 	{
 		static const int MIN_LEVEL = 0;  // [hardcode]
-		static const int MAX_LEVEL = 4; // log2( CHUNK_CELL_SIZE ) - 1  // [hardcode]
+		static const int MAX_LEVEL = 4; // log2( CHUNK_CELL_SIZE ) - 1  // [hardcode] [locked due to tile png not having 256x256]
 	};
 
 	
