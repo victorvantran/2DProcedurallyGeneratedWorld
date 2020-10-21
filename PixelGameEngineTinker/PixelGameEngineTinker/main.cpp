@@ -47,6 +47,12 @@ public:
 		sAppName = "Example";
 	}
 
+	~Example()
+	{
+		delete world;
+		delete camera;
+	}
+
 public:
 	bool OnUserCreate() override
 	{
@@ -189,7 +195,7 @@ public:
 	}
 
 
-	void createWorld() // create World?
+	void createWorld()
 	{
 		this->world = new World();
 
@@ -286,7 +292,6 @@ public:
 		olc::vi2d centerBottomIndex = olc::vi2d{ tileIndex.x, tileIndex.y + 1 };
 		olc::vi2d bottomLeftIndex = olc::vi2d{ tileIndex.x - 1, tileIndex.y + 1 };
 		olc::vi2d centerLeftIndex = olc::vi2d{ tileIndex.x - 1, tileIndex.y };
-
 
 		int configuration = 0;
 

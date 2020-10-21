@@ -163,7 +163,7 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const S
 	// Fill Consolidated
 	if ( currQuadTree.isConsolidated() )
 	{
-		if ( this->_view.intersects( currQuadTree.getBounds() ) && currQuadTree.getCells()[0].getId() != 0 )
+		if ( this->_view.intersects( currQuadTree.getBounds() ) && currQuadTree.getCells()[0].getExist() )
 		{
 			std::uint64_t id = currQuadTree.getCells()[0].getId();
 			if ( spriteTilesMap.getDecal( id ) == nullptr )
@@ -180,7 +180,7 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const S
 			int pixelY;
 			worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
 			olc::vi2d startPos = olc::vi2d{ pixelX, pixelY };
-
+		
 			pge->DrawPartialDecal(
 				startPos,
 				olc::vf2d{ this->_zoomX * tileSize, this->_zoomY * tileSize } *scale,
@@ -200,7 +200,7 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const S
 			TileRender* cells = currQuadTree.getCells();
 			for ( int i = 0; i < 4; i++ )
 			{
-				if ( cells[i].getExist() && cells[i].getId() != 0 && this->_view.intersects( cells[i].getBounds() ) )
+				if ( cells[i].getExist() && this->_view.intersects( cells[i].getBounds() ) )
 				{
 					std::uint64_t id = cells[i].getId();
 					if ( spriteTilesMap.getDecal( id ) == nullptr )
@@ -215,6 +215,7 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const S
 					worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
 					olc::vi2d startPos = olc::vi2d{ pixelX, pixelY };
 
+					
 					pge->DrawPartialDecal(
 						startPos,
 						olc::vf2d{ ( tileSize * this->_zoomX ), ( tileSize * this->_zoomY ) },
@@ -222,14 +223,13 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const S
 						olc::vf2d{ 0, 128 }, // [!] temp based on configuration
 						olc::vf2d{ 1, 1 } * ( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE )
 					);
-				
+					
 				}
 			}
 
 			return;
 		}
 		
-
 		// Fill other psosible consolidated (or not-consolidated) boundingboxes
 		// Get node indicies
 		int* childrenNodeIndicies = currQuadTree.getChildrenNodeIndicies();
@@ -251,7 +251,6 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const S
 
 void Camera::renderCamera() const
 {
-	//int tileSize = 16; // [!]
 	int tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 
 	// Draw Focal Point
@@ -276,7 +275,7 @@ void Camera::renderCamera() const
 
 void Camera::renderTilesDebug( WorldChunk& worldChunk ) const
 {
-	// Draw Tiles
+	// Draw all tiles directly from the array of tiles
 	int tileSize = Settings::Screen::CELL_PIXEL_SIZE;;
 	int tileCellSize = 1; // [!] make it from a "global" variable
 

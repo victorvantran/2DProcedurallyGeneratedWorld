@@ -50,7 +50,7 @@ public:
 		static const int CHUNK_RADIUS = 2;
 
 		static const int MAX_SAVED_CHUNKS = 50; // Maximum number of chunks in queue to save before discarding
-		static const int SPRITE_TILE_REFRESH_RATE = 300; // Every 5 minutes, refresh the tileDecals if it has not yet from condition variable notification
+		static const int SPRITE_TILE_REFRESH_RATE = 300;//300; // Every 5 minutes, refresh the tileDecals if it has not yet from condition variable notification
 	};
 
 

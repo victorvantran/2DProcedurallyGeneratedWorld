@@ -77,7 +77,24 @@ World::World()
 
 World::~World()
 {
+	// Stop the daemond threads
 	this->stopWorldMemorySystem();
+
+	// Manual Save ( stop threads first )
+	for ( int i = 0; i < this->_numWorldChunks; i++ )
+	{
+		WorldChunkMemory* worldChunkMemory = this->_worldChunks[i].createMemory();
+		if ( this->_saveWorldChunks.size() >= Settings::World::MAX_SAVED_CHUNKS )
+		{
+			delete worldChunkMemory;
+			return;
+		}
+
+		this->_saveWorldChunks.push_back( worldChunkMemory );
+	}
+	this->saveWorldGeography();
+
+	// Deallocate
 	delete[] this->_worldChunks;
 	this->_worldChunks = nullptr;
 }
@@ -328,6 +345,7 @@ void World::stopWorldMemorySystem()
 	this->_loadWorldGeographyThread.join();
 
 	this->_runningLoadSpriteTiles = false;
+	this->_condModifyTileSprites.notify_one();
 	this->_loadSpriteTilesThread.join();
 
 	return;
@@ -857,7 +875,7 @@ void World::loadSpriteTiles( )
 {
 	// refresh/clean up
 	std::unique_lock<std::mutex> lockModifyTileSprites( this->_mutexModifyTileSprites ); // [!] change to mutexmodifyspritetilesmap
-	std::chrono::system_clock::time_point secondsPassed = std::chrono::system_clock::now() + std::chrono::seconds( Settings::World::SPRITE_TILE_REFRESH_RATE );
+	std::chrono::system_clock::time_point secondsPassed = std::chrono::system_clock::now() + std::chrono::seconds( (long long)Settings::World::SPRITE_TILE_REFRESH_RATE );
 	this->_condModifyTileSprites.wait_until( lockModifyTileSprites, secondsPassed );
 	//this->_condModifyTileSprites.wait( lockModifyTileSprites );
 	

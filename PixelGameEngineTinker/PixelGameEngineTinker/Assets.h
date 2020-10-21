@@ -26,6 +26,9 @@ private:
 	static std::mutex _readSpriteDatabase;
 
 public:
+	static olc::Sprite* assetSprite;
+	static olc::Decal* assetDecal;
+
 	// Delete the default copy constructor created by the compiler.
 	// We do not want to create shallow copies of this and subsequently reload the assets
 	Assets( const Assets& ) = delete;
