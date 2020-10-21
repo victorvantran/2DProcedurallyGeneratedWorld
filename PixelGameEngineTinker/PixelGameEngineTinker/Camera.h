@@ -148,9 +148,8 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, const SpriteTilesMap& spr
 
 void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const SpriteTilesMap& spriteTilesMap ) const
 {
-	int tileSize = Settings::Screen::CELL_PIXEL_SIZE; // [!] make it global variable in singleton
-	//int tileSize = Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE;
-	int chunkSize = Settings::World::CHUNK_CELL_SIZE; // [!] singleton 
+	int tileSize = Settings::Screen::CELL_PIXEL_SIZE;
+	int chunkSize = Settings::World::CHUNK_CELL_SIZE;
 
 	QuadTree<Tile, TileRender> currQuadTree = tileRenders.getReferenceNodes()[tileRenders.getIndex()];
 	const BoundingBox<int> bounds = currQuadTree.getBounds();
@@ -175,12 +174,6 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const S
 			int level = currQuadTree.getLevel();
 			int scale = 2 << ( level );
 
-			int decalPositionY = 0;
-			for ( int i = 0; i < level; i++ )
-			{
-				decalPositionY += (16  * ( 2 << i ) );
-			}
-
 			float worldPositionX = currQuadTree.getBounds().getX();
 			float worldPositionY = currQuadTree.getBounds().getY();
 			int pixelX;
@@ -190,29 +183,11 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const S
 
 			pge->DrawPartialDecal(
 				startPos,
-				//olc::vi2d{ ( int )( tileSize * this->_zoomX ), ( int )( tileSize * this->_zoomY ) } * scale, //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
-				olc::vf2d{ this->_zoomX * tileSize, this->_zoomY * tileSize } * scale,
+				olc::vf2d{ this->_zoomX * tileSize, this->_zoomY * tileSize } *scale,
 				spriteTilesMap.getDecal( id ),
-				olc::vf2d{ 0, 128 + (float)decalPositionY }, // [!] temp based on configuration
-				olc::vf2d{ 1, 1 } * Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE * scale //
+				olc::vf2d{ 0, Settings::Camera::CONSOLIDATED_TILE_OFFSET },
+				olc::vf2d{ 1, 1 } *( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE * scale )
 			);
-			
-			
-			/*
-			pge->FillRect(
-				startPos,
-				olc::vi2d{ ( int )( tileSize * this->_zoomX ), ( int )( tileSize * this->_zoomY ) } * scale, //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
-				olc::DARK_MAGENTA
-			);
-			*/
-			/*
-			pge->DrawRect
-			(
-				startPos,
-				olc::vi2d{ ( int )( tileSize * this->_zoomX ), ( int )( tileSize * this->_zoomY ) } *scale, //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
-				olc::DARK_MAGENTA
-			);
-			*/
 		}
 
 		return;
@@ -233,31 +208,19 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const S
 						continue;
 					}
 
-
 					float worldPositionX = cells[i].getBounds().getX();
 					float worldPositionY = cells[i].getBounds().getY();
 					int pixelX;
 					int pixelY;
 					worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
 					olc::vi2d startPos = olc::vi2d{ pixelX, pixelY };
-					olc::vi2d size = olc::vi2d{ tileSize, tileSize }; //olc::vi2d{ ( int )( ( screenEndX - screenStartX ) * tileSize ), ( int )( ( screenEndY - screenStartY ) * tileSize ) };
-					olc::vf2d scale = olc::vf2d{ 1.0f * this->_zoomX, 1.0f * this->_zoomY };
-
-					/*
-					pge->FillRect(
-						startPos,
-						olc::vi2d{ ( int )( tileSize * this->_zoomX ), ( int )( tileSize * this->_zoomY ) }, //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
-						olc::DARK_MAGENTA
-					);
-					*/
 
 					pge->DrawPartialDecal(
 						startPos,
-						//olc::vi2d{ ( int )( tileSize * this->_zoomX ), ( int )( tileSize * this->_zoomY ) }, //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
-						olc::vf2d{ ( tileSize * this->_zoomX ), ( tileSize * this->_zoomY ) }, //-olc::vf2d{ 1.0f / tileSize, 1.0f / tileSize }
+						olc::vf2d{ ( tileSize * this->_zoomX ), ( tileSize * this->_zoomY ) },
 						spriteTilesMap.getDecal( id ),
 						olc::vf2d{ 0, 128 }, // [!] temp based on configuration
-						olc::vf2d{ 1, 1 } *Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE //
+						olc::vf2d{ 1, 1 } * ( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE )
 					);
 				
 				}

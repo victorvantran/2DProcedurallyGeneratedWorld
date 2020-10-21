@@ -81,6 +81,8 @@ public:
 
 		static const int ABSOLUTE_PIXEL_OFFSET_X = Screen::CELL_PIXEL_SIZE * ( Screen::SCREEN_CELL_WIDTH / 2 ) - Screen::CELL_PIXEL_SIZE * ( FOCAL_POINT_CELL_WIDTH / 2 );
 		static const int ABSOLUTE_PIXEL_OFFSET_Y = Screen::CELL_PIXEL_SIZE * ( Screen::SCREEN_CELL_HEIGHT / 2 ) - Screen::CELL_PIXEL_SIZE * ( FOCAL_POINT_CELL_HEIGHT / 2 );
+
+		static const std::uint32_t CONSOLIDATED_TILE_OFFSET = 128;
 	};
 
 
