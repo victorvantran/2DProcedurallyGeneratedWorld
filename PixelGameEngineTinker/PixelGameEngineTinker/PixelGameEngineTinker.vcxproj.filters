@@ -87,6 +87,9 @@
     <ClInclude Include="SpriteTilesMap.h">
       <Filter>Header Files\Render</Filter>
     </ClInclude>
+    <ClInclude Include="ShadowRender.h">
+      <Filter>Header Files\Render</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cell.cpp">

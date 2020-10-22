@@ -32,11 +32,10 @@ void WorldChunk::construct()
 	this->_tileRenders[0].constructQuadTree(
 		0,
 		-1,
-		QuadTree<Tile, TileRender>::_MAX_LEVEL,
+		QuadTree<TileRender>::_MAX_LEVEL,
 		0,
 		BoundingBox<int>( rootQuadTreePositionX, rootQuadTreePositionY, this->_size, this->_size ),
-		this->_tileRenders,
-		this->_tiles
+		this->_tileRenders
 	);
 
 	// Connect trees
@@ -59,11 +58,10 @@ void WorldChunk::wipeRender()
 	this->_tileRenders[0].constructQuadTree(
 		0,
 		-1,
-		QuadTree<Tile, TileRender>::_MAX_LEVEL,
+		QuadTree<TileRender>::_MAX_LEVEL,
 		0,
 		BoundingBox<int>( rootQuadTreePositionX, rootQuadTreePositionY, this->_size, this->_size ),
-		this->_tileRenders,
-		this->_tiles
+		this->_tileRenders
 	);
 	
 	// The difference between construct and reconstruct is quick reassignment, unless of course, shallow copy does this for us. Then just use construct
@@ -272,7 +270,7 @@ Tile* WorldChunk::getTiles()
 }
 
 
-QuadTree<Tile, TileRender>& WorldChunk::getTileRendersRoot()
+QuadTree<TileRender>& WorldChunk::getTileRendersRoot()
 {
 	return this->_tileRenders[0];
 }

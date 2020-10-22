@@ -59,6 +59,7 @@ public:
 	{
 		static const int SIZE = World::CHUNK_CELL_SIZE;
 		static const int NUM_TILE_RENDERS = 341; // 4^0 + 4^1 + 4^2 + ... + 4^n ( for n = log( chunkSize ) = quadTreeMaxLevel ) // [hardcode]
+		static const std::uint32_t NUM_SHADOW_RENDERS = 1365; // // 4^0 + 4^1 + 4^2 + ... + 4^( n + 1 ) ( for n = log( chunkSize ) [ hardcode ] ( 4 shadows per tile )
 	};
 
 	

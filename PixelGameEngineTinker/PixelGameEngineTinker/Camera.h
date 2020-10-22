@@ -34,7 +34,7 @@ public:
 
 	void renderWorld( World* world ) const;
 	void renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const;
-	void renderTileRenders( QuadTree<Tile, TileRender>& quadTree, Atlas& atlas ) const;
+	void renderTileRenders( QuadTree<TileRender>& quadTree, Atlas& atlas ) const;
 	void renderCamera() const;
 
 	void renderTilesDebug( WorldChunk& worldChunk ) const;
@@ -145,14 +145,14 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 }
 
 
-void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, Atlas& atlas ) const
+void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas ) const
 {
 	// Render every tileRender but only drawing one properlly scaled tile for each consolidated render
 
 	int tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 	int chunkSize = Settings::World::CHUNK_CELL_SIZE;
 
-	QuadTree<Tile, TileRender> currQuadTree = tileRenders.getReferenceNodes()[tileRenders.getIndex()];
+	QuadTree<TileRender> currQuadTree = tileRenders.getReferenceNodes()[tileRenders.getIndex()];
 	const BoundingBox<int> bounds = currQuadTree.getBounds();
 
 	// No need to render if the camera can not see it
@@ -197,7 +197,7 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, Atlas& 
 	// Fill the small bounding boxes (cells) that are not possibly consolidated
 	else
 	{
-		if ( currQuadTree.getLevel() == QuadTree<Tile, TileRender>::_MIN_LEVEL )
+		if ( currQuadTree.getLevel() == QuadTree<TileRender>::_MIN_LEVEL )
 		{
 			TileRender* cells = currQuadTree.getCells();
 			for ( int i = 0; i < 4; i++ )
