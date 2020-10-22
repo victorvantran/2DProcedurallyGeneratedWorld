@@ -23,7 +23,6 @@ public:
 	static const int _MIN_LEVEL = Settings::QuadTree::MIN_LEVEL; // ( level => gridsize => numCell ) 5 => 1024 =>64, 4 => 32 => 512, 3 => 16 => 256, 2 => 8 => 128, 1 => 4 => 64, 0 => 2 => 32
 	static const int _MAX_LEVEL = Settings::QuadTree::MAX_LEVEL;
 	static const int _MIN_CELL_SIZE = ( 2 << QuadTree<T, TRender>::_MIN_LEVEL ) / 2;
-
 	static const int _MAP_WIDTH = ( 2 << QuadTree<T, TRender>::_MAX_LEVEL );
 	static const int _MAP_HEIGHT = ( 2 << QuadTree<T, TRender>::_MAX_LEVEL );
 
@@ -32,10 +31,7 @@ private:
 	int _parentIndex;
 	int _level;
 	int _quadrant;
-
 	BoundingBox<int> _quadTreeBounds;
-
-
 	bool _divided;
 	bool _consolidated;
 	int _cellCount;
@@ -46,10 +42,7 @@ private:
 	QuadTree<T, TRender>* _referenceNodes;
 	T* _map;
 
-protected:
-
 public:
-
 	QuadTree();
 	~QuadTree();
 
@@ -68,16 +61,12 @@ public:
 
 	bool isCellOccupied( const TRender& renderCell );
 
-
 	int* getChildrenNodeIndicies();
 	QuadTree<T, TRender>* getReferenceNodes();
 	QuadTree<T, TRender>& getRootNode();
 
-
 	BoundingBox<int> getBounds();
-
 	TRender* getCells();
-
 	int getIndex();
 	int getParentIndex();
 	int getLevel();
@@ -85,7 +74,6 @@ public:
 	int getCellCount();
 
 	bool isConsolidated();
-
 };
 
 
@@ -108,6 +96,7 @@ QuadTree<T, TRender>::QuadTree( int myIndex, int parentIndex, int level, int qua
 template<typename T, typename TRender>
 QuadTree<T, TRender>::~QuadTree()
 {
+
 }
 
 
@@ -140,6 +129,7 @@ template<typename T, typename TRender>
 void QuadTree<T, TRender>::clear()
 {
 	// Clear all the Tiles and Consolidated Tiles within the QuadTree
+
 	if ( !this->_divided )
 	{
 		return;

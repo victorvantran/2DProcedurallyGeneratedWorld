@@ -51,9 +51,6 @@
     <ClInclude Include="Camera.h">
       <Filter>Header Files\Render</Filter>
     </ClInclude>
-    <ClInclude Include="Screen.h">
-      <Filter>Header Files\Render</Filter>
-    </ClInclude>
     <ClInclude Include="Atlas.h">
       <Filter>Header Files\Render</Filter>
     </ClInclude>

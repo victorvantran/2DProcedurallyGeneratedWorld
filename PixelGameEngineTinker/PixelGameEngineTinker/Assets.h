@@ -40,6 +40,4 @@ public:
 	static Assets& get();
 	static olc::Sprite* loadSpriteTile( std::uint64_t tileId );
 
-	static olc::Decal* loadDecalTile( std::uint64_t tileId );
-
 };

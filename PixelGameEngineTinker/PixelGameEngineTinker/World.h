@@ -16,7 +16,7 @@
 #include "Tile.h"
 #include "WorldChunk.h"
 #include "WorldChunkRecall.h"
-#include "SpriteTilesMap.h"
+#include "Atlas.h"
 
 #include <iostream>
 #include <fstream>
@@ -57,12 +57,12 @@ private:
 	std::thread _loadWorldGeographyThread;
 	std::mutex _loadWorldChunksMutex;
 
-	SpriteTilesMap _spriteTilesMap;
+	Atlas _atlas;
 
 	std::atomic<bool> _runningLoadSpriteTiles;
 	std::thread _loadSpriteTilesThread;
-	std::mutex _mutexModifyTileSprites;
-	std::condition_variable _condModifyTileSprites;
+	std::mutex _mutexModifyAtlas;
+	std::condition_variable _condModifyAtlas;
 
 
 private:
@@ -111,8 +111,9 @@ public:
 	// TileDecals
 	void loadSpriteTilesTask();
 	void loadSpriteTiles();
-	void addSpriteTiles( std::uint64_t tileId );
-	const SpriteTilesMap& getSpriteTilesMap();
+	void addSpriteTile( std::uint64_t tileId );
+
+	Atlas& getAtlas();
 	void updateDecals();
 
 	void DEBUG_PRINT_TILE_SPRITES();

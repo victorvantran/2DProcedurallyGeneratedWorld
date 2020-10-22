@@ -13,6 +13,8 @@ WorldChunkMemory::WorldChunkMemory()
 
 WorldChunkMemory::WorldChunkMemory( WorldChunk* worldChunk )
 {
+	// Construct a worldChunkMemory comprising of tilesBlob and its respective paletteBlob to be saved in the SQLite database
+
 	// Get tiles and palette from the worldChunk
 	Tile* tiles = worldChunk->getTiles();
 	std::vector<std::uint64_t> palette = worldChunk->getPalette();

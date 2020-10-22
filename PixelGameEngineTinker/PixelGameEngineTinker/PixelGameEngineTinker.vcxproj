@@ -42,7 +42,6 @@
     <ClInclude Include="Cell.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="QuadTree.h" />
-    <ClInclude Include="Screen.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="SpriteTilesMap.h" />
     <ClInclude Include="TileRender.h" />

@@ -4,7 +4,7 @@
 #include "Settings.h"
 #include "BoundingBox.h"
 #include "World.h"
-#include "SpriteTilesMap.h"
+#include "Atlas.h"
 #include "WorldChunk.h"
 #include "QuadTree.h"
 #include "TileRender.h"
@@ -17,7 +17,6 @@ class Camera : public olc::PGEX
 private:
 	BoundingBox<float> _focalPoint; // cell-domain
 	BoundingBox<float> _view;
-
 
 	int _absolutePixelOffsetX = Settings::Camera::ABSOLUTE_PIXEL_OFFSET_X;  //16 * ( 120 / 2 ) - 16 * ( 32 / 2 );  // tileSize * ( screenCellWidth / 2 ) - tileSize * ( cameraCellWidth / 2 ) [!] need to change based on pixelSize
 	int _absolutePixelOffsetY = Settings::Camera::ABSOLUTE_PIXEL_OFFSET_Y;
@@ -34,8 +33,8 @@ public:
 	void worldToScreen( float cellX, float cellY, int& pixelX, int& pixelY ) const; // float to int ( camera offset determines displacement )
 
 	void renderWorld( World* world ) const;
-	void renderWorldChunk( WorldChunk& worldChunk, const SpriteTilesMap& spriteTilesMap ) const;
-	void renderTileRenders( QuadTree<Tile, TileRender>& quadTree, const SpriteTilesMap& spriteTilesMap ) const;
+	void renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const;
+	void renderTileRenders( QuadTree<Tile, TileRender>& quadTree, Atlas& atlas ) const;
 	void renderCamera() const;
 
 	void renderTilesDebug( WorldChunk& worldChunk ) const;
@@ -53,10 +52,8 @@ public:
 	void setFocalPoint( float width, float height );
 
 	BoundingBox<float> getFocalPoint() const;
-
 	float getCenterX() const;
 	float getCenterY() const;
-
 	float getZoomX() const;
 	float getZoomY() const;
 };
@@ -87,7 +84,8 @@ Camera::~Camera()
 void Camera::screenToWorld( int pixelX, int pixelY, float& cellX, float& cellY ) const
 {
 	// int to float ( camera offest determines displacement )
-	int tileSize = Settings::Screen::CELL_PIXEL_SIZE;; // [!] global singleton
+
+	int tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 	cellX = ( float )( ( ( float )( pixelX - this->_absolutePixelOffsetX ) / ( float )( this->_zoomX * tileSize ) ) + ( this->_focalPoint.x ) );
 	cellY = ( float )( ( ( float )( pixelY - this->_absolutePixelOffsetY ) / ( float )( this->_zoomY * tileSize ) ) + ( this->_focalPoint.y ) );
 	return;
@@ -97,7 +95,8 @@ void Camera::screenToWorld( int pixelX, int pixelY, float& cellX, float& cellY )
 void Camera::worldToScreen( float cellX, float cellY, int& pixelX, int& pixelY ) const
 {
 	// float to int ( camera offset determines displacement )
-	int tileSize = Settings::Screen::CELL_PIXEL_SIZE;; // [!] global singleton
+
+	int tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 	pixelX = ( int )( ( cellX - ( this->_focalPoint.x ) ) * ( this->_zoomX * tileSize ) ) + this->_absolutePixelOffsetX;
 	pixelY = ( int )( ( cellY - ( this->_focalPoint.y ) ) * ( this->_zoomY * tileSize ) ) + this->_absolutePixelOffsetY;
 	return;
@@ -111,7 +110,7 @@ void Camera::renderWorld( World* world) const
 
 	for ( int i = 0; i < numWorldChunks; i++ )
 	{
-		this->renderWorldChunk( worldChunks[i], world->getSpriteTilesMap() );
+		this->renderWorldChunk( worldChunks[i], world->getAtlas() );
 		//this->renderTilesDebug( worldChunks[i] );
 	}
 
@@ -119,7 +118,7 @@ void Camera::renderWorld( World* world) const
 }
 
 
-void Camera::renderWorldChunk( WorldChunk& worldChunk, const SpriteTilesMap& spriteTilesMap ) const
+void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 {
 	int tileSize = Settings::Screen::CELL_PIXEL_SIZE;; // [!] make it from a "global" variable
 
@@ -141,13 +140,15 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, const SpriteTilesMap& spr
 		olc::GREEN
 	);
 
-	this->renderTileRenders( worldChunk.getTileRendersRoot(), spriteTilesMap );
+	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas );
 	return;
 }
 
 
-void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const SpriteTilesMap& spriteTilesMap ) const
+void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, Atlas& atlas ) const
 {
+	// Render every tileRender but only drawing one properlly scaled tile for each consolidated render
+
 	int tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 	int chunkSize = Settings::World::CHUNK_CELL_SIZE;
 
@@ -166,7 +167,8 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const S
 		if ( this->_view.intersects( currQuadTree.getBounds() ) && currQuadTree.getCells()[0].getExist() )
 		{
 			std::uint64_t id = currQuadTree.getCells()[0].getId();
-			if ( spriteTilesMap.getDecal( id ) == nullptr )
+			olc::Decal* tileDecal = atlas.getDecal( id );
+			if ( tileDecal  == nullptr )
 			{
 				return;
 			}
@@ -184,7 +186,7 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const S
 			pge->DrawPartialDecal(
 				startPos,
 				olc::vf2d{ this->_zoomX * tileSize, this->_zoomY * tileSize } *scale,
-				spriteTilesMap.getDecal( id ),
+				tileDecal,
 				olc::vf2d{ 0, Settings::Camera::CONSOLIDATED_TILE_OFFSET },
 				olc::vf2d{ 1, 1 } *( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE * scale )
 			);
@@ -203,7 +205,8 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const S
 				if ( cells[i].getExist() && this->_view.intersects( cells[i].getBounds() ) )
 				{
 					std::uint64_t id = cells[i].getId();
-					if ( spriteTilesMap.getDecal( id ) == nullptr )
+					olc::Decal* tileDecal = atlas.getDecal( id );
+					if ( tileDecal == nullptr )
 					{
 						continue;
 					}
@@ -219,7 +222,7 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const S
 					pge->DrawPartialDecal(
 						startPos,
 						olc::vf2d{ ( tileSize * this->_zoomX ), ( tileSize * this->_zoomY ) },
-						spriteTilesMap.getDecal( id ),
+						tileDecal,
 						olc::vf2d{ 0, 128 }, // [!] temp based on configuration
 						olc::vf2d{ 1, 1 } * ( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE )
 					);
@@ -231,7 +234,6 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const S
 		}
 		
 		// Fill other psosible consolidated (or not-consolidated) boundingboxes
-		// Get node indicies
 		int* childrenNodeIndicies = currQuadTree.getChildrenNodeIndicies();
 		if ( childrenNodeIndicies != nullptr )
 		{
@@ -239,7 +241,7 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const S
 			{
 				if ( childrenNodeIndicies[i] != -1 )
 				{
-					this->renderTileRenders( tileRenders.getReferenceNodes()[childrenNodeIndicies[i]], spriteTilesMap );
+					this->renderTileRenders( tileRenders.getReferenceNodes()[childrenNodeIndicies[i]], atlas );
 				}
 			}
 		}
@@ -251,6 +253,8 @@ void Camera::renderTileRenders( QuadTree<Tile, TileRender>& tileRenders, const S
 
 void Camera::renderCamera() const
 {
+	// Render the camera 
+
 	int tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 
 	// Draw Focal Point
@@ -275,7 +279,8 @@ void Camera::renderCamera() const
 
 void Camera::renderTilesDebug( WorldChunk& worldChunk ) const
 {
-	// Draw all tiles directly from the array of tiles
+	// Render every single tile directly from the array of tiles for each worldChunk
+
 	int tileSize = Settings::Screen::CELL_PIXEL_SIZE;;
 	int tileCellSize = 1; // [!] make it from a "global" variable
 

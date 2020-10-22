@@ -14,7 +14,6 @@ class SpriteTilesMap
 {
 private:
 	std::mutex _mutexAccessSpriteTilesMap;
-	//std::map<std::uint64_t, olc::Renderable*> _spriteTilesMap;
 	std::map < std::uint64_t, std::tuple<olc::Sprite*, olc::Decal*>> _spriteTilesMap;
 
 public:
@@ -30,8 +29,8 @@ public:
 		std::map<std::uint64_t, std::tuple<olc::Sprite*, olc::Decal*>>::iterator it;
 		for ( it = this->_spriteTilesMap.begin(); it != this->_spriteTilesMap.end(); )
 		{
-			delete std::get<0>( it->second ); // Deallocate the sprite
-			delete std::get<1>( it->second ); // Deallocate the decal
+			delete std::get<0>( it->second );
+			delete std::get<1>( it->second );
 			this->_spriteTilesMap.erase( it++ );
 		}
 	}
@@ -39,6 +38,10 @@ public:
 
 	void insert( std::uint64_t tileId )
 	{
+		// Load a sprite from the SQLite database and insert it into this spriteTileMap.
+		// Only create sprite and not decal because this will be called on a separate thread
+		// that does not own the OpenGL context
+
 		std::lock_guard lockAcesssSpriteTilesMap( this->_mutexAccessSpriteTilesMap );
 		if ( this->_spriteTilesMap.find( tileId ) == this->_spriteTilesMap.end() )
 		{
@@ -57,7 +60,9 @@ public:
 
 	void refresh( std::set<std::uint64_t> tileIds )
 	{
-		// Refresh/clean up
+		// Refresh/clean up any extraneous sprites and decals that are not needed for the current render frame,
+		// keeping the necessary sprites/decals based on tileIds
+
 		std::lock_guard<std::mutex> lockAccessSpriteTilesMap( this->_mutexAccessSpriteTilesMap );
 
 		std::map<std::uint64_t, std::tuple<olc::Sprite*, olc::Decal*>>::iterator it;
@@ -65,8 +70,8 @@ public:
 		{
 			if ( tileIds.find( it->first ) == tileIds.end() )
 			{
-				delete std::get<0>( it->second ); // Deallocate the sprite
-				delete std::get<1>( it->second ); // Deallocate the decal
+				delete std::get<0>( it->second );
+				delete std::get<1>( it->second );
 				this->_spriteTilesMap.erase( it++ );
 			}
 			else
@@ -81,7 +86,9 @@ public:
 	
 	void updateDecals()
 	{
-		// To be called on the thread that owns the openGL context
+		// Create decals within the spriteTilesMap, given a sprite has been created from a different thread. 
+		// Creating tiles needs to be called on the thread that owns the openGL context.
+
 		std::lock_guard<std::mutex> lockAccessSpriteTilesMap( this->_mutexAccessSpriteTilesMap );
 
 		std::map<std::uint64_t, std::tuple<olc::Sprite*, olc::Decal*>>::iterator it;
@@ -97,8 +104,12 @@ public:
 	}
 
 
-	olc::Sprite* getSprite( std::uint64_t tileId ) const
+	olc::Sprite* getSprite( std::uint64_t tileId ) //const
 	{
+		// Returns a pointer to a sprite to be used to render a tile based on tileD
+
+		std::lock_guard<std::mutex> lockAccessSpriteTilesMap( this->_mutexAccessSpriteTilesMap );
+
 		if ( this->_spriteTilesMap.find( tileId ) == this->_spriteTilesMap.end() )
 		{
 			return nullptr;
@@ -108,8 +119,12 @@ public:
 	}
 
 
-	olc::Decal* getDecal( std::uint64_t tileId ) const
+	olc::Decal* getDecal( std::uint64_t tileId ) //const
 	{
+		// Returns a pointer to a decal to be used to render a tile based on tileD
+
+		std::lock_guard<std::mutex> lockAccessSpriteTilesMap( this->_mutexAccessSpriteTilesMap );
+
 		if ( this->_spriteTilesMap.find( tileId ) == this->_spriteTilesMap.end() )
 		{
 			return nullptr;
@@ -121,7 +136,8 @@ public:
 
 	void print()
 	{
-		
+		// [DEBUG]
+
 		std::map<std::uint64_t, std::tuple<olc::Sprite*, olc::Decal*>>::iterator it;
 		for ( it = this->_spriteTilesMap.begin(); it != this->_spriteTilesMap.end(); it++ )
 		{

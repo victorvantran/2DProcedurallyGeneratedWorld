@@ -174,6 +174,10 @@ public:
 
 		this->camera->renderWorld( this->world );
 
+
+		// this->camera->renderWorld( this->world );
+
+
 		// [!] update with notification coming from any pan of the camera. But for now, this will do; (causes the lag)
 		std::thread updateFocalChunkThread( &World::updateFocalChunk, this->world, this->camera->getFocalPoint() );
 		//updateFocalChunkThread.join();

@@ -69,7 +69,7 @@ World::World()
 	_prevFocalChunkIndexX( 0 ), _prevFocalChunkIndexY( 0 ),
 	_currFocalChunkIndexX( 0 ), _currFocalChunkIndexY( 0 ),
 	_worldChunks( new WorldChunk[( 1 + 2 * ( _chunkRadius ) ) * ( 1 + 2 * ( _chunkRadius ) )] ),
-	_spriteTilesMap()
+	_atlas()
 {
 
 }
@@ -248,7 +248,7 @@ void World::initializeWorldChunks()
 	sqlite3_close( database );
 
 	// Allow the tileSprites to refresh
-	this->_condModifyTileSprites.notify_one();
+	this->_condModifyAtlas.notify_one();
 	return;
 }
 
@@ -259,8 +259,8 @@ void World::insert( int x, int y, int width, int height, uint64_t id )
 
 	std::lock_guard<std::mutex> lockModify( this->_modifyWordChunksMutex );
 
-	std::thread addSpriteTilesThread( &World::addSpriteTiles, this, id );
-	addSpriteTilesThread.detach();
+	std::thread addSpriteTileThread( &World::addSpriteTile, this, id );
+	addSpriteTileThread.detach();
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
@@ -345,7 +345,7 @@ void World::stopWorldMemorySystem()
 	this->_loadWorldGeographyThread.join();
 
 	this->_runningLoadSpriteTiles = false;
-	this->_condModifyTileSprites.notify_one();
+	this->_condModifyAtlas.notify_one();
 	this->_loadSpriteTilesThread.join();
 
 	return;
@@ -684,7 +684,7 @@ void World::loadWorldGeography( const BoundingBox<float>& focalPoint )
 	worldChunkRecalls.clear();
 
 	// Allow the tileSprites to refresh
-	this->_condModifyTileSprites.notify_one();
+	this->_condModifyAtlas.notify_one();
 	return;
 }
 
@@ -792,8 +792,8 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 			std::uint64_t tileId = paletteData[key];
 			if ( historyTileIds.find( tileId ) == historyTileIds.end() ) // [!] Make sure that render quad tree jsut continues if it can't find the sprite because it may try to render before the tileId is added
 			{
-				std::thread addSpriteTilesThread( &World::addSpriteTiles, this, tileId );
-				addSpriteTilesThread.join();
+				std::thread addSpriteTileThread( &World::addSpriteTile, this, tileId );
+				addSpriteTileThread.join();
 				historyTileIds.insert( tileId );
 			}
 			worldChunk.insert( worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1, tileId );
@@ -842,8 +842,8 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 			std::uint64_t tileId = paletteData[key];
 			if ( historyTileIds.find( tileId ) == historyTileIds.end() ) // [!] Make sure that render quad tree jsut continues if it can't find the sprite because it may try to render before the tileId is added
 			{
-				std::thread addSpriteTilesThread( &World::addSpriteTiles, this, tileId );
-				addSpriteTilesThread.join();
+				std::thread addSpriteTileThread( &World::addSpriteTile, this, tileId );
+				addSpriteTileThread.join();
 				historyTileIds.insert( tileId );
 			}
 			worldChunk.insert( worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1, tileId );
@@ -874,10 +874,10 @@ void World::loadSpriteTilesTask()
 void World::loadSpriteTiles( )
 {
 	// refresh/clean up
-	std::unique_lock<std::mutex> lockModifyTileSprites( this->_mutexModifyTileSprites ); // [!] change to mutexmodifyspritetilesmap
+	std::unique_lock<std::mutex> lockModifyTileSprites( this->_mutexModifyAtlas ); // [!] change to mutexmodifyspritetilesmap
 	std::chrono::system_clock::time_point secondsPassed = std::chrono::system_clock::now() + std::chrono::seconds( (long long)Settings::World::SPRITE_TILE_REFRESH_RATE );
-	this->_condModifyTileSprites.wait_until( lockModifyTileSprites, secondsPassed );
-	//this->_condModifyTileSprites.wait( lockModifyTileSprites );
+	this->_condModifyAtlas.wait_until( lockModifyTileSprites, secondsPassed );
+	//this->_condModifyAtlas.wait( lockModifyTileSprites );
 	
 	std::set<std::uint64_t> tileIds;
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
@@ -890,29 +890,29 @@ void World::loadSpriteTiles( )
 		}
 	}
 
-	this->_spriteTilesMap.refresh( tileIds );
+	this->_atlas.refresh( tileIds );
 	return;
 }
 
 
-void World::addSpriteTiles( std::uint64_t tileId )
+void World::addSpriteTile( std::uint64_t tileId )
 {
 	// directly adds
-	std::lock_guard<std::mutex> lockModifyTileSprites(this->_mutexModifyTileSprites );
-	this->_spriteTilesMap.insert( tileId );
+	std::lock_guard<std::mutex> lockModifyTileSprites(this->_mutexModifyAtlas );
+	this->_atlas.insert( tileId );
 	return;
 }
 
 
-const SpriteTilesMap& World::getSpriteTilesMap()
+Atlas& World::getAtlas()
 {
-	return this->_spriteTilesMap;
+	return this->_atlas;
 }
 
 
 void World::updateDecals()
 {
-	this->_spriteTilesMap.updateDecals();
+	this->_atlas.updateDecals();
 }
 
 
@@ -920,6 +920,6 @@ void World::DEBUG_PRINT_TILE_SPRITES()
 {
 	std::cout << "Sprites" << std::endl;
 
-	this->_spriteTilesMap.print();
+	this->_atlas.print();
 	return;
 }

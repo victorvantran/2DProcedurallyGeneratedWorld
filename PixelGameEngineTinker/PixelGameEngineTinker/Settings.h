@@ -50,7 +50,7 @@ public:
 		static const int CHUNK_RADIUS = 2;
 
 		static const int MAX_SAVED_CHUNKS = 50; // Maximum number of chunks in queue to save before discarding
-		static const int SPRITE_TILE_REFRESH_RATE = 300;//300; // Every 5 minutes, refresh the tileDecals if it has not yet from condition variable notification
+		static const int SPRITE_TILE_REFRESH_RATE = 300; // Every 5 minutes, refresh the tileDecals if it has not yet from condition variable notification
 	};
 
 
@@ -92,9 +92,6 @@ public:
 		static const std::uint32_t WORLD_CHUNK_NUM_BYTES = ( World::CHUNK_CELL_SIZE * World::CHUNK_CELL_SIZE ) * sizeof( std::uint64_t ); // uint64_t is the datatype of tileId
 		static const std::uint8_t NUM_BITS_PER_SEGMENT = 8;
 	};
-
-
-
 
 
 };
