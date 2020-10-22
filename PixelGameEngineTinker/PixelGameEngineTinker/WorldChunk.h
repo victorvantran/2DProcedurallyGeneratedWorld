@@ -23,9 +23,7 @@ private:
 	QuadTree<TileRender> _tileRenders[WorldChunk::_numTileRenders];
 	Tile _tiles[WorldChunk::_size * WorldChunk::_size];
 
-	QuadTree<ShadowRender> _shadowRenders[Settings::WorldChunk::NUM_SHADOW_RENDERS];
-	//ShadowRender _shadows[WorldChunk::_size * WorldChunk::_size * Settings::World::NUM_SHADOWS_PER_CELL];
-
+	// QuadTree<ShadowRender> _shadowRenders[Settings::WorldChunk::NUM_SHADOW_RENDERS];
 public:
 
 	WorldChunk();

@@ -747,7 +747,6 @@ std::vector<std::tuple<std::uint64_t, int, int>> World::delimitWorldChunks( cons
 void World::delimitWorldChunk( WorldChunk& worldChunk, int chunkIndexX, int chunkIndexY )
 {
 	// Clears the worldChunk, updates its proper index, and wipes the render in preparation to load in new data	and new render
-
 	worldChunk.clear();
 	worldChunk.delimit( chunkIndexX, chunkIndexY );
 	worldChunk.wipeRender();

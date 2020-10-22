@@ -58,8 +58,20 @@ public:
 	struct WorldChunk
 	{
 		static const int SIZE = World::CHUNK_CELL_SIZE;
+
+
 		static const int NUM_TILE_RENDERS = 341; // 4^0 + 4^1 + 4^2 + ... + 4^n ( for n = log( chunkSize ) = quadTreeMaxLevel ) // [hardcode]
+		static const std::uint32_t TILE_RENDER_MIN_LEVEL = 0; // [ hard code ]
+		static const std::uint32_t TILE_RENDER_MAX_LEVEL = 4; // [ hard code ]
+		static const float TILE_RENDER_MIN_CELL_SIZE; // [ hard code ]
+
+
+
 		static const std::uint32_t NUM_SHADOW_RENDERS = 1365; // // 4^0 + 4^1 + 4^2 + ... + 4^( n + 1 ) ( for n = log( chunkSize ) [ hardcode ] ( 4 shadows per tile )
+		static const std::uint32_t SHADOW_RENDER_MIN_LEVEL = 0; // [ hard code ]
+		static const std::uint32_t SHADOW_RENDER_MAX_LEVEL = 5; // [ hard code ]
+		static const float SHADOW_RENDER_MIN_CELL_SIZE; // [ hard code ]
+
 	};
 
 	
@@ -96,4 +108,5 @@ public:
 
 
 };
+
 

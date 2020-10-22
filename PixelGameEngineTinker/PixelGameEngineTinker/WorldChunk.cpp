@@ -32,10 +32,13 @@ void WorldChunk::construct()
 	this->_tileRenders[0].constructQuadTree(
 		0,
 		-1,
-		QuadTree<TileRender>::_MAX_LEVEL,
+		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
 		0,
 		BoundingBox<int>( rootQuadTreePositionX, rootQuadTreePositionY, this->_size, this->_size ),
-		this->_tileRenders
+		this->_tileRenders,
+		Settings::WorldChunk::TILE_RENDER_MIN_LEVEL,
+		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
+		Settings::WorldChunk::TILE_RENDER_MIN_CELL_SIZE
 	);
 
 	// Connect trees
@@ -50,18 +53,25 @@ void WorldChunk::construct()
 
 void WorldChunk::wipeRender()
 {
+	// [!] don't even need clear becasuse wipe Render calls constructQuadTree which sets root divided = false
+
 	// [!] look to see if we can make it more efficient that construct
+	// [!] soluton is to clear, and then jsut set bounding boxes to proper size? Or is no clear more efficient?
 	int rootQuadTreePositionX = this->_chunkIndexX * this->_size;
 	int rootQuadTreePositionY = this->_chunkIndexY * this->_size;
+	
 	
 	// Intialize quadTrees
 	this->_tileRenders[0].constructQuadTree(
 		0,
 		-1,
-		QuadTree<TileRender>::_MAX_LEVEL,
+		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
 		0,
 		BoundingBox<int>( rootQuadTreePositionX, rootQuadTreePositionY, this->_size, this->_size ),
-		this->_tileRenders
+		this->_tileRenders,
+		Settings::WorldChunk::TILE_RENDER_MIN_LEVEL,
+		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
+		Settings::WorldChunk::TILE_RENDER_MIN_CELL_SIZE
 	);
 	
 	// The difference between construct and reconstruct is quick reassignment, unless of course, shallow copy does this for us. Then just use construct
@@ -69,7 +79,7 @@ void WorldChunk::wipeRender()
 	{
 		this->_tileRenders[i].divide();
 	}
-
+	
 	return;
 }
 
@@ -193,7 +203,9 @@ void WorldChunk::clear()
 	std::memset( this->_tiles, 0, sizeof( this->_tiles ) ); // this->_tiles.fill(0)
 
 	// Clears the quad tree's bounds and consolidations
-	this->_tileRenders[0].clear();
+	//std::cout << "Clear start" << std::endl;
+	//this->_tileRenders[0].clear();
+	//std::cout << "Clear end" << std::endl;
 	return;
 }
 

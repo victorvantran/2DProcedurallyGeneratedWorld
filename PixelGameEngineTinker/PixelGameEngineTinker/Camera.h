@@ -141,6 +141,7 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 	);
 
 	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas );
+	//this->renderTilesDebug( worldChunk );
 	return;
 }
 
@@ -197,7 +198,7 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas 
 	// Fill the small bounding boxes (cells) that are not possibly consolidated
 	else
 	{
-		if ( currQuadTree.getLevel() == QuadTree<TileRender>::_MIN_LEVEL )
+		if ( currQuadTree.getLevel() == currQuadTree.getMinLevel() )
 		{
 			TileRender* cells = currQuadTree.getCells();
 			for ( int i = 0; i < 4; i++ )
