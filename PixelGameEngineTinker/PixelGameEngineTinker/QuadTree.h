@@ -47,7 +47,6 @@ public:
 	void constructQuadTree( int myIndex = -1, int parentIndex = -1, int level = -1, int quadrant = -1, BoundingBox<int> bounds = BoundingBox<int>(), QuadTree<TRender>* referenceNodes = nullptr,
 		std::uint32_t minLevel = 0, std::uint32_t maxLevel = 0, float minCellSize = 0.0f );
 
-	void clear();
 	void divide();
 	int getQuadrant( const TRender& boundingBox );
 
@@ -129,61 +128,6 @@ void QuadTree<TRender>::constructQuadTree( int myIndex, int parentIndex, int lev
 	this->_minLevel = minLevel;
 	this->_maxLevel = maxLevel;
 	this->_minCellSize = minCellSize;
-
-	return;
-}
-
-
-template<typename TRender>
-void QuadTree<TRender>::clear()
-{
-	// Clear all the Tiles and Consolidated Tiles within the QuadTree	
-	std::cout << "CLEAR CALLED " << std::endl;
-	if ( !this->_divided )
-	{
-		return;
-	}
-
-	//this->_minLevel = 0;
-	//this->_maxLevel = 4;
-	//this->_minCellSize = 0.0f;
-	
-	for ( int i = 0; i < 4; i++ )
-	{
-		this->_cell[i] = TRender();
-	}
-
-	if ( this->_level > this->_minLevel )
-	{
-		this->_referenceNodes[this->_childrenIndex[0]].clear();
-		this->_referenceNodes[this->_childrenIndex[1]].clear();
-		this->_referenceNodes[this->_childrenIndex[2]].clear();
-		this->_referenceNodes[this->_childrenIndex[3]].clear();
-	}
-
-
-	
-	for ( int i = 0; i < 4; i++ )
-	{
-		this->_childrenIndex[i] = -1;
-	}
-
-	this->_consolidated = false;
-	this->_cellCount = 0;
-
-	/*
-	this->_myIndex = -1;
-	this->_parentIndex = -1;
-	this->_quadrant = -1;
-	this->_quadTreeBounds;
-	this->_divided = false;
-	this->_consolidated = false;
-	this->_cellCount = 0;
-	this->_level = -1;
-
-
-	this->_referenceNodes = nullptr;
-	*/
 
 	return;
 }

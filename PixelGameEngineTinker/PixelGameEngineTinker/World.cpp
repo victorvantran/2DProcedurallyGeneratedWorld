@@ -592,7 +592,7 @@ void World::loadWorldGeography( const BoundingBox<float>& focalPoint )
 	this->_prevFocalChunkIndexX = cameraIndexX;
 	this->_prevFocalChunkIndexY = cameraIndexY;
 
-	std::vector<WorldChunkRecall*> worldChunkRecalls;
+	std::vector<WorldChunkRecall> worldChunkRecalls;
 
 	// Load
 	//std::lock_guard<std::mutex> lockDatabase( _worldDatabaseMutex ); // [!] unique lock just for reading
@@ -662,7 +662,7 @@ void World::loadWorldGeography( const BoundingBox<float>& focalPoint )
 		rc = sqlite3_step( statement ); // Extra step for null
 		rc = sqlite3_finalize( statement );
 
-		worldChunkRecalls.push_back( new WorldChunkRecall( index, tilesData, numBytesTiles, paletteData, numBytesPalette ) );
+		worldChunkRecalls.push_back( WorldChunkRecall( index, tilesData, numBytesTiles, paletteData, numBytesPalette ) );
 	}
 
 	sqlite3_close( database );
@@ -670,16 +670,17 @@ void World::loadWorldGeography( const BoundingBox<float>& focalPoint )
 
 	for ( int i = 0; i < worldChunkRecalls.size(); i++ )
 	{
-		std::uint64_t index = worldChunkRecalls[i]->getIndex();
-		unsigned char* tilesData = worldChunkRecalls[i]->getTilesData();
-		std::uint16_t numBytesTiles = worldChunkRecalls[i]->getNumBytesTiles();
-		std::uint64_t* paletteData = worldChunkRecalls[i]->getPaletteData();
-		std::uint16_t numBytesPalette = worldChunkRecalls[i]->getNumBytesPalette();
+		std::uint64_t index = worldChunkRecalls[i].getIndex();
+		unsigned char* tilesData = worldChunkRecalls[i].getTilesData();
+		std::uint16_t numBytesTiles = worldChunkRecalls[i].getNumBytesTiles();
+		std::uint64_t* paletteData = worldChunkRecalls[i].getPaletteData();
+		std::uint16_t numBytesPalette = worldChunkRecalls[i].getNumBytesPalette();
 
 		WorldChunk& worldChunk = this->_worldChunks[index];
 		this->loadTiles( worldChunk, tilesData, numBytesTiles, paletteData, numBytesPalette );
 
-		delete worldChunkRecalls[i];
+		delete[] tilesData;
+		delete[] paletteData;
 	}
 	worldChunkRecalls.clear();
 
@@ -729,8 +730,8 @@ std::vector<std::tuple<std::uint64_t, int, int>> World::delimitWorldChunks( cons
 			if ( std::abs( cameraIndexX - worldChunkIndexX ) > this->_chunkRadius || std::abs( cameraIndexY - worldChunkIndexY ) > this->_chunkRadius )
 			{
 				// Add to memory
-				std::thread addMemoryThread( &World::addMemory, this, worldChunk.createMemory() );
-				addMemoryThread.detach();
+				//std::thread addMemoryThread( &World::addMemory, this, worldChunk.createMemory() );
+				//addMemoryThread.detach();
 
 				// Add to recall
 				int newChunkIndexX = cameraIndexX + -( worldChunkIndexX - this->_prevFocalChunkIndexX );
@@ -917,8 +918,6 @@ void World::updateDecals()
 
 void World::DEBUG_PRINT_TILE_SPRITES()
 {
-	std::cout << "Sprites" << std::endl;
-
 	this->_atlas.print();
 	return;
 }

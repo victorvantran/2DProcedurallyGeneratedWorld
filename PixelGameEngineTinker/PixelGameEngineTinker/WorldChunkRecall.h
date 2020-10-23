@@ -23,11 +23,11 @@ public:
 
 	~WorldChunkRecall()
 	{
-		delete[] this->_tilesData;
-		this->_tilesData = nullptr;
+		//delete[] this->_tilesData;
+		//this->_tilesData = nullptr;
 
-		delete[] this->_paletteData;
-		this->_paletteData = nullptr;
+		//delete[] this->_paletteData;
+		//this->_paletteData = nullptr;
 	}
 
 

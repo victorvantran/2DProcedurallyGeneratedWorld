@@ -141,7 +141,6 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 	);
 
 	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas );
-	//this->renderTilesDebug( worldChunk );
 	return;
 }
 

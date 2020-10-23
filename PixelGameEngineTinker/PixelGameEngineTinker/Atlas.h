@@ -14,7 +14,8 @@ class Atlas
 {
 private:
 	std::mutex _mutexAccessAtlas;
-	std::map < std::uint64_t, std::tuple<olc::Sprite*, olc::Decal*>> _atlas;
+	std::map< std::uint64_t, olc::Sprite*> _atlasSprites;
+	std::map< std::uint64_t, olc::Decal*> _atlasDecals;
 
 public:
 	Atlas()
@@ -26,12 +27,18 @@ public:
 	~Atlas()
 	{
 		// Deallocate all Sprites and Decals
-		std::map<std::uint64_t, std::tuple<olc::Sprite*, olc::Decal*>>::iterator it;
-		for ( it = this->_atlas.begin(); it != this->_atlas.end(); )
+		std::map<std::uint64_t, olc::Sprite*>::iterator it1;
+		for ( it1 = this->_atlasSprites.begin(); it1 != this->_atlasSprites.end(); )
 		{
-			delete std::get<0>( it->second );
-			delete std::get<1>( it->second );
-			this->_atlas.erase( it++ );
+			delete it1->second;
+			this->_atlasSprites.erase( it1++ );
+		}
+
+		std::map<std::uint64_t, olc::Decal*>::iterator it2;
+		for ( it2 = this->_atlasDecals.begin(); it2 != this->_atlasDecals.end(); )
+		{
+			delete it2->second;
+			this->_atlasDecals.erase( it2++ );
 		}
 	}
 
@@ -43,15 +50,10 @@ public:
 		// that does not own the OpenGL context
 
 		std::lock_guard lockAcesssAtlas( this->_mutexAccessAtlas );
-		if ( this->_atlas.find( tileId ) == this->_atlas.end() )
+		if ( this->_atlasSprites.find( tileId ) == this->_atlasSprites.end() )
 		{
 			olc::Sprite* spriteTile = Assets::loadSpriteTile( tileId );
-			this->_atlas.insert( std::pair<std::uint64_t, std::tuple<olc::Sprite*, olc::Decal*>>
-				(
-					tileId,
-					std::tuple<olc::Sprite*, olc::Decal*>( spriteTile, nullptr )
-					)
-			);
+			this->_atlasSprites.emplace( tileId, spriteTile );
 		}
 
 		return;
@@ -65,18 +67,17 @@ public:
 
 		std::lock_guard<std::mutex> lockAccessAtlas( this->_mutexAccessAtlas );
 
-		std::map<std::uint64_t, std::tuple<olc::Sprite*, olc::Decal*>>::iterator it;
-		for ( it = this->_atlas.begin(); it != this->_atlas.end(); )
+		std::map<std::uint64_t, olc::Sprite*>::iterator it1;
+		for ( it1 = this->_atlasSprites.begin(); it1 != this->_atlasSprites.end(); )
 		{
-			if ( tileIds.find( it->first ) == tileIds.end() )
+			if ( tileIds.find( it1->first ) == tileIds.end() )
 			{
-				delete std::get<0>( it->second );
-				delete std::get<1>( it->second );
-				this->_atlas.erase( it++ );
+				delete it1->second;
+				this->_atlasSprites.erase( it1++ );
 			}
 			else
 			{
-				it++;
+				it1++;
 			}
 		}
 
@@ -91,12 +92,31 @@ public:
 
 		std::lock_guard<std::mutex> lockAccessAtlas( this->_mutexAccessAtlas );
 
-		std::map<std::uint64_t, std::tuple<olc::Sprite*, olc::Decal*>>::iterator it;
-		for ( it = this->_atlas.begin(); it != this->_atlas.end(); it++ )
+		// Create decals
+		std::map<std::uint64_t, olc::Sprite*>::iterator it1;
+		for ( it1 = this->_atlasSprites.begin(); it1 != this->_atlasSprites.end(); it1++ )
 		{
-			if ( std::get<1>( it->second ) == nullptr )
+			if ( it1->second != nullptr )
 			{
-				std::get<1>( it->second ) = new olc::Decal( std::get<0>( it->second ) );
+				if ( this->_atlasDecals.find( it1->first ) == this->_atlasDecals.end() )
+				{
+					this->_atlasDecals.emplace( it1->first, new olc::Decal( it1->second ) );
+				}
+			}
+		}
+
+		// Delete extraneous decals
+		std::map<std::uint64_t, olc::Decal*>::iterator it2;
+		for ( it2 = this->_atlasDecals.begin(); it2 != this->_atlasDecals.end(); )
+		{
+			if ( this->_atlasSprites.find( it2->first ) == this->_atlasSprites.end() )
+			{
+				delete it2->second;
+				this->_atlasDecals.erase( it2++ );
+			}
+			else
+			{
+				it2++;
 			}
 		}
 
@@ -110,12 +130,12 @@ public:
 
 		std::lock_guard<std::mutex> lockAccessAtlas( this->_mutexAccessAtlas );
 
-		if ( this->_atlas.find( tileId ) == this->_atlas.end() )
+		if ( this->_atlasSprites.find( tileId ) == this->_atlasSprites.end() )
 		{
 			return nullptr;
 		}
 
-		return std::get<0>( this->_atlas.at( tileId ) );
+		return this->_atlasSprites.at( tileId );
 	}
 
 
@@ -125,12 +145,12 @@ public:
 
 		std::lock_guard<std::mutex> lockAccessAtlas( this->_mutexAccessAtlas );
 
-		if ( this->_atlas.find( tileId ) == this->_atlas.end() )
+		if ( this->_atlasDecals.find( tileId ) == this->_atlasDecals.end() )
 		{
 			return nullptr;
 		}
 
-		return std::get<1>( this->_atlas.at( tileId ) );
+		return this->_atlasDecals.at( tileId );
 	}
 
 
@@ -138,10 +158,18 @@ public:
 	{
 		// [DEBUG]
 
-		std::map<std::uint64_t, std::tuple<olc::Sprite*, olc::Decal*>>::iterator it;
-		for ( it = this->_atlas.begin(); it != this->_atlas.end(); it++ )
+		std::cout << "Sprites" << std::endl;
+		std::map<std::uint64_t, olc::Sprite*>::iterator it1;
+		for ( it1 = this->_atlasSprites.begin(); it1 != this->_atlasSprites.end(); it1++ )
 		{
-			std::cout << it->first << ":.. " << "(" << std::get<0>( it->second ) << "," << std::get<1>( it->second ) << ")" << std::endl;
+			std::cout << it1->first << ": " << it1->second << std::endl;
+		}
+
+		std::cout << "Decals" << std::endl;
+		std::map<std::uint64_t, olc::Decal*>::iterator it2;
+		for ( it2 = this->_atlasDecals.begin(); it2 != this->_atlasDecals.end(); it2++ )
+		{
+			std::cout << it2->first << ": " << it2->second << std::endl;
 		}
 
 		return;

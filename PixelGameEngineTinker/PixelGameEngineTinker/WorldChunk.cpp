@@ -202,10 +202,6 @@ void WorldChunk::clear()
 	// Clears the tile array
 	std::memset( this->_tiles, 0, sizeof( this->_tiles ) ); // this->_tiles.fill(0)
 
-	// Clears the quad tree's bounds and consolidations
-	//std::cout << "Clear start" << std::endl;
-	//this->_tileRenders[0].clear();
-	//std::cout << "Clear end" << std::endl;
 	return;
 }
 
