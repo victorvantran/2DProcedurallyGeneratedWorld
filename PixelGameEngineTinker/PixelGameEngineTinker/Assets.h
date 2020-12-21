@@ -17,7 +17,7 @@ class Assets
 private:
 	// Make the constructor and destructors private, so the user cannot create an instance(s) of the singleton	
 	static Assets* _instance;
-	
+
 	Assets();
 	~Assets();
 

@@ -50,7 +50,7 @@ public:
 				(
 					tileId,
 					std::tuple<olc::Sprite*, olc::Decal*>( spriteTile, nullptr )
-				)
+					)
 			);
 		}
 
@@ -66,7 +66,7 @@ public:
 		std::lock_guard<std::mutex> lockAccessSpriteTilesMap( this->_mutexAccessSpriteTilesMap );
 
 		std::map<std::uint64_t, std::tuple<olc::Sprite*, olc::Decal*>>::iterator it;
-		for ( it = this->_spriteTilesMap.begin(); it != this->_spriteTilesMap.end();  )
+		for ( it = this->_spriteTilesMap.begin(); it != this->_spriteTilesMap.end(); )
 		{
 			if ( tileIds.find( it->first ) == tileIds.end() )
 			{
@@ -83,7 +83,7 @@ public:
 		return;
 	}
 
-	
+
 	void updateDecals()
 	{
 		// Create decals within the spriteTilesMap, given a sprite has been created from a different thread. 
@@ -143,7 +143,7 @@ public:
 		{
 			std::cout << it->first << ":.. " << "(" << std::get<0>( it->second ) << "," << std::get<1>( it->second ) << ")" << std::endl;
 		}
-		
+
 		return;
 	}
 };

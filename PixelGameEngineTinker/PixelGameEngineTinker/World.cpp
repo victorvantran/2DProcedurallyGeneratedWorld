@@ -64,12 +64,14 @@ unsigned char World::copyBits( unsigned char& destination, unsigned dStartIndex,
 }
 
 
+
 World::World()
 	: _numChunkWidth( 1 + this->_chunkRadius * 2 ), _numChunkHeight( 1 + this->_chunkRadius * 2 ), _numWorldChunks( this->_numChunkWidth* this->_numChunkHeight ),
 	_prevFocalChunkIndexX( 0 ), _prevFocalChunkIndexY( 0 ),
 	_currFocalChunkIndexX( 0 ), _currFocalChunkIndexY( 0 ),
 	_worldChunks( new WorldChunk[( 1 + 2 * ( _chunkRadius ) ) * ( 1 + 2 * ( _chunkRadius ) )] ),
-	_atlas()
+	_atlas(),
+	_camera( nullptr )
 {
 
 }
@@ -97,6 +99,12 @@ World::~World()
 	// Deallocate
 	delete[] this->_worldChunks;
 	this->_worldChunks = nullptr;
+}
+
+
+void World::initializeCamera( Camera* camera )
+{
+	this->_camera = camera;
 }
 
 
@@ -260,7 +268,7 @@ void World::insert( int x, int y, int width, int height, uint64_t id )
 	std::lock_guard<std::mutex> lockModify( this->_modifyWordChunksMutex );
 
 	std::thread addSpriteTileThread( &World::addSpriteTile, this, id );
-	addSpriteTileThread.detach();
+	addSpriteTileThread.join(); // [change]
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
@@ -551,7 +559,15 @@ void World::loadWorldGeographyTask()
 	this->_runningLoadWorldGeography = true;
 	while ( this->_runningLoadWorldGeography )
 	{
-		this->loadWorldGeography( this->_focalChunk ); // [!] camera
+		if ( this->_camera != nullptr )
+		{
+			this->updateFocalChunk( this->_camera->getFocalPoint() );
+		}
+		else
+		{
+			std::cout << "FSF" << std::endl;
+		}
+		this->loadWorldGeography( this->_focalChunk );
 	}
 
 	return;
@@ -730,8 +746,8 @@ std::vector<std::tuple<std::uint64_t, int, int>> World::delimitWorldChunks( cons
 			if ( std::abs( cameraIndexX - worldChunkIndexX ) > this->_chunkRadius || std::abs( cameraIndexY - worldChunkIndexY ) > this->_chunkRadius )
 			{
 				// Add to memory
-				//std::thread addMemoryThread( &World::addMemory, this, worldChunk.createMemory() );
-				//addMemoryThread.detach();
+				std::thread addMemoryThread( &World::addMemory, this, worldChunk.createMemory() );
+				addMemoryThread.detach();
 
 				// Add to recall
 				int newChunkIndexX = cameraIndexX + -( worldChunkIndexX - this->_prevFocalChunkIndexX );
@@ -871,14 +887,14 @@ void World::loadSpriteTilesTask()
 }
 
 
-void World::loadSpriteTiles( )
+void World::loadSpriteTiles()
 {
 	// refresh/clean up
 	std::unique_lock<std::mutex> lockModifyTileSprites( this->_mutexModifyAtlas ); // [!] change to mutexmodifyspritetilesmap
-	std::chrono::system_clock::time_point secondsPassed = std::chrono::system_clock::now() + std::chrono::seconds( (long long)Settings::World::SPRITE_TILE_REFRESH_RATE );
+	std::chrono::system_clock::time_point secondsPassed = std::chrono::system_clock::now() + std::chrono::seconds( ( long long )Settings::World::SPRITE_TILE_REFRESH_RATE );
 	this->_condModifyAtlas.wait_until( lockModifyTileSprites, secondsPassed );
 	//this->_condModifyAtlas.wait( lockModifyTileSprites );
-	
+
 	std::set<std::uint64_t> tileIds;
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
@@ -898,7 +914,7 @@ void World::loadSpriteTiles( )
 void World::addSpriteTile( std::uint64_t tileId )
 {
 	// directly adds
-	std::lock_guard<std::mutex> lockModifyTileSprites(this->_mutexModifyAtlas );
+	std::lock_guard<std::mutex> lockModifyTileSprites( this->_mutexModifyAtlas );
 	this->_atlas.insert( tileId );
 	return;
 }

@@ -53,7 +53,7 @@ struct BoundingBox
 	T getCenterY() const;
 	T getWidth() const;
 	T getHeight() const;
-	
+
 
 	T setX( T x );
 	T setY( T y );
@@ -96,8 +96,8 @@ bool BoundingBox<T>::operator>=( const BoundingBox<T>& rhs ) const
 {
 	return ( this->x <= rhs.x &&
 		this->y <= rhs.y &&
-		(this->x + this->width) >= (rhs.x + rhs.width) &&
-		(this->y + this->height) >= (rhs.y + rhs.height)
+		( this->x + this->width ) >= ( rhs.x + rhs.width ) &&
+		( this->y + this->height ) >= ( rhs.y + rhs.height )
 		);
 }
 

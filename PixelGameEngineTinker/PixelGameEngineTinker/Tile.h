@@ -1,15 +1,26 @@
 #pragma once
-#include <stdint.h>
+#include <cstdint>
+#include <map>
 
-enum class TileName // uint64_t MAX
+#include "TileBorder.h"
+
+
+
+
+enum class TileIdentity // uint64_t MAX
 {
 	Void = 0,
 	Water = 1,
 	Stone = 2,
 	Dirt = 3,
-	Sand = 4,
-	Gravel = 5,
-	Clay = 6,
+	Torch = 4,
+	RedTorch = 5,
+	GreenTorch = 6,
+	BlueTorth = 7,
+
+	Sand = 8,
+	Gravel = 9,
+	Clay = 10,
 
 
 
@@ -41,9 +52,11 @@ enum class TileTypez
 class Tile
 {
 private:
-	uint64_t _id;
+	const static std::map<std::uint8_t, std::uint8_t> _borderValueToDecalIndex;
 
-	int _configuration;
+	std::uint64_t _id;
+	std::uint8_t _borders;
+
 	//TileType _tileType;
 	// bool isDynamic;
 
@@ -51,15 +64,26 @@ public:
 	Tile();
 	~Tile();
 
-	Tile( uint64_t id );
+	Tile( std::uint64_t id );
+	Tile( TileIdentity identity );
 
 	// Constructor that accounts for edges
 
-	void setId( uint64_t id );
-	int setConfiguration( int configuration );
+	void setId( std::uint64_t id );
+	void setIdentity( TileIdentity identity );
 
-	uint64_t getId() const;
-	int getConfiguration() const;
+	void setBorders( std::uint8_t borders );
+	void setBorder( TileBorder border );
+	void unsetBorder( TileBorder border );
+
+
+	std::uint64_t getId() const;
+	TileIdentity getIdentity() const;
+	std::uint8_t getBorders() const;
+	bool getBorder( TileBorder border ) const;
+	std::uint8_t getBordersDecalIndex() const;
+
+	bool exists() const;
 
 	bool isVoid() const;
 

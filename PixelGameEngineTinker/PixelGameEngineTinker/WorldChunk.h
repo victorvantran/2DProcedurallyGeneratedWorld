@@ -7,15 +7,13 @@
 #include "Tile.h"
 #include "TileRender.h"
 
-#include "ShadowRender.h"
-
 class WorldChunkMemory; // Forward Declaration
 
 class WorldChunk
 {
 private:
 	// Cell domain
-	int _chunkIndexX; 
+	int _chunkIndexX;
 	int _chunkIndexY; // position = chunkIndex * size
 	static const int _size = Settings::WorldChunk::SIZE;
 	static const int _numTileRenders = Settings::WorldChunk::NUM_TILE_RENDERS;
@@ -23,7 +21,6 @@ private:
 	QuadTree<TileRender> _tileRenders[WorldChunk::_numTileRenders];
 	Tile _tiles[WorldChunk::_size * WorldChunk::_size];
 
-	// QuadTree<ShadowRender> _shadowRenders[Settings::WorldChunk::NUM_SHADOW_RENDERS];
 public:
 
 	WorldChunk();
@@ -42,7 +39,7 @@ public:
 	void removeTiles( int x, int y, int width, int height, uint64_t id );
 	void insertTileRenders( int x, int y, int width, int height, uint64_t id );
 	void removeTileRenders( int x, int y, int width, int height, uint64_t id );
-	
+
 	const std::map<uint64_t, unsigned short> createPalette() const;
 
 	void delimit( int indexX, int indexY );

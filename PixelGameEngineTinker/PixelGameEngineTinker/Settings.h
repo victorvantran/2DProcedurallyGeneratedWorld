@@ -23,7 +23,7 @@ public:
 	// Assets
 	struct Assets
 	{
-		 static const std::string SPRITES_FILE_PATH;
+		static const std::string SPRITES_FILE_PATH;
 	};
 
 	// Screen
@@ -74,7 +74,7 @@ public:
 
 	};
 
-	
+
 	// QuadTree
 	struct QuadTree
 	{
@@ -82,7 +82,7 @@ public:
 		static const int MAX_LEVEL = 4; // log2( CHUNK_CELL_SIZE ) - 1  // [hardcode] [locked due to tile png not having 256x256]
 	};
 
-	
+
 	// Camera
 	struct Camera
 	{
@@ -107,6 +107,14 @@ public:
 	};
 
 
+	// Render
+
+	// ShadowRender
+	struct ShadowRender
+	{
+		static const std::uint8_t MIN_INTENSITY = 0;
+		static const std::uint8_t MAX_INTENSITY = 9;
+	};
 };
 
 

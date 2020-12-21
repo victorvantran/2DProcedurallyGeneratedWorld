@@ -54,7 +54,6 @@ public:
 	void insert( const TRender& encapsulateCell );
 	void remove( const TRender& rRenderCell );
 
-
 	bool isCellOccupied( const TRender& renderCell );
 
 	int* getChildrenNodeIndicies();
@@ -163,7 +162,6 @@ void QuadTree<TRender>::divide()
 
 	this->_divided = true;
 
-
 	// Do not further split for the lowest level
 	if ( this->_level == this->_minLevel )
 	{
@@ -262,13 +260,13 @@ void QuadTree<TRender>::consolidate( int level )
 	if (
 		(
 			_cell[0].getId() != 0
-		)
+			)
 		&&
 		(
 			( _cell[0].getId() == _cell[1].getId() ) &&
 			( _cell[2].getId() == _cell[3].getId() ) &&
 			( _cell[0].getId() == _cell[3].getId() )
-		)
+			)
 		&&
 		// [!] need configuration to be equal too
 		// existence impies childrenNodes are consolidated
@@ -426,7 +424,7 @@ void QuadTree<TRender>::insert( const TRender& aRenderCell )
 			{
 				// Localizing the offset solves the issue of different quadrants introducing negative/wrong values when indexing.
 				int localCellIndexX = this->_cell[i].getBounds().getX() - this->_referenceNodes[0].getBounds().getX();
-				int localCellIndexY = this->_cell[i].getBounds().getY() - this->_referenceNodes[0].getBounds().getY(); 
+				int localCellIndexY = this->_cell[i].getBounds().getY() - this->_referenceNodes[0].getBounds().getY();
 
 				this->_cell[i].setId( aRenderCell.getId() );
 				this->_cellCount += 1;
@@ -446,7 +444,7 @@ void QuadTree<TRender>::insert( const TRender& aRenderCell )
 				this->_cellCount += 1;
 			}
 		}
-		
+
 		// Add to children regardless
 		this->_referenceNodes[this->_childrenIndex[quadrant]].insert( aRenderCell ); /// 
 	}
@@ -495,7 +493,7 @@ void QuadTree<TRender>::remove( const TRender& rRenderCell )
 				// Localizing the offset solves the issue of different quadrants introducing negative/wrong values when indexing.
 				int localCellIndexX = this->_cell[i].getBounds().getX() - this->_referenceNodes[0].getBounds().getX();
 				int localCellIndexY = this->_cell[i].getBounds().getY() - this->_referenceNodes[0].getBounds().getY();
-				
+
 				this->_cell[i].setId( 0 );
 				this->_cellCount -= 1;
 				this->_consolidated = false;
@@ -508,7 +506,7 @@ void QuadTree<TRender>::remove( const TRender& rRenderCell )
 	{
 		for ( int i = 0; i < 4; i++ )
 		{
-			if ( this->_cell[i].getExist() && rBoundingBox.intersects( this->_cell[i].getBounds() ) && this->_cell[i].getId() == rRenderCell.getId() ) 
+			if ( this->_cell[i].getExist() && rBoundingBox.intersects( this->_cell[i].getBounds() ) && this->_cell[i].getId() == rRenderCell.getId() )
 			{
 				this->_cell[i].setId( 0 );
 				this->_cellCount -= 1;

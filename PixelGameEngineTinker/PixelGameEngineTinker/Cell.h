@@ -8,7 +8,7 @@ class Cell
 protected:
 	int _id;
 	BoundingBox<int> _bounds;
-	
+
 	Cell();
 	~Cell();
 

@@ -12,7 +12,7 @@ Cell::~Cell()
 
 
 Cell::Cell( int id, BoundingBox<int> bounds )
-	: _id(id), _bounds( bounds )
+	: _id( id ), _bounds( bounds )
 {
 }
 
@@ -76,7 +76,7 @@ BoundingBox<int> Cell::setBounds( const BoundingBox<int>& bounds )
 
 int Cell::setWidth( int width )
 {
-	this->_bounds.setWidth(width);
+	this->_bounds.setWidth( width );
 	return width;
 }
 

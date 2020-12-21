@@ -28,7 +28,7 @@ void WorldChunk::construct()
 	int rootQuadTreePositionX = this->_chunkIndexX * this->_size;
 	int rootQuadTreePositionY = this->_chunkIndexY * this->_size;
 
-	// Intialize quadTrees
+	// Intialize tileRender QuadTrees
 	this->_tileRenders[0].constructQuadTree(
 		0,
 		-1,
@@ -41,7 +41,7 @@ void WorldChunk::construct()
 		Settings::WorldChunk::TILE_RENDER_MIN_CELL_SIZE
 	);
 
-	// Connect trees
+	// Connect tileRender nodes
 	for ( int i = 0; i < sizeof( this->_tileRenders ) / sizeof( this->_tileRenders[0] ); i++ )
 	{
 		this->_tileRenders[i].divide();
@@ -59,8 +59,8 @@ void WorldChunk::wipeRender()
 	// [!] soluton is to clear, and then jsut set bounding boxes to proper size? Or is no clear more efficient?
 	int rootQuadTreePositionX = this->_chunkIndexX * this->_size;
 	int rootQuadTreePositionY = this->_chunkIndexY * this->_size;
-	
-	
+
+
 	// Intialize quadTrees
 	this->_tileRenders[0].constructQuadTree(
 		0,
@@ -73,13 +73,13 @@ void WorldChunk::wipeRender()
 		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
 		Settings::WorldChunk::TILE_RENDER_MIN_CELL_SIZE
 	);
-	
+
 	// The difference between construct and reconstruct is quick reassignment, unless of course, shallow copy does this for us. Then just use construct
 	for ( int i = 0; i < sizeof( this->_tileRenders ) / sizeof( this->_tileRenders[0] ); i++ )
 	{
 		this->_tileRenders[i].divide();
 	}
-	
+
 	return;
 }
 
@@ -282,7 +282,6 @@ QuadTree<TileRender>& WorldChunk::getTileRendersRoot()
 {
 	return this->_tileRenders[0];
 }
-
 
 
 

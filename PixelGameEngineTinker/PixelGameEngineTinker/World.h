@@ -17,6 +17,7 @@
 #include "WorldChunk.h"
 #include "WorldChunkRecall.h"
 #include "Atlas.h"
+#include "Camera.h"
 
 #include <iostream>
 #include <fstream>
@@ -28,7 +29,7 @@ class World
 {
 private:
 
-	// World
+	// WorldChunks
 	const static int _chunkRadius = Settings::World::CHUNK_RADIUS;
 	const static int _chunkCellSize = Settings::World::CHUNK_CELL_SIZE;
 
@@ -64,6 +65,9 @@ private:
 	std::mutex _mutexModifyAtlas;
 	std::condition_variable _condModifyAtlas;
 
+	// Camera
+	Camera* _camera = nullptr;
+
 
 private:
 	static unsigned char copyBits( unsigned char& destination, unsigned char copy, unsigned startIndex, unsigned char endIndex );
@@ -73,6 +77,7 @@ public:
 	World();
 	~World();
 
+	void initializeCamera( Camera* camera );
 	void initializeDatabase();
 	void initializeDelimits( const BoundingBox<float>& cameraView );
 	void initializeWorldChunks();
