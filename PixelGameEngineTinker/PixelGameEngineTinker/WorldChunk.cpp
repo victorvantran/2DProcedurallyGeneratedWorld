@@ -54,8 +54,7 @@ void WorldChunk::construct()
 void WorldChunk::wipeRender()
 {
 	// [!] don't even need clear becasuse wipe Render calls constructQuadTree which sets root divided = false
-
-	// [!] look to see if we can make it more efficient that construct
+	// [!] look to see if we can make it more efficient than construct
 	// [!] soluton is to clear, and then jsut set bounding boxes to proper size? Or is no clear more efficient?
 	int rootQuadTreePositionX = this->_chunkIndexX * this->_size;
 	int rootQuadTreePositionY = this->_chunkIndexY * this->_size;
@@ -196,10 +195,10 @@ const std::map<uint64_t, unsigned short> WorldChunk::createPalette() const
 
 void WorldChunk::clear()
 {
+	// Clears the tile array
 	this->_chunkIndexX = 0;
 	this->_chunkIndexY = 0;
 
-	// Clears the tile array
 	std::memset( this->_tiles, 0, sizeof( this->_tiles ) ); // this->_tiles.fill(0)
 
 	return;

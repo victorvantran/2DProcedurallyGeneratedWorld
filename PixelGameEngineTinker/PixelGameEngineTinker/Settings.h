@@ -30,7 +30,7 @@ public:
 	struct Screen
 	{
 		static const int SCREEN_RESOLUTION_X = 1920;
-		static const int SCREEN_RESOLUTION_Y = 1200;
+		static const int SCREEN_RESOLUTION_Y = 1080;
 
 		static const int PIXEL_SIZE = 1;
 		static const int SCREEN_PIXEL_WIDTH = SCREEN_RESOLUTION_X / PIXEL_SIZE;
@@ -64,14 +64,6 @@ public:
 		static const std::uint32_t TILE_RENDER_MIN_LEVEL = 0; // [ hard code ]
 		static const std::uint32_t TILE_RENDER_MAX_LEVEL = 4; // [ hard code ]
 		static const float TILE_RENDER_MIN_CELL_SIZE; // [ hard code ]
-
-
-
-		static const std::uint32_t NUM_SHADOW_RENDERS = 1365; // // 4^0 + 4^1 + 4^2 + ... + 4^( n + 1 ) ( for n = log( chunkSize ) [ hardcode ] ( 4 shadows per tile )
-		static const std::uint32_t SHADOW_RENDER_MIN_LEVEL = 0; // [ hard code ]
-		static const std::uint32_t SHADOW_RENDER_MAX_LEVEL = 5; // [ hard code ]
-		static const float SHADOW_RENDER_MIN_CELL_SIZE; // [ hard code ]
-
 	};
 
 

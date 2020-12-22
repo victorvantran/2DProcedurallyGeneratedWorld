@@ -54,9 +54,6 @@
     <ClInclude Include="Atlas.h">
       <Filter>Header Files\Render</Filter>
     </ClInclude>
-    <ClInclude Include="Cell.h">
-      <Filter>Header Files\World</Filter>
-    </ClInclude>
     <ClInclude Include="WorldChunk.h">
       <Filter>Header Files\World</Filter>
     </ClInclude>
@@ -88,6 +85,12 @@
       <Filter>Header Files\Render</Filter>
     </ClInclude>
     <ClInclude Include="TileBorder.h">
+      <Filter>Header Files\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="LightRender.h">
+      <Filter>Header Files\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Cell.h">
       <Filter>Header Files\Render</Filter>
     </ClInclude>
   </ItemGroup>
@@ -123,6 +126,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LightRender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

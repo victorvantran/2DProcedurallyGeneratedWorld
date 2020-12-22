@@ -257,44 +257,14 @@ void QuadTree<TRender>::consolidate( int level )
 	// 1) they all have the same consolidation level
 	// 2) Given the position and size of the boundingBoxes from the array, determine if they "fill" the bounds of the QuadTree
 	// Height check not necessary if our bounding box is a square, but for formality
-	if (
-		(
-			_cell[0].getId() != 0
-			)
-		&&
-		(
-			( _cell[0].getId() == _cell[1].getId() ) &&
-			( _cell[2].getId() == _cell[3].getId() ) &&
-			( _cell[0].getId() == _cell[3].getId() )
-			)
-		&&
-		// [!] need configuration to be equal too
-		// existence impies childrenNodes are consolidated
-		(
-			(
-				_cell[0].getExist() &&
-				_cell[1].getExist() &&
-				_cell[2].getExist() &&
-				_cell[3].getExist()
-				)
-			)
-		&&
-		(
-			_cell[0].getWidth() == ( ( 2 << ( this->_level ) ) / 2 ) &&
-			_cell[0].getHeight() == ( ( 2 << ( this->_level ) ) / 2 )
-			)
-		&&
-		(
-			( level == this->_minLevel ) ||
-			(
-				( _cell[0].getWidth() == _cell[1].getWidth() ) &&
-				( _cell[2].getWidth() == _cell[3].getWidth() ) &&
-				( _cell[0].getWidth() == _cell[3].getWidth() ) &&
-				( _cell[0].getHeight() == _cell[1].getHeight() ) &&
-				( _cell[2].getHeight() == _cell[3].getHeight() ) &&
-				( _cell[0].getHeight() == _cell[3].getHeight() )
-				)
-			)
+
+	if (_cell[0].getId() != 0 && 
+		_cell[0].getExist() &&
+		_cell[0].getWidth() == ( ( 2 << ( this->_level ) ) / 2 ) &&
+		_cell[0].getHeight() == ( ( 2 << ( this->_level ) ) / 2 ) &&
+		_cell[0] == _cell[1] &&
+		_cell[1] == _cell[2] &&
+		_cell[2] == _cell[3]
 		)
 	{
 
@@ -305,7 +275,6 @@ void QuadTree<TRender>::consolidate( int level )
 		int height = _cell[0].getHeight() * 2;
 		int id = _cell[0].getId();
 		bool exist = _cell[0].getExist();
-
 
 		TRender renderCell = TRender( id, BoundingBox<int>( posX, posY, width, height ) );
 

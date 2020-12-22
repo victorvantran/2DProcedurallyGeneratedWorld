@@ -18,4 +18,14 @@ public:
 	std::uint8_t getBordersDecalIndex() const;
 
 	bool exists() const;
+
+
+	inline bool operator==( const TileRender& rhs ) const
+	{
+		return this->getId() == rhs.getId() &&
+			this->getExist() == rhs.getExist() &&
+			this->getWidth() == rhs.getWidth() &&
+			this->getHeight() == rhs.getHeight();
+	}
+
 };

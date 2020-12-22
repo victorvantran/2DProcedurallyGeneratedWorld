@@ -89,7 +89,7 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 		size,
 		olc::GREEN
 	);
-
+	
 	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas );
 	return;
 }
