@@ -13,10 +13,10 @@ class WorldChunk
 {
 private:
 	// Cell domain
-	int _chunkIndexX;
-	int _chunkIndexY; // position = chunkIndex * size
-	static const int _size = Settings::WorldChunk::SIZE;
-	static const int _numTileRenders = Settings::WorldChunk::NUM_TILE_RENDERS;
+	std::int64_t _chunkIndexX;
+	std::int64_t _chunkIndexY; // position = chunkIndex * size
+	static const std::uint64_t _size = Settings::WorldChunk::SIZE;
+	static const std::uint64_t _numTileRenders = Settings::WorldChunk::NUM_TILE_RENDERS;
 
 	QuadTree<TileRender> _tileRenders[WorldChunk::_numTileRenders];
 	Tile _tiles[WorldChunk::_size * WorldChunk::_size];
@@ -26,34 +26,34 @@ public:
 	WorldChunk();
 	~WorldChunk();
 
-	WorldChunk( int indexX, int indexY );
+	WorldChunk( std::int64_t indexX, std::int64_t indexY );
 
 
 	void construct();
 	void wipeRender();
 	void fill( uint64_t id );
 
-	void insert( int x, int y, int width, int height, uint64_t id );
-	void remove( int x, int y, int width, int height, uint64_t id );
-	void insertTiles( int x, int y, int width, int height, uint64_t id );
-	void removeTiles( int x, int y, int width, int height, uint64_t id );
-	void insertTileRenders( int x, int y, int width, int height, uint64_t id );
-	void removeTileRenders( int x, int y, int width, int height, uint64_t id );
+	void insert( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
+	void remove( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
+	void insertTiles( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
+	void removeTiles( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
+	void insertTileRenders( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
+	void removeTileRenders( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
 
 	const std::map<uint64_t, unsigned short> createPalette() const;
 
-	void delimit( int indexX, int indexY );
+	void delimit( std::int64_t indexX, std::int64_t indexY );
 	void clear();
 
 
-	int getChunkIndexX() const;
-	int getChunkIndexY() const;
-	int getRelativeChunkIndexX( const BoundingBox<float>& boundingBox ) const;
-	int getRelativeChunkIndexY( const BoundingBox<float>& boundingBox ) const;
-	int getSize() const;
-	int getNumTileRenders() const;
-	int getPositionX() const;
-	int getPositionY() const;
+	std::int64_t getChunkIndexX() const;
+	std::int64_t getChunkIndexY() const;
+	std::int64_t getRelativeChunkIndexX( const BoundingBox<long double>& boundingBox ) const;
+	std::int64_t getRelativeChunkIndexY( const BoundingBox<long double>& boundingBox ) const;
+	std::int64_t getSize() const;
+	std::int64_t getNumTileRenders() const;
+	std::int64_t getPositionX() const;
+	std::int64_t getPositionY() const;
 
 	Tile* getTiles();
 	// Tile getTile( int x, int y )

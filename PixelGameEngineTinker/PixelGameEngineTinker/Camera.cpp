@@ -10,13 +10,13 @@
 
 
 Camera::Camera()
-	: _focalPoint( BoundingBox<float>() ), _view( BoundingBox<float>() ), _zoomX( 1.0f ), _zoomY( 1.0f ), _world( nullptr )
+	: _focalPoint( BoundingBox<long double>() ), _view( BoundingBox<long double>() ), _zoomX( 1.0f ), _zoomY( 1.0f ), _world( nullptr )
 {
 
 }
 
 
-Camera::Camera( BoundingBox<float> focalPoint, BoundingBox<float> view, float zoomX, float zoomY, World* world )
+Camera::Camera( BoundingBox<long double> focalPoint, BoundingBox<long double> view, long double zoomX, long double zoomY, World* world )
 	: _focalPoint( focalPoint ), _view( view ), _zoomX( zoomX ), _zoomY( zoomY ), _world( world )
 {
 	this->_view.setCenterX( this->_focalPoint.getCenterX() );
@@ -31,24 +31,24 @@ Camera::~Camera()
 }
 
 
-void Camera::screenToWorld( int pixelX, int pixelY, float& cellX, float& cellY ) const
+void Camera::screenToWorld( std::int64_t pixelX, std::int64_t pixelY, long double& cellX, long double& cellY ) const
 {
 	// int to float ( camera offest determines displacement )
 
-	int tileSize = Settings::Screen::CELL_PIXEL_SIZE;
-	cellX = ( float )( ( ( float )( pixelX - this->_absolutePixelOffsetX ) / ( float )( this->_zoomX * tileSize ) ) + ( this->_focalPoint.x ) );
-	cellY = ( float )( ( ( float )( pixelY - this->_absolutePixelOffsetY ) / ( float )( this->_zoomY * tileSize ) ) + ( this->_focalPoint.y ) );
+	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
+	cellX = ( long double )( ( ( long double )( pixelX - this->_absolutePixelOffsetX ) / ( long double )( this->_zoomX * tileSize ) ) + ( this->_focalPoint.x ) );
+	cellY = ( long double )( ( ( long double )( pixelY - this->_absolutePixelOffsetY ) / ( long double )( this->_zoomY * tileSize ) ) + ( this->_focalPoint.y ) );
 	return;
 }
 
 
-void Camera::worldToScreen( float cellX, float cellY, int& pixelX, int& pixelY ) const
+void Camera::worldToScreen( long double cellX, long double cellY, std::int64_t& pixelX, std::int64_t& pixelY ) const
 {
 	// float to int ( camera offset determines displacement )
 
-	int tileSize = Settings::Screen::CELL_PIXEL_SIZE;
-	pixelX = ( int )( ( cellX - ( this->_focalPoint.x ) ) * ( this->_zoomX * tileSize ) ) + this->_absolutePixelOffsetX;
-	pixelY = ( int )( ( cellY - ( this->_focalPoint.y ) ) * ( this->_zoomY * tileSize ) ) + this->_absolutePixelOffsetY;
+	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
+	pixelX = ( std::int64_t )( ( cellX - ( this->_focalPoint.x ) ) * ( this->_zoomX * tileSize ) ) + this->_absolutePixelOffsetX;
+	pixelY = ( std::int64_t )( ( cellY - ( this->_focalPoint.y ) ) * ( this->_zoomY * tileSize ) ) + this->_absolutePixelOffsetY;
 	return;
 }
 
@@ -70,19 +70,19 @@ void Camera::renderWorld() const
 
 void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 {
-	int tileSize = Settings::Screen::CELL_PIXEL_SIZE;; // [!] make it from a "global" variable
+	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;; // [!] make it from a "global" variable
 
-	int chunkSize = worldChunk.getSize();
-	float worldPositionX = worldChunk.getChunkIndexX() * chunkSize;
-	float worldPositionY = worldChunk.getChunkIndexY() * chunkSize;
+	std::uint16_t chunkSize = worldChunk.getSize(); // [@]
+	std::int64_t worldPositionX = worldChunk.getChunkIndexX() * chunkSize; // [@]
+	std::int64_t worldPositionY = worldChunk.getChunkIndexY() * chunkSize;
 
-	int pixelX;
-	int pixelY;
+	std::int64_t pixelX;
+	std::int64_t pixelY;
 
 	worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
 
-	olc::vi2d startPos = olc::vi2d{ pixelX, pixelY };
-	olc::vi2d size = olc::vi2d{ ( int )( chunkSize * ( this->_zoomX * tileSize ) ), ( int )( chunkSize * ( this->_zoomY * tileSize ) ) };
+	olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
+	olc::v2d_generic<std::int64_t> size = olc::v2d_generic<std::int64_t>{ ( int )( chunkSize * ( this->_zoomX * tileSize ) ), ( int )( chunkSize * ( this->_zoomY * tileSize ) ) };
 
 	pge->DrawRect(
 		startPos,
@@ -103,7 +103,7 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas 
 	int chunkSize = Settings::World::CHUNK_CELL_SIZE;
 
 	QuadTree<TileRender> currQuadTree = tileRenders.getReferenceNodes()[tileRenders.getIndex()];
-	const BoundingBox<int> bounds = currQuadTree.getBounds();
+	const BoundingBox<std::int64_t> bounds = currQuadTree.getBounds();
 
 	// No need to render if the camera can not see it
 	if ( !this->_view.intersects( bounds ) )
@@ -126,16 +126,16 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas 
 			int level = currQuadTree.getLevel();
 			int scale = 2 << ( level );
 
-			float worldPositionX = currQuadTree.getBounds().getX();
-			float worldPositionY = currQuadTree.getBounds().getY();
-			int pixelX;
-			int pixelY;
+			std::int64_t worldPositionX = currQuadTree.getBounds().getX(); // [@]
+			std::int64_t worldPositionY = currQuadTree.getBounds().getY();
+			std::int64_t pixelX;
+			std::int64_t pixelY;
 			worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
-			olc::vi2d startPos = olc::vi2d{ pixelX, pixelY };
+			olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
 
 			pge->DrawPartialDecal(
 				startPos,
-				olc::vf2d{ this->_zoomX * tileSize, this->_zoomY * tileSize } *scale,
+				olc::v2d_generic<long double>{ this->_zoomX * tileSize, this->_zoomY * tileSize } *scale,
 				tileDecal,
 				olc::vf2d{ 0, Settings::Camera::CONSOLIDATED_TILE_OFFSET },
 				olc::vf2d{ 1, 1 } *( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE * scale )
@@ -161,17 +161,17 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas 
 						continue;
 					}
 
-					float worldPositionX = cells[i].getBounds().getX();
-					float worldPositionY = cells[i].getBounds().getY();
-					int pixelX;
-					int pixelY;
+					std::int64_t worldPositionX = cells[i].getBounds().getX(); // [@]
+					std::int64_t worldPositionY = cells[i].getBounds().getY();
+					std::int64_t pixelX;
+					std::int64_t pixelY;
 					worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
-					olc::vi2d startPos = olc::vi2d{ pixelX, pixelY };
+					olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
 
 
 					pge->DrawPartialDecal(
 						startPos,
-						olc::vf2d{ ( tileSize * this->_zoomX ), ( tileSize * this->_zoomY ) },
+						olc::v2d_generic<long double>{ ( tileSize * this->_zoomX ), ( tileSize * this->_zoomY ) },
 						tileDecal,
 						olc::vf2d{ 0, 128 }, // [!] temp based on configuration
 						olc::vf2d{ 1, 1 } *( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE )
@@ -211,7 +211,7 @@ void Camera::renderCamera() const
 	// Draw Focal Point
 	pge->DrawRect
 	(
-		olc::vi2d{ this->_absolutePixelOffsetX, this->_absolutePixelOffsetY },
+		olc::v2d_generic<std::int64_t>{ this->_absolutePixelOffsetX, this->_absolutePixelOffsetY },
 		olc::vi2d{ ( int )( this->_focalPoint.width * this->_zoomX * tileSize ), ( int )( this->_focalPoint.height * this->_zoomY * tileSize ) },
 		olc::WHITE
 	);
@@ -236,11 +236,11 @@ void Camera::renderTilesDebug( WorldChunk& worldChunk ) const
 	int tileCellSize = 1; // [!] make it from a "global" variable
 
 	int chunkSize = worldChunk.getSize();
-	float worldPositionX = worldChunk.getChunkIndexX() * chunkSize;
-	float worldPositionY = worldChunk.getChunkIndexY() * chunkSize;
-	int tilePixelX;
-	int tilePixelY;
-	olc::vi2d tileStartPos;
+	std::int64_t worldPositionX = worldChunk.getChunkIndexX() * chunkSize; // [@]
+	std::int64_t worldPositionY = worldChunk.getChunkIndexY() * chunkSize;
+	std::int64_t tilePixelX;
+	std::int64_t tilePixelY;
+	olc::v2d_generic<std::int64_t> tileStartPos;
 	olc::vi2d tilePixelSize = olc::vi2d{ ( int )( tileCellSize * ( this->_zoomX * tileSize ) ), ( int )( tileCellSize * ( this->_zoomY * tileSize ) ) };
 
 	Tile* tiles = worldChunk.getTiles();
@@ -251,9 +251,9 @@ void Camera::renderTilesDebug( WorldChunk& worldChunk ) const
 			Tile tile = tiles[y * chunkSize + x];
 			if ( !tile.isVoid() )
 			{
-				int id = tile.getId();
+				std::uint64_t id = tile.getId();
 				worldToScreen( worldPositionX + x, worldPositionY + y, tilePixelX, tilePixelY );
-				tileStartPos = olc::vi2d{ tilePixelX, tilePixelY };
+				tileStartPos = olc::v2d_generic<std::int64_t>{ tilePixelX, tilePixelY };
 
 				pge->FillRect(
 					tileStartPos,
@@ -266,10 +266,10 @@ void Camera::renderTilesDebug( WorldChunk& worldChunk ) const
 	}
 
 	// Draw Quadrant
-	int chunkPixelX;
-	int chunkPixelY;
+	std::int64_t chunkPixelX;
+	std::int64_t chunkPixelY;
 	worldToScreen( worldPositionX, worldPositionY, chunkPixelX, chunkPixelY );
-	olc::vi2d chunkStartPos = olc::vi2d{ chunkPixelX, chunkPixelY };
+	olc::v2d_generic<std::int64_t> chunkStartPos = olc::v2d_generic<std::int64_t>{ chunkPixelX, chunkPixelY };
 	olc::vi2d chunkPixelSize = olc::vi2d{ ( int )( chunkSize * ( this->_zoomX * tileSize ) ), ( int )( chunkSize * ( this->_zoomY * tileSize ) ) };
 
 	pge->DrawRect(
@@ -282,7 +282,7 @@ void Camera::renderTilesDebug( WorldChunk& worldChunk ) const
 }
 
 
-void Camera::pan( float x, float y )
+void Camera::pan( long double x, long double y )
 {
 	this->_focalPoint.setX( this->_focalPoint.getX() + x );
 	this->_focalPoint.setY( this->_focalPoint.getY() + y );
@@ -293,7 +293,7 @@ void Camera::pan( float x, float y )
 }
 
 
-void Camera::panX( float x )
+void Camera::panX( long double x )
 {
 	this->_focalPoint.setX( this->_focalPoint.getX() + x );
 	this->_view.setCenterX( this->_focalPoint.getCenterX() );
@@ -301,7 +301,7 @@ void Camera::panX( float x )
 }
 
 
-void Camera::panY( float y )
+void Camera::panY( long double y )
 {
 	this->_focalPoint.setY( this->_focalPoint.getY() + y );
 	this->_view.setCenterY( this->_focalPoint.getCenterY() );
@@ -309,26 +309,26 @@ void Camera::panY( float y )
 }
 
 
-void Camera::zoom( float s )
+void Camera::zoom( long double s )
 {
 	// [!] sumplify this
-	int centerCameraPixelXBeforeZoom;
-	int centerCameraPixelYBeforeZoom;
+	std::int64_t centerCameraPixelXBeforeZoom;
+	std::int64_t centerCameraPixelYBeforeZoom;
 	this->worldToScreen( this->_focalPoint.getCenterX(), this->_focalPoint.getCenterY(), centerCameraPixelXBeforeZoom, centerCameraPixelYBeforeZoom );
 
-	float cameraCenterXBeforeZoom;
-	float cameraCenterYBeforeZoom;
+	long double cameraCenterXBeforeZoom;
+	long double cameraCenterYBeforeZoom;
 	this->screenToWorld( centerCameraPixelXBeforeZoom, centerCameraPixelYBeforeZoom, cameraCenterXBeforeZoom, cameraCenterYBeforeZoom );
 
 	this->_zoomX *= s;
 	this->_zoomY *= s;
 
-	int centerCameraPixelXAfterZoom;
-	int centerCameraPixelYAfterZoom;
+	std::int64_t centerCameraPixelXAfterZoom;
+	std::int64_t centerCameraPixelYAfterZoom;
 	this->worldToScreen( this->_focalPoint.getCenterX(), this->_focalPoint.getCenterY(), centerCameraPixelXAfterZoom, centerCameraPixelYAfterZoom );
 
-	float cameraCenterXAfterZoom;
-	float cameraCenterYAfterZoom;
+	long double cameraCenterXAfterZoom;
+	long double cameraCenterYAfterZoom;
 	this->screenToWorld( centerCameraPixelXBeforeZoom, centerCameraPixelYBeforeZoom, cameraCenterXAfterZoom, cameraCenterYAfterZoom );
 
 	this->_focalPoint.width = this->_focalPoint.width * ( 1.0f / s );
@@ -345,7 +345,7 @@ void Camera::zoom( float s )
 }
 
 
-void Camera::zoom( float x, float y )
+void Camera::zoom( long double x, long double y )
 {
 	// ...
 	this->_zoomX *= x;
@@ -359,7 +359,7 @@ void Camera::zoom( float x, float y )
 }
 
 
-void Camera::zoomX( float x )
+void Camera::zoomX( long double x )
 {
 	// ...
 	this->_zoomX *= x;
@@ -369,7 +369,7 @@ void Camera::zoomX( float x )
 }
 
 
-void Camera::zoomY( float y )
+void Camera::zoomY( long double y )
 {
 	// ...
 	this->_zoomY *= y;
@@ -379,7 +379,7 @@ void Camera::zoomY( float y )
 }
 
 
-void Camera::setPosition( float x, float y )
+void Camera::setPosition( long double x, long double y )
 {
 	this->_focalPoint.setX( x );
 	this->_focalPoint.setY( y );
@@ -390,7 +390,7 @@ void Camera::setPosition( float x, float y )
 }
 
 
-void Camera::setZoom( float s )
+void Camera::setZoom( long double s )
 {
 	/*
 	this->_zoomX = s;
@@ -403,23 +403,23 @@ void Camera::setZoom( float s )
 	this->_view.height = ( 1.0f / s );
 	*/
 
-	int centerCameraPixelXBeforeZoom;
-	int centerCameraPixelYBeforeZoom;
+	std::int64_t centerCameraPixelXBeforeZoom;
+	std::int64_t centerCameraPixelYBeforeZoom;
 	this->worldToScreen( this->_focalPoint.getCenterX(), this->_focalPoint.getCenterY(), centerCameraPixelXBeforeZoom, centerCameraPixelYBeforeZoom );
 
-	float cameraCenterXBeforeZoom;
-	float cameraCenterYBeforeZoom;
+	long double cameraCenterXBeforeZoom;
+	long double cameraCenterYBeforeZoom;
 	this->screenToWorld( centerCameraPixelXBeforeZoom, centerCameraPixelYBeforeZoom, cameraCenterXBeforeZoom, cameraCenterYBeforeZoom );
 
 	this->_zoomX = s;
 	this->_zoomY = s;
 
-	int centerCameraPixelXAfterZoom;
-	int centerCameraPixelYAfterZoom;
+	std::int64_t centerCameraPixelXAfterZoom;
+	std::int64_t centerCameraPixelYAfterZoom;
 	this->worldToScreen( this->_focalPoint.getCenterX(), this->_focalPoint.getCenterY(), centerCameraPixelXAfterZoom, centerCameraPixelYAfterZoom );
 
-	float cameraCenterXAfterZoom;
-	float cameraCenterYAfterZoom;
+	long double cameraCenterXAfterZoom;
+	long double cameraCenterYAfterZoom;
 	this->screenToWorld( centerCameraPixelXBeforeZoom, centerCameraPixelYBeforeZoom, cameraCenterXAfterZoom, cameraCenterYAfterZoom );
 
 	this->_focalPoint.width = Settings::Camera::FOCAL_POINT_CELL_WIDTH * ( 1.0f / s ); // set
@@ -433,13 +433,13 @@ void Camera::setZoom( float s )
 	this->_view.setCenterX( this->_focalPoint.getCenterX() );
 	this->_view.setCenterY( this->_focalPoint.getCenterY() );
 
-	//BoundingBox<float>( 0.0f, 0.0f, Settings::Camera::FOCAL_POINT_CELL_WIDTH, Settings::Camera::FOCAL_POINT_CELL_HEIGHT ),
-	//BoundingBox<float>( 0.0f, 0.0f, Settings::Camera::VIEW_CELL_WIDTH, Settings::Camera::VIEW_CELL_HEIGHT ),
+	//BoundingBox<long double>( 0.0f, 0.0f, Settings::Camera::FOCAL_POINT_CELL_WIDTH, Settings::Camera::FOCAL_POINT_CELL_HEIGHT ),
+	//BoundingBox<long double>( 0.0f, 0.0f, Settings::Camera::VIEW_CELL_WIDTH, Settings::Camera::VIEW_CELL_HEIGHT ),
 	return;
 }
 
 
-void Camera::setZoom( float x, float y )
+void Camera::setZoom( long double x, long double y )
 {
 	this->_zoomX = x;
 	this->_zoomY = y;
@@ -453,7 +453,7 @@ void Camera::setZoom( float x, float y )
 }
 
 
-void Camera::setFocalPoint( float width, float height )
+void Camera::setFocalPoint( long double width, long double height )
 {
 	this->_focalPoint.setWidth( width );
 	this->_focalPoint.setHeight( height );
@@ -461,31 +461,31 @@ void Camera::setFocalPoint( float width, float height )
 }
 
 
-BoundingBox<float> Camera::getFocalPoint() const
+BoundingBox<long double> Camera::getFocalPoint() const
 {
 	return this->_focalPoint;
 }
 
 
-float Camera::getCenterX() const
+long double Camera::getCenterX() const
 {
 	return this->_focalPoint.getX() + this->_focalPoint.getWidth() / 2.0f;
 }
 
 
-float Camera::getCenterY() const
+long double Camera::getCenterY() const
 {
 	return this->_focalPoint.getY() + this->_focalPoint.getHeight() / 2.0f;
 }
 
 
-float Camera::getZoomX() const
+long double Camera::getZoomX() const
 {
 	return this->_zoomX;
 }
 
 
-float Camera::getZoomY() const
+long double Camera::getZoomY() const
 {
 	return this->_zoomY;
 }

@@ -12,7 +12,7 @@ private:
 public:
 	TileRender();
 	~TileRender();
-	TileRender( int id, const BoundingBox<int>& bounds );
+	TileRender( std::uint64_t id, const BoundingBox<std::int64_t>& bounds );
 
 	void setBordersDecalIndex( std::uint8_t bordersDecalIndex );
 	std::uint8_t getBordersDecalIndex() const;

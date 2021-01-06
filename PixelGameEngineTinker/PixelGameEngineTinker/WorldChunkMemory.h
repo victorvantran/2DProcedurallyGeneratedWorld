@@ -8,8 +8,8 @@ class WorldChunk; // Forward Declaration
 class WorldChunkMemory
 {
 private:
-	int _chunkIndexX;
-	int _chunkIndexY;
+	std::int64_t _chunkIndexX;
+	std::int64_t _chunkIndexY;
 
 	unsigned char* _tilesBlob;
 	std::uint64_t* _paletteBlob;
@@ -21,8 +21,8 @@ public:
 	WorldChunkMemory( WorldChunk* worldChunk );
 	~WorldChunkMemory();
 
-	int getChunkIndexX();
-	int getChunkIndexY();
+	std::int64_t getChunkIndexX();
+	std::int64_t getChunkIndexY();
 
 	unsigned char* getTilesBlob();
 	std::uint64_t* getPaletteBlob();

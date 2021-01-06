@@ -15,14 +15,14 @@ class World; // Forward Declaration
 class Camera : public olc::PGEX
 {
 private:
-	BoundingBox<float> _focalPoint; // cell-domain
-	BoundingBox<float> _view;
+	BoundingBox<long double> _focalPoint; // cell-domain
+	BoundingBox<long double> _view;
 
-	int _absolutePixelOffsetX = Settings::Camera::ABSOLUTE_PIXEL_OFFSET_X;  //16 * ( 120 / 2 ) - 16 * ( 32 / 2 );  // tileSize * ( screenCellWidth / 2 ) - tileSize * ( cameraCellWidth / 2 ) [!] need to change based on pixelSize
-	int _absolutePixelOffsetY = Settings::Camera::ABSOLUTE_PIXEL_OFFSET_Y;
+	std::int64_t _absolutePixelOffsetX = Settings::Camera::ABSOLUTE_PIXEL_OFFSET_X;  //16 * ( 120 / 2 ) - 16 * ( 32 / 2 );  // tileSize * ( screenCellWidth / 2 ) - tileSize * ( cameraCellWidth / 2 ) [!] need to change based on pixelSize
+	std::int64_t _absolutePixelOffsetY = Settings::Camera::ABSOLUTE_PIXEL_OFFSET_Y;
 
-	float _zoomX;
-	float _zoomY;
+	long double _zoomX;
+	long double _zoomY;
 
 
 	World* _world = nullptr;
@@ -30,10 +30,10 @@ private:
 public:
 	Camera();
 	~Camera();
-	Camera( BoundingBox<float> focalPoint, BoundingBox<float> biew, float zoomX, float zoomY, World* _world );
+	Camera( BoundingBox<long double> focalPoint, BoundingBox<long double> biew, long double zoomX, long double zoomY, World* _world );
 
-	void screenToWorld( int pixelX, int pixelY, float& cellX, float& cellY ) const; // int to float ( camera offest determines displacement )
-	void worldToScreen( float cellX, float cellY, int& pixelX, int& pixelY ) const; // float to int ( camera offset determines displacement )
+	void screenToWorld( std::int64_t pixelX, std::int64_t pixelY, long double& cellX, long double& cellY ) const; // int to float ( camera offest determines displacement )
+	void worldToScreen( long double cellX, long double cellY, std::int64_t& pixelX, std::int64_t& pixelY ) const; // float to int ( camera offset determines displacement )
 
 	void renderWorld() const;
 	void renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const;
@@ -42,21 +42,21 @@ public:
 
 	void renderTilesDebug( WorldChunk& worldChunk ) const;
 
-	void pan( float x, float y );
-	void panX( float x );
-	void panY( float y );
-	void zoom( float s );
-	void zoom( float x, float y );
-	void zoomX( float x );
-	void zoomY( float y );
-	void setPosition( float x, float y );
-	void setZoom( float s );
-	void setZoom( float x, float y );
-	void setFocalPoint( float width, float height );
+	void pan( long double x, long double y );
+	void panX( long double x );
+	void panY( long double y );
+	void zoom( long double s );
+	void zoom( long double x, long double y );
+	void zoomX( long double x );
+	void zoomY( long double y );
+	void setPosition( long double x, long double y );
+	void setZoom( long double s );
+	void setZoom( long double x, long double y );
+	void setFocalPoint( long double width, long double height );
 
-	BoundingBox<float> getFocalPoint() const;
-	float getCenterX() const;
-	float getCenterY() const;
-	float getZoomX() const;
-	float getZoomY() const;
+	BoundingBox<long double> getFocalPoint() const;
+	long double getCenterX() const;
+	long double getCenterY() const;
+	long double getZoomX() const;
+	long double getZoomY() const;
 };

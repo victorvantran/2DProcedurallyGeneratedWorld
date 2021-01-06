@@ -15,7 +15,7 @@ WorldChunk::~WorldChunk()
 }
 
 
-WorldChunk::WorldChunk( int indexX, int indexY )
+WorldChunk::WorldChunk( std::int64_t indexX, std::int64_t indexY )
 	: _chunkIndexX( indexX ), _chunkIndexY( indexY )
 {
 
@@ -25,8 +25,8 @@ WorldChunk::WorldChunk( int indexX, int indexY )
 void WorldChunk::construct()
 {
 	// Used solely for initializing the first chunks renders
-	int rootQuadTreePositionX = this->_chunkIndexX * this->_size;
-	int rootQuadTreePositionY = this->_chunkIndexY * this->_size;
+	std::int64_t rootQuadTreePositionX = this->_chunkIndexX * this->_size;
+	std::int64_t rootQuadTreePositionY = this->_chunkIndexY * this->_size;
 
 	// Intialize tileRender QuadTrees
 	this->_tileRenders[0].constructQuadTree(
@@ -34,7 +34,7 @@ void WorldChunk::construct()
 		-1,
 		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
 		0,
-		BoundingBox<int>( rootQuadTreePositionX, rootQuadTreePositionY, this->_size, this->_size ),
+		BoundingBox<std::int64_t>( rootQuadTreePositionX, rootQuadTreePositionY, this->_size, this->_size ),
 		this->_tileRenders,
 		Settings::WorldChunk::TILE_RENDER_MIN_LEVEL,
 		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
@@ -56,8 +56,8 @@ void WorldChunk::wipeRender()
 	// [!] don't even need clear becasuse wipe Render calls constructQuadTree which sets root divided = false
 	// [!] look to see if we can make it more efficient than construct
 	// [!] soluton is to clear, and then jsut set bounding boxes to proper size? Or is no clear more efficient?
-	int rootQuadTreePositionX = this->_chunkIndexX * this->_size;
-	int rootQuadTreePositionY = this->_chunkIndexY * this->_size;
+	std::int64_t rootQuadTreePositionX = this->_chunkIndexX * this->_size;
+	std::int64_t rootQuadTreePositionY = this->_chunkIndexY * this->_size;
 
 
 	// Intialize quadTrees
@@ -66,7 +66,7 @@ void WorldChunk::wipeRender()
 		-1,
 		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
 		0,
-		BoundingBox<int>( rootQuadTreePositionX, rootQuadTreePositionY, this->_size, this->_size ),
+		BoundingBox<std::int64_t>( rootQuadTreePositionX, rootQuadTreePositionY, this->_size, this->_size ),
 		this->_tileRenders,
 		Settings::WorldChunk::TILE_RENDER_MIN_LEVEL,
 		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
@@ -90,7 +90,7 @@ void WorldChunk::fill( uint64_t id )
 }
 
 
-void WorldChunk::insert( int x, int y, int width, int height, uint64_t id )
+void WorldChunk::insert( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id )
 {
 	this->insertTiles( x, y, width, height, id );
 	this->insertTileRenders( x, y, width, height, id );
@@ -98,17 +98,17 @@ void WorldChunk::insert( int x, int y, int width, int height, uint64_t id )
 }
 
 
-void WorldChunk::insertTiles( int x, int y, int width, int height, uint64_t id )
+void WorldChunk::insertTiles( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id )
 {
 	// insert to Tiles[] (game logic)
-	int localCellStartIndexX = x - this->_chunkIndexX * this->_size;
-	int localCellStartIndexY = y - this->_chunkIndexY * this->_size;
+	std::int64_t localCellStartIndexX = x - this->_chunkIndexX * this->_size;
+	std::int64_t localCellStartIndexY = y - this->_chunkIndexY * this->_size;
 
-	int localCellIndexX;
-	int localCellIndexY;
-	for ( int x = 0; x < width; x++ )
+	std::int64_t localCellIndexX;
+	std::int64_t localCellIndexY;
+	for ( std::int64_t x = 0; x < width; x++ )
 	{
-		for ( int y = 0; y < height; y++ )
+		for ( std::int64_t y = 0; y < height; y++ )
 		{
 			localCellIndexX = localCellStartIndexX + x;
 			localCellIndexY = localCellStartIndexY + y;
@@ -128,14 +128,14 @@ void WorldChunk::insertTiles( int x, int y, int width, int height, uint64_t id )
 }
 
 
-void WorldChunk::insertTileRenders( int x, int y, int width, int height, uint64_t id )
+void WorldChunk::insertTileRenders( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id )
 {
-	this->_tileRenders[0].insert( TileRender( id, BoundingBox<int>( x, y, width, height ) ) );
+	this->_tileRenders[0].insert( TileRender( id, BoundingBox<std::int64_t>( x, y, width, height ) ) );
 	return;
 }
 
 
-void WorldChunk::remove( int x, int y, int width, int height, uint64_t id )
+void WorldChunk::remove( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id )
 {
 	this->removeTiles( x, y, width, height, id );
 	this->removeTileRenders( x, y, width, height, id );
@@ -143,17 +143,17 @@ void WorldChunk::remove( int x, int y, int width, int height, uint64_t id )
 }
 
 
-void WorldChunk::removeTiles( int x, int y, int width, int height, uint64_t id )
+void WorldChunk::removeTiles( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id )
 {
 	// remove from Tiles[] (game logic)
-	int localCellStartIndexX = x - this->_chunkIndexX * this->_size;
-	int localCellStartIndexY = y - this->_chunkIndexY * this->_size;
+	std::int64_t localCellStartIndexX = x - this->_chunkIndexX * this->_size;
+	std::int64_t localCellStartIndexY = y - this->_chunkIndexY * this->_size;
 
-	int localCellIndexX;
-	int localCellIndexY;
-	for ( int x = 0; x < width; x++ )
+	std::int64_t localCellIndexX;
+	std::int64_t localCellIndexY;
+	for ( std::int64_t x = 0; x < width; x++ )
 	{
-		for ( int y = 0; y < height; y++ )
+		for ( std::int64_t y = 0; y < height; y++ )
 		{
 			localCellIndexX = localCellStartIndexX + x;
 			localCellIndexY = localCellStartIndexY + y;
@@ -173,9 +173,9 @@ void WorldChunk::removeTiles( int x, int y, int width, int height, uint64_t id )
 }
 
 
-void WorldChunk::removeTileRenders( int x, int y, int width, int height, uint64_t id )
+void WorldChunk::removeTileRenders( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id )
 {
-	this->_tileRenders[0].remove( TileRender( id, BoundingBox<int>( x, y, width, height ) ) );
+	this->_tileRenders[0].remove( TileRender( id, BoundingBox<std::int64_t>( x, y, width, height ) ) );
 	return;
 }
 
@@ -183,8 +183,8 @@ void WorldChunk::removeTileRenders( int x, int y, int width, int height, uint64_
 const std::map<uint64_t, unsigned short> WorldChunk::createPalette() const
 {
 	std::map<uint64_t, unsigned short> palette;
-	unsigned short numTiles = this->_size * this->_size;
-	for ( unsigned short i = 0; i < numTiles; i++ )
+	std::int64_t numTiles = this->_size * this->_size;
+	for ( std::int64_t i = 0; i < numTiles; i++ )
 	{
 		palette.emplace( this->_tiles->getId(), palette.size() );
 	}
@@ -205,12 +205,11 @@ void WorldChunk::clear()
 }
 
 
-void WorldChunk::delimit( int indexX, int indexY )
+void WorldChunk::delimit( std::int64_t indexX, std::int64_t indexY )
 {
 	// pass tile by reference
 	// copy contents of tile into this->_tiles
 	// reset quadtree
-
 	this->_chunkIndexX = indexX;
 	this->_chunkIndexY = indexY;
 
@@ -219,53 +218,53 @@ void WorldChunk::delimit( int indexX, int indexY )
 
 
 
-int WorldChunk::getChunkIndexX() const
+std::int64_t WorldChunk::getChunkIndexX() const
 {
 	return this->_chunkIndexX;
 }
 
 
-int WorldChunk::getChunkIndexY() const
+std::int64_t WorldChunk::getChunkIndexY() const
 {
 	return this->_chunkIndexY;
 }
 
 
-int WorldChunk::getRelativeChunkIndexX( const BoundingBox<float>& boundingBox ) const
+std::int64_t WorldChunk::getRelativeChunkIndexX( const BoundingBox<long double>& boundingBox ) const
 {
 	// Returns the chunk index X relative to a bounding box's position
-	int boxIndexX = ( int )( boundingBox.getCenterX() / this->_size );
+	std::int64_t boxIndexX = ( std::int64_t )( boundingBox.getCenterX() / this->_size );
 	return this->_chunkIndexX - boxIndexX;
 }
 
 
-int WorldChunk::getRelativeChunkIndexY( const BoundingBox<float>& boundingBox ) const
+std::int64_t WorldChunk::getRelativeChunkIndexY( const BoundingBox<long double>& boundingBox ) const
 {
 	// Returns the chunk index Y relative to a bounding box's position
-	int boxIndexY = ( int )( boundingBox.getCenterY() / this->_size );
+	std::int64_t boxIndexY = ( std::int64_t )( boundingBox.getCenterY() / this->_size );
 	return this->_chunkIndexY - boxIndexY;
 }
 
 
-int WorldChunk::getSize() const
+std::int64_t WorldChunk::getSize() const
 {
 	return this->_size;
 }
 
 
-int WorldChunk::getNumTileRenders() const
+std::int64_t WorldChunk::getNumTileRenders() const
 {
 	return this->_numTileRenders;
 }
 
 
-int WorldChunk::getPositionX() const
+std::int64_t WorldChunk::getPositionX() const
 {
 	return this->_chunkIndexX * this->_size;
 }
 
 
-int WorldChunk::getPositionY() const
+std::int64_t WorldChunk::getPositionY() const
 {
 	return this->_chunkIndexY * this->_size;
 }

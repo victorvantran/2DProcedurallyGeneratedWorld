@@ -19,11 +19,10 @@
 class Example : public olc::PixelGameEngine
 {
 public:
-	// [!] need to chagne absolute position and zoom of the camera in accordance to pixelSize
-	const static int pixelSize = Settings::Screen::PIXEL_SIZE;
-	const static int screenWidth = Settings::Screen::SCREEN_PIXEL_WIDTH;
-	const static int screenHeight = Settings::Screen::SCREEN_PIXEL_HEIGHT;
-	const static int cellSize = Settings::Screen::CELL_PIXEL_SIZE;
+	const static std::uint64_t pixelSize = Settings::Screen::PIXEL_SIZE;
+	const static std::uint64_t screenWidth = Settings::Screen::SCREEN_PIXEL_WIDTH;
+	const static std::uint64_t screenHeight = Settings::Screen::SCREEN_PIXEL_HEIGHT;
+	const static std::uint64_t cellSize = Settings::Screen::CELL_PIXEL_SIZE;
 
 
 public:
@@ -37,7 +36,7 @@ public:
 
 	olc::vi2d gridDimension;
 
-	int tileId = 1; // [!] never insert a void block (0) unless you know how to remove it without seeing it
+	int tileId = 1; // never insert a void block (0) unless you know how to remove it without seeing it
 private:
 
 
@@ -65,67 +64,67 @@ public:
 	bool OnUserUpdate( float fElapsedTime ) override
 	{
 		// Camera Debug
-		float mouseX = ( float )GetMouseX();
-		float mouseY = ( float )GetMouseY();
+		long double mouseX = ( long double )GetMouseX();
+		long double mouseY = ( long double )GetMouseY();
 
-		float panSpeed = 20.0f;
+		long double panSpeed = 20.0f;
 		if ( GetKey( olc::Key::UP ).bPressed || GetKey( olc::Key::UP ).bHeld )
 		{
-			camera->panY( -panSpeed * fElapsedTime );
+			camera->panY( -panSpeed * (long double)fElapsedTime );
 		}
 		if ( GetKey( olc::Key::DOWN ).bPressed || GetKey( olc::Key::DOWN ).bHeld )
 		{
-			camera->panY( panSpeed * fElapsedTime );
+			camera->panY( panSpeed * ( long double )fElapsedTime );
 		}
 		if ( GetKey( olc::Key::LEFT ).bPressed || GetKey( olc::Key::LEFT ).bHeld )
 		{
-			camera->panX( -panSpeed * fElapsedTime );
+			camera->panX( -panSpeed * ( long double )fElapsedTime );
 		}
 		if ( GetKey( olc::Key::RIGHT ).bPressed || GetKey( olc::Key::RIGHT ).bHeld )
 		{
-			camera->panX( panSpeed * fElapsedTime );
+			camera->panX( panSpeed * ( long double )fElapsedTime );
 		}
 		if ( GetKey( olc::Key::T ).bPressed || GetKey( olc::Key::T ).bHeld )
 		{
-			camera->pan( panSpeed * fElapsedTime, panSpeed * fElapsedTime );
+			camera->pan( panSpeed * ( long double )fElapsedTime, panSpeed * ( long double )fElapsedTime );
 		}
 
 
 		if ( GetKey( olc::Key::F1 ).bPressed )
 		{
-			camera->panY( -panSpeed * 100 );
+			camera->panY( -( panSpeed * 100 ) );
 		}
 		if ( GetKey( olc::Key::F2 ).bPressed )
 		{
-			camera->panY( panSpeed * 100 );
+			camera->panY( ( panSpeed * 100 ) );
 		}
 		if ( GetKey( olc::Key::F3 ).bPressed )
 		{
-			camera->panX( -panSpeed * 100 );
+			camera->panX( -( panSpeed * 100 ) );
 		}
 		if ( GetKey( olc::Key::F4 ).bPressed )
 		{
-			camera->panX( panSpeed * 100 );
+			camera->panX( ( panSpeed * 100 ) );
 		}
 
 		// Zoom in
 		if ( GetKey( olc::Key::Z ).bPressed || GetKey( olc::Key::Z ).bHeld )
 		{
-			float zoomScale = 1.0f + ( 1.0f * fElapsedTime );
+			long double zoomScale = 1.0 + ( 1.0 * fElapsedTime );
 			this->camera->zoom( zoomScale );
 		}
 
 		// Zoom out
 		if ( GetKey( olc::Key::X ).bPressed || GetKey( olc::Key::X ).bHeld )
 		{
-			float zoomScale = 1.0f - ( 1.0f * fElapsedTime );
+			long double zoomScale = 1.0 - ( 1.0 * fElapsedTime );
 			this->camera->zoom( zoomScale );
 		}
 
 		// Reset camera
 		if ( GetKey( olc::Key::C ).bPressed || GetKey( olc::Key::C ).bHeld )
 		{
-			this->camera->setZoom( 1.0f );
+			this->camera->setZoom( 1.0 );
 		}
 
 		if ( GetKey( olc::Key::W ).bPressed )
@@ -142,15 +141,17 @@ public:
 		}
 
 		// Insert to world Debug 
-		float tilePositionX;
-		float tilePositionY;
+		long double tilePositionX;
+		long double tilePositionY;
 
 		this->camera->screenToWorld( GetMouseX(), GetMouseY(), tilePositionX, tilePositionY );
 
-		olc::vi2d tileIndex = olc::vi2d{
-			( int )( std::floorf( tilePositionX ) ),
-			( int )( std::floorf( tilePositionY ) )
+		olc::v2d_generic<std::int64_t> tileIndex = olc::v2d_generic<std::int64_t>{
+			( std::int64_t )( std::floor( tilePositionX ) ),
+			( std::int64_t )( std::floor( tilePositionY ) )
 		};
+
+
 
 		if ( GetKey( olc::Key::P ).bPressed )
 		{
@@ -194,8 +195,8 @@ public:
 		
 		this->world = new World();
 		this->camera = new Camera(
-			BoundingBox<float>( 0.0f, 0.0f, Settings::Camera::FOCAL_POINT_CELL_WIDTH, Settings::Camera::FOCAL_POINT_CELL_HEIGHT ),
-			BoundingBox<float>( 0.0f, 0.0f, Settings::Camera::VIEW_CELL_WIDTH, Settings::Camera::VIEW_CELL_HEIGHT ),
+			BoundingBox<long double>( 0.0f, 0.0f, Settings::Camera::FOCAL_POINT_CELL_WIDTH, Settings::Camera::FOCAL_POINT_CELL_HEIGHT ),
+			BoundingBox<long double>( 0.0f, 0.0f, Settings::Camera::VIEW_CELL_WIDTH, Settings::Camera::VIEW_CELL_HEIGHT ),
 			1.0f, 1.0f,
 			this->world);
 

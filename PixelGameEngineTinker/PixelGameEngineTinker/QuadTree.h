@@ -23,8 +23,8 @@ private:
 	int _myIndex;
 	int _parentIndex;
 	int _level;
-	int _quadrant;
-	BoundingBox<int> _quadTreeBounds;
+	std::uint8_t _quadrant;
+	BoundingBox<std::int64_t> _quadTreeBounds;
 	bool _divided;
 	bool _consolidated;
 	int _cellCount;
@@ -41,10 +41,10 @@ public:
 	QuadTree();
 	~QuadTree();
 
-	QuadTree( int myIndex, int parentIndex, int level, int quadrant, BoundingBox<int> bounds, QuadTree<TRender>* referenceNodes,
+	QuadTree( int myIndex, int parentIndex, int level, std::uint8_t quadrant, BoundingBox<std::int64_t> bounds, QuadTree<TRender>* referenceNodes,
 		std::uint32_t minLevel, std::uint32_t maxLevel, float minCellSize );
 
-	void constructQuadTree( int myIndex = -1, int parentIndex = -1, int level = -1, int quadrant = -1, BoundingBox<int> bounds = BoundingBox<int>(), QuadTree<TRender>* referenceNodes = nullptr,
+	void constructQuadTree( int myIndex = -1, int parentIndex = -1, int level = -1, std::uint8_t quadrant = -1, BoundingBox<std::int64_t> bounds = BoundingBox<std::int64_t>(), QuadTree<TRender>* referenceNodes = nullptr,
 		std::uint32_t minLevel = 0, std::uint32_t maxLevel = 0, float minCellSize = 0.0f );
 
 	void divide();
@@ -60,7 +60,7 @@ public:
 	QuadTree<TRender>* getReferenceNodes();
 	QuadTree<TRender>& getRootNode();
 
-	BoundingBox<int> getBounds() const;
+	BoundingBox<std::int64_t> getBounds() const;
 	TRender* getCells();
 	int getIndex() const;
 	int getParentIndex() const;
@@ -78,7 +78,7 @@ public:
 
 template<typename TRender>
 QuadTree<TRender>::QuadTree()
-	: _myIndex( -1 ), _parentIndex( -1 ), _level( -1 ), _quadrant( -1 ), _quadTreeBounds( BoundingBox<int>() ), _divided( false ), _consolidated( false ), _cellCount( 0 ),
+	: _myIndex( -1 ), _parentIndex( -1 ), _level( -1 ), _quadrant( -1 ), _quadTreeBounds( BoundingBox<std::int64_t>() ), _divided( false ), _consolidated( false ), _cellCount( 0 ),
 	_cell{}, _childrenIndex{ -1, -1, -1, -1 }, _referenceNodes( nullptr ),
 	_minLevel( 0 ), _maxLevel( 0 ), _minCellSize( 0.0f )
 
@@ -88,7 +88,7 @@ QuadTree<TRender>::QuadTree()
 
 
 template<typename TRender>
-QuadTree<TRender>::QuadTree( int myIndex, int parentIndex, int level, int quadrant, BoundingBox<int> quadTreeBounds, QuadTree<TRender>* referenceNodes,
+QuadTree<TRender>::QuadTree( int myIndex, int parentIndex, int level, std::uint8_t quadrant, BoundingBox<std::int64_t> quadTreeBounds, QuadTree<TRender>* referenceNodes,
 	std::uint32_t minLevel, std::uint32_t maxLevel, float minCellSize )
 {
 	constructQuadTree( myIndex, parentIndex, level, quadrant, quadTreeBounds, referenceNodes,
@@ -104,7 +104,7 @@ QuadTree<TRender>::~QuadTree()
 
 
 template<typename TRender>
-void QuadTree<TRender>::constructQuadTree( int myIndex, int parentIndex, int level, int quadrant, BoundingBox<int> quadTreeBounds, QuadTree<TRender>* referenceNodes,
+void QuadTree<TRender>::constructQuadTree( int myIndex, int parentIndex, int level, std::uint8_t quadrant, BoundingBox<std::int64_t> quadTreeBounds, QuadTree<TRender>* referenceNodes,
 	std::uint32_t minLevel, std::uint32_t maxLevel, float minCellSize )
 {
 	this->_myIndex = myIndex;
@@ -155,10 +155,10 @@ void QuadTree<TRender>::divide()
 	int subWidth = this->_quadTreeBounds.getWidth() / 2;
 	int subHeight = this->_quadTreeBounds.getHeight() / 2;
 
-	this->_cell[0] = TRender( 0, BoundingBox<int>( x, y, subWidth, subHeight ) );
-	this->_cell[1] = TRender( 0, BoundingBox<int>( x + subWidth, y, subWidth, subHeight ) );
-	this->_cell[2] = TRender( 0, BoundingBox<int>( x, y + subHeight, subWidth, subHeight ) );
-	this->_cell[3] = TRender( 0, BoundingBox<int>( x + subWidth, y + subHeight, subWidth, subHeight ) );
+	this->_cell[0] = TRender( 0, BoundingBox<std::int64_t>( x, y, subWidth, subHeight ) );
+	this->_cell[1] = TRender( 0, BoundingBox<std::int64_t>( x + subWidth, y, subWidth, subHeight ) );
+	this->_cell[2] = TRender( 0, BoundingBox<std::int64_t>( x, y + subHeight, subWidth, subHeight ) );
+	this->_cell[3] = TRender( 0, BoundingBox<std::int64_t>( x + subWidth, y + subHeight, subWidth, subHeight ) );
 
 	this->_divided = true;
 
@@ -191,13 +191,13 @@ void QuadTree<TRender>::divide()
 	this->_childrenIndex[2] = initialShift + recursiveShift + 2;
 	this->_childrenIndex[3] = initialShift + recursiveShift + 3;
 
-	this->_referenceNodes[this->_childrenIndex[0]].constructQuadTree( this->_childrenIndex[0], this->_myIndex, this->_level - 1, 0, BoundingBox<int>( x, y, subWidth, subHeight ), this->_referenceNodes,
+	this->_referenceNodes[this->_childrenIndex[0]].constructQuadTree( this->_childrenIndex[0], this->_myIndex, this->_level - 1, 0, BoundingBox<std::int64_t>( x, y, subWidth, subHeight ), this->_referenceNodes,
 		this->_minLevel, this->_maxLevel, this->_minCellSize );
-	this->_referenceNodes[this->_childrenIndex[1]].constructQuadTree( this->_childrenIndex[1], this->_myIndex, this->_level - 1, 1, BoundingBox<int>( x + subWidth, y, subWidth, subHeight ), this->_referenceNodes,
+	this->_referenceNodes[this->_childrenIndex[1]].constructQuadTree( this->_childrenIndex[1], this->_myIndex, this->_level - 1, 1, BoundingBox<std::int64_t>( x + subWidth, y, subWidth, subHeight ), this->_referenceNodes,
 		this->_minLevel, this->_maxLevel, this->_minCellSize );
-	this->_referenceNodes[this->_childrenIndex[2]].constructQuadTree( this->_childrenIndex[2], this->_myIndex, this->_level - 1, 2, BoundingBox<int>( x, y + subHeight, subWidth, subHeight ), this->_referenceNodes,
+	this->_referenceNodes[this->_childrenIndex[2]].constructQuadTree( this->_childrenIndex[2], this->_myIndex, this->_level - 1, 2, BoundingBox<std::int64_t>( x, y + subHeight, subWidth, subHeight ), this->_referenceNodes,
 		this->_minLevel, this->_maxLevel, this->_minCellSize );
-	this->_referenceNodes[this->_childrenIndex[3]].constructQuadTree( this->_childrenIndex[3], this->_myIndex, this->_level - 1, 3, BoundingBox<int>( x + subWidth, y + subHeight, subWidth, subHeight ), this->_referenceNodes,
+	this->_referenceNodes[this->_childrenIndex[3]].constructQuadTree( this->_childrenIndex[3], this->_myIndex, this->_level - 1, 3, BoundingBox<std::int64_t>( x + subWidth, y + subHeight, subWidth, subHeight ), this->_referenceNodes,
 		this->_minLevel, this->_maxLevel, this->_minCellSize );
 
 	return;
@@ -207,7 +207,7 @@ void QuadTree<TRender>::divide()
 template<typename TRender>
 int QuadTree<TRender>::getQuadrant( const TRender& renderCell )
 {
-	BoundingBox<int> boundingBox = renderCell.getBounds();
+	BoundingBox<std::int64_t> boundingBox = renderCell.getBounds();
 
 	// Given a boundingBox, returns the index of the nodes ( which quadrant the box belongs to )
 	float verticleMidpoint = this->_quadTreeBounds.x + ( this->_quadTreeBounds.width / 2 );
@@ -269,14 +269,14 @@ void QuadTree<TRender>::consolidate( int level )
 	{
 
 		// Add encapsulated box 
-		int posX = std::min<int>( std::min<int>( _cell[0].getX(), _cell[1].getX() ), std::min<int>( _cell[2].getX(), _cell[3].getX() ) ); // technically only need to check for 3 of them
-		int posY = std::min<int>( std::min<int>( _cell[0].getY(), _cell[1].getY() ), std::min<int>( _cell[2].getY(), _cell[3].getY() ) );
+		int posX = std::min<std::int64_t>( std::min<std::int64_t>( _cell[0].getX(), _cell[1].getX() ), std::min<std::int64_t>( _cell[2].getX(), _cell[3].getX() ) ); // technically only need to check for 3 of them
+		int posY = std::min<std::int64_t>( std::min<std::int64_t>( _cell[0].getY(), _cell[1].getY() ), std::min<std::int64_t>( _cell[2].getY(), _cell[3].getY() ) );
 		int width = _cell[0].getWidth() * 2;
 		int height = _cell[0].getHeight() * 2;
 		int id = _cell[0].getId();
 		bool exist = _cell[0].getExist();
 
-		TRender renderCell = TRender( id, BoundingBox<int>( posX, posY, width, height ) );
+		TRender renderCell = TRender( id, BoundingBox<std::int64_t>( posX, posY, width, height ) );
 
 		this->_consolidated = true;
 		this->_referenceNodes[this->_parentIndex].insert( renderCell );
@@ -293,7 +293,7 @@ template<typename TRender>
 void QuadTree<TRender>::insert( const TRender& aRenderCell )
 {
 	// Recursively adds bounding boxes and consolidates
-	BoundingBox<int> aBoundingBox = aRenderCell.getBounds();
+	BoundingBox<std::int64_t> aBoundingBox = aRenderCell.getBounds();
 
 	// If it does not exist, return
 	if ( !aRenderCell.getExist() )
@@ -336,18 +336,18 @@ void QuadTree<TRender>::insert( const TRender& aRenderCell )
 		int trimWidth;
 		int trimHeight;
 
-		trimX = std::max<int>( this->_quadTreeBounds.getX(), aBoundingBox.getX() );
-		trimY = std::max<int>( this->_quadTreeBounds.getY(), aBoundingBox.getY() );
+		trimX = std::max<std::int64_t>( this->_quadTreeBounds.getX(), aBoundingBox.getX() );
+		trimY = std::max<std::int64_t>( this->_quadTreeBounds.getY(), aBoundingBox.getY() );
 
-		trimWidth = std::min<int>( this->_quadTreeBounds.getX() + this->_quadTreeBounds.getWidth(), aBoundingBox.getX() + aBoundingBox.getWidth() ) - trimX;
-		trimHeight = std::min<int>( this->_quadTreeBounds.getY() + this->_quadTreeBounds.getHeight(), aBoundingBox.getY() + aBoundingBox.getHeight() ) - trimY;
+		trimWidth = std::min<std::int64_t>( this->_quadTreeBounds.getX() + this->_quadTreeBounds.getWidth(), aBoundingBox.getX() + aBoundingBox.getWidth() ) - trimX;
+		trimHeight = std::min<std::int64_t>( this->_quadTreeBounds.getY() + this->_quadTreeBounds.getHeight(), aBoundingBox.getY() + aBoundingBox.getHeight() ) - trimY;
 
 		if ( trimWidth == 0 || trimHeight == 0 )
 		{
 			return;
 		}
 
-		this->insert( TRender( aRenderCell.getId(), BoundingBox<int>( trimX, trimY, trimWidth, trimHeight ) ) );
+		this->insert( TRender( aRenderCell.getId(), BoundingBox<std::int64_t>( trimX, trimY, trimWidth, trimHeight ) ) );
 		return;
 	}
 
@@ -364,10 +364,10 @@ void QuadTree<TRender>::insert( const TRender& aRenderCell )
 		int subWidth2 = aBoundingBox.getWidth() - subWidth1;
 		int subHeight2 = aBoundingBox.getHeight() - subHeight1;
 
-		const TRender aSubRenderCell0 = TRender( id, BoundingBox<int>( x, y, subWidth1, subHeight1 ) );
-		const TRender aSubRenderCell1 = TRender( id, BoundingBox<int>( x + subWidth1, y, subWidth2, subHeight1 ) );
-		const TRender aSubRenderCell2 = TRender( id, BoundingBox<int>( x, y + subHeight1, subWidth1, subHeight2 ) );
-		const TRender aSubRenderCell3 = TRender( id, BoundingBox<int>( x + subWidth1, y + subHeight1, subWidth2, subHeight2 ) );
+		const TRender aSubRenderCell0 = TRender( id, BoundingBox<std::int64_t>( x, y, subWidth1, subHeight1 ) );
+		const TRender aSubRenderCell1 = TRender( id, BoundingBox<std::int64_t>( x + subWidth1, y, subWidth2, subHeight1 ) );
+		const TRender aSubRenderCell2 = TRender( id, BoundingBox<std::int64_t>( x, y + subHeight1, subWidth1, subHeight2 ) );
+		const TRender aSubRenderCell3 = TRender( id, BoundingBox<std::int64_t>( x + subWidth1, y + subHeight1, subWidth2, subHeight2 ) );
 
 		this->insert( aSubRenderCell0 );
 		this->insert( aSubRenderCell1 );
@@ -431,7 +431,7 @@ void QuadTree<TRender>::insert( const TRender& aRenderCell )
 template<typename TRender>
 void QuadTree<TRender>::remove( const TRender& rRenderCell )
 {
-	const BoundingBox<int> rBoundingBox = rRenderCell.getBounds();
+	const BoundingBox<std::int64_t> rBoundingBox = rRenderCell.getBounds();
 
 	// If it does not exist, return
 	if ( !rRenderCell.getExist() )
@@ -501,10 +501,10 @@ void QuadTree<TRender>::remove( const TRender& rRenderCell )
 		int subWidth2 = rBoundingBox.getWidth() - subWidth1;
 		int subHeight2 = rBoundingBox.getHeight() - subHeight1;
 
-		const TRender rSubRenderCell0 = TRender( id, BoundingBox<int>( x, y, subWidth1, subHeight1 ) );
-		const TRender rSubRenderCell1 = TRender( id, BoundingBox<int>( x + subWidth1, y, subWidth2, subHeight1 ) );
-		const TRender rSubRenderCell2 = TRender( id, BoundingBox<int>( x, y + subHeight1, subWidth1, subHeight2 ) );
-		const TRender rSubRenderCell3 = TRender( id, BoundingBox<int>( x + subWidth1, y + subHeight1, subWidth2, subHeight2 ) );
+		const TRender rSubRenderCell0 = TRender( id, BoundingBox<std::int64_t>( x, y, subWidth1, subHeight1 ) );
+		const TRender rSubRenderCell1 = TRender( id, BoundingBox<std::int64_t>( x + subWidth1, y, subWidth2, subHeight1 ) );
+		const TRender rSubRenderCell2 = TRender( id, BoundingBox<std::int64_t>( x, y + subHeight1, subWidth1, subHeight2 ) );
+		const TRender rSubRenderCell3 = TRender( id, BoundingBox<std::int64_t>( x + subWidth1, y + subHeight1, subWidth2, subHeight2 ) );
 
 		this->remove( rSubRenderCell0 );
 		this->remove( rSubRenderCell1 );
@@ -528,7 +528,7 @@ void QuadTree<TRender>::remove( const TRender& rRenderCell )
 template<typename TRender>
 bool QuadTree<TRender>::isCellOccupied( const TRender& renderCell )
 {
-	BoundingBox<int> boundingBox = renderCell.getBounds();
+	BoundingBox<std::int64_t> boundingBox = renderCell.getBounds();
 
 	// If out of bounds, techincally not occupied
 	if ( !boundingBox.intersects( this->_quadTreeBounds ) )
@@ -598,7 +598,7 @@ QuadTree<TRender>& QuadTree<TRender>::getRootNode()
 
 
 template<typename TRender>
-BoundingBox<int> QuadTree<TRender>::getBounds() const
+BoundingBox<std::int64_t> QuadTree<TRender>::getBounds() const
 {
 	return this->_quadTreeBounds;
 }

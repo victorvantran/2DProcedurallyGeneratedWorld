@@ -147,7 +147,7 @@ void World::initializeDatabase()
 }
 
 
-void World::initializeDelimits( const BoundingBox<float>& focalPoint )
+void World::initializeDelimits( const BoundingBox<long double>& focalPoint )
 {
 	// Based on the initial camera's position, delimit the surrounding worldChunks
 
@@ -261,7 +261,7 @@ void World::initializeWorldChunks()
 }
 
 
-void World::insert( int x, int y, int width, int height, uint64_t id )
+void World::insert( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id )
 {
 	// Insert a tile ( or tiles ) into the proper world chunk.
 
@@ -272,7 +272,7 @@ void World::insert( int x, int y, int width, int height, uint64_t id )
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
-		if ( BoundingBox<int>( x, y, width, height ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
+		if ( BoundingBox<std::int64_t>( x, y, width, height ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
 		{
 			this->_worldChunks[i].insert( x, y, width, height, id );
 		}
@@ -281,7 +281,7 @@ void World::insert( int x, int y, int width, int height, uint64_t id )
 }
 
 
-void World::remove( int x, int y, int width, int height, uint64_t id )
+void World::remove( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id )
 {
 	// Remove a tile ( or tiles ) from the proper world chunk.
 
@@ -289,7 +289,7 @@ void World::remove( int x, int y, int width, int height, uint64_t id )
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
-		if ( BoundingBox<int>( x, y, width, height ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
+		if ( BoundingBox<std::int64_t>( x, y, width, height ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
 		{
 			this->_worldChunks[i].remove( x, y, width, height, id );
 		}
@@ -304,31 +304,31 @@ WorldChunk* World::getWorldChunks()
 }
 
 
-WorldChunk& World::getWorldChunk( int x, int y )
+WorldChunk& World::getWorldChunk( std::int64_t x, std::int64_t y )
 {
 	return this->_worldChunks[y * this->_numChunkWidth + x];
 }
 
 
-int World::getChunkRadius() const
+std::uint64_t World::getChunkRadius() const
 {
 	return this->_chunkRadius;
 }
 
 
-int World::getNumWorldChunks() const
+std::uint64_t World::getNumWorldChunks() const
 {
 	return this->_numWorldChunks;
 }
 
 
-int World::getNumChunkWidth() const
+std::uint64_t World::getNumChunkWidth() const
 {
 	return this->_numChunkWidth;
 }
 
 
-int World::getNumChunkHeight() const
+std::uint64_t World::getNumChunkHeight() const
 {
 	return this->_numChunkHeight;
 }
@@ -406,8 +406,8 @@ void World::saveWorldGeography()
 
 		WorldChunkMemory* worldChunkMemory = this->_saveWorldChunks[i];
 
-		int chunkIndexX = worldChunkMemory->getChunkIndexX();
-		int chunkIndexY = worldChunkMemory->getChunkIndexY();
+		std::int64_t chunkIndexX = worldChunkMemory->getChunkIndexX();
+		std::int64_t chunkIndexY = worldChunkMemory->getChunkIndexY();
 
 		unsigned char* tilesBlob = worldChunkMemory->getTilesBlob();
 		std::uint64_t* paletteBlob = worldChunkMemory->getPaletteBlob();
@@ -574,22 +574,22 @@ void World::loadWorldGeographyTask()
 }
 
 
-void World::loadWorldGeography( const BoundingBox<float>& focalPoint )
+void World::loadWorldGeography( const BoundingBox<long double>& focalPoint )
 {
 	// Load the proper worldChunks from the SQLite database 
 
 	std::lock_guard<std::mutex> lockLoad( this->_loadWorldChunksMutex );
 
 	// Check to see if there is an update
-	int cameraIndexX = focalPoint.getCenterX() >= 0 ? ( int )( focalPoint.getCenterX() / this->_chunkCellSize ) : ( int )( ( focalPoint.getCenterX() - this->_chunkCellSize ) / this->_chunkCellSize );
-	int cameraIndexY = focalPoint.getCenterY() >= 0 ? ( int )( focalPoint.getCenterY() / this->_chunkCellSize ) : ( int )( ( focalPoint.getCenterY() - this->_chunkCellSize ) / this->_chunkCellSize );
+	std::int64_t cameraIndexX = focalPoint.getCenterX() >= 0 ? ( std::int64_t )( focalPoint.getCenterX() / this->_chunkCellSize ) : ( std::int64_t )( ( focalPoint.getCenterX() - this->_chunkCellSize ) / this->_chunkCellSize );
+	std::int64_t cameraIndexY = focalPoint.getCenterY() >= 0 ? ( std::int64_t )( focalPoint.getCenterY() / this->_chunkCellSize ) : ( std::int64_t )( ( focalPoint.getCenterY() - this->_chunkCellSize ) / this->_chunkCellSize );
 	if ( this->_prevFocalChunkIndexX == cameraIndexX && this->_prevFocalChunkIndexY == cameraIndexY )
 	{
 		return;
 	}
 
 	// Delimit
-	std::vector<std::tuple<std::uint64_t, int, int>> chunkRecalls = this->delimitWorldChunks( focalPoint );
+	std::vector<std::tuple<std::uint64_t, std::int64_t, std::int64_t>> chunkRecalls = this->delimitWorldChunks( focalPoint );
 	if ( chunkRecalls.empty() )
 	{
 		return;
@@ -598,8 +598,8 @@ void World::loadWorldGeography( const BoundingBox<float>& focalPoint )
 	for ( int i = 0; i < chunkRecalls.size(); i++ )
 	{
 		std::uint64_t index = std::get<0>( chunkRecalls[i] );
-		int chunkIndexX = std::get<1>( chunkRecalls[i] );
-		int chunkIndexY = std::get<2>( chunkRecalls[i] );
+		std::int64_t chunkIndexX = std::get<1>( chunkRecalls[i] );
+		std::int64_t chunkIndexY = std::get<2>( chunkRecalls[i] );
 		WorldChunk* worldChunk = &this->_worldChunks[index];
 
 		this->delimitWorldChunk( *worldChunk, chunkIndexX, chunkIndexY );
@@ -706,7 +706,7 @@ void World::loadWorldGeography( const BoundingBox<float>& focalPoint )
 }
 
 
-void World::updateFocalChunk( BoundingBox<float> focalPoint )
+void World::updateFocalChunk( BoundingBox<long double> focalPoint )
 {
 	// Update the focalChunk of the world relative to a camera's focal point.
 	// Inhibit changing the focalChunk while loading for any nasty race conditions.
@@ -717,16 +717,16 @@ void World::updateFocalChunk( BoundingBox<float> focalPoint )
 }
 
 
-std::vector<std::tuple<std::uint64_t, int, int>> World::delimitWorldChunks( const BoundingBox<float>& focalPoint )
+std::vector<std::tuple<std::uint64_t, std::int64_t, std::int64_t>> World::delimitWorldChunks( const BoundingBox<long double>& focalPoint )
 {
 	// Based on the focalPoint, prepare all the world chunks that need to be delimited and updated 
 
 	// Build recall Vector
-	std::vector<std::tuple<std::uint64_t, int, int>> chunkRecalls;
+	std::vector<std::tuple<std::uint64_t, std::int64_t, std::int64_t>> chunkRecalls;
 
 	// Based on the updated camera's position, delimit the surrounding worldChunks
-	int cameraIndexX = focalPoint.getCenterX() >= 0 ? ( int )( focalPoint.getCenterX() / this->_chunkCellSize ) : ( int )( ( focalPoint.getCenterX() - this->_chunkCellSize ) / this->_chunkCellSize );
-	int cameraIndexY = focalPoint.getCenterY() >= 0 ? ( int )( focalPoint.getCenterY() / this->_chunkCellSize ) : ( int )( ( focalPoint.getCenterY() - this->_chunkCellSize ) / this->_chunkCellSize );
+	std::int64_t cameraIndexX = focalPoint.getCenterX() >= 0 ? ( std::int64_t )( focalPoint.getCenterX() / this->_chunkCellSize ) : ( std::int64_t )( ( focalPoint.getCenterX() - this->_chunkCellSize ) / this->_chunkCellSize );
+	std::int64_t cameraIndexY = focalPoint.getCenterY() >= 0 ? ( std::int64_t )( focalPoint.getCenterY() / this->_chunkCellSize ) : ( std::int64_t )( ( focalPoint.getCenterY() - this->_chunkCellSize ) / this->_chunkCellSize );
 
 	// No need to delimit if the camera index has not changed
 	if ( this->_prevFocalChunkIndexX == cameraIndexX && this->_prevFocalChunkIndexY == cameraIndexY )
@@ -739,8 +739,8 @@ std::vector<std::tuple<std::uint64_t, int, int>> World::delimitWorldChunks( cons
 		for ( std::uint64_t y = 0; y < this->_numChunkHeight; y++ )
 		{
 			WorldChunk& worldChunk = this->_worldChunks[y * this->_numChunkWidth + x];
-			int worldChunkIndexX = worldChunk.getChunkIndexX();
-			int worldChunkIndexY = worldChunk.getChunkIndexY();
+			std::int64_t worldChunkIndexX = worldChunk.getChunkIndexX();
+			std::int64_t worldChunkIndexY = worldChunk.getChunkIndexY();
 
 			// If the worldChunk is out of range relative to the camera
 			if ( std::abs( cameraIndexX - worldChunkIndexX ) > this->_chunkRadius || std::abs( cameraIndexY - worldChunkIndexY ) > this->_chunkRadius )
@@ -750,9 +750,9 @@ std::vector<std::tuple<std::uint64_t, int, int>> World::delimitWorldChunks( cons
 				addMemoryThread.detach();
 
 				// Add to recall
-				int newChunkIndexX = cameraIndexX + -( worldChunkIndexX - this->_prevFocalChunkIndexX );
-				int newChunkIndexY = cameraIndexY + -( worldChunkIndexY - this->_prevFocalChunkIndexY );
-				chunkRecalls.push_back( std::tuple<std::uint64_t, int, int>( y * this->_numChunkWidth + x, newChunkIndexX, newChunkIndexY ) );
+				std::int64_t newChunkIndexX = cameraIndexX + -( worldChunkIndexX - this->_prevFocalChunkIndexX );
+				std::int64_t newChunkIndexY = cameraIndexY + -( worldChunkIndexY - this->_prevFocalChunkIndexY );
+				chunkRecalls.push_back( std::tuple<std::uint64_t, std::int64_t, std::int64_t>( y * this->_numChunkWidth + x, newChunkIndexX, newChunkIndexY ) );
 			}
 		}
 	}
@@ -761,7 +761,7 @@ std::vector<std::tuple<std::uint64_t, int, int>> World::delimitWorldChunks( cons
 }
 
 
-void World::delimitWorldChunk( WorldChunk& worldChunk, int chunkIndexX, int chunkIndexY )
+void World::delimitWorldChunk( WorldChunk& worldChunk, std::int64_t chunkIndexX, std::int64_t chunkIndexY )
 {
 	// Clears the worldChunk, updates its proper index, and wipes the render in preparation to load in new data	and new render
 	worldChunk.clear();

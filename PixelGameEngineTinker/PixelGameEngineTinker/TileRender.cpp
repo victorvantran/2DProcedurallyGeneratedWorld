@@ -1,7 +1,7 @@
 #include "TileRender.h"
 
 TileRender::TileRender()
-	: Cell( 0, BoundingBox<int>() ), _bordersDecalIndex( 0 )
+	: Cell( 0, BoundingBox<std::int64_t>() ), _bordersDecalIndex( 0 )
 {
 
 }
@@ -13,7 +13,7 @@ TileRender::~TileRender()
 }
 
 
-TileRender::TileRender( int id, const BoundingBox<int>& bounds )
+TileRender::TileRender( std::uint64_t id, const BoundingBox<std::int64_t>& bounds )
 	: Cell( id, bounds ), _bordersDecalIndex( 0 )
 {
 

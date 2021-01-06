@@ -30,20 +30,20 @@ class World
 private:
 
 	// WorldChunks
-	const static int _chunkRadius = Settings::World::CHUNK_RADIUS;
-	const static int _chunkCellSize = Settings::World::CHUNK_CELL_SIZE;
+	const static std::uint64_t _chunkRadius = Settings::World::CHUNK_RADIUS;
+	const static std::uint64_t _chunkCellSize = Settings::World::CHUNK_CELL_SIZE;
 
 	WorldChunk* _worldChunks = nullptr;
 
-	int _numChunkWidth;
-	int _numChunkHeight;
-	int _numWorldChunks;
+	std::uint64_t _numChunkWidth;
+	std::uint64_t _numChunkHeight;
+	std::uint64_t _numWorldChunks;
 
-	BoundingBox<float> _focalChunk;
-	int _currFocalChunkIndexX;
-	int _currFocalChunkIndexY;
-	int _prevFocalChunkIndexX;
-	int _prevFocalChunkIndexY;
+	BoundingBox<long double> _focalChunk;
+	std::int64_t _currFocalChunkIndexX;
+	std::int64_t _currFocalChunkIndexY;
+	std::int64_t _prevFocalChunkIndexX;
+	std::int64_t _prevFocalChunkIndexY;
 
 	// Memory
 	std::mutex _worldDatabaseMutex;
@@ -79,20 +79,20 @@ public:
 
 	void initializeCamera( Camera* camera );
 	void initializeDatabase();
-	void initializeDelimits( const BoundingBox<float>& cameraView );
+	void initializeDelimits( const BoundingBox<long double>& cameraView );
 	void initializeWorldChunks();
 
 	// Modify
-	void insert( int x, int y, int width, int height, uint64_t id );
-	void remove( int x, int y, int width, int height, uint64_t id );
+	void insert( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
+	void remove( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
 
 	// Getters/Setters
 	WorldChunk* getWorldChunks();
-	WorldChunk& getWorldChunk( int x, int y );
-	int getChunkRadius() const;
-	int getNumWorldChunks() const;
-	int getNumChunkWidth() const;
-	int getNumChunkHeight() const;
+	WorldChunk& getWorldChunk( std::int64_t x, std::int64_t y );
+	std::uint64_t getChunkRadius() const;
+	std::uint64_t getNumWorldChunks() const;
+	std::uint64_t getNumChunkWidth() const;
+	std::uint64_t getNumChunkHeight() const;
 
 	// Save/Load System
 	void startWorldMemorySystem();
@@ -107,10 +107,10 @@ public:
 
 	// Load
 	void loadWorldGeographyTask();
-	void loadWorldGeography( const BoundingBox<float>& cameraView );
-	void updateFocalChunk( BoundingBox<float> focalPoint );
-	std::vector<std::tuple<std::uint64_t, int, int>> delimitWorldChunks( const BoundingBox<float>& cameraView );
-	void delimitWorldChunk( WorldChunk& worldChunk, int newIndexX, int newIndexY );
+	void loadWorldGeography( const BoundingBox<long double>& cameraView );
+	void updateFocalChunk( BoundingBox<long double> focalPoint );
+	std::vector<std::tuple<std::uint64_t, std::int64_t, std::int64_t>> delimitWorldChunks( const BoundingBox<long double>& cameraView );
+	void delimitWorldChunk( WorldChunk& worldChunk, std::int64_t newIndexX, std::int64_t newIndexY );
 	void loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::uint16_t tilesNumBytes, std::uint64_t* paletteData, std::uint16_t numUniqueKeys );
 
 	// TileDecals

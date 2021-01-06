@@ -46,13 +46,13 @@ WorldChunkMemory::~WorldChunkMemory()
 }
 
 
-int WorldChunkMemory::getChunkIndexX()
+std::int64_t WorldChunkMemory::getChunkIndexX()
 {
 	return this->_chunkIndexX;
 }
 
 
-int WorldChunkMemory::getChunkIndexY()
+std::int64_t WorldChunkMemory::getChunkIndexY()
 {
 	return this->_chunkIndexY;
 }

@@ -1,7 +1,7 @@
 #include "Cell.h"
 
 Cell::Cell()
-	: _id( 0 ), _bounds( BoundingBox<int>() )
+	: _id( 0 ), _bounds( BoundingBox<std::int64_t>() )
 {
 }
 
@@ -11,19 +11,19 @@ Cell::~Cell()
 }
 
 
-Cell::Cell( int id, BoundingBox<int> bounds )
+Cell::Cell( std::uint64_t id, BoundingBox<std::int64_t> bounds )
 	: _id( id ), _bounds( bounds )
 {
 }
 
 
-int Cell::getId() const
+std::uint64_t Cell::getId() const
 {
 	return this->_id;
 }
 
 
-BoundingBox<int> Cell::getBounds() const
+BoundingBox<std::int64_t> Cell::getBounds() const
 {
 	return this->_bounds;
 }
@@ -35,60 +35,57 @@ bool Cell::getExist() const
 
 
 
-int Cell::getX() const
+std::int64_t Cell::getX() const
 {
 	return this->_bounds.getX();
 }
 
 
-int Cell::getY() const
+std::int64_t Cell::getY() const
 {
 	return this->_bounds.getY();
 }
 
 
 
-int Cell::getWidth() const
+std::int64_t Cell::getWidth() const
 {
 	return this->_bounds.getWidth();
 }
 
 
-int Cell::getHeight() const
+std::int64_t Cell::getHeight() const
 {
 	return this->_bounds.getHeight();
 }
 
 
-int Cell::setId( int id )
+std::uint64_t Cell::setId( std::uint64_t id )
 {
 	this->_id = id;
 	return this->_id;
 }
 
 
-BoundingBox<int> Cell::setBounds( const BoundingBox<int>& bounds )
+BoundingBox<std::int64_t> Cell::setBounds( const BoundingBox<std::int64_t>& bounds )
 {
 	this->_bounds = bounds;
 	return this->_bounds;
 }
 
 
-int Cell::setWidth( int width )
+std::int64_t Cell::setWidth( std::int64_t width )
 {
 	this->_bounds.setWidth( width );
 	return width;
 }
 
 
-int Cell::setHeight( int height )
+std::int64_t Cell::setHeight( std::int64_t height )
 {
 	this->_bounds.setHeight( height );
 	return height;
 }
-
-
-
 
 
 void Cell::clear()
