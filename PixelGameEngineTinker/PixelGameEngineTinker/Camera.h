@@ -7,6 +7,7 @@
 #include "Atlas.h"
 #include "WorldChunk.h"
 #include "QuadTree.h"
+#include "Lighting.h"
 #include "TileRender.h"
 #include "Tile.h"
 
@@ -18,14 +19,19 @@ private:
 	BoundingBox<long double> _focalPoint; // cell-domain
 	BoundingBox<long double> _view;
 
-	std::int64_t _absolutePixelOffsetX = Settings::Camera::ABSOLUTE_PIXEL_OFFSET_X;  //16 * ( 120 / 2 ) - 16 * ( 32 / 2 );  // tileSize * ( screenCellWidth / 2 ) - tileSize * ( cameraCellWidth / 2 ) [!] need to change based on pixelSize
-	std::int64_t _absolutePixelOffsetY = Settings::Camera::ABSOLUTE_PIXEL_OFFSET_Y;
+	std::int32_t _absolutePixelOffsetX = Settings::Camera::ABSOLUTE_PIXEL_OFFSET_X;  //16 * ( 120 / 2 ) - 16 * ( 32 / 2 );  // tileSize * ( screenCellWidth / 2 ) - tileSize * ( cameraCellWidth / 2 ) [!] need to change based on pixelSize
+	std::int32_t _absolutePixelOffsetY = Settings::Camera::ABSOLUTE_PIXEL_OFFSET_Y;
 
 	long double _zoomX;
 	long double _zoomY;
 
 
 	World* _world = nullptr;
+
+
+	// Decal
+	olc::Sprite* _spriteLight = nullptr;
+	olc::Decal* _decalLight = nullptr;
 
 public:
 	Camera();
@@ -38,6 +44,7 @@ public:
 	void renderWorld() const;
 	void renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const;
 	void renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas ) const;
+	void renderLights( WorldChunk& worldChunk ) const;
 	void renderCamera() const;
 
 	void renderTilesDebug( WorldChunk& worldChunk ) const;

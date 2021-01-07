@@ -3,7 +3,7 @@
 
 
 WorldChunk::WorldChunk()
-	: _chunkIndexX( 0 ), _chunkIndexY( 0 )
+	: _chunkIndexX( 0 ), _chunkIndexY( 0 ), _lighting( Settings::WorldChunk::SIZE, Settings::WorldChunk::SIZE, this->_tiles )
 {
 
 }
@@ -16,7 +16,7 @@ WorldChunk::~WorldChunk()
 
 
 WorldChunk::WorldChunk( std::int64_t indexX, std::int64_t indexY )
-	: _chunkIndexX( indexX ), _chunkIndexY( indexY )
+	: _chunkIndexX( indexX ), _chunkIndexY( indexY ), _lighting( Settings::WorldChunk::SIZE, Settings::WorldChunk::SIZE, this->_tiles )
 {
 
 }
@@ -246,13 +246,13 @@ std::int64_t WorldChunk::getRelativeChunkIndexY( const BoundingBox<long double>&
 }
 
 
-std::int64_t WorldChunk::getSize() const
+std::int16_t WorldChunk::getSize() const
 {
 	return this->_size;
 }
 
 
-std::int64_t WorldChunk::getNumTileRenders() const
+std::int16_t WorldChunk::getNumTileRenders() const
 {
 	return this->_numTileRenders;
 }
@@ -312,4 +312,26 @@ std::vector<std::uint64_t> WorldChunk::getPalette()
 WorldChunkMemory* WorldChunk::createMemory()
 {
 	return new WorldChunkMemory( this );
+}
+
+
+
+Light* WorldChunk::getLights()
+{
+	return this->_lighting.getLights();
+}
+
+
+
+void WorldChunk::resetLighting()
+{
+	this->_lighting.blackenLights();
+	return;
+}
+
+
+void WorldChunk::renderLighting()
+{
+	this->_lighting.renderLights();
+	return;
 }

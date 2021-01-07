@@ -310,25 +310,25 @@ WorldChunk& World::getWorldChunk( std::int64_t x, std::int64_t y )
 }
 
 
-std::uint64_t World::getChunkRadius() const
+std::uint16_t World::getChunkRadius() const
 {
 	return this->_chunkRadius;
 }
 
 
-std::uint64_t World::getNumWorldChunks() const
+std::uint16_t World::getNumWorldChunks() const
 {
 	return this->_numWorldChunks;
 }
 
 
-std::uint64_t World::getNumChunkWidth() const
+std::uint16_t World::getNumChunkWidth() const
 {
 	return this->_numChunkWidth;
 }
 
 
-std::uint64_t World::getNumChunkHeight() const
+std::uint16_t World::getNumChunkHeight() const
 {
 	return this->_numChunkHeight;
 }
@@ -900,7 +900,7 @@ void World::loadSpriteTiles()
 	{
 		Tile* tiles = this->_worldChunks[i].getTiles();
 
-		for ( int j = 0; j < Settings::World::NUM_CELLS_PER_CHUNK; j++ )
+		for ( std::uint16_t j = 0; j < Settings::World::NUM_CELLS_PER_CHUNK; j++ )
 		{
 			tileIds.insert( tiles[j].getId() );
 		}
@@ -935,5 +935,41 @@ void World::updateDecals()
 void World::DEBUG_PRINT_TILE_SPRITES()
 {
 	this->_atlas.print();
+	return;
+}
+
+
+
+void World::resetLighting()
+{
+	for ( std::uint64_t i = 0; i < this->_numWorldChunks; i++ )
+	{
+		this->_worldChunks[i].resetLighting();
+	}
+
+	return;
+}
+
+
+
+void World::activateStaticLighting()
+{
+	for ( std::uint64_t i = 0; i < this->_numWorldChunks; i++ )
+	{
+		// this->_worldChunks[i].emitStaticLightSources(); [!]
+	}
+
+	return;
+}
+
+
+
+void World::renderLighting()
+{
+	for ( std::uint64_t i = 0; i < this->_numWorldChunks; i++ )
+	{
+		this->_worldChunks[i].renderLighting();
+	}
+
 	return;
 }

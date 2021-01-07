@@ -19,10 +19,10 @@
 class Example : public olc::PixelGameEngine
 {
 public:
-	const static std::uint64_t pixelSize = Settings::Screen::PIXEL_SIZE;
-	const static std::uint64_t screenWidth = Settings::Screen::SCREEN_PIXEL_WIDTH;
-	const static std::uint64_t screenHeight = Settings::Screen::SCREEN_PIXEL_HEIGHT;
-	const static std::uint64_t cellSize = Settings::Screen::CELL_PIXEL_SIZE;
+	const static std::uint16_t pixelSize = Settings::Screen::PIXEL_SIZE;
+	const static std::uint16_t screenWidth = Settings::Screen::SCREEN_PIXEL_WIDTH;
+	const static std::uint16_t screenHeight = Settings::Screen::SCREEN_PIXEL_HEIGHT;
+	const static std::uint16_t cellSize = Settings::Screen::CELL_PIXEL_SIZE;
 
 
 public:
@@ -63,6 +63,11 @@ public:
 
 	bool OnUserUpdate( float fElapsedTime ) override
 	{
+
+		// Pre-Update
+		this->world->resetLighting();
+
+
 		// Camera Debug
 		long double mouseX = ( long double )GetMouseX();
 		long double mouseY = ( long double )GetMouseY();
@@ -158,9 +163,19 @@ public:
 			world->insert( tileIndex.x, tileIndex.y, 1, 1, tileId );
 		}
 
-		if ( GetKey( olc::Key::K ).bPressed || GetKey( olc::Key::K ).bHeld )
+
+
+
+
+		if ( GetKey( olc::Key::R ).bPressed || GetKey( olc::Key::R ).bHeld )
 		{
+			std::uint8_t r = std::rand() % 256;
+			std::uint8_t g = std::rand() % 256;
+			std::uint8_t b = std::rand() % 256;
+
+			//world->insertLightTile( tileIndex.x, tileIndex.y, r, g, b, 255, 20 );
 		}
+
 
 		if ( GetMouse( 0 ).bPressed || GetMouse( 0 ).bHeld )
 			//if ( GetMouse( 0 ).bPressed )
@@ -179,7 +194,9 @@ public:
 		// Render
 		Clear( olc::BLACK );
 		this->camera->renderWorld();
+		// this->world->renderLighting();
 		this->world->updateDecals();
+	
 
 		// DEBUG
 		drawTileIndexString( tileIndex );

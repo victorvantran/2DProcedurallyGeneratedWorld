@@ -6,7 +6,7 @@
 #include <vector>
 #include <utility>
 
-
+#include "Settings.h"
 #include "Tile.h"
 #include "LightSource.h"
 #include "Light.h"
@@ -93,6 +93,19 @@ struct Row
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 template <typename T>
 class Lighting : public olc::PGEX
 {
@@ -100,7 +113,7 @@ private:
 	std::uint64_t _width;
 	std::uint64_t _height;
 	Tile* _tiles;
-	Light* _lights;
+	Light _lights[Settings::WorldChunk::SIZE * Settings::WorldChunk::SIZE];
 
 	std::map<std::uint16_t, LightSource> _lightSources;
 
@@ -142,7 +155,7 @@ private:
 	}
 
 
-	bool isWall( Quadrant<T>& quadrant, const olc::v2d_generic<T>& tile )
+	bool isOpaque( Quadrant<T>& quadrant, const olc::v2d_generic<T>& tile )
 	{
 		olc::v2d_generic<T> position = quadrant.transform( tile );
 		int tileIndex = ( int )( ( ( int )std::ceil( position.y ) * this->_width + ( int )std::ceil( position.x ) ) );
@@ -150,7 +163,7 @@ private:
 	}
 
 
-	bool isFloor( Quadrant<T>& quadrant, const olc::v2d_generic<T>& tile )
+	bool isTransparent( Quadrant<T>& quadrant, const olc::v2d_generic<T>& tile )
 	{
 		olc::v2d_generic<T> position = quadrant.transform( tile );
 		int tileIndex = ( int )( ( ( int )std::ceil( position.y ) * this->_width + ( int )std::ceil( position.x ) ) );
@@ -168,15 +181,15 @@ private:
 		const olc::v2d_generic<T>* prevTile = nullptr;
 		for ( const olc::v2d_generic<T>& tile : row.getTiles() )
 		{
-			if ( this->isWall( quadrant, tile ) || this->isSymmetric( row, tile ) )
+			if ( this->isOpaque( quadrant, tile ) || this->isSymmetric( row, tile ) )
 			{
 				this->reveal( quadrant, tile, originPosition, maxRadius );
 			}
-			if ( prevTile != nullptr && this->isWall( quadrant, *prevTile ) && this->isFloor( quadrant, tile ) )
+			if ( prevTile != nullptr && this->isOpaque( quadrant, *prevTile ) && this->isTransparent( quadrant, tile ) )
 			{
 				row.startSlope = Lighting::slopeStatic( tile );
 			}
-			if ( prevTile != nullptr && this->isFloor( quadrant, *prevTile ) && this->isWall( quadrant, tile ) )
+			if ( prevTile != nullptr && this->isTransparent( quadrant, *prevTile ) && this->isOpaque( quadrant, tile ) )
 			{
 				Row<T> nextRow = row.getNext();
 				nextRow.endSlope = Lighting::slopeStatic( tile );
@@ -185,7 +198,7 @@ private:
 			prevTile = &tile;
 		}
 
-		if ( prevTile != nullptr && this->isFloor( quadrant, *prevTile ) )
+		if ( prevTile != nullptr && this->isTransparent( quadrant, *prevTile ) )
 		{
 			Row<T> nextRow = row.getNext();
 			this->scanStatic( quadrant, nextRow, originPosition, maxRadius );
@@ -213,7 +226,7 @@ private:
 		const olc::v2d_generic<T>* prevTile = nullptr;
 		for ( const olc::v2d_generic<T>& tile : row.getTiles() )
 		{
-			if ( this->isWall( quadrant, tile ) || this->isSymmetric( row, tile ) )
+			if ( this->isOpaque( quadrant, tile ) || this->isSymmetric( row, tile ) )
 			{
 				olc::v2d_generic<T> position = quadrant.transform( tile );
 				T tilePosX = position.x;
@@ -241,11 +254,11 @@ private:
 				}
 
 			}
-			if ( prevTile != nullptr && this->isWall( quadrant, *prevTile ) && this->isFloor( quadrant, tile ) )
+			if ( prevTile != nullptr && this->isOpaque( quadrant, *prevTile ) && this->isTransparent( quadrant, tile ) )
 			{
 				row.startSlope = Lighting::slopeDynamic( tile, originPosition, quadrant.cardinal );
 			}
-			if ( prevTile != nullptr && this->isFloor( quadrant, *prevTile ) && this->isWall( quadrant, tile ) )
+			if ( prevTile != nullptr && this->isTransparent( quadrant, *prevTile ) && this->isOpaque( quadrant, tile ) )
 			{
 				Row<T> nextRow = row.getNext();
 				nextRow.endSlope = Lighting::slopeDynamic( tile, originPosition, quadrant.cardinal );
@@ -254,7 +267,7 @@ private:
 			prevTile = &tile;
 		}
 
-		if ( prevTile != nullptr && this->isFloor( quadrant, *prevTile ) )
+		if ( prevTile != nullptr && this->isTransparent( quadrant, *prevTile ) )
 		{
 			Row<T> nextRow = row.getNext();
 			this->scanDynamic( quadrant, nextRow, originPosition, maxRadius );
@@ -348,23 +361,31 @@ private:
 	}
 
 public:
-	Lighting( std::uint16_t width_, std::uint16_t height_, Tile* tiles_, Light* lights_ ) : _width( width_ ), _height( height_ ), _tiles( tiles_ ), _lights( lights_ )
+	Lighting( std::uint16_t width_, std::uint16_t height_, Tile* tiles_ ) : _width( width_ ), _height( height_ ), _tiles( tiles_ )
 	{
 		this->_spriteLight = new olc::Sprite( "./tiles/light.png" );
 		this->_decalLight = new olc::Decal( this->_spriteLight );
+
+		this->blackenLights();
 	}
 
 
 	~Lighting()
 	{
-		delete[] this->_lights;
-		this->_lights = nullptr;
+		//delete[] this->_lights;
+		//this->_lights = nullptr;
 
 		delete this->_spriteLight;
 		this->_spriteLight = nullptr;
 
 		delete this->_decalLight;
 		this->_decalLight = nullptr;
+	}
+
+
+	Light* getLights()
+	{
+		return this->_lights;
 	}
 
 
@@ -543,10 +564,10 @@ public:
 
 
 			olc::vf2d verticiesB[4];
-			verticiesB[0] = olc::vf2d{ x * ( float )settings::TILE_SIZE, y * ( float )settings::TILE_SIZE };
-			verticiesB[1] = olc::vf2d{ x * ( float )settings::TILE_SIZE, y * ( float )settings::TILE_SIZE + ( float )settings::TILE_SIZE };
-			verticiesB[2] = olc::vf2d{ x * ( float )settings::TILE_SIZE + ( float )settings::TILE_SIZE, y * ( float )settings::TILE_SIZE + ( float )settings::TILE_SIZE };
-			verticiesB[3] = olc::vf2d{ x * ( float )settings::TILE_SIZE + ( float )settings::TILE_SIZE, y * ( float )settings::TILE_SIZE };
+			verticiesB[0] = olc::vf2d{ x * ( float )Settings::Screen::CELL_PIXEL_SIZE, y * ( float )Settings::Screen::CELL_PIXEL_SIZE };
+			verticiesB[1] = olc::vf2d{ x * ( float )Settings::Screen::CELL_PIXEL_SIZE, y * ( float )Settings::Screen::CELL_PIXEL_SIZE + ( float )Settings::Screen::CELL_PIXEL_SIZE };
+			verticiesB[2] = olc::vf2d{ x * ( float )Settings::Screen::CELL_PIXEL_SIZE + ( float )Settings::Screen::CELL_PIXEL_SIZE, y * ( float )Settings::Screen::CELL_PIXEL_SIZE + ( float )Settings::Screen::CELL_PIXEL_SIZE };
+			verticiesB[3] = olc::vf2d{ x * ( float )Settings::Screen::CELL_PIXEL_SIZE + ( float )Settings::Screen::CELL_PIXEL_SIZE, y * ( float )Settings::Screen::CELL_PIXEL_SIZE };
 
 			olc::vf2d textureCoordinates[4];
 			textureCoordinates[0] = olc::vf2d{ 0.0f, 0.0f };
@@ -603,6 +624,7 @@ public:
 
 	void blackenLights()
 	{
+		//std::cout << "blacken" << std::endl;
 		for ( std::uint16_t i = 0; i < this->getNumCells(); i++ )
 		{
 			this->_lights[i].blacken();

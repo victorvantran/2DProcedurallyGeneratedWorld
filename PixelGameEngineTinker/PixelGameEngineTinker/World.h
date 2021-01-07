@@ -30,14 +30,14 @@ class World
 private:
 
 	// WorldChunks
-	const static std::uint64_t _chunkRadius = Settings::World::CHUNK_RADIUS;
-	const static std::uint64_t _chunkCellSize = Settings::World::CHUNK_CELL_SIZE;
+	const static std::uint16_t _chunkRadius = Settings::World::CHUNK_RADIUS;
+	const static std::uint16_t _chunkCellSize = Settings::World::CHUNK_CELL_SIZE;
 
 	WorldChunk* _worldChunks = nullptr;
 
-	std::uint64_t _numChunkWidth;
-	std::uint64_t _numChunkHeight;
-	std::uint64_t _numWorldChunks;
+	std::uint16_t _numChunkWidth;
+	std::uint16_t _numChunkHeight;
+	std::uint16_t _numWorldChunks;
 
 	BoundingBox<long double> _focalChunk;
 	std::int64_t _currFocalChunkIndexX;
@@ -77,6 +77,7 @@ public:
 	World();
 	~World();
 
+	// Initialization
 	void initializeCamera( Camera* camera );
 	void initializeDatabase();
 	void initializeDelimits( const BoundingBox<long double>& cameraView );
@@ -89,10 +90,10 @@ public:
 	// Getters/Setters
 	WorldChunk* getWorldChunks();
 	WorldChunk& getWorldChunk( std::int64_t x, std::int64_t y );
-	std::uint64_t getChunkRadius() const;
-	std::uint64_t getNumWorldChunks() const;
-	std::uint64_t getNumChunkWidth() const;
-	std::uint64_t getNumChunkHeight() const;
+	std::uint16_t getChunkRadius() const;
+	std::uint16_t getNumWorldChunks() const;
+	std::uint16_t getNumChunkWidth() const;
+	std::uint16_t getNumChunkHeight() const;
 
 	// Save/Load System
 	void startWorldMemorySystem();
@@ -122,4 +123,11 @@ public:
 	void updateDecals();
 
 	void DEBUG_PRINT_TILE_SPRITES();
+
+
+	// Update
+	void resetLighting();
+	void activateStaticLighting();
+
+	void renderLighting();
 };
