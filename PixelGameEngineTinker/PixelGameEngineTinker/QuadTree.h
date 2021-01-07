@@ -259,7 +259,7 @@ void QuadTree<TRender>::consolidate( int level )
 	// Height check not necessary if our bounding box is a square, but for formality
 
 	if (_cell[0].getId() != 0 && 
-		_cell[0].getExist() &&
+		_cell[0].exists() &&
 		_cell[0].getWidth() == ( ( 2 << ( this->_level ) ) / 2 ) &&
 		_cell[0].getHeight() == ( ( 2 << ( this->_level ) ) / 2 ) &&
 		_cell[0] == _cell[1] &&
@@ -274,7 +274,7 @@ void QuadTree<TRender>::consolidate( int level )
 		int width = _cell[0].getWidth() * 2;
 		int height = _cell[0].getHeight() * 2;
 		int id = _cell[0].getId();
-		bool exist = _cell[0].getExist();
+		bool exist = _cell[0].exists();
 
 		TRender renderCell = TRender( id, BoundingBox<std::int64_t>( posX, posY, width, height ) );
 
@@ -296,7 +296,7 @@ void QuadTree<TRender>::insert( const TRender& aRenderCell )
 	BoundingBox<std::int64_t> aBoundingBox = aRenderCell.getBounds();
 
 	// If it does not exist, return
-	if ( !aRenderCell.getExist() )
+	if ( !aRenderCell.exists() )
 	{
 		return;
 	}
@@ -322,7 +322,7 @@ void QuadTree<TRender>::insert( const TRender& aRenderCell )
 	// Check if a bounding box is already occupied
 	for ( int i = 0; i < 4; i++ )
 	{
-		if ( this->_cell[i].getExist() && this->_cell[i].getBounds() == aBoundingBox )
+		if ( this->_cell[i].exists() && this->_cell[i].getBounds() == aBoundingBox )
 		{
 			return;
 		}
@@ -357,7 +357,7 @@ void QuadTree<TRender>::insert( const TRender& aRenderCell )
 		int x = aBoundingBox.getX();
 		int y = aBoundingBox.getY();
 		int id = aRenderCell.getId();
-		bool exist = aRenderCell.getExist();
+		bool exist = aRenderCell.exists();
 
 		int subWidth1 = aBoundingBox.getWidth() / 2;
 		int subHeight1 = aBoundingBox.getHeight() / 2;
@@ -389,7 +389,7 @@ void QuadTree<TRender>::insert( const TRender& aRenderCell )
 		int rId = aRenderCell.getId();
 		for ( int i = 0; i < 4; i++ )
 		{
-			if ( !this->_cell[i].getExist() && aBoundingBox.intersects( this->_cell[i].getBounds() ) /*&& this->_cell[i].getId() == rId*/ ) // [!] why does cell[i] have the same id???
+			if ( !this->_cell[i].exists() && aBoundingBox.intersects( this->_cell[i].getBounds() ) /*&& this->_cell[i].getId() == rId*/ ) // [!] why does cell[i] have the same id???
 			{
 				// Localizing the offset solves the issue of different quadrants introducing negative/wrong values when indexing.
 				int localCellIndexX = this->_cell[i].getBounds().getX() - this->_referenceNodes[0].getBounds().getX();
@@ -407,7 +407,7 @@ void QuadTree<TRender>::insert( const TRender& aRenderCell )
 		// Only add to the parent once it's children are consolidated
 		if ( this->_referenceNodes[this->_childrenIndex[quadrant]].getBounds() == aBoundingBox && this->_referenceNodes[this->_childrenIndex[quadrant]].isConsolidated() )
 		{
-			if ( !this->_cell[quadrant].getExist() )
+			if ( !this->_cell[quadrant].exists() )
 			{
 				this->_cell[quadrant].setId( aRenderCell.getId() );
 				this->_cellCount += 1;
@@ -434,7 +434,7 @@ void QuadTree<TRender>::remove( const TRender& rRenderCell )
 	const BoundingBox<std::int64_t> rBoundingBox = rRenderCell.getBounds();
 
 	// If it does not exist, return
-	if ( !rRenderCell.getExist() )
+	if ( !rRenderCell.exists() )
 	{
 		return;
 	}
@@ -457,7 +457,7 @@ void QuadTree<TRender>::remove( const TRender& rRenderCell )
 		int rId = rRenderCell.getId();
 		for ( int i = 0; i < 4; i++ )
 		{
-			if ( this->_cell[i].getExist() && rBoundingBox.intersects( this->_cell[i].getBounds() ) && this->_cell[i].getId() == rId ) // what are the bigger cell's id when mixutre? [!]
+			if ( this->_cell[i].exists() && rBoundingBox.intersects( this->_cell[i].getBounds() ) && this->_cell[i].getId() == rId ) // what are the bigger cell's id when mixutre? [!]
 			{
 				// Localizing the offset solves the issue of different quadrants introducing negative/wrong values when indexing.
 				int localCellIndexX = this->_cell[i].getBounds().getX() - this->_referenceNodes[0].getBounds().getX();
@@ -475,7 +475,7 @@ void QuadTree<TRender>::remove( const TRender& rRenderCell )
 	{
 		for ( int i = 0; i < 4; i++ )
 		{
-			if ( this->_cell[i].getExist() && rBoundingBox.intersects( this->_cell[i].getBounds() ) && this->_cell[i].getId() == rRenderCell.getId() )
+			if ( this->_cell[i].exists() && rBoundingBox.intersects( this->_cell[i].getBounds() ) && this->_cell[i].getId() == rRenderCell.getId() )
 			{
 				this->_cell[i].setId( 0 );
 				this->_cellCount -= 1;
@@ -493,7 +493,7 @@ void QuadTree<TRender>::remove( const TRender& rRenderCell )
 		int x = rBoundingBox.getX();
 		int y = rBoundingBox.getY();
 		int id = rRenderCell.getId();
-		bool exist = rRenderCell.getExist();
+		bool exist = rRenderCell.exists();
 
 		int subWidth1 = rBoundingBox.getWidth() / 2;
 		int subHeight1 = rBoundingBox.getHeight() / 2;

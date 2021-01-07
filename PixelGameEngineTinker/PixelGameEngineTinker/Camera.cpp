@@ -122,7 +122,7 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas 
 	// Fill Consolidated
 	if ( currQuadTree.isConsolidated() )
 	{
-		if ( this->_view.intersects( currQuadTree.getBounds() ) && currQuadTree.getCells()[0].getExist() )
+		if ( this->_view.intersects( currQuadTree.getBounds() ) && currQuadTree.getCells()[0].exists() )
 		{
 			std::uint64_t id = currQuadTree.getCells()[0].getId();
 			olc::Decal* tileDecal = atlas.getDecal( id );
@@ -160,7 +160,7 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas 
 			TileRender* cells = currQuadTree.getCells();
 			for ( int i = 0; i < 4; i++ )
 			{
-				if ( cells[i].getExist() && this->_view.intersects( cells[i].getBounds() ) )
+				if ( cells[i].exists() && this->_view.intersects( cells[i].getBounds() ) )
 				{
 					std::uint64_t id = cells[i].getId();
 					olc::Decal* tileDecal = atlas.getDecal( id );
@@ -333,35 +333,13 @@ void Camera::renderLights( WorldChunk& worldChunk ) const
 			colors[2] = olc::Pixel{ corner2R, corner2G, corner2B, corner2A };
 			colors[3] = olc::Pixel{ corner3R, corner3G, corner3B, corner3A };
 
-			/*
-			olc::vf2d verticiesB[4];
-			verticiesB[0] = olc::vf2d{ x * ( float )Settings::Screen::CELL_PIXEL_SIZE, y * ( float )Settings::Screen::CELL_PIXEL_SIZE };
-			verticiesB[1] = olc::vf2d{ x * ( float )Settings::Screen::CELL_PIXEL_SIZE, y * ( float )Settings::Screen::CELL_PIXEL_SIZE + ( float )Settings::Screen::CELL_PIXEL_SIZE };
-			verticiesB[2] = olc::vf2d{ x * ( float )Settings::Screen::CELL_PIXEL_SIZE + ( float )Settings::Screen::CELL_PIXEL_SIZE, y * ( float )Settings::Screen::CELL_PIXEL_SIZE + ( float )Settings::Screen::CELL_PIXEL_SIZE };
-			verticiesB[3] = olc::vf2d{ x * ( float )Settings::Screen::CELL_PIXEL_SIZE + ( float )Settings::Screen::CELL_PIXEL_SIZE, y * ( float )Settings::Screen::CELL_PIXEL_SIZE };
-			*/
-
 
 			std::int64_t pixelX;
 			std::int64_t pixelY;
 			worldToScreen( absoluteX, absoluteY, pixelX, pixelY );
 			olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
 
-			/*
-			olc::vf2d verticiesB[4];
-			verticiesB[0] = olc::vf2d{ ( float )pixelX * this->_zoomX, ( float )pixelY * this->_zoomY };
-			verticiesB[1] = olc::vf2d{ ( float )pixelX * this->_zoomX, ( ( float )pixelY + ( float )Settings::Screen::CELL_PIXEL_SIZE ) * this->_zoomY };
-			verticiesB[2] = olc::vf2d{ ( ( float )pixelX + ( float )Settings::Screen::CELL_PIXEL_SIZE ) * this->_zoomX, ( ( float )pixelY + ( float )Settings::Screen::CELL_PIXEL_SIZE ) * this->_zoomY };
-			verticiesB[3] = olc::vf2d{ ( ( float )pixelX + ( float )Settings::Screen::CELL_PIXEL_SIZE ) * this->_zoomX, ( float )pixelY * this->_zoomY };
-			*/
 
-			/*
-			olc::vf2d verticiesB[4];
-			verticiesB[0] = olc::vf2d{ ( float )pixelX * ( float )this->_zoomX, ( float )pixelY * ( float )this->_zoomY };
-			verticiesB[1] = olc::vf2d{ ( float )pixelX * ( float )this->_zoomX, ( ( float )pixelY + ( float )Settings::Screen::CELL_PIXEL_SIZE ) * ( float )this->_zoomY };
-			verticiesB[2] = olc::vf2d{ ( ( float )pixelX + ( float )Settings::Screen::CELL_PIXEL_SIZE ) * ( float )this->_zoomX, ( ( float )pixelY + ( float )Settings::Screen::CELL_PIXEL_SIZE ) * ( float )this->_zoomY };
-			verticiesB[3] = olc::vf2d{ ( ( float )pixelX + ( float )Settings::Screen::CELL_PIXEL_SIZE ) * ( float )this->_zoomX, ( float )pixelY * ( float )this->_zoomY };
-			*/
 
 			olc::vf2d verticiesB[4];
 			verticiesB[0] = olc::vf2d{ ( float )pixelX, ( float )pixelY };
