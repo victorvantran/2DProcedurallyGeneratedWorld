@@ -10,6 +10,7 @@
 #include "Tile.h"
 #include "LightSource.h"
 #include "Light.h"
+#include "LightRender.h"
 
 
 template <typename T>
@@ -110,10 +111,14 @@ template <typename T>
 class Lighting : public olc::PGEX
 {
 private:
-	std::uint64_t _width;
-	std::uint64_t _height;
+	std::int64_t _chunkIndexX;
+	std::int64_t _chunkIndexY;
+	std::uint16_t _width;
+	std::uint16_t _height;
 	Tile* _tiles;
 	Light _lights[Settings::WorldChunk::SIZE * Settings::WorldChunk::SIZE];
+	QuadTree<LightRender> _lightRenders[Settings::WorldChunk::NUM_TILE_RENDERS];
+
 
 	std::map<std::uint16_t, LightSource> _lightSources;
 
@@ -361,11 +366,13 @@ private:
 	}
 
 public:
-	Lighting( std::uint16_t width_, std::uint16_t height_, Tile* tiles_ ) : _width( width_ ), _height( height_ ), _tiles( tiles_ )
+	Lighting( std::int64_t chunkIndexX_, std::int64_t chunkIndexY_, std::uint16_t width_, std::uint16_t height_, Tile* tiles_ ) : _chunkIndexX( chunkIndexX_ ), _chunkIndexY( chunkIndexY_ ), _width( width_ ), _height( height_ ), _tiles( tiles_ )
 	{
 		this->_spriteLight = new olc::Sprite( "./tiles/light.png" );
 		this->_decalLight = new olc::Decal( this->_spriteLight );
 
+
+		this->wipeRender();
 		this->blackenLights();
 	}
 
@@ -383,10 +390,63 @@ public:
 	}
 
 
+	void setChunkIndexX( std::int64_t chunkIndexX )
+	{
+		this->_chunkIndexX = chunkIndexX;
+		return;
+	}
+
+	void setChunkIndexY( std::int64_t chunkIndexY )
+	{
+		this->_chunkIndexY = chunkIndexY;
+		return;
+	}
+
+
+
 	Light* getLights()
 	{
 		return this->_lights;
 	}
+
+
+
+	// QuadTree Render
+	void insertLightRenders( std::uint8_t* corner0, std::uint8_t* corner1, std::uint8_t* corner2, std::uint8_t* corner3, bool exist, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height)
+	{
+		this->_lightRenders[0].insert( LightRender( corner0, corner1, corner2, corner3, exist, BoundingBox<std::int64_t>( x, y, width, height ) ) );
+		return;
+	}
+
+
+	void wipeRender()
+	{
+		// Need to update chunkIndex of lighting when updating index of worldChunk [!]
+		std::int64_t rootQuadTreePositionX = this->_chunkIndexX * this->_width;
+		std::int64_t rootQuadTreePositionY = this->_chunkIndexY * this->_height;
+
+		// Intialize quadTrees
+		this->_lightRenders[0].constructQuadTree(
+			0,
+			-1,
+			Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
+			0,
+			BoundingBox<std::int64_t>( rootQuadTreePositionX, rootQuadTreePositionY, this->_width, this->_height ),
+			this->_lightRenders,
+			Settings::WorldChunk::TILE_RENDER_MIN_LEVEL,
+			Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
+			Settings::WorldChunk::TILE_RENDER_MIN_CELL_SIZE
+		);
+
+		// The difference between construct and reconstruct is quick reassignment, unless of course, shallow copy does this for us. Then just use construct
+		for ( int i = 0; i < sizeof( this->_lightRenders ) / sizeof( this->_lightRenders[0] ); i++ )
+		{
+			this->_lightRenders[i].divide();
+		}
+
+		return;
+	}
+
 
 
 	void insertLightSource( std::uint16_t index, std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a, std::int16_t radius )

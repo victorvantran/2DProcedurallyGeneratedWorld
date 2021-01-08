@@ -217,11 +217,7 @@ void Camera::renderLights( WorldChunk& worldChunk ) const
 	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 	std::uint16_t chunkSize = Settings::WorldChunk::SIZE;
 
-
-
-	Light* lights = worldChunk.getLights();
 	const BoundingBox<std::int64_t> bounds = BoundingBox<std::int64_t>( worldChunk.getChunkIndexX() * chunkSize, worldChunk.getChunkIndexY() * chunkSize, chunkSize, chunkSize );
-
 	
 	// No need to render if the camera can not see it
 	if ( !this->_view.intersects( bounds ) )
@@ -229,6 +225,9 @@ void Camera::renderLights( WorldChunk& worldChunk ) const
 		return;
 	}
 
+
+	Light* lights = worldChunk.getLights();
+	worldChunk.resetLighting();
 
 	for ( std::int16_t i = 0; i < Settings::World::NUM_CELLS_PER_CHUNK; i++ )
 	{
@@ -245,16 +244,12 @@ void Camera::renderLights( WorldChunk& worldChunk ) const
 		std::int64_t topLeftY = ( std::int64_t )std::floor( this->_view.getY() );
 
 
-		std::int64_t bottomRightX = ( std::int64_t )std::ceil( this->_view.getX() + this->_view.getWidth()/2 );
-		std::int64_t bottomRightY = ( std::int64_t )std::ceil( this->_view.getY() + this->_view.getHeight()/2 );
+		std::int64_t bottomRightX = ( std::int64_t )std::ceil( this->_view.getX() + this->_view.getWidth() );
+		std::int64_t bottomRightY = ( std::int64_t )std::ceil( this->_view.getY() + this->_view.getHeight() );
 
 		// Only render lights within camera frame
 		if ( absoluteX >= topLeftX && absoluteX <= bottomRightX && absoluteY >= topLeftY && absoluteY <= bottomRightY )
 		{
-			//std::cout << "(" << absoluteX << ", " << absoluteY << ")" << std::endl;
-			//std::cout << "(" << (std::int64_t)std::ceil( absoluteX - this->_view.getX() ) << ", " << ( std::int64_t )std::ceil( absoluteY - this->_view.getY() ) << ")" << std::endl;
-
-			
 			std::int64_t screenTranslatedX = ( std::int64_t )std::ceil( absoluteX - this->_view.getX() );
 			std::int64_t screenTranslatedY = ( std::int64_t )std::ceil( absoluteY - this->_view.getY() );
 
@@ -285,7 +280,7 @@ void Camera::renderLights( WorldChunk& worldChunk ) const
 
 				se < 0 && se >= chunkSize ||
 				s < 0 && s >= chunkSize ||
-				sw < 0 && sw >= chunkSize 
+				sw < 0 && sw >= chunkSize
 				)
 			{
 				return;
@@ -326,6 +321,15 @@ void Camera::renderLights( WorldChunk& worldChunk ) const
 			{
 				//continue;
 			}
+
+
+			std::uint8_t corner0[4] = { corner0R, corner0G, corner0B, corner0A };
+			std::uint8_t corner1[4] = { corner1R, corner1G, corner1B, corner1A };
+			std::uint8_t corner2[4] = { corner2R, corner2G, corner2B, corner2A };
+			std::uint8_t corner3[4] = { corner3R, corner3G, corner3B, corner3A };
+
+			worldChunk.getLighting().insertLightRenders( corner0, corner1, corner2, corner3, true, absoluteX, absoluteY, 1, 1 );
+
 
 			olc::Pixel colors[4];
 			colors[0] = olc::Pixel{ corner0R, corner0G, corner0B, corner0A };

@@ -2,6 +2,7 @@
 
 #include "Settings.h"
 #include "TileRender.h"
+#include "LightRender.h"
 #include "Tile.h"
 #include "BoundingBox.h"
 #include <vector>
@@ -48,6 +49,7 @@ public:
 		std::uint32_t minLevel = 0, std::uint32_t maxLevel = 0, float minCellSize = 0.0f );
 
 	void divide();
+
 	int getQuadrant( const TRender& boundingBox );
 
 	void consolidate( int level );
@@ -202,6 +204,7 @@ void QuadTree<TRender>::divide()
 
 	return;
 }
+
 
 
 template<typename TRender>
@@ -672,3 +675,20 @@ float QuadTree<TRender>::getMinCellSize() const
 {
 	return this->_minCellSize;
 }
+
+
+
+// Template Specilization
+template<>
+void QuadTree<TileRender>::divide();
+
+template<>
+void QuadTree<LightRender>::divide();
+
+
+template<>
+void QuadTree<LightRender>::insert( const LightRender& aRenderCell );
+
+
+template<>
+void QuadTree<LightRender>::consolidate( int level );

@@ -3,7 +3,7 @@
 
 
 WorldChunk::WorldChunk()
-	: _chunkIndexX( 0 ), _chunkIndexY( 0 ), _lighting( Settings::WorldChunk::SIZE, Settings::WorldChunk::SIZE, this->_tiles )
+	: _chunkIndexX( 0 ), _chunkIndexY( 0 ), _lighting( 0, 0, Settings::WorldChunk::SIZE, Settings::WorldChunk::SIZE, this->_tiles )
 {
 
 }
@@ -16,7 +16,7 @@ WorldChunk::~WorldChunk()
 
 
 WorldChunk::WorldChunk( std::int64_t indexX, std::int64_t indexY )
-	: _chunkIndexX( indexX ), _chunkIndexY( indexY ), _lighting( Settings::WorldChunk::SIZE, Settings::WorldChunk::SIZE, this->_tiles )
+	: _chunkIndexX( indexX ), _chunkIndexY( indexY ), _lighting( indexX, indexY, Settings::WorldChunk::SIZE, Settings::WorldChunk::SIZE, this->_tiles )
 {
 
 }
@@ -213,6 +213,15 @@ void WorldChunk::delimit( std::int64_t indexX, std::int64_t indexY )
 	this->_chunkIndexX = indexX;
 	this->_chunkIndexY = indexY;
 
+
+	this->_lighting.setChunkIndexX( indexX );
+	this->_lighting.setChunkIndexY( indexY );
+
+	// [!] Do the same for geography when isolated black boxed
+	//this->_geography.setChunkIndexX( indexX );
+	//this->_geography.setChunkIndexY( indexY );
+
+
 	return;
 }
 
@@ -316,6 +325,14 @@ WorldChunkMemory* WorldChunk::createMemory()
 
 
 
+
+
+Lighting<long double>& WorldChunk::getLighting()
+{
+	return this->_lighting;
+}
+
+
 Light* WorldChunk::getLights()
 {
 	return this->_lighting.getLights();
@@ -325,6 +342,7 @@ Light* WorldChunk::getLights()
 
 void WorldChunk::resetLighting()
 {
+	this->_lighting.wipeRender();
 	this->_lighting.blackenLights();
 	return;
 }

@@ -64,9 +64,6 @@ public:
 	bool OnUserUpdate( float fElapsedTime ) override
 	{
 
-		// Pre-Update
-		this->world->resetLighting();
-
 
 		// Camera Debug
 		long double mouseX = ( long double )GetMouseX();
