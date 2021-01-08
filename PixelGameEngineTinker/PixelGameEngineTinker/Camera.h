@@ -9,6 +9,7 @@
 #include "QuadTree.h"
 #include "Lighting.h"
 #include "TileRender.h"
+#include "LightRender.h"
 #include "Tile.h"
 
 class World; // Forward Declaration
@@ -41,10 +42,13 @@ public:
 	void screenToWorld( std::int64_t pixelX, std::int64_t pixelY, long double& cellX, long double& cellY ) const; // int to float ( camera offest determines displacement )
 	void worldToScreen( long double cellX, long double cellY, std::int64_t& pixelX, std::int64_t& pixelY ) const; // float to int ( camera offset determines displacement )
 
+
+	void calculateLights( WorldChunk& worldChunk ) const;
+
 	void renderWorld() const;
 	void renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const;
 	void renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas ) const;
-	void renderLights( WorldChunk& worldChunk ) const;
+	void renderLightRenders( QuadTree<LightRender>& tileRenders ) const;
 	void renderCamera() const;
 
 	void renderTilesDebug( WorldChunk& worldChunk ) const;

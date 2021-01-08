@@ -4,19 +4,14 @@
 #include <string.h>
 
 LightRender::LightRender()
-	: exist( false ), Cell( BoundingBox<std::int64_t>() )
+	: corner0( 0 ), corner1( 0 ), corner2( 0 ), corner3( 0 ), exist( false ), Cell( BoundingBox<std::int64_t>() )
 {
-
 }
 
 
-LightRender::LightRender( std::uint8_t* corner0_, std::uint8_t* corner1_, std::uint8_t* corner2_, std::uint8_t* corner3_, bool exist_, const BoundingBox<std::int64_t>& bounds )
-	: exist( exist_ ), Cell( bounds )
+LightRender::LightRender( std::uint32_t corner0_, std::uint32_t corner1_, std::uint32_t corner2_, std::uint32_t corner3_, bool exist_, const BoundingBox<std::int64_t>& bounds )
+	: corner0( corner0_ ), corner1( corner1_ ), corner2( corner2_ ), corner3( corner3_ ), exist( exist_ ), Cell( bounds )
 {
-	std::memcpy( this->corner0, corner0_, 4 );
-	std::memcpy( this->corner1, corner1_, 4 );
-	std::memcpy( this->corner2, corner2_, 4 );
-	std::memcpy( this->corner3, corner3_, 4 );
 }
 
 
@@ -34,10 +29,8 @@ bool LightRender::exists() const
 
 bool LightRender::isSolid() const
 {
-	return corner0[0] == corner0[1] && corner0[1] == corner0[2] && corner0[2] == corner0[3] &&
-		corner1[0] == corner1[1] && corner1[1] == corner1[2] && corner1[2] == corner1[3] &&
-		corner2[0] == corner2[1] && corner2[1] == corner2[2] && corner2[2] == corner2[3] &&
-		corner3[0] == corner3[1] && corner3[1] == corner3[2] && corner3[2] == corner3[3];
+	// [!] need to check all 4 components to see if they are the same
+	return corner0 == corner1 && corner1 == corner2 && corner2 == corner3;
 }
 
 

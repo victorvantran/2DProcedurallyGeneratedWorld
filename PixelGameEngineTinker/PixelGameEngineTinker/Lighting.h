@@ -412,9 +412,15 @@ public:
 
 
 	// QuadTree Render
-	void insertLightRenders( std::uint8_t* corner0, std::uint8_t* corner1, std::uint8_t* corner2, std::uint8_t* corner3, bool exist, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height)
+	QuadTree<LightRender>& getLightRendersRoot()
 	{
-		this->_lightRenders[0].insert( LightRender( corner0, corner1, corner2, corner3, exist, BoundingBox<std::int64_t>( x, y, width, height ) ) );
+		return this->_lightRenders[0];
+	}
+
+	void insertLightRenders( std::uint16_t corner0, std::uint16_t corner1, std::uint16_t corner2, std::uint16_t corner3, bool exist, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height)
+	{
+		this->_lightRenders[0].insert( LightRender( corner0, corner1, corner2, corner3, exist,
+			BoundingBox<std::int64_t>( x, y, width, height ) ) );
 		return;
 	}
 
@@ -584,29 +590,29 @@ public:
 			int se = ( y + 1 ) * this->_width + ( x + 1 ); // Southeastern neighbor
 
 
-			std::uint8_t corner0R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( this->_lights[i].getRed() + this->_lights[nw].getRed() + this->_lights[n].getRed() + this->_lights[w].getRed() ) / 4 ), 255 ) );
-			std::uint8_t corner0G = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( this->_lights[i].getGreen() + this->_lights[nw].getGreen() + this->_lights[n].getGreen() + this->_lights[w].getGreen() ) / 4 ), 255 ) );
-			std::uint8_t corner0B = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( this->_lights[i].getBlue() + this->_lights[nw].getBlue() + this->_lights[n].getBlue() + this->_lights[w].getBlue() ) / 4 ), 255 ) );
-			std::uint8_t corner0A = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( this->_lights[i].getAlpha() + this->_lights[nw].getAlpha() + this->_lights[n].getAlpha() + this->_lights[w].getAlpha() ) / 4 ), 255 ) );
+			std::uint8_t corner0R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getRed() + this->_lights[nw].getRed() + this->_lights[n].getRed() + this->_lights[w].getRed() ) / 4 ), 255 ) );
+			std::uint8_t corner0G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getGreen() + this->_lights[nw].getGreen() + this->_lights[n].getGreen() + this->_lights[w].getGreen() ) / 4 ), 255 ) );
+			std::uint8_t corner0B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getBlue() + this->_lights[nw].getBlue() + this->_lights[n].getBlue() + this->_lights[w].getBlue() ) / 4 ), 255 ) );
+			std::uint8_t corner0A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getAlpha() + this->_lights[nw].getAlpha() + this->_lights[n].getAlpha() + this->_lights[w].getAlpha() ) / 4 ), 255 ) );
 
 
-			std::uint8_t corner1R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( this->_lights[i].getRed() + this->_lights[sw].getRed() + this->_lights[s].getRed() + this->_lights[w].getRed() ) / 4 ), 255 ) );
-			std::uint8_t corner1G = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( this->_lights[i].getGreen() + this->_lights[sw].getGreen() + this->_lights[s].getGreen() + this->_lights[w].getGreen() ) / 4 ), 255 ) );
-			std::uint8_t corner1B = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( this->_lights[i].getBlue() + this->_lights[sw].getBlue() + this->_lights[s].getBlue() + this->_lights[w].getBlue() ) / 4 ), 255 ) );
-			std::uint8_t corner1A = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( this->_lights[i].getAlpha() + this->_lights[sw].getAlpha() + this->_lights[s].getAlpha() + this->_lights[w].getAlpha() ) / 4 ), 255 ) );
+			std::uint8_t corner1R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getRed() + this->_lights[sw].getRed() + this->_lights[s].getRed() + this->_lights[w].getRed() ) / 4 ), 255 ) );
+			std::uint8_t corner1G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getGreen() + this->_lights[sw].getGreen() + this->_lights[s].getGreen() + this->_lights[w].getGreen() ) / 4 ), 255 ) );
+			std::uint8_t corner1B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getBlue() + this->_lights[sw].getBlue() + this->_lights[s].getBlue() + this->_lights[w].getBlue() ) / 4 ), 255 ) );
+			std::uint8_t corner1A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getAlpha() + this->_lights[sw].getAlpha() + this->_lights[s].getAlpha() + this->_lights[w].getAlpha() ) / 4 ), 255 ) );
 
 
 
-			std::uint8_t corner2R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( this->_lights[i].getRed() + this->_lights[se].getRed() + this->_lights[s].getRed() + this->_lights[e].getRed() ) / 4 ), 255 ) );
-			std::uint8_t corner2G = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( this->_lights[i].getGreen() + this->_lights[se].getGreen() + this->_lights[s].getGreen() + this->_lights[e].getGreen() ) / 4 ), 255 ) );
-			std::uint8_t corner2B = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( this->_lights[i].getBlue() + this->_lights[se].getBlue() + this->_lights[s].getBlue() + this->_lights[e].getBlue() ) / 4 ), 255 ) );
-			std::uint8_t corner2A = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( this->_lights[i].getAlpha() + this->_lights[se].getAlpha() + this->_lights[s].getAlpha() + this->_lights[e].getAlpha() ) / 4 ), 255 ) );
+			std::uint8_t corner2R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getRed() + this->_lights[se].getRed() + this->_lights[s].getRed() + this->_lights[e].getRed() ) / 4 ), 255 ) );
+			std::uint8_t corner2G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getGreen() + this->_lights[se].getGreen() + this->_lights[s].getGreen() + this->_lights[e].getGreen() ) / 4 ), 255 ) );
+			std::uint8_t corner2B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getBlue() + this->_lights[se].getBlue() + this->_lights[s].getBlue() + this->_lights[e].getBlue() ) / 4 ), 255 ) );
+			std::uint8_t corner2A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getAlpha() + this->_lights[se].getAlpha() + this->_lights[s].getAlpha() + this->_lights[e].getAlpha() ) / 4 ), 255 ) );
 
 
-			std::uint8_t corner3R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( this->_lights[i].getRed() + this->_lights[ne].getRed() + this->_lights[n].getRed() + this->_lights[e].getRed() ) / 4 ), 255 ) );
-			std::uint8_t corner3G = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( this->_lights[i].getGreen() + this->_lights[ne].getGreen() + this->_lights[n].getGreen() + this->_lights[e].getGreen() ) / 4 ), 255 ) );
-			std::uint8_t corner3B = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( this->_lights[i].getBlue() + this->_lights[ne].getBlue() + this->_lights[n].getBlue() + this->_lights[e].getBlue() ) / 4 ), 255 ) );
-			std::uint8_t corner3A = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( this->_lights[i].getAlpha() + this->_lights[ne].getAlpha() + this->_lights[n].getAlpha() + this->_lights[e].getAlpha() ) / 4 ), 255 ) );
+			std::uint8_t corner3R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getRed() + this->_lights[ne].getRed() + this->_lights[n].getRed() + this->_lights[e].getRed() ) / 4 ), 255 ) );
+			std::uint8_t corner3G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getGreen() + this->_lights[ne].getGreen() + this->_lights[n].getGreen() + this->_lights[e].getGreen() ) / 4 ), 255 ) );
+			std::uint8_t corner3B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getBlue() + this->_lights[ne].getBlue() + this->_lights[n].getBlue() + this->_lights[e].getBlue() ) / 4 ), 255 ) );
+			std::uint8_t corner3A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getAlpha() + this->_lights[ne].getAlpha() + this->_lights[n].getAlpha() + this->_lights[e].getAlpha() ) / 4 ), 255 ) );
 
 			if ( corner0R == 0 && corner0G == 0 && corner0B == 0 &&
 				corner1R == 0 && corner1G == 0 && corner1B == 0 &&

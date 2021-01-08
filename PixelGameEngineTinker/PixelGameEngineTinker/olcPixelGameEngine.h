@@ -3375,6 +3375,19 @@ namespace olc
 				glColor4ub( decal.tint[3].r, decal.tint[3].g, decal.tint[3].b, decal.tint[3].a );
 				glTexCoord4f( decal.uv[3].x, decal.uv[3].y, 0.0f, decal.w[3] ); glVertex2f( decal.pos[3].x, decal.pos[3].y );
 				glEnd();
+				
+				
+				/*
+				SetDecalMode( decal.mode );
+				glBindTexture( GL_TEXTURE_2D, decal.decal->id );
+				glBegin( GL_QUADS );
+				glColor4ub( decal.tint[0].r, decal.tint[0].g, decal.tint[0].b, decal.tint[0].a );
+				glTexCoord4f( decal.uv[0].x, decal.uv[0].y, 0.0f, decal.w[0] ); glVertex2f( decal.pos[0].x, decal.pos[0].y );
+				glTexCoord4f( decal.uv[1].x, decal.uv[1].y, 0.0f, decal.w[1] ); glVertex2f( decal.pos[1].x, decal.pos[1].y );
+				glTexCoord4f( decal.uv[2].x, decal.uv[2].y, 0.0f, decal.w[2] ); glVertex2f( decal.pos[2].x, decal.pos[2].y );
+				glTexCoord4f( decal.uv[3].x, decal.uv[3].y, 0.0f, decal.w[3] ); glVertex2f( decal.pos[3].x, decal.pos[3].y );
+				glEnd();
+				*/
 			}
 		}
 

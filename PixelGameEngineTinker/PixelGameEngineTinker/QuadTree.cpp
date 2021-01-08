@@ -98,15 +98,11 @@ void QuadTree<LightRender>::divide()
 	std::int64_t subWidth = this->_quadTreeBounds.getWidth() / 2;
 	std::int64_t subHeight = this->_quadTreeBounds.getHeight() / 2;
 
-	std::uint8_t corner0[4] = { 0, 0, 0, 0 };
-	std::uint8_t corner1[4] = { 0, 0, 0, 0 };
-	std::uint8_t corner2[4] = { 0, 0, 0, 0 };
-	std::uint8_t corner3[4] = { 0, 0, 0, 0 };
 
-	this->_cell[0] = LightRender( corner0, corner1, corner2, corner3, false, BoundingBox<std::int64_t>( x, y, subWidth, subHeight ) );
-	this->_cell[1] = LightRender( corner0, corner1, corner2, corner3, false, BoundingBox<std::int64_t>( x + subWidth, y, subWidth, subHeight ) );
-	this->_cell[2] = LightRender( corner0, corner1, corner2, corner3, false, BoundingBox<std::int64_t>( x, y + subHeight, subWidth, subHeight ) );
-	this->_cell[3] = LightRender( corner0, corner1, corner2, corner3, false, BoundingBox<std::int64_t>( x + subWidth, y + subHeight, subWidth, subHeight ) );
+	this->_cell[0] = LightRender( 0, 0, 0, 0, false, BoundingBox<std::int64_t>( x, y, subWidth, subHeight ) );
+	this->_cell[1] = LightRender( 0, 0, 0, 0, false, BoundingBox<std::int64_t>( x + subWidth, y, subWidth, subHeight ) );
+	this->_cell[2] = LightRender( 0, 0, 0, 0, false, BoundingBox<std::int64_t>( x, y + subHeight, subWidth, subHeight ) );
+	this->_cell[3] = LightRender( 0, 0, 0, 0, false, BoundingBox<std::int64_t>( x + subWidth, y + subHeight, subWidth, subHeight ) );
 
 	this->_divided = true;
 
@@ -223,12 +219,8 @@ void QuadTree<LightRender>::insert( const LightRender& aRenderCell )
 		}
 
 		//
-		std::uint8_t corner0[4] = { aRenderCell.corner0[0], aRenderCell.corner0[1], aRenderCell.corner0[2], aRenderCell.corner0[3] };
-		std::uint8_t corner1[4] = { aRenderCell.corner1[0], aRenderCell.corner1[1], aRenderCell.corner1[2], aRenderCell.corner1[3] };
-		std::uint8_t corner2[4] = { aRenderCell.corner2[0], aRenderCell.corner2[1], aRenderCell.corner2[2], aRenderCell.corner2[3] };
-		std::uint8_t corner3[4] = { aRenderCell.corner3[0], aRenderCell.corner3[1], aRenderCell.corner3[2], aRenderCell.corner3[3] };
-
-		this->insert( LightRender( corner0, corner1, corner2, corner3, aRenderCell.exists(), BoundingBox<std::int64_t>( trimX, trimY, trimWidth, trimHeight ) ) );
+		this->insert( LightRender( aRenderCell.corner0, aRenderCell.corner1, aRenderCell.corner2, aRenderCell.corner3, aRenderCell.exists(),
+			BoundingBox<std::int64_t>( trimX, trimY, trimWidth, trimHeight ) ) );
 		return;
 	}
 
@@ -239,10 +231,10 @@ void QuadTree<LightRender>::insert( const LightRender& aRenderCell )
 		int y = aBoundingBox.getY();
 
 		//int id = aRenderCell.getId();
-		std::uint8_t corner0[4] = { aRenderCell.corner0[0], aRenderCell.corner0[1], aRenderCell.corner0[2], aRenderCell.corner0[3] };
-		std::uint8_t corner1[4] = { aRenderCell.corner1[0], aRenderCell.corner1[1], aRenderCell.corner1[2], aRenderCell.corner1[3] };
-		std::uint8_t corner2[4] = { aRenderCell.corner2[0], aRenderCell.corner2[1], aRenderCell.corner2[2], aRenderCell.corner2[3] };
-		std::uint8_t corner3[4] = { aRenderCell.corner3[0], aRenderCell.corner3[1], aRenderCell.corner3[2], aRenderCell.corner3[3] };
+		std::uint32_t corner0 = aRenderCell.corner0;
+		std::uint32_t corner1 = aRenderCell.corner1;
+		std::uint32_t corner2 = aRenderCell.corner2;
+		std::uint32_t corner3 = aRenderCell.corner3;
 		
 		
 		bool exist = aRenderCell.exists();
@@ -270,17 +262,16 @@ void QuadTree<LightRender>::insert( const LightRender& aRenderCell )
 	// More than encapsulated, since we trimmed and split, it must be or not be the same as only one children bound ( we can break early )
 	// Create the bounding box if any children quadrant bounds is equal to the aBoundingBox; this means we can index our bounding box by the quadrant!
 
+	//int rId = aRenderCell.getId();
+	std::uint32_t rCorner0 = aRenderCell.corner0;
+	std::uint32_t rCorner1 = aRenderCell.corner1;
+	std::uint32_t rCorner2 = aRenderCell.corner2;
+	std::uint32_t rCorner3 = aRenderCell.corner3;
+
 	// Level Min: Simply fill in the bounding boxes and end the recursion
 	if ( this->_level == this->_minLevel )
 	{
 		// Find the index by using the bounds, and the position of the single-cell bounding box
-		//int rId = aRenderCell.getId();
-		std::uint8_t corner0[4] = { aRenderCell.corner0[0], aRenderCell.corner0[1], aRenderCell.corner0[2], aRenderCell.corner0[3] };
-		std::uint8_t corner1[4] = { aRenderCell.corner1[0], aRenderCell.corner1[1], aRenderCell.corner1[2], aRenderCell.corner1[3] };
-		std::uint8_t corner2[4] = { aRenderCell.corner2[0], aRenderCell.corner2[1], aRenderCell.corner2[2], aRenderCell.corner2[3] };
-		std::uint8_t corner3[4] = { aRenderCell.corner3[0], aRenderCell.corner3[1], aRenderCell.corner3[2], aRenderCell.corner3[3] };
-
-
 		for ( int i = 0; i < 4; i++ )
 		{
 			if ( !this->_cell[i].exists() && aBoundingBox.intersects( this->_cell[i].getBounds() ) /*&& this->_cell[i].getId() == rId*/ ) // [!] why does cell[i] have the same id???
@@ -290,25 +281,11 @@ void QuadTree<LightRender>::insert( const LightRender& aRenderCell )
 				int localCellIndexY = this->_cell[i].getBounds().getY() - this->_referenceNodes[0].getBounds().getY();
 
 				// this->_cell[i].setId( aRenderCell.getId() );
-				this->_cell[i].corner0[0] = aRenderCell.corner0[0];
-				this->_cell[i].corner0[1] = aRenderCell.corner0[1];
-				this->_cell[i].corner0[2] = aRenderCell.corner0[2];
-				this->_cell[i].corner0[3] = aRenderCell.corner0[3];
-
-				this->_cell[i].corner1[0] = aRenderCell.corner1[0];
-				this->_cell[i].corner1[1] = aRenderCell.corner1[1];
-				this->_cell[i].corner1[2] = aRenderCell.corner1[2];
-				this->_cell[i].corner1[3] = aRenderCell.corner1[3];
-
-				this->_cell[i].corner2[0] = aRenderCell.corner2[0];
-				this->_cell[i].corner2[1] = aRenderCell.corner2[1];
-				this->_cell[i].corner2[2] = aRenderCell.corner2[2];
-				this->_cell[i].corner2[3] = aRenderCell.corner2[3];
-
-				this->_cell[i].corner3[0] = aRenderCell.corner3[0];
-				this->_cell[i].corner3[1] = aRenderCell.corner3[1];
-				this->_cell[i].corner3[2] = aRenderCell.corner3[2];
-				this->_cell[i].corner3[3] = aRenderCell.corner3[3];
+				this->_cell[i].corner0 = rCorner0;
+				this->_cell[i].corner1 = rCorner1;
+				this->_cell[i].corner2 = rCorner2;
+				this->_cell[i].corner3 = rCorner3;
+				this->_cell[i].exist = aRenderCell.exists();
 
 				this->_cellCount += 1;
 			}
@@ -324,26 +301,12 @@ void QuadTree<LightRender>::insert( const LightRender& aRenderCell )
 			if ( !this->_cell[quadrant].exists() )
 			{
 				//this->_cell[quadrant].setId( aRenderCell.getId() );
-				this->_cell[quadrant].corner0[0] = aRenderCell.corner0[0];
-				this->_cell[quadrant].corner0[1] = aRenderCell.corner0[1];
-				this->_cell[quadrant].corner0[2] = aRenderCell.corner0[2];
-				this->_cell[quadrant].corner0[3] = aRenderCell.corner0[3];
+				this->_cell[quadrant].corner0 = rCorner0;
+				this->_cell[quadrant].corner1 = rCorner1;
+				this->_cell[quadrant].corner2 = rCorner2;
+				this->_cell[quadrant].corner3 = rCorner3;
+				this->_cell[quadrant].exist = aRenderCell.exists();
 
-				this->_cell[quadrant].corner1[0] = aRenderCell.corner1[0];
-				this->_cell[quadrant].corner1[1] = aRenderCell.corner1[1];
-				this->_cell[quadrant].corner1[2] = aRenderCell.corner1[2];
-				this->_cell[quadrant].corner1[3] = aRenderCell.corner1[3];
-
-				this->_cell[quadrant].corner2[0] = aRenderCell.corner2[0];
-				this->_cell[quadrant].corner2[1] = aRenderCell.corner2[1];
-				this->_cell[quadrant].corner2[2] = aRenderCell.corner2[2];
-				this->_cell[quadrant].corner2[3] = aRenderCell.corner2[3];
-
-				this->_cell[quadrant].corner3[0] = aRenderCell.corner3[0];
-				this->_cell[quadrant].corner3[1] = aRenderCell.corner3[1];
-				this->_cell[quadrant].corner3[2] = aRenderCell.corner3[2];
-				this->_cell[quadrant].corner3[3] = aRenderCell.corner3[3];
-				
 				this->_cellCount += 1;
 			}
 		}
@@ -372,9 +335,8 @@ void QuadTree<LightRender>::consolidate( int level )
 	// 1) they all have the same consolidation level
 	// 2) Given the position and size of the boundingBoxes from the array, determine if they "fill" the bounds of the QuadTree
 	// Height check not necessary if our bounding box is a square, but for formality
-
+	
 	if ( _cell[0].exists() &&
-		_cell[0].exists() &&
 		_cell[0].getWidth() == ( ( 2 << ( this->_level ) ) / 2 ) &&
 		_cell[0].getHeight() == ( ( 2 << ( this->_level ) ) / 2 ) &&
 		_cell[0] == _cell[1] &&
@@ -391,18 +353,12 @@ void QuadTree<LightRender>::consolidate( int level )
 
 
 		//int id = _cell[0].getId();
-		std::uint8_t corner0[4] = { _cell[0].corner0[0], _cell[0].corner0[1], _cell[0].corner0[2], _cell[0].corner0[3] };
-		std::uint8_t corner1[4] = { _cell[0].corner1[0], _cell[0].corner1[1], _cell[0].corner1[2], _cell[0].corner1[3] };
-		std::uint8_t corner2[4] = { _cell[0].corner2[0], _cell[0].corner2[1], _cell[0].corner2[2], _cell[0].corner2[3] };
-		std::uint8_t corner3[4] = { _cell[0].corner3[0], _cell[0].corner3[1], _cell[0].corner3[2], _cell[0].corner3[3] };
-
-
-		bool exist = _cell[0].exists();
-
-		LightRender renderCell = LightRender( corner0, corner1, corner2, corner3, exist, BoundingBox<std::int64_t>( posX, posY, width, height ) );
+		LightRender renderCell = LightRender( _cell[0].corner0, _cell[0].corner1, _cell[0].corner2, _cell[0].corner3, _cell[0].exists(), 
+			BoundingBox<std::int64_t>( posX, posY, width, height ) );
 
 		this->_consolidated = true;
 		this->_referenceNodes[this->_parentIndex].insert( renderCell );
+
 		// Else no need to consolidate at the root node beacuse there is no parent to insert the encapsulate box
 	}
 
