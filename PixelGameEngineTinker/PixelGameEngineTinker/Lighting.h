@@ -119,13 +119,7 @@ private:
 	Light _lights[Settings::WorldChunk::SIZE * Settings::WorldChunk::SIZE];
 	QuadTree<LightRender> _lightRenders[Settings::WorldChunk::NUM_TILE_RENDERS];
 
-
 	std::map<std::uint16_t, LightSource> _lightSources;
-
-
-	olc::Sprite* _spriteLight = nullptr;
-	olc::Decal* _decalLight = nullptr;
-
 
 	void reveal( Quadrant<T>& quadrant, const olc::v2d_generic<T>& tile, const olc::v2d_generic<T>& originPosition, const int maxRadius )
 	{
@@ -368,10 +362,6 @@ private:
 public:
 	Lighting( std::int64_t chunkIndexX_, std::int64_t chunkIndexY_, std::uint16_t width_, std::uint16_t height_, Tile* tiles_ ) : _chunkIndexX( chunkIndexX_ ), _chunkIndexY( chunkIndexY_ ), _width( width_ ), _height( height_ ), _tiles( tiles_ )
 	{
-		this->_spriteLight = new olc::Sprite( "./tiles/light.png" );
-		this->_decalLight = new olc::Decal( this->_spriteLight );
-
-
 		this->wipeRender();
 		this->blackenLights();
 	}
@@ -381,12 +371,6 @@ public:
 	{
 		//delete[] this->_lights;
 		//this->_lights = nullptr;
-
-		delete this->_spriteLight;
-		this->_spriteLight = nullptr;
-
-		delete this->_decalLight;
-		this->_decalLight = nullptr;
 	}
 
 
@@ -412,12 +396,17 @@ public:
 
 
 	// QuadTree Render
+	QuadTree<LightRender>* lightRenderEncapsulates()
+	{
+		return this->_lightRenders;
+	}
+
 	QuadTree<LightRender>& getLightRendersRoot()
 	{
 		return this->_lightRenders[0];
 	}
 
-	void insertLightRenders( std::uint16_t corner0, std::uint16_t corner1, std::uint16_t corner2, std::uint16_t corner3, bool exist, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height)
+	void insertLightRenders( std::uint32_t corner0, std::uint32_t corner1, std::uint32_t corner2, std::uint32_t corner3, bool exist, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height)
 	{
 		this->_lightRenders[0].insert( LightRender( corner0, corner1, corner2, corner3, exist,
 			BoundingBox<std::int64_t>( x, y, width, height ) ) );
@@ -535,148 +524,13 @@ public:
 	}
 
 
-
-
-	void renderLights()
+	void reset()
 	{
-		// 16 bit int may e too small for lights that are close to eahcother exceed 2^15 - 1
-		for ( std::uint16_t i = 0; i < this->getNumCells(); i++ )
-		{
-			std::uint16_t x = i % this->_width;
-			std::uint16_t y = i / this->_width;
+		this->wipeRender();
+		this->blackenLights();
 
-
-			/*
-			// No interpolation
-			// [!] need to fix max glitch
-			//std::uint8_t r = std::min<std::uint8_t>( this->_lights[i].getRed(), 255 );
-			//std::uint8_t g = std::min<std::uint8_t>( this->_lights[i].getGreen(), 255 );
-			//std::uint8_t b = std::min<std::uint8_t>( this->_lights[i].getBlue(), 255 );
-			//std::uint8_t a = std::min<std::uint8_t>( this->_lights[i].getAlpha(), 255 );
-
-			std::uint8_t r = ( std::uint8_t )std::min<std::uint16_t>( this->_lights[i].getRed(), 255 );
-			std::uint8_t g = ( std::uint8_t )std::min<std::uint16_t>( this->_lights[i].getGreen(), 255 );
-			std::uint8_t b = ( std::uint8_t )std::min<std::uint16_t>( this->_lights[i].getBlue(), 255 );
-			std::uint8_t a = ( std::uint8_t )std::min<std::uint16_t>( this->_lights[i].getAlpha(), 255 );
-
-
-			if ( a == 0 ||
-				( r == 0 && g == 0 && b == 0 ) )
-			{
-				//continue;
-			}
-
-
-			olc::Pixel colors[4];
-			colors[0] = olc::Pixel{ r, g, b, a };
-			colors[1] = olc::Pixel{ r, g, b, a };
-			colors[2] = olc::Pixel{ r, g, b, a };
-			colors[3] = olc::Pixel{ r, g, b, a };
-			*/
-
-
-
-			// Bilnear interpolation
-			int ne = ( y - 1 ) * this->_width + ( x + 1 ); // Northerneastern neighbor
-			int n = ( y - 1 ) * this->_width + x; // Northern neighbor
-			int nw = ( y - 1 ) * this->_width + ( x - 1 ); // // Northwestern
-
-			int e = y * this->_width + ( x + 1 ); // Eastern neighbor
-			int c = y * this->_width + x; // Current tile
-			int w = y * this->_width + ( x - 1 ); // Western neighbor
-
-			int s = ( y + 1 ) * this->_width + x; // Southern neighbor
-			int sw = ( y + 1 ) * this->_width + ( x - 1 ); // Southwestern neighbor
-			int se = ( y + 1 ) * this->_width + ( x + 1 ); // Southeastern neighbor
-
-
-			std::uint8_t corner0R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getRed() + this->_lights[nw].getRed() + this->_lights[n].getRed() + this->_lights[w].getRed() ) / 4 ), 255 ) );
-			std::uint8_t corner0G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getGreen() + this->_lights[nw].getGreen() + this->_lights[n].getGreen() + this->_lights[w].getGreen() ) / 4 ), 255 ) );
-			std::uint8_t corner0B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getBlue() + this->_lights[nw].getBlue() + this->_lights[n].getBlue() + this->_lights[w].getBlue() ) / 4 ), 255 ) );
-			std::uint8_t corner0A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getAlpha() + this->_lights[nw].getAlpha() + this->_lights[n].getAlpha() + this->_lights[w].getAlpha() ) / 4 ), 255 ) );
-
-
-			std::uint8_t corner1R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getRed() + this->_lights[sw].getRed() + this->_lights[s].getRed() + this->_lights[w].getRed() ) / 4 ), 255 ) );
-			std::uint8_t corner1G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getGreen() + this->_lights[sw].getGreen() + this->_lights[s].getGreen() + this->_lights[w].getGreen() ) / 4 ), 255 ) );
-			std::uint8_t corner1B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getBlue() + this->_lights[sw].getBlue() + this->_lights[s].getBlue() + this->_lights[w].getBlue() ) / 4 ), 255 ) );
-			std::uint8_t corner1A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getAlpha() + this->_lights[sw].getAlpha() + this->_lights[s].getAlpha() + this->_lights[w].getAlpha() ) / 4 ), 255 ) );
-
-
-
-			std::uint8_t corner2R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getRed() + this->_lights[se].getRed() + this->_lights[s].getRed() + this->_lights[e].getRed() ) / 4 ), 255 ) );
-			std::uint8_t corner2G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getGreen() + this->_lights[se].getGreen() + this->_lights[s].getGreen() + this->_lights[e].getGreen() ) / 4 ), 255 ) );
-			std::uint8_t corner2B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getBlue() + this->_lights[se].getBlue() + this->_lights[s].getBlue() + this->_lights[e].getBlue() ) / 4 ), 255 ) );
-			std::uint8_t corner2A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getAlpha() + this->_lights[se].getAlpha() + this->_lights[s].getAlpha() + this->_lights[e].getAlpha() ) / 4 ), 255 ) );
-
-
-			std::uint8_t corner3R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getRed() + this->_lights[ne].getRed() + this->_lights[n].getRed() + this->_lights[e].getRed() ) / 4 ), 255 ) );
-			std::uint8_t corner3G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getGreen() + this->_lights[ne].getGreen() + this->_lights[n].getGreen() + this->_lights[e].getGreen() ) / 4 ), 255 ) );
-			std::uint8_t corner3B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getBlue() + this->_lights[ne].getBlue() + this->_lights[n].getBlue() + this->_lights[e].getBlue() ) / 4 ), 255 ) );
-			std::uint8_t corner3A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( this->_lights[i].getAlpha() + this->_lights[ne].getAlpha() + this->_lights[n].getAlpha() + this->_lights[e].getAlpha() ) / 4 ), 255 ) );
-
-			if ( corner0R == 0 && corner0G == 0 && corner0B == 0 &&
-				corner1R == 0 && corner1G == 0 && corner1B == 0 &&
-				corner2R == 0 && corner2G == 0 && corner2B == 0 &&
-				corner3R == 0 && corner3G == 0 && corner3B == 0 )
-			{
-				//continue;
-			}
-
-			olc::Pixel colors[4];
-			colors[0] = olc::Pixel{ corner0R, corner0G, corner0B, corner0A };
-			colors[1] = olc::Pixel{ corner1R, corner1G, corner1B, corner1A };
-			colors[2] = olc::Pixel{ corner2R, corner2G, corner2B, corner2A };
-			colors[3] = olc::Pixel{ corner3R, corner3G, corner3B, corner3A };
-
-
-			olc::vf2d verticiesB[4];
-			verticiesB[0] = olc::vf2d{ x * ( float )Settings::Screen::CELL_PIXEL_SIZE, y * ( float )Settings::Screen::CELL_PIXEL_SIZE };
-			verticiesB[1] = olc::vf2d{ x * ( float )Settings::Screen::CELL_PIXEL_SIZE, y * ( float )Settings::Screen::CELL_PIXEL_SIZE + ( float )Settings::Screen::CELL_PIXEL_SIZE };
-			verticiesB[2] = olc::vf2d{ x * ( float )Settings::Screen::CELL_PIXEL_SIZE + ( float )Settings::Screen::CELL_PIXEL_SIZE, y * ( float )Settings::Screen::CELL_PIXEL_SIZE + ( float )Settings::Screen::CELL_PIXEL_SIZE };
-			verticiesB[3] = olc::vf2d{ x * ( float )Settings::Screen::CELL_PIXEL_SIZE + ( float )Settings::Screen::CELL_PIXEL_SIZE, y * ( float )Settings::Screen::CELL_PIXEL_SIZE };
-
-			olc::vf2d textureCoordinates[4];
-			textureCoordinates[0] = olc::vf2d{ 0.0f, 0.0f };
-			textureCoordinates[1] = olc::vf2d{ 0.0f, 1.0f };
-			textureCoordinates[2] = olc::vf2d{ 1.0f, 1.0f };
-			textureCoordinates[3] = olc::vf2d{ 1.0f, 0.0f };
-
-
-			olc::Decal* lightDecal = this->_decalLight;
-			//pge->SetDrawTarget( this->_spriteLight );
-
-			pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
-			pge->DrawExplicitDecal(
-				lightDecal,
-				verticiesB,
-				textureCoordinates,
-				colors
-			);
-
-
-
-			/*
-			// Also add "additive tick"
-			if ( !( corner0R == 0 && corner0G == 0 && corner0B == 0 &&
-				corner1R == 0 && corner1G == 0 && corner1B == 0 &&
-				corner2R == 0 && corner2G == 0 && corner2B == 0 &&
-				corner3R == 0 && corner3G == 0 && corner3B == 0 ) )
-			{
-				pge->SetDecalMode( olc::DecalMode::ADDITIVE );
-				pge->DrawExplicitDecal(
-					lightDecal,
-					verticiesB,
-					textureCoordinates,
-					colors
-				);
-			}
-			*/
-
-
-		}
 		return;
 	}
-
 
 
 	void resetLights()

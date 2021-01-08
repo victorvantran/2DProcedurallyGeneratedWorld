@@ -338,18 +338,3 @@ Light* WorldChunk::getLights()
 	return this->_lighting.getLights();
 }
 
-
-
-void WorldChunk::resetLighting()
-{
-	this->_lighting.wipeRender();
-	this->_lighting.blackenLights();
-	return;
-}
-
-
-void WorldChunk::renderLighting()
-{
-	this->_lighting.renderLights();
-	return;
-}

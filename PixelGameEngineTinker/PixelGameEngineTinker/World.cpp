@@ -938,38 +938,3 @@ void World::DEBUG_PRINT_TILE_SPRITES()
 	return;
 }
 
-
-
-void World::resetLighting()
-{
-	for ( std::uint64_t i = 0; i < this->_numWorldChunks; i++ )
-	{
-		this->_worldChunks[i].resetLighting();
-	}
-
-	return;
-}
-
-
-
-void World::activateStaticLighting()
-{
-	for ( std::uint64_t i = 0; i < this->_numWorldChunks; i++ )
-	{
-		// this->_worldChunks[i].emitStaticLightSources(); [!]
-	}
-
-	return;
-}
-
-
-
-void World::renderLighting()
-{
-	for ( std::uint64_t i = 0; i < this->_numWorldChunks; i++ )
-	{
-		this->_worldChunks[i].renderLighting();
-	}
-
-	return;
-}

@@ -47,8 +47,8 @@ public:
 
 	void renderWorld() const;
 	void renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const;
-	void renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas ) const;
-	void renderLightRenders( QuadTree<LightRender>& tileRenders ) const;
+	void renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas, QuadTree<LightRender>* lightRenderEncapsulates ) const;
+	void renderLightRenders( QuadTree<LightRender>& lightRenders ) const;
 	void renderCamera() const;
 
 	void renderTilesDebug( WorldChunk& worldChunk ) const;

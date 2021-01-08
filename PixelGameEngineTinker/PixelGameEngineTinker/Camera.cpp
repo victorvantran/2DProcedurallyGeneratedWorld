@@ -99,16 +99,15 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 	
 
 	// this->calculateTiles( worldChunk );
-	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas );
+	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas, worldChunk.getLighting().lightRenderEncapsulates() );
 	this->calculateLights( worldChunk );
 	this->renderLightRenders( worldChunk.getLighting().getLightRendersRoot() );
 
-	//this->renderLights( worldChunk );
 	return;
 }
 
 
-void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas ) const
+void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas, QuadTree<LightRender>* lightRenderEncapsulates ) const
 {
 	// Render every tileRender but only drawing one properlly scaled tile for each consolidated render
 
@@ -124,10 +123,29 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas 
 		return;
 	}
 
+
+	// If this bounding box happens to have solidLightEncapsulate, just render the light. No need to render the tile
+	QuadTree<LightRender> currLightEncapsulate = lightRenderEncapsulates[tileRenders.getIndex()];
+	LightRender& referenceLight = currLightEncapsulate.getCells()[0];
+	bool isShadowEncapsulated = currLightEncapsulate.isConsolidated() &&
+		referenceLight.corner0 == 0x000000ff;
+	/*
+	bool isShadowEncapsulated = currLightEncapsulate.isConsolidated() &&
+		(
+			
+			
+			
+			( std::uint8_t )( referenceLight.corner0 & 0x000000ff ) == 255 &&
+			( std::uint8_t )( referenceLight.corner1 & 0x000000ff ) == 255 &&
+			( std::uint8_t )( referenceLight.corner2 & 0x000000ff ) == 255 &&
+			( std::uint8_t )( referenceLight.corner3 & 0x000000ff ) == 255
+			);
+	*/
+
 	// Fill Consolidated
 	if ( currQuadTree.isConsolidated() )
 	{
-		if ( this->_view.intersects( currQuadTree.getBounds() ) && currQuadTree.getCells()[0].exists() )
+		if ( this->_view.intersects( currQuadTree.getBounds() ) && currQuadTree.getCells()[0].exists() && !isShadowEncapsulated )
 		{
 			std::uint64_t id = currQuadTree.getCells()[0].getId();
 			olc::Decal* tileDecal = atlas.getDecal( id );
@@ -165,7 +183,7 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas 
 			TileRender* cells = currQuadTree.getCells();
 			for ( int i = 0; i < 4; i++ )
 			{
-				if ( cells[i].exists() && this->_view.intersects( cells[i].getBounds() ) )
+				if ( cells[i].exists() && this->_view.intersects( cells[i].getBounds() ) && !isShadowEncapsulated )
 				{
 					std::uint64_t id = cells[i].getId();
 					olc::Decal* tileDecal = atlas.getDecal( id );
@@ -180,7 +198,6 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas 
 					std::int64_t pixelY;
 					worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
 					olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
-
 
 					pge->DrawPartialDecal(
 						startPos,
@@ -204,7 +221,7 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas 
 			{
 				if ( childrenNodeIndicies[i] != -1 )
 				{
-					this->renderTileRenders( tileRenders.getReferenceNodes()[childrenNodeIndicies[i]], atlas );
+					this->renderTileRenders( tileRenders.getReferenceNodes()[childrenNodeIndicies[i]], atlas, lightRenderEncapsulates );
 				}
 			}
 		}
@@ -230,34 +247,35 @@ void Camera::calculateLights( WorldChunk& worldChunk ) const
 		return;
 	}
 
-
 	Light* lights = worldChunk.getLights();
-	worldChunk.resetLighting();
+	worldChunk.getLighting().reset();
+
+
+
+
+	std::uint32_t randomColor = std::rand() % 4294967296;
+
+
 
 	for ( std::int16_t i = 0; i < Settings::World::NUM_CELLS_PER_CHUNK; i++ )
 	{
-		std::uint16_t y = i / chunkSize;
 		std::uint16_t x = i % chunkSize;
+		std::uint16_t y = i / chunkSize;
 
-
-		std::int64_t absoluteX = x + worldChunk.getChunkIndexX() * chunkSize;
-		std::int64_t absoluteY = y + worldChunk.getChunkIndexY() * chunkSize;
-
-
+		std::int64_t worldX = x + worldChunk.getChunkIndexX() * chunkSize;
+		std::int64_t worldY = y + worldChunk.getChunkIndexY() * chunkSize;
 
 		std::int64_t topLeftX = (std::int64_t )std::floor( this->_view.getX() );
 		std::int64_t topLeftY = ( std::int64_t )std::floor( this->_view.getY() );
-
 
 		std::int64_t bottomRightX = ( std::int64_t )std::ceil( this->_view.getX() + this->_view.getWidth() );
 		std::int64_t bottomRightY = ( std::int64_t )std::ceil( this->_view.getY() + this->_view.getHeight() );
 
 		// Only render lights within camera frame
-		if ( absoluteX >= topLeftX && absoluteX <= bottomRightX && absoluteY >= topLeftY && absoluteY <= bottomRightY )
+		if ( worldX >= topLeftX && worldX <= bottomRightX && worldY >= topLeftY && worldY <= bottomRightY )
 		{
-			std::int64_t screenTranslatedX = ( std::int64_t )std::ceil( absoluteX - this->_view.getX() );
-			std::int64_t screenTranslatedY = ( std::int64_t )std::ceil( absoluteY - this->_view.getY() );
-
+			std::int64_t screenTranslatedX = ( std::int64_t )std::ceil( worldX - this->_view.getX() );
+			std::int64_t screenTranslatedY = ( std::int64_t )std::ceil( worldY - this->_view.getY() );
 
 			int ne = ( y - 1 ) * chunkSize + ( x + 1 ); // Northerneastern neighbor
 			int n = ( y - 1 ) * chunkSize + x; // Northern neighbor
@@ -270,8 +288,6 @@ void Camera::calculateLights( WorldChunk& worldChunk ) const
 			int s = ( y + 1 ) * chunkSize + x; // Southern neighbor
 			int sw = ( y + 1 ) * chunkSize + ( x - 1 ); // Southwestern neighbor
 			int se = ( y + 1 ) * chunkSize + ( x + 1 ); // Southeastern neighbor
-
-
 
 			// Temp in bounds
 			if ( ne < 0 && ne >= chunkSize ||
@@ -291,28 +307,20 @@ void Camera::calculateLights( WorldChunk& worldChunk ) const
 				return;
 			}
 
-
-
-
-
 			std::uint8_t corner0R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( lights[i].getRed() + lights[nw].getRed() + lights[n].getRed() + lights[w].getRed() ) / 4 ), 255 ) );
 			std::uint8_t corner0G = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( lights[i].getGreen() + lights[nw].getGreen() + lights[n].getGreen() + lights[w].getGreen() ) / 4 ), 255 ) );
 			std::uint8_t corner0B = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( lights[i].getBlue() + lights[nw].getBlue() + lights[n].getBlue() + lights[w].getBlue() ) / 4 ), 255 ) );
 			std::uint8_t corner0A = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( lights[i].getAlpha() + lights[nw].getAlpha() + lights[n].getAlpha() + lights[w].getAlpha() ) / 4 ), 255 ) );
-
 
 			std::uint8_t corner1R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( lights[i].getRed() + lights[sw].getRed() + lights[s].getRed() + lights[w].getRed() ) / 4 ), 255 ) );
 			std::uint8_t corner1G = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( lights[i].getGreen() + lights[sw].getGreen() + lights[s].getGreen() + lights[w].getGreen() ) / 4 ), 255 ) );
 			std::uint8_t corner1B = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( lights[i].getBlue() + lights[sw].getBlue() + lights[s].getBlue() + lights[w].getBlue() ) / 4 ), 255 ) );
 			std::uint8_t corner1A = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( lights[i].getAlpha() + lights[sw].getAlpha() + lights[s].getAlpha() + lights[w].getAlpha() ) / 4 ), 255 ) );
 
-
-
 			std::uint8_t corner2R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( lights[i].getRed() + lights[se].getRed() + lights[s].getRed() + lights[e].getRed() ) / 4 ), 255 ) );
 			std::uint8_t corner2G = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( lights[i].getGreen() + lights[se].getGreen() + lights[s].getGreen() + lights[e].getGreen() ) / 4 ), 255 ) );
 			std::uint8_t corner2B = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( lights[i].getBlue() + lights[se].getBlue() + lights[s].getBlue() + lights[e].getBlue() ) / 4 ), 255 ) );
 			std::uint8_t corner2A = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( lights[i].getAlpha() + lights[se].getAlpha() + lights[s].getAlpha() + lights[e].getAlpha() ) / 4 ), 255 ) );
-
 
 			std::uint8_t corner3R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( lights[i].getRed() + lights[ne].getRed() + lights[n].getRed() + lights[e].getRed() ) / 4 ), 255 ) );
 			std::uint8_t corner3G = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( lights[i].getGreen() + lights[ne].getGreen() + lights[n].getGreen() + lights[e].getGreen() ) / 4 ), 255 ) );
@@ -327,86 +335,22 @@ void Camera::calculateLights( WorldChunk& worldChunk ) const
 				//continue;
 			}
 
-
-			//std::uint8_t corner0[4] = { corner0R, corner0G, corner0B, corner0A };
-			//std::uint8_t corner1[4] = { corner1R, corner1G, corner1B, corner1A };
-			//std::uint8_t corner2[4] = { corner2R, corner2G, corner2B, corner2A };
-			//std::uint8_t corner3[4] = { corner3R, corner3G, corner3B, corner3A };
-
+			/*
 			std::uint32_t corner0 = ( corner0R << 24 ) + ( corner0G << 16 ) + ( corner0B << 8 ) + ( corner0A );
 			std::uint32_t corner1 = ( corner1R << 24 ) + ( corner1G << 16 ) + ( corner1B << 8 ) + ( corner1A );
 			std::uint32_t corner2 = ( corner2R << 24 ) + ( corner2G << 16 ) + ( corner2B << 8 ) + ( corner2A );
 			std::uint32_t corner3 = ( corner3R << 24 ) + ( corner3G << 16 ) + ( corner3B << 8 ) + ( corner3A );
-
-
-			worldChunk.getLighting().insertLightRenders( corner0, corner1, corner2, corner3, true, absoluteX, absoluteY, 1, 1 );
-
-
-			/*
-			// std::cout << "insert: " << (int)corner0R << ", " << ( int )corner0G << ", " << ( int )corner0B << ", " << ( int )corner0A << std::endl;
-
-			olc::Pixel colors[4];
-			colors[0] = olc::Pixel{ corner0R, corner0G, corner0B, corner0A };
-			colors[1] = olc::Pixel{ corner1R, corner1G, corner1B, corner1A };
-			colors[2] = olc::Pixel{ corner2R, corner2G, corner2B, corner2A };
-			colors[3] = olc::Pixel{ corner3R, corner3G, corner3B, corner3A };
-
-
-			std::int64_t pixelX;
-			std::int64_t pixelY;
-			this->worldToScreen( absoluteX, absoluteY, pixelX, pixelY );
-			olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
-
-
-
-			olc::vf2d verticiesB[4];
-			verticiesB[0] = olc::vf2d{ ( float )pixelX, ( float )pixelY };
-			verticiesB[1] = olc::vf2d{ ( float )pixelX, ( ( float )pixelY + ( float )Settings::Screen::CELL_PIXEL_SIZE ) * ( float )this->_zoomY };
-			verticiesB[2] = olc::vf2d{ ( float )pixelX + ( float )Settings::Screen::CELL_PIXEL_SIZE * ( float )this->_zoomX, ( float )pixelY + ( float )Settings::Screen::CELL_PIXEL_SIZE * ( float )this->_zoomY };
-			verticiesB[3] = olc::vf2d{ ( float )pixelX + ( float )Settings::Screen::CELL_PIXEL_SIZE * ( float )this->_zoomX, ( float )pixelY };
-
-
-			olc::vf2d textureCoordinates[4];
-			textureCoordinates[0] = olc::vf2d{ 0.0f, 0.0f };
-			textureCoordinates[1] = olc::vf2d{ 0.0f, 1.0f };
-			textureCoordinates[2] = olc::vf2d{ 1.0f, 1.0f };
-			textureCoordinates[3] = olc::vf2d{ 1.0f, 0.0f };
-
-
-			
-			olc::Decal* lightDecal = this->_decalLight;
-
-			
-			//pge->SetDrawTarget( this->_spriteLight );
-
-			pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
-			pge->DrawExplicitDecal(
-				lightDecal,
-				verticiesB,
-				textureCoordinates,
-				colors
-			);
-			
-			
-
-
-
-
-
-
-			pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
-
-			pge->DrawDecal(
-				startPos,
-				lightDecal,
-				olc::v2d_generic<long double>{1 * this->_zoomX, 1 * this->_zoomY},
-				olc::RED
-			);
-
-			pge->SetDecalMode( olc::DecalMode::NORMAL );
-
-			//return;
 			*/
+
+			
+			std::uint32_t corner0  = randomColor;
+			std::uint32_t corner1 = randomColor;
+			std::uint32_t corner2 = randomColor;
+			std::uint32_t corner3 = randomColor;
+
+
+
+			worldChunk.getLighting().insertLightRenders( corner0, corner1, corner2, corner3, true, worldX, worldY, 1, 1 );
 		}
 	}
 	return;
@@ -416,8 +360,7 @@ void Camera::calculateLights( WorldChunk& worldChunk ) const
 
 void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 {
-	// Render every tileRender but only drawing one properlly scaled tile for each consolidated render
-
+	// Render every lightRender but only drawing one properlly scaled tile for each consolidated render
 	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 	std::uint16_t chunkSize = Settings::World::CHUNK_CELL_SIZE;
 
@@ -435,94 +378,31 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 	{
 		if ( this->_view.intersects( currQuadTree.getBounds() ) && currQuadTree.getCells()[0].exists() )
 		{
-			/*
-			std::uint64_t id = currQuadTree.getCells()[0].getId();
-			olc::Decal* tileDecal = atlas.getDecal( id );
-			if ( tileDecal == nullptr )
-			{
-				return;
-			}
-			*/
-
 			int level = currQuadTree.getLevel();
 			int scale = 2 << ( level );
 
-			std::int64_t worldPositionX = currQuadTree.getBounds().getX(); // [@]
+			std::int64_t worldPositionX = currQuadTree.getBounds().getX();
 			std::int64_t worldPositionY = currQuadTree.getBounds().getY();
 			std::int64_t pixelX;
 			std::int64_t pixelY;
 			worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
 			olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
 
-			olc::Decal* lightDecal = this->_decalLight;
-
-
 			std::uint32_t corner0 = currQuadTree.getCells()[0].corner0;
-
-			std::uint8_t channel = ( std::uint8_t )( ( corner0 & 0x0000ff00 ) >> 8 );
+			std::uint8_t r = ( std::uint8_t )( ( corner0 & 0xff000000 ) >> 24 );
+			std::uint8_t g = ( std::uint8_t )( ( corner0 & 0x00ff0000 ) >> 16 );
+			std::uint8_t b = ( std::uint8_t )( ( corner0 & 0x0000ff00 ) >> 8 );
 			std::uint8_t alpha = ( std::uint8_t )( ( corner0 & 0x000000ff ) );
-
-
-			// olc::Pixel color = olc::Pixel{ ( std::uint8_t )( ( corner0 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner0 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner0 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner0 & 0x000000ff ) ) };
-			olc::Pixel color = olc::Pixel{ channel, channel, channel, alpha };
-
+			olc::Pixel color = olc::Pixel{ r, g, b, alpha };
 			
 
 			pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
 			pge->FillRectDecal(
 				startPos,
-				olc::v2d_generic<long double>{ this->_zoomX* tileSize, this->_zoomY* tileSize } *scale,
+				olc::v2d_generic<long double>{ this->_zoomX * tileSize, this->_zoomY * tileSize } *scale,
 				color 
 			);
 			pge->SetDecalMode( olc::DecalMode::NORMAL );
-
-
-
-
-
-
-
-			/*
-
-			olc::Pixel colors[4];
-			colors[0] = olc::Pixel{ channel, channel, channel, alpha };
-			colors[1] = olc::Pixel{ channel, channel, channel, alpha };
-			colors[2] = olc::Pixel{ channel, channel, channel, alpha };
-			colors[3] = olc::Pixel{ channel, channel, channel, alpha };
-
-
-			
-			olc::vf2d verticiesB[4];
-			verticiesB[0] = olc::vf2d{ ( float )pixelX, ( float )pixelY };
-			verticiesB[1] = olc::vf2d{ ( float )pixelX, ( ( float )pixelY + ( float )Settings::Screen::CELL_PIXEL_SIZE ) * ( float )this->_zoomY };
-			verticiesB[2] = olc::vf2d{ ( float )pixelX + ( float )Settings::Screen::CELL_PIXEL_SIZE * ( float )this->_zoomX, ( float )pixelY + ( float )Settings::Screen::CELL_PIXEL_SIZE * ( float )this->_zoomY };
-			verticiesB[3] = olc::vf2d{ ( float )pixelX + ( float )Settings::Screen::CELL_PIXEL_SIZE * ( float )this->_zoomX, ( float )pixelY };
-			
-
-			olc::vf2d textureCoordinates[4];
-			textureCoordinates[0] = olc::vf2d{ 0.0f, 0.0f };
-			textureCoordinates[1] = olc::vf2d{ 0.0f, 1.0f };
-			textureCoordinates[2] = olc::vf2d{ 1.0f, 1.0f };
-			textureCoordinates[3] = olc::vf2d{ 1.0f, 0.0f };
-
-
-
-
-
-
-			//pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
-			pge->DrawExplicitDecal(
-				lightDecal,
-				verticiesB,
-				textureCoordinates,
-				colors
-			);
-			//pge->SetDecalMode( olc::DecalMode::NORMAL );
-			
-			*/
-
-			
-
 		}
 
 		return;
@@ -537,119 +417,51 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 			{
 				if ( cells[i].exists() && this->_view.intersects( cells[i].getBounds() ) )
 				{
-					/*
-					std::uint64_t id = cells[i].getId();
-					olc::Decal* tileDecal = atlas.getDecal( id );
-					if ( tileDecal == nullptr )
-					{
-						continue;
-					}
-					*/
+					std::uint32_t corner0 = cells[i].corner0;
+					std::uint32_t corner1 = cells[i].corner1;
+					std::uint32_t corner2 = cells[i].corner2;
+					std::uint32_t corner3 = cells[i].corner3;
 
-					/*
-					if ( this->_zoomX < 1 || this->_zoomY < 1 )
-					{
-						int level = currQuadTree.getLevel();
-						int scale = 2 << ( level );
+					olc::Pixel colors[4];
+					colors[0] = olc::Pixel{ ( std::uint8_t )( ( corner0 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner0 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner0 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner0 & 0x000000ff ) ) };
+					colors[1] = olc::Pixel{ ( std::uint8_t )( ( corner1 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner1 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner1 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner1 & 0x000000ff ) ) };
+					colors[2] = olc::Pixel{ ( std::uint8_t )( ( corner2 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner2 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner2 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner2 & 0x000000ff ) ) };
+					colors[3] = olc::Pixel{ ( std::uint8_t )( ( corner3 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner3 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner3 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner3 & 0x000000ff ) ) };
 
-						std::int64_t worldPositionX = currQuadTree.getBounds().getX(); // [@]
-						std::int64_t worldPositionY = currQuadTree.getBounds().getY();
-						std::int64_t pixelX;
-						std::int64_t pixelY;
-						worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
-						olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
+					std::int64_t worldPositionX = cells[i].getBounds().getX();
+					std::int64_t worldPositionY = cells[i].getBounds().getY();
+					std::int64_t topLeftPixelX;
+					std::int64_t topLeftPixelY;
+					std::int64_t bottomRightPixelX;
+					std::int64_t bottomRightPixelY;
+					worldToScreen( worldPositionX, worldPositionY, topLeftPixelX, topLeftPixelY );
+					worldToScreen( worldPositionX + 1, worldPositionY + 1, bottomRightPixelX, bottomRightPixelY );
 
-						olc::Decal* lightDecal = this->_decalLight;
-
-
-						std::uint32_t corner0 = currQuadTree.getCells()[0].corner0;
-
-						std::uint8_t r = ( std::uint8_t )( ( corner0 & 0xff000000 ) >> 24 );
-						std::uint8_t g = ( std::uint8_t )( ( corner0 & 0x00ff0000 ) >> 16 );
-						std::uint8_t b = ( std::uint8_t )( ( corner0 & 0x0000ff00 ) >> 8 );
-						std::uint8_t alpha = ( std::uint8_t )( ( corner0 & 0x000000ff ) );
-
-
-						// olc::Pixel color = olc::Pixel{ ( std::uint8_t )( ( corner0 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner0 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner0 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner0 & 0x000000ff ) ) };
-						olc::Pixel color = olc::Pixel{ r, g, b, alpha };
-
-						pge->FillRectDecal(
-							startPos,
-							olc::v2d_generic<long double>{ this->_zoomX* tileSize, this->_zoomY* tileSize } *scale,
-							color
-						);
-					}
-					*/
-					//else
-					//{
-						std::uint32_t corner0 = cells[i].corner0;
-						std::uint32_t corner1 = cells[i].corner1;
-						std::uint32_t corner2 = cells[i].corner2;
-						std::uint32_t corner3 = cells[i].corner3;
-
-
-						olc::Pixel colors[4];
-						colors[0] = olc::Pixel{ ( std::uint8_t )( ( corner0 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner0 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner0 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner0 & 0x000000ff ) ) };
-						colors[1] = olc::Pixel{ ( std::uint8_t )( ( corner1 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner1 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner1 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner1 & 0x000000ff ) ) };
-						colors[2] = olc::Pixel{ ( std::uint8_t )( ( corner2 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner2 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner2 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner2 & 0x000000ff ) ) };
-						colors[3] = olc::Pixel{ ( std::uint8_t )( ( corner3 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner3 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner3 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner3 & 0x000000ff ) ) };
-
-
-						std::int64_t worldPositionX = cells[i].getBounds().getX(); // [@]
-						std::int64_t worldPositionY = cells[i].getBounds().getY();
-						std::int64_t pixelX;
-						std::int64_t pixelY;
-						std::int64_t pixelXz;
-						std::int64_t pixelYz;
-						worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
-						worldToScreen( worldPositionX + 1, worldPositionY + 1, pixelXz, pixelYz );
-
-						olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
-
-
-						/*
-						olc::vf2d verticiesB[4];
-						verticiesB[0] = olc::vf2d{ ( float )pixelX, ( float )pixelY };
-						verticiesB[1] = olc::vf2d{ ( float )pixelX, ( ( float )pixelY + ( float )Settings::Screen::CELL_PIXEL_SIZE ) * ( float )this->_zoomY };
-						verticiesB[2] = olc::vf2d{ ( float )pixelX + ( float )Settings::Screen::CELL_PIXEL_SIZE * ( float )this->_zoomX, ( float )pixelY + ( float )Settings::Screen::CELL_PIXEL_SIZE * ( float )this->_zoomY };
-						verticiesB[3] = olc::vf2d{ ( float )pixelX + ( float )Settings::Screen::CELL_PIXEL_SIZE * ( float )this->_zoomX, ( float )pixelY };
-						*/
-
-
-						olc::vf2d verticiesB[4];
-						verticiesB[0] = olc::vf2d{ ( float )pixelX, ( float )pixelY };
-						verticiesB[1] = olc::vf2d{ ( float )pixelX, ( float )pixelYz };
-						verticiesB[2] = olc::vf2d{ ( float )pixelXz, ( float )pixelYz };
-						verticiesB[3] = olc::vf2d{ ( float )pixelXz , ( float )pixelY };
+					olc::vf2d verticiesB[4];
+					verticiesB[0] = olc::vf2d{ ( float )topLeftPixelX, ( float )topLeftPixelY };
+					verticiesB[1] = olc::vf2d{ ( float )topLeftPixelX, ( float )bottomRightPixelY };
+					verticiesB[2] = olc::vf2d{ ( float )bottomRightPixelX, ( float )bottomRightPixelY };
+					verticiesB[3] = olc::vf2d{ ( float )bottomRightPixelX , ( float )topLeftPixelY };
 						
-						/*
-						olc::vf2d textureCoordinates[4];
-						textureCoordinates[0] = olc::vf2d{ 0.0f, 0.0f };
-						textureCoordinates[1] = olc::vf2d{ 0.0f, 1.0f * ( float )this->_zoomY };
-						textureCoordinates[2] = olc::vf2d{ 1.0f * ( float )this->_zoomX, 1.0f * ( float )this->_zoomY };
-						textureCoordinates[3] = olc::vf2d{ 1.0f * ( float )this->_zoomX, 0.0f };
-						*/
-
-
+					olc::vf2d textureCoordinates[4];
+					textureCoordinates[0] = olc::vf2d{ 0.0f, 0.0f };
+					textureCoordinates[1] = olc::vf2d{ 0.0f, 1.0f };
+					textureCoordinates[2] = olc::vf2d{ 1.0f, 1.0f };
+					textureCoordinates[3] = olc::vf2d{ 1.0f, 0.0f };
 						
-						olc::vf2d textureCoordinates[4];
-						textureCoordinates[0] = olc::vf2d{ 0.0f, 0.0f };
-						textureCoordinates[1] = olc::vf2d{ 0.0f, 1.0f };
-						textureCoordinates[2] = olc::vf2d{ 1.0f, 1.0f };
-						textureCoordinates[3] = olc::vf2d{ 1.0f, 0.0f };
-						
-
-						olc::Decal* lightDecal = this->_decalLight;
-
-						pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
-						pge->DrawExplicitDecal(
-							lightDecal,
-							verticiesB,
-							textureCoordinates,
-							colors
-						);
-						pge->SetDecalMode( olc::DecalMode::NORMAL );
-					//}
+					
+					olc::Decal* lightDecal = this->_decalLight;
+					pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
+					pge->DrawExplicitDecal(
+						lightDecal,
+						verticiesB,
+						textureCoordinates,
+						colors
+					);
+					pge->SetDecalMode( olc::DecalMode::NORMAL );
+				
+					// std::cout << ( int )( ( corner0 & 0x000000ff ) ) << std::endl;
+					
 				}
 			}
 
@@ -678,7 +490,6 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 void Camera::renderCamera() const
 {
 	// Render the camera 
-
 	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 
 	// Draw Focal Point
@@ -704,7 +515,6 @@ void Camera::renderCamera() const
 void Camera::renderTilesDebug( WorldChunk& worldChunk ) const
 {
 	// Render every single tile directly from the array of tiles for each worldChunk
-
 	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 	int tileCellSize = 1; // [!] make it from a "global" variable
 

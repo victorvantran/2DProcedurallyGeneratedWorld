@@ -67,7 +67,5 @@ public:
 	// Lighting
 	Lighting<long double>& getLighting();
 	Light* getLights();
-	void resetLighting();
-	void renderLighting();
 };
 

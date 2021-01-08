@@ -124,10 +124,4 @@ public:
 
 	void DEBUG_PRINT_TILE_SPRITES();
 
-
-	// Update
-	void resetLighting();
-	void activateStaticLighting();
-
-	void renderLighting();
 };
