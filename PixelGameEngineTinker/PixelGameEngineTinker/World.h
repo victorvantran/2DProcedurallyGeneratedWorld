@@ -94,6 +94,9 @@ public:
 	std::uint16_t getNumWorldChunks() const;
 	std::uint16_t getNumChunkWidth() const;
 	std::uint16_t getNumChunkHeight() const;
+	// 	Light* getTile( std::int64_t x, std::int64_t y );
+	Light* getLight( std::int64_t x, std::int64_t y );
+
 
 	// Save/Load System
 	void startWorldMemorySystem();

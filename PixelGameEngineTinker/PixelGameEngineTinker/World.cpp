@@ -334,6 +334,28 @@ std::uint16_t World::getNumChunkHeight() const
 }
 
 
+
+Light* World::getLight( std::int64_t x, std::int64_t y )
+{
+	// Given worldPosition, return the reference of Light as a pointer
+	// Used for edge meshing of lights
+	for ( int i = 0; i < this->_numWorldChunks; i++ )
+	{
+		if ( BoundingBox<std::int64_t>( x, y, 1, 1 ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
+		{
+			return this->_worldChunks[i].getLight( x, y );
+		}
+	}
+
+	return nullptr;
+}
+
+
+
+
+
+
+
 void World::startWorldMemorySystem()
 {
 	// Daemon threads

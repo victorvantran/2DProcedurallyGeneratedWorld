@@ -338,3 +338,10 @@ Light* WorldChunk::getLights()
 	return this->_lighting.getLights();
 }
 
+
+Light* WorldChunk::getLight( std::int64_t x, std::int64_t y )
+{
+	std::int64_t localCellIndexX = x - this->_chunkIndexX * this->_size;
+	std::int64_t localCellIndexY = y - this->_chunkIndexY * this->_size;
+	return &this->getLights()[localCellIndexY * this->_size + localCellIndexX];
+}

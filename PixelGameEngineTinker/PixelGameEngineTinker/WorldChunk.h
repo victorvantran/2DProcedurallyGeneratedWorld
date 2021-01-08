@@ -67,5 +67,7 @@ public:
 	// Lighting
 	Lighting<long double>& getLighting();
 	Light* getLights();
+	Light* getLight( std::int64_t x, std::int64_t y );
+
 };
 
