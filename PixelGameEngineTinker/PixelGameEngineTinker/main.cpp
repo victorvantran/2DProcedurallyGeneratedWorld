@@ -186,6 +186,10 @@ public:
 			world->remove( tileIndex.x, tileIndex.y, 5, 5, tileId );
 		}
 
+		// updateLighting
+		this->world->resetLighting();
+		this->world->activateCursorLightSource( tilePositionX, tilePositionY, 20 );
+		this->world->updateLighting();
 
 
 		// Render

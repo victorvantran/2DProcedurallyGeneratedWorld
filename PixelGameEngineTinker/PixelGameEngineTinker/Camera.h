@@ -42,9 +42,6 @@ public:
 	void screenToWorld( std::int64_t pixelX, std::int64_t pixelY, long double& cellX, long double& cellY ) const; // int to float ( camera offest determines displacement )
 	void worldToScreen( long double cellX, long double cellY, std::int64_t& pixelX, std::int64_t& pixelY ) const; // float to int ( camera offset determines displacement )
 
-
-	void calculateLights( WorldChunk& worldChunk ) const;
-
 	void renderWorld() const;
 	void renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const;
 	void renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas, QuadTree<LightRender>* lightRenderEncapsulates ) const;
@@ -65,7 +62,8 @@ public:
 	void setZoom( long double x, long double y );
 	void setFocalPoint( long double width, long double height );
 
-	BoundingBox<long double> getFocalPoint() const;
+	const BoundingBox<long double>& getFocalPoint() const;
+	const BoundingBox<long double>& getView() const;
 	long double getCenterX() const;
 	long double getCenterY() const;
 	long double getZoomX() const;

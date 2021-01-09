@@ -11,7 +11,10 @@
 #include "LightSource.h"
 #include "Light.h"
 #include "LightRender.h"
+#include "QuadTree.h"
 
+
+class World;
 
 template <typename T>
 struct Quadrant
@@ -464,7 +467,6 @@ public:
 		std::uint16_t originX = ( std::uint16_t )fOriginX;
 		fOriginX -= fractionX;
 
-
 		float fOriginY;
 		float fractionY = std::modf( dY, &fOriginY );
 		std::uint16_t originY = ( std::uint16_t )fOriginY;
@@ -522,6 +524,11 @@ public:
 
 		return;
 	}
+
+
+
+	
+
 
 
 	void reset()

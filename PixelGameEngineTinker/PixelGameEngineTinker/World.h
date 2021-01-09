@@ -24,7 +24,6 @@
 
 class WorldChunkMemory; // Forward Declaration
 
-
 class World
 {
 private:
@@ -95,7 +94,7 @@ public:
 	std::uint16_t getNumChunkWidth() const;
 	std::uint16_t getNumChunkHeight() const;
 	// 	Light* getTile( std::int64_t x, std::int64_t y );
-	Light* getLight( std::int64_t x, std::int64_t y );
+	const Light* getLight( std::int64_t x, std::int64_t y ) const;
 
 
 	// Save/Load System
@@ -125,6 +124,14 @@ public:
 	Atlas& getAtlas();
 	void updateDecals();
 
+
+
+	// Debug
 	void DEBUG_PRINT_TILE_SPRITES();
+	void activateCursorLightSource( long double dX, long double dY, std::int64_t radius );
+	void resetLighting();
+	void updateLighting();
+	
+
 
 };
