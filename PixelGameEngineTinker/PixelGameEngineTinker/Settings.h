@@ -51,6 +51,9 @@ public:
 
 		static const std::uint16_t MAX_SAVED_CHUNKS = 50; // Maximum number of chunks in queue to save before discarding
 		static const std::uint16_t SPRITE_TILE_REFRESH_RATE = 300; // Every 5 minutes, refresh the tileDecals if it has not yet from condition variable notification
+
+
+		static const std::uint16_t NUM_WORLD_CHUNKS = ( 1 + CHUNK_RADIUS * 2 ) * ( 1 + CHUNK_RADIUS * 2 );
 	};
 
 

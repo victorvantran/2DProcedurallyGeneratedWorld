@@ -33,16 +33,15 @@ private:
 	const static std::uint16_t _chunkCellSize = Settings::World::CHUNK_CELL_SIZE;
 
 	WorldChunk* _worldChunks = nullptr;
+	WorldChunk* _worldChunkPointers[Settings::World::NUM_WORLD_CHUNKS] = { 0 };
 
 	std::uint16_t _numChunkWidth;
 	std::uint16_t _numChunkHeight;
 	std::uint16_t _numWorldChunks;
 
 	BoundingBox<long double> _focalChunk;
-	std::int64_t _currFocalChunkIndexX;
-	std::int64_t _currFocalChunkIndexY;
-	std::int64_t _prevFocalChunkIndexX;
-	std::int64_t _prevFocalChunkIndexY;
+	std::int64_t _focalChunkIndexX;
+	std::int64_t _focalChunkIndexY;
 
 	// Memory
 	std::mutex _worldDatabaseMutex;
@@ -93,7 +92,7 @@ public:
 	std::uint16_t getNumWorldChunks() const;
 	std::uint16_t getNumChunkWidth() const;
 	std::uint16_t getNumChunkHeight() const;
-	// 	Light* getTile( std::int64_t x, std::int64_t y );
+	const Tile* getTile( std::int64_t x, std::int64_t y ) const;
 	const Light* getLight( std::int64_t x, std::int64_t y ) const;
 
 
@@ -104,14 +103,18 @@ public:
 	// Save
 	void saveWorldGeographyTask();
 	void saveWorldGeography();
-	static unsigned char* createTilesBlob( Tile* tiles, std::vector<std::uint64_t>& palette );
+	static unsigned char* createTilesBlob( const Tile* tiles, std::vector<std::uint64_t>& palette );
 	static std::uint64_t* createPaletteBlob( std::vector<std::uint64_t>& palette );
 	void addMemory( WorldChunkMemory* worldChunkMemory );
 
 	// Load
 	void loadWorldGeographyTask();
-	void loadWorldGeography( const BoundingBox<long double>& cameraView );
-	void updateFocalChunk( BoundingBox<long double> focalPoint );
+	void loadWorldGeography();
+	void updateWorldChunkRelativity( const BoundingBox<long double>& focalPoint );
+	void updateFocalChunk( const BoundingBox<long double>& focalPoint );
+	void updateWorldChunkRelativeIndicies();
+	void updateWorldChunkPointers();
+
 	std::vector<std::tuple<std::uint64_t, std::int64_t, std::int64_t>> delimitWorldChunks( const BoundingBox<long double>& cameraView );
 	void delimitWorldChunk( WorldChunk& worldChunk, std::int64_t newIndexX, std::int64_t newIndexY );
 	void loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::uint16_t tilesNumBytes, std::uint64_t* paletteData, std::uint16_t numUniqueKeys );

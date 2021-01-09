@@ -161,7 +161,10 @@ public:
 		}
 
 
-
+		if ( GetKey( olc::Key::O ).bPressed )
+		{
+			world->getTile( tileIndex.x, tileIndex.y );
+		}
 
 
 		if ( GetKey( olc::Key::R ).bPressed || GetKey( olc::Key::R ).bHeld )
@@ -188,7 +191,7 @@ public:
 
 		// updateLighting
 		this->world->resetLighting();
-		this->world->activateCursorLightSource( tilePositionX, tilePositionY, 20 );
+		this->world->activateCursorLightSource( tilePositionX, tilePositionY, 5 );
 		this->world->updateLighting();
 
 

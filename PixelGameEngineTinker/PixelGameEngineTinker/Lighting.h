@@ -218,6 +218,7 @@ private:
 	}
 
 
+
 	void scanDynamic( Quadrant<T>& quadrant, Row<T>& row, const olc::v2d_generic<T> originPosition, const std::uint16_t maxRadius )
 	{
 		if ( row.depth >= maxRadius )
@@ -228,11 +229,31 @@ private:
 		const olc::v2d_generic<T>* prevTile = nullptr;
 		for ( const olc::v2d_generic<T>& tile : row.getTiles() )
 		{
+			olc::v2d_generic<T> position = quadrant.transform( tile );
+			T tilePosX = position.x;
+			T tilePosY = position.y;
+
+			// find relativeTilePos
+
+			// if relativeTilePos is different (i.e. out of bounds occurs)
+
+			// use is for isOpaque, isTransparent, and addLight, on the proper quadrant
+
+
+
 			if ( this->isOpaque( quadrant, tile ) || this->isSymmetric( row, tile ) )
 			{
-				olc::v2d_generic<T> position = quadrant.transform( tile );
-				T tilePosX = position.x;
-				T tilePosY = position.y;
+
+				/*
+				if ( ( std::int16_t )std::ceil( tilePosX ) < 0 || ( std::int16_t )std::ceil( tilePosX ) >= this->_width ||
+					( std::int16_t )std::ceil( tilePosY ) < 0 || ( std::int16_t )std::ceil( tilePosY ) >= this->_height
+					)
+				{
+					std::cout << row.depth << ": " << ( std::int16_t )std::ceil( tilePosX ) << ", " << ( std::int16_t )std::ceil( tilePosY ) << std::endl;
+
+				}
+				*/
+
 
 				T originPosX = originPosition.x;
 				T originPosY = originPosition.y;
@@ -266,7 +287,21 @@ private:
 				nextRow.endSlope = Lighting::slopeDynamic( tile, originPosition, quadrant.cardinal );
 				this->scanDynamic( quadrant, nextRow, originPosition, maxRadius );
 			}
+
+			/*
+			if ( ( std::int16_t )std::ceil( tilePosX ) < 0 || ( std::int16_t )std::ceil( tilePosX ) >= this->_width ||
+				( std::int16_t )std::ceil( tilePosY ) < 0 || ( std::int16_t )std::ceil( tilePosY ) >= this->_height
+				)
+			{
+				prevTile = prevTile;
+			}
+			else
+			{
+				prevTile = &tile;
+			}
+			*/
 			prevTile = &tile;
+
 		}
 
 		if ( prevTile != nullptr && this->isTransparent( quadrant, *prevTile ) )
@@ -278,6 +313,104 @@ private:
 		return;
 	}
 
+
+	/*
+	void scanDynamic( Quadrant<T>& quadrant, Row<T>& row, const olc::v2d_generic<T> originPosition, const std::uint16_t maxRadius )
+	{
+		if ( row.depth >= maxRadius )
+		{
+			return;
+		}
+
+		const olc::v2d_generic<T>* prevTile = nullptr;
+		for ( const olc::v2d_generic<T>& tile : row.getTiles() )
+		{
+			olc::v2d_generic<T> position = quadrant.transform( tile );
+			T tilePosX = position.x;
+			T tilePosY = position.y;
+
+			if ( this->isOpaque( quadrant, tile ) || this->isSymmetric( row, tile ) )
+			{
+				//std::cout << ( std::int16_t )std::ceil( tilePosX ) << ", " << ( std::int16_t )std::ceil( tilePosY ) << std::endl;
+				//std::cout << originPosition.x << ", " << originPosition.y << std::endl;
+
+				
+				//if ( ( std::int16_t )std::ceil( tilePosX ) < 0 || ( std::int16_t )std::ceil( tilePosX ) > 31 ||
+				//	( std::int16_t )std::ceil( tilePosY ) < 0 || ( std::int16_t )std::ceil( tilePosY ) > 31
+				//	)
+				//{
+				//	std::cout << row.depth << ": " << ( std::int16_t )std::ceil( tilePosX ) << ", " << ( std::int16_t )std::ceil( tilePosY ) << std::endl;
+				//}
+				
+
+				
+				if (
+					( ( std::int16_t )std::ceil( tilePosY ) < 0 || ( std::int16_t )std::ceil( tilePosY ) > 31 ) 
+					&& row.depth == maxRadius - 1
+					)
+
+				{
+					std::cout << row.depth << ": " << ( std::int16_t )std::ceil( tilePosY ) << std::endl;
+				}
+				
+
+
+
+
+				T originPosX = originPosition.x;
+				T originPosY = originPosition.y;
+
+				T rayDistance = std::hypot( tilePosX - ( std::uint16_t )std::ceil( originPosX ), tilePosY - ( std::uint16_t )std::ceil( originPosY ) );
+				T intensity = std::max<T>( 0, ( 1.0 - ( rayDistance / maxRadius ) ) );
+
+				if (
+					!( quadrant.cardinal == 0 && tile.x == tile.y ) &&
+					!( quadrant.cardinal == 1 && tile.x == tile.y ) &&
+					!( quadrant.cardinal == 2 && tile.x == -tile.y ) &&
+					!( quadrant.cardinal == 3 && tile.x == -tile.y )
+					)
+				{
+					this->addLight( ( std::uint16_t )std::ceil( tilePosX ), ( std::uint16_t )std::ceil( tilePosY ),
+						255 * intensity,
+						255 * intensity,
+						255 * intensity,
+						255
+					);
+				}
+
+			}
+			if ( prevTile != nullptr && this->isOpaque( quadrant, *prevTile ) && this->isTransparent( quadrant, tile ) )
+			{
+				row.startSlope = Lighting::slopeDynamic( tile, originPosition, quadrant.cardinal );
+			}
+			if ( prevTile != nullptr && this->isTransparent( quadrant, *prevTile ) && this->isOpaque( quadrant, tile ) )
+			{
+				Row<T> nextRow = row.getNext();
+				nextRow.endSlope = Lighting::slopeDynamic( tile, originPosition, quadrant.cardinal );
+				this->scanDynamic( quadrant, nextRow, originPosition, maxRadius );
+			}
+			//prevTile = &tile;
+			if ( ( std::int16_t )std::ceil( tilePosX ) < 0 || ( std::int16_t )std::ceil( tilePosX ) > 31 ||
+				( std::int16_t )std::ceil( tilePosY ) < 0 || ( std::int16_t )std::ceil( tilePosY ) > 31
+				)
+			{
+				prevTile = prevTile;
+			}
+			else
+			{
+				prevTile = &tile;
+			}
+		}
+
+		if ( prevTile != nullptr && this->isTransparent( quadrant, *prevTile ) )
+		{
+			Row<T> nextRow = row.getNext();
+			this->scanDynamic( quadrant, nextRow, originPosition, maxRadius );
+		}
+
+		return;
+	}
+	*/
 
 	static float slopeDynamic( const olc::v2d_generic<T>& tile, const olc::v2d_generic<T> originPosition, const std::uint8_t cardinality )
 	{
@@ -465,11 +598,13 @@ public:
 		float fOriginX;
 		float fractionX = std::modf( dX, &fOriginX );
 		std::uint16_t originX = ( std::uint16_t )fOriginX;
+		//std::uint16_t originX = ( std::uint16_t )std::ceil( fOriginX );
 		fOriginX -= fractionX;
 
 		float fOriginY;
 		float fractionY = std::modf( dY, &fOriginY );
 		std::uint16_t originY = ( std::uint16_t )fOriginY;
+		//std::uint16_t originY = ( std::uint16_t )std::ceil( fOriginY );
 		fOriginY -= fractionY;
 
 		this->addLight( originX, originY,
@@ -514,7 +649,6 @@ public:
 
 		olc::v2d_generic<T> originCellPosition{ ( T )originX, ( T )originY };
 
-
 		for ( int cardinality = 0; cardinality < 4; cardinality++ )
 		{
 			Quadrant<T> quadrant( cardinality, originX, originY );
@@ -535,7 +669,6 @@ public:
 	{
 		this->wipeRender();
 		this->blackenLights();
-
 		return;
 	}
 

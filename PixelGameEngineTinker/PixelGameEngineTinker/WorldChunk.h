@@ -14,6 +14,7 @@ class WorldChunk
 {
 private:
 	// Cell domain
+	std::uint16_t _relativeChunkIndex;
 	std::int64_t _chunkIndexX;
 	std::int64_t _chunkIndexY; // position = chunkIndex * size
 	static const std::uint16_t _size = Settings::WorldChunk::SIZE;
@@ -28,12 +29,15 @@ public:
 	WorldChunk();
 	~WorldChunk();
 
-	WorldChunk( std::int64_t indexX, std::int64_t indexY );
+	WorldChunk( std::uint16_t relChunkIndex, std::int64_t indexX, std::int64_t indexY );
 
 
 	void construct();
 	void wipeRender();
 	void fill( uint64_t id );
+
+	std::uint16_t getRelativeChunkIndex() const;
+	void setRelativeChunkIndex( std::uint16_t relChunkIndex );
 
 	void insert( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
 	void remove( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
@@ -57,7 +61,7 @@ public:
 	std::int64_t getPositionX() const;
 	std::int64_t getPositionY() const;
 
-	Tile* getTiles();
+	const Tile* getTiles();
 	// Tile getTile( int x, int y )
 	QuadTree<TileRender>& getTileRendersRoot();
 	std::vector<std::uint64_t> getPalette();

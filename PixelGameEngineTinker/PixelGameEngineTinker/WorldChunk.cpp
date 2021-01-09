@@ -3,7 +3,7 @@
 
 
 WorldChunk::WorldChunk()
-	: _chunkIndexX( 0 ), _chunkIndexY( 0 ), _lighting( 0, 0, Settings::WorldChunk::SIZE, Settings::WorldChunk::SIZE, this->_tiles )
+	: _relativeChunkIndex( 0 ), _chunkIndexX( 0 ), _chunkIndexY( 0 ), _lighting( 0, 0, Settings::WorldChunk::SIZE, Settings::WorldChunk::SIZE, this->_tiles )
 {
 
 }
@@ -15,8 +15,8 @@ WorldChunk::~WorldChunk()
 }
 
 
-WorldChunk::WorldChunk( std::int64_t indexX, std::int64_t indexY )
-	: _chunkIndexX( indexX ), _chunkIndexY( indexY ), _lighting( indexX, indexY, Settings::WorldChunk::SIZE, Settings::WorldChunk::SIZE, this->_tiles )
+WorldChunk::WorldChunk( std::uint16_t relChunkIndex, std::int64_t indexX, std::int64_t indexY )
+	: _relativeChunkIndex( relChunkIndex ), _chunkIndexX( indexX ), _chunkIndexY( indexY ), _lighting( indexX, indexY, Settings::WorldChunk::SIZE, Settings::WorldChunk::SIZE, this->_tiles )
 {
 
 }
@@ -86,6 +86,19 @@ void WorldChunk::wipeRender()
 void WorldChunk::fill( uint64_t id )
 {
 	this->insert( this->getChunkIndexX() * this->_size, this->getChunkIndexY() * this->_size, this->_size, this->_size, id );
+	return;
+}
+
+
+std::uint16_t WorldChunk::getRelativeChunkIndex() const
+{
+	return this->_relativeChunkIndex;
+}
+
+
+void WorldChunk::setRelativeChunkIndex( std::uint16_t relChunkIndex )
+{
+	this->_relativeChunkIndex = relChunkIndex;
 	return;
 }
 
@@ -279,7 +292,7 @@ std::int64_t WorldChunk::getPositionY() const
 }
 
 
-Tile* WorldChunk::getTiles()
+const Tile* WorldChunk::getTiles()
 {
 	return this->_tiles;
 }

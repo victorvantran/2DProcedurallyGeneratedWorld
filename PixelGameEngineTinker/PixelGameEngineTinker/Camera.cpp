@@ -97,6 +97,11 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 		olc::GREEN
 	);
 	
+	pge->DrawStringDecal(
+		startPos,
+		std::to_string( worldChunk.getRelativeChunkIndex() ),
+		olc::GREEN
+	);
 
 	// this->calculateTiles( worldChunk ); [!] calcuate tile configuration
 	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas, worldChunk.getLighting().lightRenderEncapsulates() );
@@ -257,7 +262,8 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 			std::uint8_t alpha = ( std::uint8_t )( ( corner0 & 0x000000ff ) );
 			olc::Pixel color = olc::Pixel{ r, g, b, alpha };
 			
-			pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
+			//pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
+			pge->SetDecalMode( olc::DecalMode::ADDITIVE );
 			pge->FillRectDecal(
 				startPos,
 				olc::v2d_generic<long double>{ this->_zoomX * tileSize, this->_zoomY * tileSize } *scale,
@@ -283,11 +289,13 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 					std::uint32_t corner2 = cells[i].corner2;
 					std::uint32_t corner3 = cells[i].corner3;
 
+					
 					olc::Pixel colors[4];
 					colors[0] = olc::Pixel{ ( std::uint8_t )( ( corner0 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner0 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner0 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner0 & 0x000000ff ) ) };
 					colors[1] = olc::Pixel{ ( std::uint8_t )( ( corner1 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner1 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner1 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner1 & 0x000000ff ) ) };
 					colors[2] = olc::Pixel{ ( std::uint8_t )( ( corner2 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner2 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner2 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner2 & 0x000000ff ) ) };
 					colors[3] = olc::Pixel{ ( std::uint8_t )( ( corner3 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner3 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner3 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner3 & 0x000000ff ) ) };
+					
 
 					std::int64_t worldPositionX = cells[i].getBounds().getX();
 					std::int64_t worldPositionY = cells[i].getBounds().getY();
@@ -311,7 +319,8 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 					textureCoordinates[3] = olc::vf2d{ 1.0f, 0.0f };
 						
 					olc::Decal* lightDecal = this->_decalLight;
-					pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
+					//pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
+					pge->SetDecalMode( olc::DecalMode::ADDITIVE );
 					pge->DrawExplicitDecal(
 						lightDecal,
 						verticiesB,
@@ -383,7 +392,7 @@ void Camera::renderTilesDebug( WorldChunk& worldChunk ) const
 	olc::v2d_generic<std::int64_t> tileStartPos;
 	olc::vi2d tilePixelSize = olc::vi2d{ ( int )( tileCellSize * ( this->_zoomX * tileSize ) ), ( int )( tileCellSize * ( this->_zoomY * tileSize ) ) };
 
-	Tile* tiles = worldChunk.getTiles();
+	const Tile* tiles = worldChunk.getTiles();
 	for ( int x = 0; x < chunkSize; x++ )
 	{
 		for ( int y = 0; y < chunkSize; y++ )
