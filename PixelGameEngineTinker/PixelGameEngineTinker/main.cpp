@@ -197,14 +197,13 @@ public:
 
 		// updateLighting
 		this->world->resetLighting();
-		this->world->activateCursorLightSource( tilePositionX, tilePositionY, 10 );
+		this->world->activateCursorLightSource( tilePositionX, tilePositionY, 5 );
 		this->world->updateLighting();
 
 
 		// Render
 		Clear( olc::BLACK );
 		this->camera->renderWorld();
-		// this->world->renderLighting();
 		this->world->updateDecals();
 	
 

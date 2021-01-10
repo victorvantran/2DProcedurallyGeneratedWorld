@@ -342,12 +342,17 @@ std::uint16_t World::getNumChunkHeight() const
 
 
 
+/*
 const Tile* World::getTile( std::int64_t x, std::int64_t y ) const
 {
 	// Given worldPosition, return the reference of Tile as a pointer
 	// The reason for conditionals is to account for negative quadrant offsets
+	std::int16_t numChunksWidth = 1 + this->_chunkRadius * 2;
+
 	std::int16_t chunkIndexX = ( x >= 0 ) ? ( std::int16_t )( x / this->_chunkCellSize ) : ( std::int16_t )( ( ( x + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
 	std::int16_t chunkIndexY = y >= 0 ? ( std::int16_t )( y / this->_chunkCellSize ) : ( std::int16_t )( ( ( y + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
+
+
 
 	// Out of bounds
 	if ( chunkIndexX < -this->_chunkRadius || chunkIndexX > this->_chunkRadius ||
@@ -356,16 +361,44 @@ const Tile* World::getTile( std::int64_t x, std::int64_t y ) const
 		return nullptr;
 	}
 
-	std::int16_t numChunksWidth = 1 + this->_chunkRadius * 2;
+	// std::cout << ( ( chunkIndexY - this->_focalChunkIndexY ) + this->_chunkRadius ) * numChunksWidth + ( ( chunkIndexX - this->_focalChunkIndexX ) + this->_chunkRadius ) << std::endl;
+
+
 	std::int16_t relativeChunkIndex = ( ( chunkIndexY - this->_focalChunkIndexY ) + this->_chunkRadius ) * numChunksWidth + ( ( chunkIndexX - this->_focalChunkIndexX ) + this->_chunkRadius );
 
 	std::int16_t relativeX = ( x >= 0 ) ? ( x % this->_chunkCellSize ) : ( ( x + 1 ) % this->_chunkCellSize ) + this->_chunkCellSize - 1;
 	std::int16_t relativeY = ( y >= 0 ) ? ( y % this->_chunkCellSize ) : ( ( y + 1 ) % this->_chunkCellSize ) + this->_chunkCellSize - 1;
 	std::int16_t relativeTileIndex = relativeY * this->_chunkCellSize + relativeX;
-	
 	return &this->_worldChunkPointers[relativeChunkIndex]->getTiles()[relativeTileIndex];
 }
+*/
 
+
+
+const Tile* World::getTile( std::int64_t x, std::int64_t y ) const
+{
+	// Given worldPosition, return the reference of Tile as a pointer
+	// The reason for conditionals is to account for negative quadrant offsets
+	std::int16_t numChunksWidth = 1 + this->_chunkRadius * 2;
+
+	std::int64_t chunkIndexX = ( x >= 0 ) ? ( std::int64_t )( x / this->_chunkCellSize ) : ( std::int64_t )( ( ( x + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
+	std::int64_t chunkIndexY = ( y >= 0 ) ? ( std::int64_t )( y / this->_chunkCellSize ) : ( std::int64_t )( ( ( y + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
+
+	std::int16_t relativeChunkIndex = ( ( chunkIndexY - this->_focalChunkIndexY ) + this->_chunkRadius ) * numChunksWidth + ( ( chunkIndexX - this->_focalChunkIndexX ) + this->_chunkRadius );
+
+	// Out of bounds
+	if ( relativeChunkIndex < 0 || relativeChunkIndex >= this->_numWorldChunks )
+	{
+		std::cout << "FAILTILE" << std::endl;
+		return nullptr;
+	}
+
+	std::int16_t relativeX = ( x >= 0 ) ? ( x % this->_chunkCellSize ) : ( ( x + 1 ) % this->_chunkCellSize ) + this->_chunkCellSize - 1;
+	std::int16_t relativeY = ( y >= 0 ) ? ( y % this->_chunkCellSize ) : ( ( y + 1 ) % this->_chunkCellSize ) + this->_chunkCellSize - 1;
+	std::uint16_t relativeTileIndex = relativeY * this->_chunkCellSize + relativeX;
+
+	return &this->_worldChunkPointers[relativeChunkIndex]->getTiles()[relativeTileIndex];
+}
 
 
 // Memory System
@@ -1008,18 +1041,39 @@ void World::DEBUG_PRINT_TILE_SPRITES()
 
 
 // Lighting
+/*
 const Light* World::getLight( std::int64_t x, std::int64_t y ) const
 {
 	// Given worldPosition, return the reference of Light as a pointer
 	// The reason for conditionals is to account for negative quadrant offsets
 	// Used for edge meshing of lights
+	
+	
+	// std::int16_t chunkIndexX = ( x >= 0 ) ? ( std::int16_t )( x / this->_chunkCellSize ) : ( std::int16_t )( ( ( x + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
+	// std::int16_t chunkIndexY = y >= 0 ? ( std::int16_t )( y / this->_chunkCellSize ) : ( std::int16_t )( ( ( y + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
+
 	std::int16_t chunkIndexX = ( x >= 0 ) ? ( std::int16_t )( x / this->_chunkCellSize ) : ( std::int16_t )( ( ( x + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
-	std::int16_t chunkIndexY = y >= 0 ? ( std::int16_t )( y / this->_chunkCellSize ) : ( std::int16_t )( ( ( y + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
+	std::int16_t chunkIndexY = ( y >= 0 ) ? ( std::int16_t )( y / this->_chunkCellSize ) : ( std::int16_t )( ( ( y + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
+
+
+	
+	//std::uint16_t relativeChunkIndex = ( this->_worldChunks[i].getChunkIndexY() - ( this->_focalChunkIndexY - Settings::World::CHUNK_RADIUS ) ) * this->_numChunkWidth
+	//	+ ( this->_worldChunks[i].getChunkIndexX() - ( this->_focalChunkIndexX - Settings::World::CHUNK_RADIUS ) );
+	//this->_worldChunks[i].setRelativeChunkIndex( relativeChunkIndex );
+	
+
+
+
+
+
 
 	// Out of bounds
 	if ( chunkIndexX < -this->_chunkRadius || chunkIndexX > this->_chunkRadius ||
 		chunkIndexY < -this->_chunkRadius || chunkIndexY > this->_chunkRadius )
 	{
+
+		std::cout << chunkIndexX << ", " << chunkIndexY << std::endl;
+		//std::cout << "FAIL" << std::endl;
 		return nullptr;
 	}
 
@@ -1029,9 +1083,33 @@ const Light* World::getLight( std::int64_t x, std::int64_t y ) const
 	std::int16_t relativeX = ( x >= 0 ) ? ( x % this->_chunkCellSize ) : ( ( x + 1 ) % this->_chunkCellSize ) + this->_chunkCellSize - 1;
 	std::int16_t relativeY = ( y >= 0 ) ? ( y % this->_chunkCellSize ) : ( ( y + 1 ) % this->_chunkCellSize ) + this->_chunkCellSize - 1;
 	std::uint16_t relativeTileIndex = relativeY * this->_chunkCellSize + relativeX;
+	
+	return &this->_worldChunkPointers[relativeChunkIndex]->getLights()[relativeTileIndex];
+}
+*/
 
+const Light* World::getLight( std::int64_t x, std::int64_t y ) const
+{
+	// Given worldPosition, return the reference of Light as a pointer
+	// The reason for conditionals is to account for negative quadrant offsets
+	// Used for edge meshing of lights
+	std::int16_t numChunksWidth = 1 + this->_chunkRadius * 2;
 
-	// std::cout << "EDGE" << std::endl;
+	std::int64_t chunkIndexX = ( x >= 0 ) ? ( std::int64_t )( x / this->_chunkCellSize ) : ( std::int64_t )( ( ( x + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
+	std::int64_t chunkIndexY = ( y >= 0 ) ? ( std::int64_t )( y / this->_chunkCellSize ) : ( std::int64_t )( ( ( y + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
+
+	std::int16_t relativeChunkIndex = ( ( chunkIndexY - this->_focalChunkIndexY ) + this->_chunkRadius ) * numChunksWidth + ( ( chunkIndexX - this->_focalChunkIndexX ) + this->_chunkRadius );
+
+	// Out of bounds
+	if ( relativeChunkIndex < 0 || relativeChunkIndex >= this->_numWorldChunks )
+	{
+		std::cout << "FAIL" << std::endl;
+		return nullptr;
+	}
+
+	std::int16_t relativeX = ( x >= 0 ) ? ( x % this->_chunkCellSize ) : ( ( x + 1 ) % this->_chunkCellSize ) + this->_chunkCellSize - 1;
+	std::int16_t relativeY = ( y >= 0 ) ? ( y % this->_chunkCellSize ) : ( ( y + 1 ) % this->_chunkCellSize ) + this->_chunkCellSize - 1;
+	std::uint16_t relativeTileIndex = relativeY * this->_chunkCellSize + relativeX;
 
 	return &this->_worldChunkPointers[relativeChunkIndex]->getLights()[relativeTileIndex];
 }
@@ -1063,41 +1141,11 @@ const LightSource* World::getLightSource( std::int64_t x, std::int64_t y ) const
 }
 
 /*
-void World::addLight( std::int64_t x, std::int64_t y, std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a )
-{
-	// Given worldPosition, return the reference of Light as a pointer
-	// The reason for conditionals is to account for negative quadrant offsets
-	std::int16_t chunkIndexX = ( x >= 0 ) ? ( std::int16_t )( x / this->_chunkCellSize ) : ( std::int16_t )( ( ( x + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
-	std::int16_t chunkIndexY = y >= 0 ? ( std::int16_t )( y / this->_chunkCellSize ) : ( std::int16_t )( ( ( y + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
-
-	// Out of bounds
-	if ( chunkIndexX < -this->_chunkRadius || chunkIndexX > this->_chunkRadius ||
-		chunkIndexY < -this->_chunkRadius || chunkIndexY > this->_chunkRadius )
-	{
-		return;
-	}
-
-	std::int16_t numChunksWidth = 1 + this->_chunkRadius * 2;
-	std::int16_t relativeChunkIndex = ( ( chunkIndexY - this->_focalChunkIndexY ) + this->_chunkRadius ) * numChunksWidth + ( ( chunkIndexX - this->_focalChunkIndexX ) + this->_chunkRadius );
-
-	std::int16_t relativeX = ( x >= 0 ) ? ( x % this->_chunkCellSize ) : ( ( x + 1 ) % this->_chunkCellSize ) + this->_chunkCellSize - 1;
-	std::int16_t relativeY = ( y >= 0 ) ? ( y % this->_chunkCellSize ) : ( ( y + 1 ) % this->_chunkCellSize ) + this->_chunkCellSize - 1;
-	std::int16_t relativeTileIndex = relativeY * this->_chunkCellSize + relativeX;
-
-	Light& light = this->_worldChunkPointers[relativeChunkIndex]->getLights()[relativeTileIndex];
-	light.addRed( r );
-	light.addGreen( g );
-	light.addBlue( b );
-	light.addAlpha( a );
-
-	return;
-}
-*/
-
 void World::addLight( std::int64_t x, std::int64_t y, const LightSource& lightSource, long double intensity )
 {
 	// Given worldPosition, return the reference of Light as a pointer
 	// The reason for conditionals is to account for negative quadrant offsets
+
 	std::int16_t chunkIndexX = ( x >= 0 ) ? ( std::int16_t )( x / this->_chunkCellSize ) : ( std::int16_t )( ( ( x + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
 	std::int16_t chunkIndexY = y >= 0 ? ( std::int16_t )( y / this->_chunkCellSize ) : ( std::int16_t )( ( ( y + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
 
@@ -1123,6 +1171,39 @@ void World::addLight( std::int64_t x, std::int64_t y, const LightSource& lightSo
 
 	return;
 }
+*/
+
+
+void World::addLight( std::int64_t x, std::int64_t y, const LightSource& lightSource, long double intensity )
+{
+	// Given worldPosition, return the reference of Light as a pointer
+	// The reason for conditionals is to account for negative quadrant offsets
+	std::int16_t numChunksWidth = 1 + this->_chunkRadius * 2;
+
+	std::int64_t chunkIndexX = ( x >= 0 ) ? ( std::int64_t )( x / this->_chunkCellSize ) : ( std::int64_t )( ( ( x + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
+	std::int64_t chunkIndexY = ( y >= 0 ) ? ( std::int64_t )( y / this->_chunkCellSize ) : ( std::int64_t )( ( ( y + 1 ) - this->_chunkCellSize ) / this->_chunkCellSize );
+
+	std::int16_t relativeChunkIndex = ( ( chunkIndexY - this->_focalChunkIndexY ) + this->_chunkRadius ) * numChunksWidth + ( ( chunkIndexX - this->_focalChunkIndexX ) + this->_chunkRadius );
+
+	// Out of bounds
+	if ( relativeChunkIndex < 0 || relativeChunkIndex >= this->_numWorldChunks )
+	{
+		return;
+	}
+	
+	std::int16_t relativeX = ( x >= 0 ) ? ( x % this->_chunkCellSize ) : ( ( x + 1 ) % this->_chunkCellSize ) + this->_chunkCellSize - 1;
+	std::int16_t relativeY = ( y >= 0 ) ? ( y % this->_chunkCellSize ) : ( ( y + 1 ) % this->_chunkCellSize ) + this->_chunkCellSize - 1;
+	std::int16_t relativeTileIndex = relativeY * this->_chunkCellSize + relativeX;
+
+	Light& light = this->_worldChunkPointers[relativeChunkIndex]->getLights()[relativeTileIndex];
+	light.addRed( lightSource.getRed() * intensity );
+	light.addGreen( lightSource.getGreen() * intensity );
+	light.addBlue( lightSource.getBlue() * intensity );
+	light.addAlpha( lightSource.getAlpha() );
+
+	return;
+}
+
 
 
 void World::resetLighting()
@@ -1146,206 +1227,12 @@ void World::resetLighting()
 }
 
 
-void World::updateLightingcache()
-{
-	int count = 0;
-	const BoundingBox<long double>& cameraView = this->_camera->getView();
-	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
-	std::uint16_t chunkSize = Settings::WorldChunk::SIZE;
-	std::uint16_t numCellsPerChunk = Settings::World::NUM_CELLS_PER_CHUNK;
-
-
-
-	std::int64_t topLeftX = ( std::int64_t )std::floor( cameraView.getX() );
-	std::int64_t topLeftY = ( std::int64_t )std::floor( cameraView.getY() );
-
-	std::int64_t bottomRightX = ( std::int64_t )std::ceil( cameraView.getX() + cameraView.getWidth() );
-	std::int64_t bottomRightY = ( std::int64_t )std::ceil( cameraView.getY() + cameraView.getHeight() );
-
-
-	for ( int i = 0; i < this->_numWorldChunks; i++ )
-	{
-		const BoundingBox<std::int64_t> chunkBounds = BoundingBox<std::int64_t>( _worldChunks[i].getChunkIndexX() * chunkSize, _worldChunks[i].getChunkIndexY() * chunkSize, chunkSize, chunkSize );
-		// [!] add a method to retreive chunkBounds
-		// No need to render if camera cannot see it
-		if ( cameraView.intersects( chunkBounds ) )
-		{
-			WorldChunk& currWorldChunk = this->_worldChunks[i];
-			Light* lights = currWorldChunk.getLights();
-
-			// currWorldChunk.getLighting().reset();
-			for ( std::int16_t i = 0; i < numCellsPerChunk; i++ )
-			{
-				std::uint16_t x = i % chunkSize;
-				std::uint16_t y = i / chunkSize;
-
-				std::int64_t worldPosX = x + currWorldChunk.getChunkIndexX() * chunkSize;
-				std::int64_t worldPosY = y + currWorldChunk.getChunkIndexY() * chunkSize;
-
-
-				// Only render lights within camera frame
-				if ( worldPosX >= topLeftX && worldPosX <= bottomRightX && worldPosY >= topLeftY && worldPosY <= bottomRightY )
-				{
-					int ne = ( y - 1 ) * chunkSize + ( x + 1 ); // Northerneastern neighbor
-					int n = ( y - 1 ) * chunkSize + x; // Northern neighbor
-					int nw = ( y - 1 ) * chunkSize + ( x - 1 ); // // Northwestern
-
-					int e = y * chunkSize + ( x + 1 ); // Eastern neighbor
-					int c = y * chunkSize + x; // Current tile
-					int w = y * chunkSize + ( x - 1 ); // Western neighbor
-
-					int se = ( y + 1 ) * chunkSize + ( x + 1 ); // Southeastern neighbor
-					int s = ( y + 1 ) * chunkSize + x; // Southern neighbor
-					int sw = ( y + 1 ) * chunkSize + ( x - 1 ); // Southwestern neighbor
-
-					// Quadrant edge merge
-					const Light* neLight = ( ne < 0 || ne >= numCellsPerChunk ) ? this->getLight( worldPosX + 1, worldPosY - 1 ) : &lights[ne];
-					const Light* nLight = ( n < 0 || n >= numCellsPerChunk ) ? this->getLight( worldPosX, worldPosY - 1 ) : &lights[n];
-					const Light* nwLight = ( nw < 0 || nw >= numCellsPerChunk ) ? this->getLight( worldPosX - 1, worldPosY - 1 ) : &lights[nw];
-					const Light* eLight = ( e < 0 || e >= numCellsPerChunk ) ? this->getLight( worldPosX + 1, worldPosY ) : &lights[e];
-					const Light* cLight = &lights[i];
-					const Light* wLight = ( w < 0 || w >= numCellsPerChunk ) ? this->getLight( worldPosX - 1, worldPosY ) : &lights[w];
-					const Light* seLight = ( se < 0 || se >= numCellsPerChunk ) ? this->getLight( worldPosX + 1, worldPosY + 1 ) : &lights[se];
-					const Light* sLight = ( s < 0 || s >= numCellsPerChunk ) ? this->getLight( worldPosX, worldPosY + 1 ) : &lights[s];
-					const Light* swLight = ( sw < 0 || sw >= numCellsPerChunk ) ? this->getLight( worldPosX - 1, worldPosY + 1 ) : &lights[sw];
-					
-
-					/*
-					if ( worldPosX > 60 && cLight->getBlue() > 0 )
-					{
-						std::cout << worldPosX << std::endl;
-					}
-					*/
-
-					/*
-					const Light* neLight = ( ne < 0 || ne >= numCellsPerChunk ) ? nullptr : &lights[ne];
-					const Light* nLight = ( n < 0 || n >= numCellsPerChunk ) ? nullptr : &lights[n];
-					const Light* nwLight = ( nw < 0 || nw >= numCellsPerChunk ) ? nullptr : &lights[nw];
-					const Light* eLight = ( e < 0 || e >= numCellsPerChunk ) ? nullptr : &lights[e];
-					const Light* cLight = &lights[i];
-					const Light* wLight = ( w < 0 || w >= numCellsPerChunk ) ? nullptr : &lights[w];
-					const Light* seLight = ( se < 0 || se >= numCellsPerChunk ) ? nullptr : &lights[se];
-					const Light* sLight = ( s < 0 || s >= numCellsPerChunk ) ? nullptr : &lights[s];
-					const Light* swLight = ( sw < 0 || sw >= numCellsPerChunk ) ? nullptr : &lights[sw];
-					*/
-
-					/*
-					const Light* neLight = ( ne < 0 || ne >= numCellsPerChunk ) ? this->getLight( worldPosX + 1, worldPosY - 1 ) : &lights[ne];
-					const Light* nLight = ( n < 0 || n >= numCellsPerChunk ) ? nullptr : &lights[n];
-					const Light* nwLight = ( nw < 0 || nw >= numCellsPerChunk ) ? this->getLight( worldPosX - 1, worldPosY - 1 ) : &lights[nw];
-					const Light* eLight = ( e < 0 || e >= numCellsPerChunk ) ? this->getLight( worldPosX + 1, worldPosY ) : &lights[e];
-					const Light* cLight = &lights[i];
-					const Light* wLight = ( w < 0 || w >= numCellsPerChunk ) ? this->getLight( worldPosX - 1, worldPosY ) : &lights[w];
-					const Light* seLight = ( se < 0 || se >= numCellsPerChunk ) ? this->getLight( worldPosX + 1, worldPosY + 1 ) : &lights[se];
-					const Light* sLight = ( s < 0 || s >= numCellsPerChunk ) ? nullptr : &lights[s];
-					const Light* swLight = ( sw < 0 || sw >= numCellsPerChunk ) ? this->getLight( worldPosX - 1, worldPosY + 1 ) : &lights[sw];
-					*/
-
-
-					/*
-					if ( ( ne < 0 || ne >= numCellsPerChunk ) ||
-						( n < 0 || n >= numCellsPerChunk ) ||
-						( nw < 0 || nw >= numCellsPerChunk ) ||
-
-						( e < 0 || e >= numCellsPerChunk ) ||
-						( w < 0 || w >= numCellsPerChunk )||
-						( se < 0 || se >= numCellsPerChunk ) ||
-						( s < 0 || s >= numCellsPerChunk ) ||
-						( sw < 0 || sw >= numCellsPerChunk )
-						)
-					{
-						std::cout << "EDGE" << std::endl;
-					}
-					*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-					// Out of bounds check
-					if ( neLight == nullptr || nLight == nullptr || nwLight == nullptr ||
-						eLight == nullptr || wLight == nullptr ||
-						seLight == nullptr || sLight == nullptr || swLight == nullptr
-						)
-					{
-						continue;
-					}
-
-					std::uint8_t corner0R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getRed() + nwLight->getRed() + nLight->getRed() + wLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner0G = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getGreen() + nwLight->getGreen() + nLight->getGreen() + wLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner0B = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getBlue() + nwLight->getBlue() + nLight->getBlue() + wLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner0A = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getAlpha() + nwLight->getAlpha() + nLight->getAlpha() + wLight->getAlpha() ) / 4 ), 255 ) );
-
-					std::uint8_t corner1R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getRed() + swLight->getRed() + sLight->getRed() + wLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner1G = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getGreen() + swLight->getGreen() + sLight->getGreen() + wLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner1B = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getBlue() + swLight->getBlue() + sLight->getBlue() + wLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner1A = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getAlpha() + swLight->getAlpha() + sLight->getAlpha() + wLight->getAlpha() ) / 4 ), 255 ) );
-
-					std::uint8_t corner2R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getRed() + seLight->getRed() + sLight->getRed() + eLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner2G = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getGreen() + seLight->getGreen() + sLight->getGreen() + eLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner2B = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getBlue() + seLight->getBlue() + sLight->getBlue() + eLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner2A = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getAlpha() + seLight->getAlpha() + sLight->getAlpha() + eLight->getAlpha() ) / 4 ), 255 ) );
-
-					std::uint8_t corner3R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getRed() + neLight->getRed() + nLight->getRed() + eLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner3G = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getGreen() + neLight->getGreen() + nLight->getGreen() + eLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner3B = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getBlue() + neLight->getBlue() + nLight->getBlue() + eLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner3A = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getAlpha() + neLight->getAlpha() + nLight->getAlpha() + eLight->getAlpha() ) / 4 ), 255 ) );
-
-					std::uint32_t corner0 = ( corner0R << 24 ) + ( corner0G << 16 ) + ( corner0B << 8 ) + ( corner0A );
-					std::uint32_t corner1 = ( corner1R << 24 ) + ( corner1G << 16 ) + ( corner1B << 8 ) + ( corner1A );
-					std::uint32_t corner2 = ( corner2R << 24 ) + ( corner2G << 16 ) + ( corner2B << 8 ) + ( corner2A );
-					std::uint32_t corner3 = ( corner3R << 24 ) + ( corner3G << 16 ) + ( corner3B << 8 ) + ( corner3A );
-
-
-
-					if ( worldPosX == 0 && ( std::uint8_t )( ( corner0 & 0xff000000 ) >> 24 ) > 0 )
-					{
-						//std::cout << "WTF" << std::endl;
-					}
-
-					if ( ( std::uint8_t )( ( corner0 & 0xff000000 ) >> 24 ) > 0 )
-					{
-						count++;
-						//std::cout << "WTF" << std::endl;
-					}
-
-
-					currWorldChunk.insertLightRenders( corner0, corner1, corner2, corner3, true, worldPosX, worldPosY, 1, 1 );
-
-
-				}
-			}
-		}
-	}
-	
-	// std::cout << count << std::endl;
-
-	return;
-}
-
-
-
-
-
 void World::updateLighting()
 {
-	int count = 0;
 	const BoundingBox<long double>& cameraView = this->_camera->getView();
 	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 	std::uint16_t chunkSize = Settings::WorldChunk::SIZE;
 	std::uint16_t numCellsPerChunk = Settings::World::NUM_CELLS_PER_CHUNK;
-
-
 
 	std::int64_t topLeftX = ( std::int64_t )std::floor( cameraView.getX() );
 	std::int64_t topLeftY = ( std::int64_t )std::floor( cameraView.getY() );
@@ -1353,6 +1240,11 @@ void World::updateLighting()
 	std::int64_t bottomRightX = ( std::int64_t )std::ceil( cameraView.getX() + cameraView.getWidth() );
 	std::int64_t bottomRightY = ( std::int64_t )std::ceil( cameraView.getY() + cameraView.getHeight() );
 
+
+	//std::cout << cameraView.getX() << std::endl;
+
+	//std::cout << topLeftX << ", " << bottomRightX << std::endl;
+	//std::cout << topLeftY << ", " << bottomRightY << std::endl;
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
@@ -1374,35 +1266,9 @@ void World::updateLighting()
 				std::int64_t worldPosY = y + currWorldChunk.getChunkIndexY() * chunkSize;
 
 
-				// Only render lights within camera frame
+				// Only render lights within camera frame AND within world
 				if ( worldPosX >= topLeftX && worldPosX <= bottomRightX && worldPosY >= topLeftY && worldPosY <= bottomRightY )
 				{
-					/*
-					const Light* cLight = &lights[i];
-					std::uint32_t corner0 = ( ( std::uint32_t )( ( std::int8_t )std::min<int>( cLight->getRed(), 255 ) ) << 24 ) +
-						( ( std::uint32_t )( ( std::int8_t )std::min<int>( cLight->getRed(), 255 ) ) << 16 ) +
-						( ( std::uint32_t )( ( std::int8_t )std::min<int>( cLight->getRed(), 255 ) ) << 8 ) +
-						( ( std::uint32_t )( ( std::int8_t )std::min<int>( cLight->getRed(), 255 ) ) );						
-					std::uint32_t corner1 = corner0;
-					std::uint32_t corner2 = corner0;
-					std::uint32_t corner3 = corner0;
-
-
-					if ( worldPosX == 0 && ( std::uint8_t )( ( corner0 & 0xff000000 ) >> 24 ) > 0 )
-					{
-						//std::cout << "WTF" << std::endl;
-					}
-
-					if ( ( std::uint8_t )( ( corner0 & 0xff000000 ) >> 24 ) > 0 )
-					{
-						count++;
-						//std::cout << "WTF" << std::endl;
-						//currWorldChunk.insertTileRenders( worldPosX, worldPosY, 5, 1, 2 );
-						//currWorldChunk.insertLightRenders( corner0, corner1, corner2, corner3, true, worldPosX, worldPosY, 5, 1 );
-
-					}
-					currWorldChunk.insertLightRenders( corner0, corner1, corner2, corner3, true, worldPosX, worldPosY, 1, 1 );
-					*/
 					int ne = ( y - 1 ) * chunkSize + ( x + 1 ); // Northerneastern neighbor
 					int n = ( y - 1 ) * chunkSize + x; // Northern neighbor
 					int nw = ( y - 1 ) * chunkSize + ( x - 1 ); // // Northwestern
@@ -1416,43 +1282,6 @@ void World::updateLighting()
 					int sw = ( y + 1 ) * chunkSize + ( x - 1 ); // Southwestern neighbor
 
 					// Quadrant edge merge
-					/*
-					const Light* neLight = ( ne < 0 || ne >= numCellsPerChunk ) ? this->getLight( worldPosX + 1, worldPosY - 1 ) : &lights[ne];
-					const Light* nLight = ( n < 0 || n >= numCellsPerChunk ) ? this->getLight( worldPosX, worldPosY - 1 ) : &lights[n];
-					const Light* nwLight = ( nw < 0 || nw >= numCellsPerChunk ) ? this->getLight( worldPosX - 1, worldPosY - 1 ) : &lights[nw];
-					const Light* eLight = ( e < 0 || e >= numCellsPerChunk ) ? this->getLight( worldPosX + 1, worldPosY ) : &lights[e];
-					const Light* cLight = &lights[i];
-					const Light* wLight = ( w < 0 || w >= numCellsPerChunk ) ? this->getLight( worldPosX - 1, worldPosY ) : &lights[w];
-					const Light* seLight = ( se < 0 || se >= numCellsPerChunk ) ? this->getLight( worldPosX + 1, worldPosY + 1 ) : &lights[se];
-					const Light* sLight = ( s < 0 || s >= numCellsPerChunk ) ? this->getLight( worldPosX, worldPosY + 1 ) : &lights[s];
-					const Light* swLight = ( sw < 0 || sw >= numCellsPerChunk ) ? this->getLight( worldPosX - 1, worldPosY + 1 ) : &lights[sw];
-					*/
-
-					/*
-					const Light* neLight = this->getLight( worldPosX + 1, worldPosY - 1 );
-					const Light* nLight = this->getLight( worldPosX, worldPosY - 1 );
-					const Light* nwLight = this->getLight( worldPosX - 1, worldPosY - 1 );
-					const Light* eLight = this->getLight( worldPosX + 1, worldPosY );
-					const Light* cLight = &lights[i];
-					const Light* wLight = this->getLight( worldPosX - 1, worldPosY );
-					const Light* seLight = this->getLight( worldPosX + 1, worldPosY + 1 );
-					const Light* sLight = this->getLight( worldPosX, worldPosY + 1 );
-					const Light* swLight = this->getLight( worldPosX - 1, worldPosY + 1 );
-					*/
-
-					/*
-					const Light* neLight = ( ne < 0 || ne >= numCellsPerChunk || x >= chunkSize - 1 || y <= 0 ) ? this->getLight( worldPosX + 1, worldPosY - 1 ) : &lights[ne];
-					const Light* nLight = ( n < 0 || n >= numCellsPerChunk || y <= 0 ) ? this->getLight( worldPosX, worldPosY - 1 ) : &lights[n];
-					const Light* nwLight = ( nw < 0 || nw >= numCellsPerChunk || x <= 0 || y <= 0 ) ? this->getLight( worldPosX - 1, worldPosY - 1 ) : &lights[nw];
-					const Light* eLight = ( e < 0 || e >= numCellsPerChunk || x >= chunkSize - 1 ) ? this->getLight( worldPosX + 1, worldPosY ) : &lights[e];
-					const Light* cLight = &lights[i];
-					const Light* wLight = ( w < 0 || w >= numCellsPerChunk || x <= 0 ) ? this->getLight( worldPosX - 1, worldPosY ) : &lights[w];
-					const Light* seLight = ( se < 0 || se >= numCellsPerChunk || x >= chunkSize - 1 || y >= chunkSize - 1 ) ? this->getLight( worldPosX + 1, worldPosY + 1 ) : &lights[se];
-					const Light* sLight = ( s < 0 || s >= numCellsPerChunk || y >= chunkSize - 1 ) ? this->getLight( worldPosX, worldPosY + 1 ) : &lights[s];
-					const Light* swLight = ( sw < 0 || sw >= numCellsPerChunk || x <= 0 || y >= chunkSize - 1 ) ? this->getLight( worldPosX - 1, worldPosY + 1 ) : &lights[sw];
-					*/
-
-					
 					const Light* neLight = (  x >= chunkSize - 1 || y <= 0 ) ? this->getLight( worldPosX + 1, worldPosY - 1 ) : &lights[ne];
 					const Light* nLight = (  y <= 0 ) ? this->getLight( worldPosX, worldPosY - 1 ) : &lights[n];
 					const Light* nwLight = (  x <= 0 || y <= 0 ) ? this->getLight( worldPosX - 1, worldPosY - 1 ) : &lights[nw];
@@ -1470,7 +1299,8 @@ void World::updateLighting()
 						seLight == nullptr || sLight == nullptr || swLight == nullptr
 						)
 					{
-						continue;
+						//continue;
+						return;
 					}
 
 					std::uint8_t corner0R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getRed() + nwLight->getRed() + nLight->getRed() + wLight->getRed() ) / 4 ), 255 ) );
@@ -1498,42 +1328,11 @@ void World::updateLighting()
 					std::uint32_t corner2 = ( corner2R << 24 ) + ( corner2G << 16 ) + ( corner2B << 8 ) + ( corner2A );
 					std::uint32_t corner3 = ( corner3R << 24 ) + ( corner3G << 16 ) + ( corner3B << 8 ) + ( corner3A );
 
-
-					/*
-					if ( worldPosX == 0 && ( std::uint8_t )( ( corner0 & 0xff000000 ) >> 24 ) > 0 )
-					{
-						//std::cout << "WTF" << std::endl;
-					}
-
-					
-					if ( ( std::uint8_t )( ( corner0 & 0xff000000 ) >> 24 ) > 0 )
-					{
-						//count++;
-						//std::cout << "WTF" << std::endl;
-
-
-						std::uint32_t corner0 = ( ( std::uint32_t )( ( std::int8_t )std::min<int>( cLight->getRed(), 255 ) ) << 24 ) +
-							( ( std::uint32_t )( ( std::int8_t )std::min<int>( cLight->getRed(), 255 ) ) << 16 ) +
-							( ( std::uint32_t )( ( std::int8_t )std::min<int>( cLight->getRed(), 255 ) ) << 8 ) +
-							( ( std::uint32_t )( ( std::int8_t )std::min<int>( cLight->getRed(), 255 ) ) );
-						std::uint32_t corner1 = corner0;
-						std::uint32_t corner2 = corner0;
-						std::uint32_t corner3 = corner0;
-
-						currWorldChunk.insertLightRenders( corner0, corner1, corner2, corner3, true, worldPosX, worldPosY, 1, 1 );
-
-
-					}
-					
-					*/
-
 					currWorldChunk.insertLightRenders( corner0, corner1, corner2, corner3, true, worldPosX, worldPosY, 1, 1 );
 				}
 			}
 		}
 	}
-
-	//std::cout << count << std::endl;
 
 	return;
 }
@@ -1605,17 +1404,33 @@ void World::reveal( LightCastQuadrant& quadrant, const olc::v2d_generic<long dou
 
 
 
-bool World::isOpaque( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& tile )
+bool World::isOpaque( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& castPos )
 {
-	olc::v2d_generic<long double> position = quadrant.transform( tile );
-	return this->getTile( ( std::int64_t )std::ceil( position.x ), ( std::int64_t )std::ceil( position.y ) )->exists();
+	olc::v2d_generic<long double> position = quadrant.transform( castPos );
+	const Tile* tile = this->getTile( ( std::int64_t )std::ceil( position.x ), ( std::int64_t )std::ceil( position.y ) );
+	if ( tile == nullptr )
+	{
+		return true;
+	}
+	else
+	{
+		return tile->exists();
+	}
 }
 
 
-bool World::isTransparent( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& tile )
+bool World::isTransparent( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& castPos )
 {
-	olc::v2d_generic<long double> position = quadrant.transform( tile );
-	return !this->getTile( ( std::int64_t )std::ceil( position.x ), ( std::int64_t )std::ceil( position.y ) )->exists();
+	olc::v2d_generic<long double> position = quadrant.transform( castPos );
+	const Tile* tile = this->getTile( ( std::int64_t )std::ceil( position.x ), ( std::int64_t )std::ceil( position.y ) );
+	if ( tile == nullptr )
+	{
+		return false;
+	}
+	else
+	{
+		return !tile->exists();
+	}
 }
 
 /*
@@ -1676,9 +1491,12 @@ void World::scanDynamic( LightCastQuadrant& quadrant, LightCastRow& row,
 		// if relativeTilePos is different (i.e. out of bounds occurs)
 		// use is for isOpaque, isTransparent, and addLight, on the proper quadrant
 
+
+		bool inBounds =  this->getTile( ( std::int64_t )std::ceil( tilePosX ), ( std::int64_t )std::ceil( tilePosY ) ) != nullptr;
+		if ( !inBounds ) return;
+
 		if ( this->isOpaque( quadrant, tile ) || LightCastQuadrant::isSymmetric( row, tile ) )
 		{
-
 			/*
 			if ( ( std::int16_t )std::ceil( tilePosX ) < 0 || ( std::int16_t )std::ceil( tilePosX ) >= this->_width ||
 				( std::int16_t )std::ceil( tilePosY ) < 0 || ( std::int16_t )std::ceil( tilePosY ) >= this->_height
