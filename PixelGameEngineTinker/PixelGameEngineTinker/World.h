@@ -148,6 +148,8 @@ public:
 	void addLight( std::int64_t x, std::int64_t y, const LightSource& lightSource, long double intensity );
 	void resetLighting();
 	void updateLighting();
+	void updateLightingcache();
+
 	void revealDynamic( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& tile, 
 		const olc::v2d_generic<long double>& originPosition, const LightSource& lightSource, const int maxRadius );
 	bool isOpaque( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& tile );

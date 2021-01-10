@@ -261,8 +261,8 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 			std::uint8_t alpha = ( std::uint8_t )( ( corner0 & 0x000000ff ) );
 			olc::Pixel color = olc::Pixel{ r, g, b, alpha };
 			
-			//pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
-			pge->SetDecalMode( olc::DecalMode::ADDITIVE );
+			pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
+			//pge->SetDecalMode( olc::DecalMode::ADDITIVE );
 			pge->FillRectDecal(
 				startPos,
 				olc::v2d_generic<long double>{ this->_zoomX * tileSize, this->_zoomY * tileSize } *scale,
@@ -283,6 +283,7 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 			{
 				if ( cells[i].exists() && this->_view.intersects( cells[i].getBounds() ) )
 				{
+					
 					std::uint32_t corner0 = cells[i].corner0;
 					std::uint32_t corner1 = cells[i].corner1;
 					std::uint32_t corner2 = cells[i].corner2;
@@ -318,8 +319,8 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 					textureCoordinates[3] = olc::vf2d{ 1.0f, 0.0f };
 						
 					olc::Decal* lightDecal = this->_decalLight;
-					//pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
-					pge->SetDecalMode( olc::DecalMode::ADDITIVE );
+					pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
+					//pge->SetDecalMode( olc::DecalMode::ADDITIVE );
 					pge->DrawExplicitDecal(
 						lightDecal,
 						verticiesB,
@@ -327,6 +328,41 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 						colors
 					);
 					pge->SetDecalMode( olc::DecalMode::NORMAL );					
+					
+					
+
+
+
+					/*
+					std::uint32_t corner0 = cells[i].corner0;
+					std::int64_t worldPositionX = cells[i].getBounds().getX(); // [@]
+					std::int64_t worldPositionY = cells[i].getBounds().getY();
+					std::int64_t pixelX;
+					std::int64_t pixelY;
+					worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
+					olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
+					olc::Decal* lightDecal = this->_decalLight;
+
+					if ( ( std::uint8_t )( ( corner0 & 0xff000000 ) >> 24 ) > 0 )
+					{
+						olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
+
+						pge->DrawDecal(
+							startPos,
+							lightDecal,
+							olc::vf2d{ 1 * (float)this->_zoomX , 1 * (float)this->_zoomY }
+						);
+
+						//std::cout << worldPositionX << ", " << worldPositionY << std::endl;
+					}
+
+					
+					//if ( worldPositionX == 0 && ( std::uint8_t )( ( corner0 & 0xff000000 ) >> 24 ) > 0 )
+					//{
+					//	std::cout << "WTF" << std::endl;
+					//}
+					*/
+
 				}
 			}
 
