@@ -6,7 +6,9 @@
 #include "QuadTree.h"
 #include "Tile.h"
 #include "TileRender.h"
-#include "Lighting.h"
+#include "Light.h"
+#include "LightRender.h"
+#include "LightSource.h"
 
 class WorldChunkMemory; // Forward Declaration
 
@@ -20,10 +22,17 @@ private:
 	static const std::uint16_t _size = Settings::WorldChunk::SIZE;
 	static const std::uint16_t _numTileRenders = Settings::WorldChunk::NUM_TILE_RENDERS;
 
-	QuadTree<TileRender> _tileRenders[WorldChunk::_numTileRenders];
 	Tile _tiles[WorldChunk::_size * WorldChunk::_size];
+	QuadTree<TileRender> _tileRenders[WorldChunk::_numTileRenders];
 
-	Lighting<long double> _lighting;
+	Light _lights[WorldChunk::_size * WorldChunk::_size];
+	QuadTree<LightRender> _lightRenders[WorldChunk::_numTileRenders];
+
+
+	//LightSource _lightSources[WorldChunk::_size * WorldChunk::_size];
+	std::map<std::uint16_t, LightSource> _lightSources;
+
+
 public:
 
 	WorldChunk();
@@ -33,7 +42,6 @@ public:
 
 
 	void construct();
-	void wipeRender();
 	void fill( uint64_t id );
 
 	std::uint16_t getRelativeChunkIndex() const;
@@ -45,6 +53,7 @@ public:
 	void removeTiles( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
 	void insertTileRenders( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
 	void removeTileRenders( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
+	void wipeRender();
 
 	const std::map<uint64_t, unsigned short> createPalette() const;
 
@@ -69,8 +78,17 @@ public:
 
 
 	// Lighting
-	Lighting<long double>& getLighting();
 	Light* getLights();
 	Light* getLight( std::int64_t x, std::int64_t y );
+	const std::map<std::uint16_t, LightSource>& getLightSources();
+	QuadTree<LightRender>* getLightRenders();
+
+	void resetLights();
+	void wipeLightRender();
+	void blackenLights();
+	void clearLightSources();
+
+	void insertLightRender( std::uint32_t corner0, std::uint32_t corner1, std::uint32_t corner2, std::uint32_t corner3, bool exist, std::int64_t x, std::int64_t y ); // [!] overhaul and model after insert
+	void insertLightRenders( std::uint32_t corner0, std::uint32_t corner1, std::uint32_t corner2, std::uint32_t corner3, bool exist, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 };
 

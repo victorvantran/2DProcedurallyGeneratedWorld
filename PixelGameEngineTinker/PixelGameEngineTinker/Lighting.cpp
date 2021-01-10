@@ -1,4 +1,4 @@
-#include "Lighting.h"
+//#include "Lighting.h"
 /*
 template<class T>
 void Lighting<T>::calculateLights( const BoundingBox<long double>& cameraView, World* world )

@@ -3,7 +3,7 @@
 
 
 WorldChunk::WorldChunk()
-	: _relativeChunkIndex( 0 ), _chunkIndexX( 0 ), _chunkIndexY( 0 ), _lighting( 0, 0, Settings::WorldChunk::SIZE, Settings::WorldChunk::SIZE, this->_tiles )
+	: _relativeChunkIndex( 0 ), _chunkIndexX( 0 ), _chunkIndexY( 0 )
 {
 
 }
@@ -16,7 +16,7 @@ WorldChunk::~WorldChunk()
 
 
 WorldChunk::WorldChunk( std::uint16_t relChunkIndex, std::int64_t indexX, std::int64_t indexY )
-	: _relativeChunkIndex( relChunkIndex ), _chunkIndexX( indexX ), _chunkIndexY( indexY ), _lighting( indexX, indexY, Settings::WorldChunk::SIZE, Settings::WorldChunk::SIZE, this->_tiles )
+	: _relativeChunkIndex( relChunkIndex ), _chunkIndexX( indexX ), _chunkIndexY( indexY )
 {
 
 }
@@ -24,29 +24,9 @@ WorldChunk::WorldChunk( std::uint16_t relChunkIndex, std::int64_t indexX, std::i
 
 void WorldChunk::construct()
 {
-	// Used solely for initializing the first chunks renders
-	std::int64_t rootQuadTreePositionX = this->_chunkIndexX * this->_size;
-	std::int64_t rootQuadTreePositionY = this->_chunkIndexY * this->_size;
-
-	// Intialize tileRender QuadTrees
-	this->_tileRenders[0].constructQuadTree(
-		0,
-		-1,
-		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
-		0,
-		BoundingBox<std::int64_t>( rootQuadTreePositionX, rootQuadTreePositionY, this->_size, this->_size ),
-		this->_tileRenders,
-		Settings::WorldChunk::TILE_RENDER_MIN_LEVEL,
-		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
-		Settings::WorldChunk::TILE_RENDER_MIN_CELL_SIZE
-	);
-
-	// Connect tileRender nodes
-	for ( int i = 0; i < sizeof( this->_tileRenders ) / sizeof( this->_tileRenders[0] ); i++ )
-	{
-		this->_tileRenders[i].divide();
-	}
-
+	this->wipeRender();
+	this->wipeLightRender();
+	this->blackenLights();
 	return;
 }
 
@@ -214,6 +194,8 @@ void WorldChunk::clear()
 
 	std::memset( this->_tiles, 0, sizeof( this->_tiles ) ); // this->_tiles.fill(0)
 
+	this->blackenLights();
+	this->clearLightSources();
 	return;
 }
 
@@ -227,8 +209,8 @@ void WorldChunk::delimit( std::int64_t indexX, std::int64_t indexY )
 	this->_chunkIndexY = indexY;
 
 
-	this->_lighting.setChunkIndexX( indexX );
-	this->_lighting.setChunkIndexY( indexY );
+	//this->_lighting.setChunkIndexX( indexX );
+	//this->_lighting.setChunkIndexY( indexY );
 
 	// [!] Do the same for geography when isolated black boxed
 	//this->_geography.setChunkIndexX( indexX );
@@ -338,17 +320,10 @@ WorldChunkMemory* WorldChunk::createMemory()
 
 
 
-
-
-Lighting<long double>& WorldChunk::getLighting()
-{
-	return this->_lighting;
-}
-
-
+// Lighting
 Light* WorldChunk::getLights()
 {
-	return this->_lighting.getLights();
+	return this->_lights;
 }
 
 
@@ -356,8 +331,91 @@ Light* WorldChunk::getLight( std::int64_t x, std::int64_t y )
 {
 	std::int64_t localCellIndexX = x - this->_chunkIndexX * this->_size;
 	std::int64_t localCellIndexY = y - this->_chunkIndexY * this->_size;
-	return &this->getLights()[localCellIndexY * this->_size + localCellIndexX];
+	return &this->_lights[localCellIndexY * this->_size + localCellIndexX];
+}
+
+
+const std::map<std::uint16_t, LightSource>& WorldChunk::getLightSources()
+{
+	return this->_lightSources;
+}
+
+
+QuadTree<LightRender>* WorldChunk::getLightRenders()
+{
+	return this->_lightRenders;
+}
+
+
+void WorldChunk::resetLights()
+{
+	this->wipeLightRender();
+	this->blackenLights();
+	return;
+}
+
+
+void WorldChunk::blackenLights()
+{
+	//std::cout << "blacken" << std::endl;
+	for ( std::uint16_t i = 0; i < this->_size * this->_size; i++ )
+	{
+		this->_lights[i].blacken();
+	}
+	return;
+}
+
+
+void WorldChunk::clearLightSources()
+{
+	this->_lightSources.clear();
+	return;
+}
+
+
+void WorldChunk::wipeLightRender()
+{
+	// Need to update chunkIndex of lighting when updating index of worldChunk [!]
+	std::int64_t rootQuadTreePositionX = this->_chunkIndexX * this->_size;
+	std::int64_t rootQuadTreePositionY = this->_chunkIndexY * this->_size;
+
+	// Intialize quadTrees
+	this->_lightRenders[0].constructQuadTree(
+		0,
+		-1,
+		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
+		0,
+		BoundingBox<std::int64_t>( rootQuadTreePositionX, rootQuadTreePositionY, this->_size, this->_size ),
+		this->_lightRenders,
+		Settings::WorldChunk::TILE_RENDER_MIN_LEVEL,
+		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
+		Settings::WorldChunk::TILE_RENDER_MIN_CELL_SIZE
+	);
+
+	// The difference between construct and reconstruct is quick reassignment, unless of course, shallow copy does this for us. Then just use construct
+	for ( int i = 0; i < sizeof( this->_lightRenders ) / sizeof( this->_lightRenders[0] ); i++ )
+	{
+		this->_lightRenders[i].divide();
+	}
+
+	return;
 }
 
 
 
+
+
+void WorldChunk::insertLightRender( std::uint32_t corner0, std::uint32_t corner1, std::uint32_t corner2, std::uint32_t corner3, bool exist, std::int64_t x, std::int64_t y )
+{
+	// model after insert
+
+	return;
+}
+
+
+void WorldChunk::insertLightRenders( std::uint32_t corner0, std::uint32_t corner1, std::uint32_t corner2, std::uint32_t corner3, bool exist, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->_lightRenders[0].insert( LightRender( corner0, corner1, corner2, corner3, exist,
+		BoundingBox<std::int64_t>( x, y, width, height ) ) );
+	return;
+}

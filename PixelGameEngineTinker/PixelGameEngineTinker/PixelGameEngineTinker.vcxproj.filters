@@ -102,6 +102,12 @@
     <ClInclude Include="LightRender.h">
       <Filter>Header Files\Render</Filter>
     </ClInclude>
+    <ClInclude Include="LightCastQuadrant.h">
+      <Filter>Header Files\World</Filter>
+    </ClInclude>
+    <ClInclude Include="LightCastRow.h">
+      <Filter>Header Files\World</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cell.cpp">
@@ -144,6 +150,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Lighting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LightCastRow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LightCastQuadrant.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

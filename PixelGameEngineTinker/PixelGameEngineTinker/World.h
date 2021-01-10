@@ -10,6 +10,9 @@
 #include <atomic>
 #include <condition_variable>
 
+#include <iostream>
+#include <fstream>
+
 #include "sqlite/sqlite3.h"
 
 #include "Assets.h"
@@ -19,8 +22,11 @@
 #include "Atlas.h"
 #include "Camera.h"
 
-#include <iostream>
-#include <fstream>
+
+#include "LightSource.h"
+#include "LightCastRow.h"
+#include "LightCastQuadrant.h"
+
 
 class WorldChunkMemory; // Forward Declaration
 
@@ -85,7 +91,7 @@ public:
 	void insert( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
 	void remove( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
 
-	// Getters/Setters
+	// World Chunks
 	WorldChunk* getWorldChunks();
 	WorldChunk& getWorldChunk( std::int64_t x, std::int64_t y );
 	std::uint16_t getChunkRadius() const;
@@ -93,7 +99,6 @@ public:
 	std::uint16_t getNumChunkWidth() const;
 	std::uint16_t getNumChunkHeight() const;
 	const Tile* getTile( std::int64_t x, std::int64_t y ) const;
-	const Light* getLight( std::int64_t x, std::int64_t y ) const;
 
 
 	// Save/Load System
@@ -123,7 +128,6 @@ public:
 	void loadSpriteTilesTask();
 	void loadSpriteTiles();
 	void addSpriteTile( std::uint64_t tileId );
-
 	Atlas& getAtlas();
 	void updateDecals();
 
@@ -131,10 +135,45 @@ public:
 
 	// Debug
 	void DEBUG_PRINT_TILE_SPRITES();
-	void activateCursorLightSource( long double dX, long double dY, std::int64_t radius );
+
+	
+
+	// Geography
+
+
+	// Lighting
+	const Light* getLight( std::int64_t x, std::int64_t y ) const;
+	const LightSource* getLightSource( std::int64_t x, std::int64_t y ) const;
+	//void addLight( std::int64_t x, std::int64_t y, std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a );
+	void addLight( std::int64_t x, std::int64_t y, const LightSource& lightSource, long double intensity );
 	void resetLighting();
 	void updateLighting();
-	
+	void revealDynamic( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& tile, 
+		const olc::v2d_generic<long double>& originPosition, const LightSource& lightSource, const int maxRadius );
+	bool isOpaque( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& tile );
+	bool isTransparent( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& tile );
+
+
+
+	void scanDynamic( LightCastQuadrant& quadrant, LightCastRow& row, const olc::v2d_generic<long double> originPosition, const LightSource& lightSource, const std::uint16_t maxRadius );
+
+
+
+
+
+
+
+	void emitDynamicLight( long double dX, long double dY, std::int64_t radius );
+	void activateCursorLightSource( long double dX, long double dY, std::int64_t radius );
 
 
 };
+
+
+
+
+
+
+
+
+

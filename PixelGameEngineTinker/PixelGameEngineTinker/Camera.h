@@ -7,7 +7,7 @@
 #include "Atlas.h"
 #include "WorldChunk.h"
 #include "QuadTree.h"
-#include "Lighting.h"
+//#include "Lighting.h"
 #include "TileRender.h"
 #include "LightRender.h"
 #include "Tile.h"

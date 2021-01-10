@@ -42,6 +42,8 @@
     <ClInclude Include="Cell.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="Lighting.h" />
+    <ClInclude Include="LightCastQuadrant.h" />
+    <ClInclude Include="LightCastRow.h" />
     <ClInclude Include="LightRender.h" />
     <ClInclude Include="LightSource.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
@@ -60,6 +62,8 @@
     <ClCompile Include="Assets.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Cell.cpp" />
+    <ClCompile Include="LightCastQuadrant.cpp" />
+    <ClCompile Include="LightCastRow.cpp" />
     <ClCompile Include="Lighting.cpp" />
     <ClCompile Include="LightRender.cpp" />
     <ClCompile Include="main.cpp" />

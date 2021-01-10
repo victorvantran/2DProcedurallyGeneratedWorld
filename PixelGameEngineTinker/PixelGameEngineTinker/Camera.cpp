@@ -104,9 +104,9 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 	);
 
 	// this->calculateTiles( worldChunk ); [!] calcuate tile configuration
-	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas, worldChunk.getLighting().lightRenderEncapsulates() );
+	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas, worldChunk.getLightRenders() );
 	// this->calculateLights( worldChunk );
-	this->renderLightRenders( worldChunk.getLighting().getLightRendersRoot() );
+	this->renderLightRenders( worldChunk.getLightRenders()[0] );
 
 	return;
 }
@@ -230,7 +230,6 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 	// Render every lightRender but only drawing one properlly scaled tile for each consolidated render
 	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 	std::uint16_t chunkSize = Settings::World::CHUNK_CELL_SIZE;
-
 	QuadTree<LightRender> currQuadTree = lightRenders.getReferenceNodes()[lightRenders.getIndex()];
 	const BoundingBox<std::int64_t> bounds = currQuadTree.getBounds();
 
