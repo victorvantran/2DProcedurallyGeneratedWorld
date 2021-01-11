@@ -41,7 +41,6 @@ Camera::~Camera()
 void Camera::screenToWorld( std::int64_t pixelX, std::int64_t pixelY, long double& cellX, long double& cellY ) const
 {
 	// int to float ( camera offest determines displacement )
-
 	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 	cellX = ( long double )( ( ( long double )( pixelX - this->_absolutePixelOffsetX ) / ( long double )( this->_zoomX * tileSize ) ) + ( this->_focalPoint.x ) );
 	cellY = ( long double )( ( ( long double )( pixelY - this->_absolutePixelOffsetY ) / ( long double )( this->_zoomY * tileSize ) ) + ( this->_focalPoint.y ) );
@@ -52,10 +51,7 @@ void Camera::screenToWorld( std::int64_t pixelX, std::int64_t pixelY, long doubl
 void Camera::worldToScreen( long double cellX, long double cellY, std::int64_t& pixelX, std::int64_t& pixelY ) const
 {
 	// float to int ( camera offset determines displacement )
-
 	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
-	// pixelX = ( std::int64_t )( ( cellX - ( this->_focalPoint.x ) ) * ( this->_zoomX * tileSize ) ) + this->_absolutePixelOffsetX;
-	// pixelY = ( std::int64_t )( ( cellY - ( this->_focalPoint.y ) ) * ( this->_zoomY * tileSize ) ) + this->_absolutePixelOffsetY;
 	pixelX = ( std::int64_t )std::ceil( ( ( cellX - ( this->_focalPoint.x ) ) * ( this->_zoomX * tileSize ) ) + this->_absolutePixelOffsetX );
 	pixelY = ( std::int64_t )std::ceil( ( ( cellY - ( this->_focalPoint.y ) ) * ( this->_zoomY * tileSize ) ) + this->_absolutePixelOffsetY );
 	return;
@@ -93,7 +89,6 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 	olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
 	olc::v2d_generic<std::int64_t> size = olc::v2d_generic<std::int64_t>{ ( int )( chunkSize * ( this->_zoomX * tileSize ) ), ( int )( chunkSize * ( this->_zoomY * tileSize ) ) };
 
-	/*
 	pge->DrawRect(
 		startPos,
 		size,
@@ -105,7 +100,6 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 		std::to_string( worldChunk.getRelativeChunkIndex() ),
 		olc::GREEN
 	);
-	*/
 
 	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas, worldChunk.getLightRenders() );
 	this->renderLightRenders( worldChunk.getLightRenders()[0] );
@@ -263,17 +257,8 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 			std::uint8_t alpha = ( std::uint8_t )( ( corner0 & 0x000000ff ) );
 			olc::Pixel color = olc::Pixel{ r, g, b, alpha };
 			
-			pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
-			//pge->SetDecalMode( olc::DecalMode::ADDITIVE );
-			/*
-			pge->FillRectDecal(
-				startPos,
-				olc::v2d_generic<long double>{ this->_zoomX * tileSize, this->_zoomY * tileSize } * scale,
-				color 
-			);
-			*/
-
-
+			//pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
+			pge->SetDecalMode( olc::DecalMode::ADDITIVE );
 			pge->FillRectDecal(
 				startPos,
 				olc::vf2d{ (float)this->_zoomX * ( float )tileSize, ( float )this->_zoomY * ( float )tileSize } *( float )scale,
@@ -339,8 +324,8 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 					textureCoordinates[3] = olc::vf2d{ 1.0f, 0.0f };
 						
 					olc::Decal* lightDecal = this->_decalLight;
-					pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
-					//pge->SetDecalMode( olc::DecalMode::ADDITIVE );
+					//pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
+					pge->SetDecalMode( olc::DecalMode::ADDITIVE );
 					pge->DrawExplicitDecal(
 						lightDecal,
 						verticiesB,

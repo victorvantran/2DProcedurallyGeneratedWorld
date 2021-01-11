@@ -67,7 +67,8 @@ public:
 		long double mouseX = ( long double )GetMouseX();
 		long double mouseY = ( long double )GetMouseY();
 
-		long double panSpeed = 20.0f;
+		//long double panSpeed = 20.0f;
+		long double panSpeed = 32.0f;
 
 		if ( GetKey( olc::Key::UP ).bPressed || GetKey( olc::Key::UP ).bHeld )
 		{
@@ -90,6 +91,23 @@ public:
 			camera->pan( panSpeed * ( long double )fElapsedTime, panSpeed * ( long double )fElapsedTime );
 		}
 
+
+		if ( GetKey( olc::Key::W ).bPressed )
+		{
+			camera->panY( -1.0f );
+		}
+		if ( GetKey( olc::Key::S ).bPressed )
+		{
+			camera->panY( 1.0f );
+		}
+		if ( GetKey( olc::Key::D ).bPressed )
+		{
+			camera->panY( 1.0f );
+		}
+		if ( GetKey( olc::Key::A ).bPressed )
+		{
+			camera->panY( 1.0f );
+		}
 
 		if ( GetKey( olc::Key::F1 ).bPressed )
 		{
@@ -128,15 +146,15 @@ public:
 			this->camera->setZoom( 1.0 );
 		}
 
-		if ( GetKey( olc::Key::W ).bPressed )
+		if ( GetKey( olc::Key::K1 ).bPressed )
 		{
 			tileId = 1;
 		}
-		else if ( GetKey( olc::Key::S ).bPressed )
+		else if ( GetKey( olc::Key::K2 ).bPressed )
 		{
 			tileId = 2;
 		}
-		else if ( GetKey( olc::Key::D ).bPressed )
+		else if ( GetKey( olc::Key::K3 ).bPressed )
 		{
 			tileId = 3;
 		}

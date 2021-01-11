@@ -10,8 +10,13 @@ std::vector<olc::v2d_generic<long double>> LightCastRow::getTiles()
 {
 	std::vector< olc::v2d_generic<long double>> rowTiles;
 
+	/*
 	long double minCol = std::floor( ( this->depth * this->startSlope ) + 0.5 );
 	long double maxCol = std::ceil( ( this->depth * this->endSlope ) - 0.5 );
+	*/
+	long double minCol = std::floor( ( this->depth * this->startSlope ) + 0.5 );
+	long double maxCol = std::ceil( ( this->depth * this->endSlope ) - 0.5 );
+
 
 	for ( long double col = minCol; col <= maxCol; col++ )
 	{

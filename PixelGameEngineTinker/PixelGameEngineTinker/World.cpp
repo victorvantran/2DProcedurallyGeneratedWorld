@@ -1283,10 +1283,14 @@ void World::revealDynamic( LightCastQuadrant& quadrant, const olc::v2d_generic<l
 	long double originPosX = originPosition.x;
 	long double originPosY = originPosition.y;
 
-	long double rayDistance;
+	/*
+	long double rayDistance; // [!]
 	if ( originPosition.x >= 0 && originPosition.y >= 0 )
 	{
-		rayDistance = std::hypot( castPosition.x - std::ceil( originPosition.x ), castPosition.y - std::ceil( originPosition.y ) );
+		//rayDistance = std::hypot( castPosition.x - originPosition.x, castPosition.y - originPosition.y );
+		// rayDistance = std::hypot( castPosition.x - std::ceil( originPosition.x ), castPosition.y - std::ceil( originPosition.y ) );
+		//rayDistance = std::hypot( std::floor( castPosition.x ) - originPosition.x, std::floor( castPosition.y ) - originPosition.y );
+		//rayDistance = std::hypot( castPosition.x - originPosition.x, castPosition.y - originPosition.y );
 	}
 	else if ( originPosition.x < 0 && originPosition.y >= 0 )
 	{
@@ -1298,10 +1302,16 @@ void World::revealDynamic( LightCastQuadrant& quadrant, const olc::v2d_generic<l
 	}
 	else // if ( originPosition.x < 0 && originPosition.y < 0 )
 	{
-		rayDistance = std::hypot( std::ceil( castPosition.x ) - originPosition.x, std::ceil( castPosition.y ) - originPosition.y );
-	}
+		rayDistance = std::hypot( castPosition.x - originPosition.x, castPosition.y - originPosition.y );
 
-	long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / maxRadius ) ) );
+		//rayDistance = std::hypot( std::ceil( castPosition.x ) - originPosition.x, std::ceil( castPosition.y ) - originPosition.y );
+	}
+	*/
+
+	long double rayDistance = std::hypot( castPosition.x - originPosition.x, castPosition.y - originPosition.y );
+
+	long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / (long double)maxRadius ) ) );
+
 
 	if ( originPosition.x >= 0 && originPosition.y >= 0 )
 	{
@@ -1309,6 +1319,7 @@ void World::revealDynamic( LightCastQuadrant& quadrant, const olc::v2d_generic<l
 	}
 	else if ( originPosition.x < 0 && originPosition.y >= 0 )
 	{
+		//this->addLight( ( std::int64_t )std::floor( castPosition.x ), ( std::int64_t )std::ceil( castPosition.y ), lightSource, intensity );
 		this->addLight( ( std::int64_t )std::floor( castPosition.x ), ( std::int64_t )std::ceil( castPosition.y ), lightSource, intensity );
 	}
 	else if ( originPosition.x >= 0 && originPosition.y < 0 )
@@ -1532,33 +1543,132 @@ void World::emitDynamicLight( long double dX, long double dY, std::int64_t radiu
 
 void World::activateCursorLightSource( long double dX, long double dY, std::int64_t radius )
 {
+
+	const LightSource& lightSource = LightSource( 255, 255, 255, 255, ( std::int16_t )radius );
+
+
 	long double dOriginX;
 	long double fractionX = std::modfl( dX, &dOriginX );
+	//dOriginX -= ( dOriginX >= 0 ) ? fractionX : -fractionX;
 	//std::int64_t originX = ( dOriginX >= 0 ) ? ( std::int64_t )std::ceil( dOriginX ) : ( std::int64_t )std::floor( dOriginX );
-	dOriginX -= ( dOriginX >= 0 ) ? fractionX : -fractionX;
-	std::int64_t originX = ( dOriginX >= 0 ) ? ( std::int64_t )std::ceil( dOriginX ) : ( std::int64_t )std::floor( dOriginX );
 
 	long double dOriginY;
 	long double fractionY = std::modfl( dY, &dOriginY );
-	//std::int64_t originY = ( std::int64_t )dOriginY;
+	//dOriginY -= ( dOriginY >= 0 ) ? fractionY : -fractionY;
 	//std::int64_t originY = ( dOriginY >= 0 ) ? ( std::int64_t )std::ceil( dOriginY ) : ( std::int64_t )std::floor( dOriginY );
-	dOriginY -= ( dOriginY >= 0 ) ? fractionY : -fractionY;
-	std::int64_t originY = ( dOriginY >= 0 ) ? ( std::int64_t )std::ceil( dOriginY ) : ( std::int64_t )std::floor( dOriginY );
 
-	const LightSource& lightSource = LightSource( 255, 255, 255, 255, ( std::int16_t )radius );
-	//const LightSource& lightSource = LightSource( 252, 236, 167, 255, ( std::int16_t )radius );
 
-	long double rayDistance = std::hypot( dOriginX - ( ( long double )originX - 0.5 ), dOriginY - ( ( long double )originY - 0.5 ) );
-	long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / radius ) ) );
-	this->addLight( originX, originY, lightSource, intensity );
-	//this->addLight( originX, originY, lightSource, 1.0 );
+	olc::v2d_generic<long double> originPosition;
+	std::int64_t originX;
+	std::int64_t originY;
+	if ( dX >= 0 && dY >= 0 )
+	{
+		originPosition = olc::v2d_generic<long double>{ dX, dY };
+		originX = ( std::int64_t )std::floor( originPosition.x );
+		originY = ( std::int64_t )std::floor( originPosition.y );
 
-	olc::v2d_generic<long double> originPosition{ dOriginX, dOriginY };
+		long double rayDistance = std::hypot( dOriginX - ( ( long double )originX - 0.5 ), dOriginY - ( ( long double )originY - 0.5 ) );
+		long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / radius ) ) );
+		this->addLight( originX, originY, lightSource, intensity );
+
+		for ( int cardinality = 0; cardinality < 4; cardinality++ )
+		{
+			LightCastQuadrant quadrant( cardinality, dOriginX, dOriginY );
+			LightCastRow initialRow = LightCastRow( 1.0f, -1.0f, 1.0f );
+			this->scanDynamic( quadrant, initialRow, originPosition, lightSource, radius );
+		}
+	}
+	else if ( dX < 0 && dY >= 0 )
+	{
+		originPosition = olc::v2d_generic<long double>{ dOriginX + fractionX, dY };
+		originX = ( std::int64_t )std::ceil( originPosition.x );
+		originY = ( std::int64_t )std::floor( originPosition.y );
+
+		long double rayDistance = std::hypot( dOriginX - ( ( long double )originX - 0.5 ), dOriginY - ( ( long double )originY - 0.5 ) );
+		long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / radius ) ) );
+		//this->addLight( originX, originY, lightSource, intensity );
+		//this->addLight( ( std::int64_t )std::floor( dX ), ( std::int64_t )std::floor( dY ), lightSource, intensity );
+		this->addLight( originX - 1, originY, lightSource, intensity );
+
+
+		for ( int cardinality = 0; cardinality < 4; cardinality++ )
+		{
+			//LightCastQuadrant quadrant( cardinality, originPosition.x, dOriginY );
+			LightCastQuadrant quadrant( cardinality, dOriginX - 1, dOriginY );
+			LightCastRow initialRow = LightCastRow( 1.0f, -1.0f, 1.0f );
+			this->scanDynamic( quadrant, initialRow, originPosition, lightSource, radius );
+		}
+	}
+	else if ( dX >= 0 && dY < 0 )
+	{
+		originPosition = olc::v2d_generic<long double>{ dX, dOriginY + fractionY };
+		originX = ( std::int64_t )std::floor( originPosition.x );
+		originY = ( std::int64_t )std::ceil( originPosition.y );
+
+		long double rayDistance = std::hypot( dOriginX - ( ( long double )originX - 0.5 ), dOriginY - ( ( long double )originY - 0.5 ) );
+		long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / radius ) ) );
+		//this->addLight( originX, originY, lightSource, intensity );
+		//this->addLight( ( std::int64_t )std::floor( dX ), ( std::int64_t )std::floor( dY ), lightSource, intensity );
+		this->addLight( originX, originY - 1, lightSource, intensity );
+
+		for ( int cardinality = 0; cardinality < 4; cardinality++ )
+		{
+			//LightCastQuadrant quadrant( cardinality, dOriginX, originPosition.y );
+			LightCastQuadrant quadrant( cardinality, dOriginX, dOriginY - 1 );
+			LightCastRow initialRow = LightCastRow( 1.0f, -1.0f, 1.0f );
+			this->scanDynamic( quadrant, initialRow, originPosition, lightSource, radius );
+		}
+	}
+	else // if ( dX < 0 && dY < 0 )
+	{
+		originPosition = olc::v2d_generic<long double>{ dX, dY };
+		originX = ( std::int64_t )std::ceil( originPosition.x );
+		originY = ( std::int64_t )std::ceil( originPosition.y );
+
+		long double rayDistance = std::hypot( dOriginX - ( ( long double )originX - 0.5 ), dOriginY - ( ( long double )originY - 0.5 ) );
+		long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / radius ) ) );
+		//this->addLight( originX, originY, lightSource, intensity );
+		//this->addLight( ( std::int64_t )std::floor( dX ), ( std::int64_t )std::floor( dY ), lightSource, intensity );
+		this->addLight( originX - 1, originY - 1, lightSource, intensity );
+
+
+
+		for ( int cardinality = 0; cardinality < 4; cardinality++ )
+		{
+			//LightCastQuadrant quadrant( cardinality, dOriginX, dOriginY );
+			//LightCastQuadrant quadrant( cardinality, originPosition.x, originPosition.y );
+			LightCastQuadrant quadrant( cardinality, dOriginX - 1, dOriginY - 1 );
+			LightCastRow initialRow = LightCastRow( 1.0f, -1.0f, 1.0f );
+			this->scanDynamic( quadrant, initialRow, originPosition, lightSource, radius );
+		}
+	}
+
+
+
+
+
+
+
+
+
+	//olc::v2d_generic<long double> originPosition{ dOriginX, dOriginY }; // bottomRight
+	//olc::v2d_generic<long double> originPosition{ dX, dY }; // ( topLeft)
+	//originPosition = olc::v2d_generic<long double>{ dX, dY };
+
+	//std::cout << originPosition.x << ", " << originPosition.y << std::endl;
+	//std::cout << std::numeric_limits<long double>::epsilon() << std::endl;
+
+
+
+	/*
 	for ( int cardinality = 0; cardinality < 4; cardinality++ )
 	{
-		LightCastQuadrant quadrant( cardinality, dOriginX, dOriginY );
+		//LightCastQuadrant quadrant( cardinality, dOriginX, dOriginY );
+		LightCastQuadrant quadrant( cardinality, originPosition.x, originPosition.y );
 		LightCastRow initialRow = LightCastRow( 1.0f, -1.0f, 1.0f );
 		this->scanDynamic( quadrant, initialRow, originPosition, lightSource, radius );
 	}
+	*/
+
 	return;
 }
