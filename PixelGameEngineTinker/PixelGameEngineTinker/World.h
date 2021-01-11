@@ -151,12 +151,12 @@ public:
 
 	void revealDynamic( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& tile, 
 		const olc::v2d_generic<long double>& originPosition, const LightSource& lightSource, const int maxRadius );
-	bool isOpaque( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& tile );
-	bool isTransparent( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& tile );
+	bool isOpaque( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& tile, const olc::v2d_generic<long double>& originPosition );
+	bool isTransparent( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& tile, const olc::v2d_generic<long double>& originPosition );
 
 
 
-	void scanDynamic( LightCastQuadrant& quadrant, LightCastRow& row, const olc::v2d_generic<long double> originPosition, const LightSource& lightSource, const std::uint16_t maxRadius );
+	void scanDynamic( LightCastQuadrant& quadrant, LightCastRow& row, const olc::v2d_generic<long double>& originPosition, const LightSource& lightSource, const std::uint16_t maxRadius );
 
 
 

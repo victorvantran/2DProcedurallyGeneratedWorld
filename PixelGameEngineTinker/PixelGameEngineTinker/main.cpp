@@ -197,7 +197,7 @@ public:
 
 		// updateLighting
 		this->world->resetLighting();
-		this->world->activateCursorLightSource( tilePositionX, tilePositionY, 5 );
+		this->world->activateCursorLightSource( tilePositionX, tilePositionY, 15 );
 		this->world->updateLighting();
 
 

@@ -90,9 +90,6 @@
     <ClInclude Include="Cell.h">
       <Filter>Header Files\Render</Filter>
     </ClInclude>
-    <ClInclude Include="Lighting.h">
-      <Filter>Header Files\World</Filter>
-    </ClInclude>
     <ClInclude Include="Light.h">
       <Filter>Header Files\World</Filter>
     </ClInclude>
@@ -147,9 +144,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="QuadTree.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Lighting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="LightCastRow.cpp">

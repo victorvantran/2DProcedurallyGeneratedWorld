@@ -91,6 +91,7 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 	olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
 	olc::v2d_generic<std::int64_t> size = olc::v2d_generic<std::int64_t>{ ( int )( chunkSize * ( this->_zoomX * tileSize ) ), ( int )( chunkSize * ( this->_zoomY * tileSize ) ) };
 
+	
 	pge->DrawRect(
 		startPos,
 		size,
@@ -102,10 +103,9 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 		std::to_string( worldChunk.getRelativeChunkIndex() ),
 		olc::GREEN
 	);
+	
 
-	// this->calculateTiles( worldChunk ); [!] calcuate tile configuration
 	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas, worldChunk.getLightRenders() );
-	// this->calculateLights( worldChunk );
 	this->renderLightRenders( worldChunk.getLightRenders()[0] );
 
 	return;
