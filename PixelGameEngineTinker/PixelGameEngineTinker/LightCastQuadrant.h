@@ -36,19 +36,19 @@ struct LightCastQuadrant
 
 		long double dOriginX;
 		long double fractionX = std::modfl( dX, &dOriginX );
-		std::int64_t originX = ( std::int64_t )dOriginX;
+		//std::int64_t originX = ( std::int64_t )dOriginX;
 		//dOriginX -= fractionX;
 		dOriginX -= ( dOriginX >= 0 ) ? fractionX : -fractionX;
 
-
+		// std::int64_t originX = ( dOriginX >= 0 ) ? ( std::int64_t )std::ceil( dOriginX ) : ( std::int64_t )std::floor( dOriginX );
 
 		long double dOriginY;
 		long double fractionY = std::modfl( dY, &dOriginY );
-		std::int64_t originY = ( std::int64_t )dOriginY;
+		//std::int64_t originY = ( std::int64_t )dOriginY;
 		//dOriginY -= fractionY;
 		dOriginY -= ( dOriginY >= 0 ) ? fractionY : -fractionY;
 
-
+		// std::int64_t originY = ( dOriginY >= 0 ) ? ( std::int64_t )std::ceil( dOriginY ) : ( std::int64_t )std::floor( dOriginY );
 
 		//if ( fractionY == 0 ) fractionY = 0.99;
 		//if ( fractionX == 0 ) fractionX = 0.99;
@@ -62,10 +62,10 @@ struct LightCastQuadrant
 		long double tileCol;
 		long double rowDepth;
 
-
+		
 		if ( originPosition.x >= 0 && originPosition.y >= 0 )
 		{
-			//std::cout << "bottomRight" << std::endl;
+			// bottom right
 			if ( cardinality == 0 )
 			{
 				return ( 2 * tile.x - 1 + fractionX - 0.5 ) / ( 2 * tile.y - fractionY + 0.5 );
@@ -89,77 +89,7 @@ struct LightCastQuadrant
 		}
 		else if ( originPosition.x < 0 && originPosition.y >= 0 )
 		{
-			//std::cout << "bottomLeft" << std::endl;
-			/*
-			if ( cardinality == 0 )
-			{
-				return ( 2 * tile.x - 1 - fractionX + 0.5 ) / ( 2 * tile.y - fractionY - 0.5 );
-			}
-			else if ( cardinality == 1 )
-			{
-				return ( 2 * tile.x - 1 + fractionY + 0.5 ) / ( 2 * tile.y - fractionX + 0.5 );
-			}
-			else if ( cardinality == 2 )
-			{
-				return ( 2 * tile.x - 1 - fractionX + 0.5 ) / ( 2 * tile.y + fractionY + 0.5 );
-			}
-			else if ( cardinality == 3 )
-			{
-				return ( 2 * tile.x - 1 + fractionY + 0.5 ) / ( 2 * tile.y + fractionX - 0.5 );
-			}
-			else
-			{
-				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-			}
-			*/
-
-			/*
-			if ( cardinality == 0 )
-			{
-				return ( 2 * tile.x - 1 - fractionX - 0.5 ) / ( 2 * tile.y - fractionY - 0.5 );
-			}
-			else if ( cardinality == 1 )
-			{
-				return ( 2 * tile.x - 1 + fractionY + 0.5 ) / ( 2 * tile.y - fractionX - 0.5 );
-			}
-			else if ( cardinality == 2 )
-			{
-				return ( 2 * tile.x - 1 - fractionX - 0.5 ) / ( 2 * tile.y + fractionY + 0.5 );
-			}
-			else if ( cardinality == 3 )
-			{
-				return ( 2 * tile.x - 1 + fractionY + 0.5 ) / ( 2 * tile.y + fractionX + 0.5 );
-			}
-			else
-			{
-				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-			}
-			*/
-			/*
-			if ( cardinality == 0 )
-			{
-				return ( 2 * tile.x - 1 - fractionX - 0.5 ) / ( 2 * tile.y - fractionY - 0.5 );
-			}
-			else if ( cardinality == 1 )
-			{
-				return ( 2 * tile.x - 1 + fractionY + 0.5 ) / ( 2 * tile.y - fractionX - 0.5 );
-			}
-			else if ( cardinality == 2 )
-			{
-				return ( 2 * tile.x - 1 - fractionX - 0.5 ) / ( 2 * tile.y + fractionY + 0.5 );
-			}
-			else if ( cardinality == 3 )
-			{
-				return ( 2 * tile.x - 1 + fractionY + 0.5 ) / ( 2 * tile.y + fractionX + 0.5 );
-			}
-			else
-			{
-				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-			}
-			*/
-
-
-
+			// bottom left
 			if ( cardinality == 0 )
 			{
 				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y - fractionY + 0.5 );
@@ -183,52 +113,7 @@ struct LightCastQuadrant
 		}
 		else if ( originPosition.x >= 0 && originPosition.y < 0 )
 		{
-			//std::cout << "topRight" << std::endl;
-			/*
-			if ( cardinality == 0 )
-			{
-				return ( 2 * tile.x - 1 + fractionX - 0.5 ) / ( 2 * tile.y + fractionY - 0.5 );
-			}
-			else if ( cardinality == 1 )
-			{
-				return ( 2 * tile.x - 1 - fractionY + 0.5 ) / ( 2 * tile.y + fractionX - 0.5 );
-			}
-			else if ( cardinality == 2 )
-			{
-				return ( 2 * tile.x - 1 + fractionX - 0.5 ) / ( 2 * tile.y - fractionY + 0.5 );
-			}
-			else if ( cardinality == 3 )
-			{
-				return ( 2 * tile.x - 1 - fractionY + 0.5 ) / ( 2 * tile.y - fractionX + 0.5 );
-			}
-			else
-			{
-				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-			}
-			*/
-			/*
-			if ( cardinality == 0 )
-			{
-				return ( 2 * tile.x - 1 + fractionX - 0.5 ) / ( 2 * tile.y - ( -fractionY + 0.5 ) );
-			}
-			else if ( cardinality == 1 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY - 0.5 ) ) / ( 2 * tile.y + fractionX - 0.5 );
-			}
-			else if ( cardinality == 2 )
-			{
-				return ( 2 * tile.x - 1 + fractionX - 0.5 ) / ( 2 * tile.y - ( fractionY - 0.5 ) );
-			}
-			else if ( cardinality == 3 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY - 0.5 ) ) / ( 2 * tile.y - fractionX + 0.5 );
-			}
-			else
-			{
-				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-			}
-			*/
-
+			// top right
 			if ( cardinality == 0 )
 			{
 				return ( 2 * tile.x - 1 + fractionX - 0.5 ) / ( 2 * tile.y - ( -fractionY - 0.5 ) );
@@ -252,31 +137,7 @@ struct LightCastQuadrant
 		}
 		else // if ( originPosition.x < 0 && originPosition.y < 0 )
 		{
-			//std::cout << "topLeft" << std::endl;
-			/*
-			if ( cardinality == 0 )
-			{
-				return ( 2 * tile.x - 1 - fractionX + 0.5 ) / ( 2 * tile.y - fractionY + 0.5 );
-			}
-			else if ( cardinality == 1 )
-			{
-				return ( 2 * tile.x - 1 + fractionY - 0.5 ) / ( 2 * tile.y - fractionX + 0.5 );
-			}
-			else if ( cardinality == 2 )
-			{
-				return ( 2 * tile.x - 1 - fractionX + 0.5 ) / ( 2 * tile.y + fractionY - 0.5 );
-			}
-			else if ( cardinality == 3 )
-			{
-				return ( 2 * tile.x - 1 + fractionY - 0.5 ) / ( 2 * tile.y + fractionX - 0.5 );
-			}
-			else
-			{
-				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-			}
-			*/
-
-
+			// top left
 			if ( cardinality == 0 )
 			{
 				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y - ( -fractionY - 0.5 ) );
@@ -297,61 +158,10 @@ struct LightCastQuadrant
 			{
 				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
 			}
-			
 		}
 
 	}
 	
-	
-	/*
-	static float slopeDynamic( const olc::v2d_generic<long double>& tile, const olc::v2d_generic<long double> originPosition, const std::uint8_t cardinality )
-	{
-		// Tangent Slope for subcell positions
-		long double dX = originPosition.x;
-		long double dY = originPosition.y;
-
-		long double fOriginX;
-		long double fractionX = std::modfl( dX, &fOriginX );
-		std::uint16_t originX = ( std::uint16_t )fOriginX;
-		fOriginX -= fractionX;
-
-
-		long double fOriginY;
-		long double fractionY = std::modfl( dY, &fOriginY );
-		std::uint16_t originY = ( std::uint16_t )fOriginY;
-		fOriginY -= fractionY;
-
-
-		if ( fractionY == 0 ) fractionY = 0.99;
-		if ( fractionX == 0 ) fractionX = 0.99;
-
-
-		long double tileCol;
-		long double rowDepth;
-
-		
-		if ( cardinality == 0 )
-		{
-			return ( 2 * tile.x - 1 + fractionX - 0.5 ) / ( 2 * tile.y - fractionY + 0.5 );
-		}
-		else if ( cardinality == 1 )
-		{
-			return ( 2 * tile.x - 1 + fractionY - 0.5 ) / ( 2 * tile.y + fractionX - 0.5 );
-		}
-		else if ( cardinality == 2 )
-		{
-			return ( 2 * tile.x - 1 + fractionX - 0.5 ) / ( 2 * tile.y + fractionY - 0.5 );
-		}
-		else if ( cardinality == 3 )
-		{
-			return ( 2 * tile.x - 1 + fractionY - 0.5 ) / ( 2 * tile.y - fractionX + 0.5 );
-		}
-		else
-		{
-			return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-		}
-	}
-	*/
 
 	static bool isSymmetric( const LightCastRow& row, const olc::v2d_generic<long double>& tile )
 	{

@@ -1269,15 +1269,19 @@ void World::updateLighting()
 void World::revealDynamic( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& tile,
 	const olc::v2d_generic<long double>& originPosition, const LightSource& lightSource, const int maxRadius )
 {
+	if (
+		( quadrant.cardinal == 0 && tile.x == tile.y ) ||
+		( quadrant.cardinal == 1 && tile.x == tile.y ) ||
+		( quadrant.cardinal == 2 && tile.x == -tile.y ) ||
+		( quadrant.cardinal == 3 && tile.x == -tile.y )
+		)
+	{
+		return;
+	}
+
 	olc::v2d_generic<long double> castPosition = quadrant.transform( tile );
-
-
-	//long double rayDistance = std::hypot( tilePosX - originPosX, tilePosY - originPosY );
-	//long double rayDistance = std::hypot( castPosition.x - ( std::int64_t )std::ceil( originPosition.x ), castPosition.y - ( std::int64_t )std::ceil( originPosition.y ) );
-
 	long double originPosX = originPosition.x;
 	long double originPosY = originPosition.y;
-
 
 	long double rayDistance;
 	if ( originPosition.x >= 0 && originPosition.y >= 0 )
@@ -1296,51 +1300,9 @@ void World::revealDynamic( LightCastQuadrant& quadrant, const olc::v2d_generic<l
 	{
 		rayDistance = std::hypot( std::ceil( castPosition.x ) - originPosition.x, std::ceil( castPosition.y ) - originPosition.y );
 	}
-	/*
-	if ( originPosX >= 0 && originPosY <= 0 )
-	{
-		rayDistance = std::hypot( castPosition.x - ( std::int64_t )std::ceil( originPosition.x ), castPosition.y - ( std::int64_t )std::ceil( originPosition.y ) );
-	}
-	else if ( originPosX < 0 && originPosY > 0 )
-	{
-		rayDistance = std::hypot( castPosition.x + ( std::int64_t )std::ceil( originPosition.x ), castPosition.y + ( std::int64_t )std::ceil( originPosition.y ) );
-		//rayDistance = std::hypot( castPosition.x - ( std::int64_t )std::floor( originPosition.x ), castPosition.y - ( std::int64_t )std::floor( originPosition.y ) );
-	}
-	else if ( originPosX < 0 && originPosY <= 0 )
-	{
-		rayDistance = std::hypot( castPosition.x + ( std::int64_t )std::ceil( originPosition.x ), castPosition.y - ( std::int64_t )std::ceil( originPosition.y ) );
-		//rayDistance = std::hypot( castPosition.x - ( std::int64_t )std::floor( originPosition.x ), castPosition.y - ( std::int64_t )std::ceil( originPosition.y ) );
-	}
-	else // if ( originPosX >= 0 && originPosY > 0 )
-	{
-		rayDistance = std::hypot( castPosition.x - ( std::int64_t )std::ceil( originPosition.x ), castPosition.y + ( std::int64_t )std::ceil( originPosition.y ) );
-		//rayDistance = std::hypot( castPosition.x - ( std::int64_t )std::ceil( originPosition.x ), castPosition.y - ( std::int64_t )std::floor( originPosition.y ) );
-	}
-	*/
-	
-	//rayDistance = std::hypot( castPosition.x - ( std::int64_t )std::ceil( originPosition.x ), castPosition.y - ( std::int64_t )std::ceil( originPosition.y ) );
-	// rayDistance = std::hypot( ( std::int64_t )castPosition.x - ( std::int64_t )std::ceil( originPosition.x ), castPosition.y - ( std::int64_t )std::ceil( originPosition.y ) );
-	//rayDistance = std::hypot( std::ceil( castPosition.x ) -  originPosition.x , castPosition.y - ( std::int64_t )std::ceil( originPosition.y ) );
-
-
-	//rayDistance = std::hypot( -castPosition.x + ( std::int64_t )std::ceil( originPosition.x ), -castPosition.y + ( std::int64_t )std::ceil( originPosition.y ) );
 
 	long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / maxRadius ) ) );
 
-
-
-	if (
-		( quadrant.cardinal == 0 && tile.x == tile.y ) ||
-		( quadrant.cardinal == 1 && tile.x == tile.y ) ||
-		( quadrant.cardinal == 2 && tile.x == -tile.y ) ||
-		( quadrant.cardinal == 3 && tile.x == -tile.y )
-		)
-	{
-		return;
-	}
-
-
-	
 	if ( originPosition.x >= 0 && originPosition.y >= 0 )
 	{
 		this->addLight( ( std::int64_t )std::ceil( castPosition.x ), ( std::int64_t )std::ceil( castPosition.y ), lightSource, intensity ); // bottomRight [!]
@@ -1358,13 +1320,7 @@ void World::revealDynamic( LightCastQuadrant& quadrant, const olc::v2d_generic<l
 		this->addLight( ( std::int64_t )std::floor( castPosition.x ), ( std::int64_t )std::floor( castPosition.y ), lightSource, intensity );
 	}
 	
-	
-	//this->addLight( ( std::int64_t )std::ceil( castPosition.x ), ( std::int64_t )std::ceil( castPosition.y ), lightSource, intensity ); // bottomRight [!]
-	//this->addLight( ( std::int64_t )std::floor( castPosition.x ), ( std::int64_t )std::floor( castPosition.y ), lightSource, intensity ); // topLeft [!]
-
-	//this->addLight( ( std::int64_t )std::ceil( castPosition.x ), ( std::int64_t )std::floor( castPosition.y ), lightSource, intensity ); // topRight [!]
-	//this->addLight( ( std::int64_t )std::floor( castPosition.x ), ( std::int64_t )std::ceil( castPosition.y ), lightSource, intensity ); // bottomLeft [!]
-
+	// this->addLight( ( std::int64_t )std::ceil( castPosition.x ), ( std::int64_t )std::ceil( castPosition.y ), lightSource, intensity ); // bottomRight [!]
 	return;
 }
 
@@ -1409,7 +1365,6 @@ void World::reveal( LightCastQuadrant& quadrant, const olc::v2d_generic<long dou
 */
 
 
-
 bool World::isOpaque( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& castPos, const olc::v2d_generic<long double>& originPosition )
 {
 	olc::v2d_generic<long double> position = quadrant.transform( castPos );
@@ -1444,6 +1399,7 @@ bool World::isTransparent( LightCastQuadrant& quadrant, const olc::v2d_generic<l
 		return !tile->exists();
 	}
 }
+
 
 /*
 void World::scanStatic( LightCastQuadrant& quadrant, LightCastRow& row, const olc::v2d_generic<long double> originPosition, const std::uint16_t maxRadius )
@@ -1499,24 +1455,11 @@ void World::scanDynamic( LightCastQuadrant& quadrant, LightCastRow& row,
 		long double tilePosX = position.x;
 		long double tilePosY = position.y;
 
-		// find relativeTilePos
-		// if relativeTilePos is different (i.e. out of bounds occurs)
-		// use is for isOpaque, isTransparent, and addLight, on the proper quadrant
-
-
-		bool inBounds =  this->getTile( ( std::int64_t )std::ceil( tilePosX ), ( std::int64_t )std::ceil( tilePosY ) ) != nullptr;
+		bool inBounds =  this->getTile( ( std::int64_t )std::ceil( tilePosX ), ( std::int64_t )std::ceil( tilePosY ) ) != nullptr; // [!]
 		if ( !inBounds ) return;
 
 		if ( this->isOpaque( quadrant, tile, originPosition ) || LightCastQuadrant::isSymmetric( row, tile ) )
 		{
-			/*
-			if ( ( std::int16_t )std::ceil( tilePosX ) < 0 || ( std::int16_t )std::ceil( tilePosX ) >= this->_width ||
-				( std::int16_t )std::ceil( tilePosY ) < 0 || ( std::int16_t )std::ceil( tilePosY ) >= this->_height
-				)
-			{
-				std::cout << row.depth << ": " << ( std::int16_t )std::ceil( tilePosX ) << ", " << ( std::int16_t )std::ceil( tilePosY ) << std::endl;
-			}
-			*/
 			this->revealDynamic( quadrant, tile, originPosition, lightSource, maxRadius );
 		}
 		if ( prevTile != nullptr && this->isOpaque( quadrant, *prevTile, originPosition ) && this->isTransparent( quadrant, tile, originPosition ) )
@@ -1530,18 +1473,6 @@ void World::scanDynamic( LightCastQuadrant& quadrant, LightCastRow& row,
 			this->scanDynamic( quadrant, nextRow, originPosition, lightSource, maxRadius );
 		}
 
-		/*
-		if ( ( std::int16_t )std::ceil( tilePosX ) < 0 || ( std::int16_t )std::ceil( tilePosX ) >= this->_width ||
-			( std::int16_t )std::ceil( tilePosY ) < 0 || ( std::int16_t )std::ceil( tilePosY ) >= this->_height
-			)
-		{
-			prevTile = prevTile;
-		}
-		else
-		{
-			prevTile = &tile;
-		}
-		*/
 		prevTile = &tile;
 
 	}
@@ -1564,13 +1495,17 @@ void World::emitDynamicLight( long double dX, long double dY, std::int64_t radiu
 {
 	long double dOriginX;
 	long double fractionX = std::modfl( dX, &dOriginX );
-	std::int64_t originX = ( std::int64_t )dOriginX;
+	//std::int64_t originX = ( std::int64_t )dOriginX;
 	dOriginX -= ( dOriginX >= 0 ) ? fractionX : -fractionX;
+	std::int64_t originX = ( dOriginX >= 0 ) ? ( std::int64_t )std::ceil( dOriginX ) : ( std::int64_t )std::floor( dOriginX );
+
 
 	long double dOriginY;
 	long double fractionY = std::modfl( dY, &dOriginY );
-	std::int64_t originY = ( std::int64_t )dOriginY;
+	//std::int64_t originY = ( std::int64_t )dOriginY;
 	dOriginY -= ( dOriginY >= 0 ) ? fractionY : -fractionY;
+	std::int64_t originY = ( dOriginY >= 0 ) ? ( std::int64_t )std::ceil( dOriginY ) : ( std::int64_t )std::floor( dOriginY );
+
 
 	const LightSource& lightSource = *this->getLightSource( originX, originY );
 
@@ -1600,8 +1535,6 @@ void World::activateCursorLightSource( long double dX, long double dY, std::int6
 	long double dOriginX;
 	long double fractionX = std::modfl( dX, &dOriginX );
 	//std::int64_t originX = ( dOriginX >= 0 ) ? ( std::int64_t )std::ceil( dOriginX ) : ( std::int64_t )std::floor( dOriginX );
-
-
 	dOriginX -= ( dOriginX >= 0 ) ? fractionX : -fractionX;
 	std::int64_t originX = ( dOriginX >= 0 ) ? ( std::int64_t )std::ceil( dOriginX ) : ( std::int64_t )std::floor( dOriginX );
 
@@ -1609,21 +1542,15 @@ void World::activateCursorLightSource( long double dX, long double dY, std::int6
 	long double fractionY = std::modfl( dY, &dOriginY );
 	//std::int64_t originY = ( std::int64_t )dOriginY;
 	//std::int64_t originY = ( dOriginY >= 0 ) ? ( std::int64_t )std::ceil( dOriginY ) : ( std::int64_t )std::floor( dOriginY );
-
-
-
 	dOriginY -= ( dOriginY >= 0 ) ? fractionY : -fractionY;
 	std::int64_t originY = ( dOriginY >= 0 ) ? ( std::int64_t )std::ceil( dOriginY ) : ( std::int64_t )std::floor( dOriginY );
 
-
 	const LightSource& lightSource = LightSource( 255, 255, 255, 255, ( std::int16_t )radius );
-
+	//const LightSource& lightSource = LightSource( 252, 236, 167, 255, ( std::int16_t )radius );
 
 	long double rayDistance = std::hypot( dOriginX - ( ( long double )originX - 0.5 ), dOriginY - ( ( long double )originY - 0.5 ) );
 	long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / radius ) ) );
 	this->addLight( originX, originY, lightSource, intensity );
-
-	//std::cout << originX << ", " << originY << std::endl;
 	//this->addLight( originX, originY, lightSource, 1.0 );
 
 	olc::v2d_generic<long double> originPosition{ dOriginX, dOriginY };

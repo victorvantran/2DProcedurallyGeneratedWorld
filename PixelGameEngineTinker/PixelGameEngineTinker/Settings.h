@@ -84,7 +84,7 @@ public:
 		static const std::uint16_t FOCAL_POINT_CELL_HEIGHT = World::CHUNK_CELL_SIZE;
 
 		static const std::uint16_t VIEW_CELL_WIDTH = Screen::SCREEN_CELL_WIDTH;
-		static const std::uint16_t VIEW_CELL_HEIGHT = Screen::SCREEN_CELL_HEIGHT;
+		static const std::uint16_t VIEW_CELL_HEIGHT = Screen::SCREEN_CELL_HEIGHT + 2;
 
 		static const std::int32_t ABSOLUTE_PIXEL_OFFSET_X = Screen::CELL_PIXEL_SIZE * ( Screen::SCREEN_CELL_WIDTH / 2 ) - Screen::CELL_PIXEL_SIZE * ( FOCAL_POINT_CELL_WIDTH / 2 );
 		static const std::int32_t ABSOLUTE_PIXEL_OFFSET_Y = Screen::CELL_PIXEL_SIZE * ( Screen::SCREEN_CELL_HEIGHT / 2 ) - Screen::CELL_PIXEL_SIZE * ( FOCAL_POINT_CELL_HEIGHT / 2 );

@@ -54,8 +54,10 @@ void Camera::worldToScreen( long double cellX, long double cellY, std::int64_t& 
 	// float to int ( camera offset determines displacement )
 
 	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
-	pixelX = ( std::int64_t )( ( cellX - ( this->_focalPoint.x ) ) * ( this->_zoomX * tileSize ) ) + this->_absolutePixelOffsetX;
-	pixelY = ( std::int64_t )( ( cellY - ( this->_focalPoint.y ) ) * ( this->_zoomY * tileSize ) ) + this->_absolutePixelOffsetY;
+	// pixelX = ( std::int64_t )( ( cellX - ( this->_focalPoint.x ) ) * ( this->_zoomX * tileSize ) ) + this->_absolutePixelOffsetX;
+	// pixelY = ( std::int64_t )( ( cellY - ( this->_focalPoint.y ) ) * ( this->_zoomY * tileSize ) ) + this->_absolutePixelOffsetY;
+	pixelX = ( std::int64_t )std::ceil( ( ( cellX - ( this->_focalPoint.x ) ) * ( this->_zoomX * tileSize ) ) + this->_absolutePixelOffsetX );
+	pixelY = ( std::int64_t )std::ceil( ( ( cellY - ( this->_focalPoint.y ) ) * ( this->_zoomY * tileSize ) ) + this->_absolutePixelOffsetY );
 	return;
 }
 
@@ -91,7 +93,7 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 	olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
 	olc::v2d_generic<std::int64_t> size = olc::v2d_generic<std::int64_t>{ ( int )( chunkSize * ( this->_zoomX * tileSize ) ), ( int )( chunkSize * ( this->_zoomY * tileSize ) ) };
 
-	
+	/*
 	pge->DrawRect(
 		startPos,
 		size,
@@ -103,7 +105,7 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 		std::to_string( worldChunk.getRelativeChunkIndex() ),
 		olc::GREEN
 	);
-	
+	*/
 
 	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas, worldChunk.getLightRenders() );
 	this->renderLightRenders( worldChunk.getLightRenders()[0] );
@@ -261,13 +263,23 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 			std::uint8_t alpha = ( std::uint8_t )( ( corner0 & 0x000000ff ) );
 			olc::Pixel color = olc::Pixel{ r, g, b, alpha };
 			
-			//pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
-			pge->SetDecalMode( olc::DecalMode::ADDITIVE );
+			pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
+			//pge->SetDecalMode( olc::DecalMode::ADDITIVE );
+			/*
 			pge->FillRectDecal(
 				startPos,
-				olc::v2d_generic<long double>{ this->_zoomX * tileSize, this->_zoomY * tileSize } *scale,
+				olc::v2d_generic<long double>{ this->_zoomX * tileSize, this->_zoomY * tileSize } * scale,
 				color 
 			);
+			*/
+
+
+			pge->FillRectDecal(
+				startPos,
+				olc::vf2d{ (float)this->_zoomX * ( float )tileSize, ( float )this->_zoomY * ( float )tileSize } *( float )scale,
+				color
+			);
+
 			pge->SetDecalMode( olc::DecalMode::NORMAL );
 		}
 
@@ -311,7 +323,15 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 					verticiesB[1] = olc::vf2d{ ( float )topLeftPixelX, ( float )bottomRightPixelY };
 					verticiesB[2] = olc::vf2d{ ( float )bottomRightPixelX, ( float )bottomRightPixelY };
 					verticiesB[3] = olc::vf2d{ ( float )bottomRightPixelX , ( float )topLeftPixelY };
-						
+					
+
+					/*
+					verticiesB[0] = olc::vf2d{ ( float )topLeftPixelX, ( float )topLeftPixelY };
+					verticiesB[1] = olc::vf2d{ ( float )topLeftPixelX, ( float )bottomRightPixelY };
+					verticiesB[2] = olc::vf2d{ ( float )topLeftPixelX + ( float )17, ( float )topLeftPixelY + ( float )17 };
+					verticiesB[3] = olc::vf2d{ ( float )topLeftPixelX + ( float )17 , ( float )topLeftPixelY };
+					*/
+
 					olc::vf2d textureCoordinates[4];
 					textureCoordinates[0] = olc::vf2d{ 0.0f, 0.0f };
 					textureCoordinates[1] = olc::vf2d{ 0.0f, 1.0f };
@@ -319,8 +339,8 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 					textureCoordinates[3] = olc::vf2d{ 1.0f, 0.0f };
 						
 					olc::Decal* lightDecal = this->_decalLight;
-					//pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
-					pge->SetDecalMode( olc::DecalMode::ADDITIVE );
+					pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
+					//pge->SetDecalMode( olc::DecalMode::ADDITIVE );
 					pge->DrawExplicitDecal(
 						lightDecal,
 						verticiesB,

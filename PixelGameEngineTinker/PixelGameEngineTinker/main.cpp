@@ -63,13 +63,12 @@ public:
 
 	bool OnUserUpdate( float fElapsedTime ) override
 	{
-
-
 		// Camera Debug
 		long double mouseX = ( long double )GetMouseX();
 		long double mouseY = ( long double )GetMouseY();
 
 		long double panSpeed = 20.0f;
+
 		if ( GetKey( olc::Key::UP ).bPressed || GetKey( olc::Key::UP ).bHeld )
 		{
 			camera->panY( -panSpeed * (long double)fElapsedTime );
@@ -210,6 +209,15 @@ public:
 		// DEBUG
 		drawTileIndexString( tileIndex );
 
+		/*
+		DrawStringDecal(
+			olc::vi2d( GetMouseX(), GetMouseY() ),
+			"O",
+			olc::WHITE,
+			olc::vf2d( 2.0f, 2.0f )
+		);
+		*/
+
 		if ( GetKey( olc::Key::M ).bPressed ) world->DEBUG_PRINT_TILE_SPRITES();
 		
 		return true;
@@ -256,6 +264,7 @@ public:
 
 int main()
 {
+	//ShowCursor( NULL );
 	Example demo;
 	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize ) )
 		demo.Start();
