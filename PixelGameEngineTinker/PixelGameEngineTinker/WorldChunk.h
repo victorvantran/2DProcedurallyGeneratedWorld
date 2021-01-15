@@ -47,7 +47,25 @@ public:
 	std::uint16_t getRelativeChunkIndex() const;
 	void setRelativeChunkIndex( std::uint16_t relChunkIndex );
 
-	void insert( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
+
+
+
+	void insertTile( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertLightSource( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+	typedef void ( WorldChunk::* funcType )( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	static const funcType insertMethods[( unsigned long long )TileIdentity::count];
+	void insertWater( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertStone( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertDirt( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertTorch( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+	void insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+
+
+
+	void insertTile( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
 	void remove( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
 	void insertTiles( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
 	void removeTiles( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );

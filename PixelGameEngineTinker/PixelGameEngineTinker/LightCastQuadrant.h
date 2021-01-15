@@ -36,50 +36,13 @@ struct LightCastQuadrant
 
 		long double dOriginX;
 		long double fractionX = std::modfl( dX, &dOriginX );
-		dOriginX -= ( dOriginX >= 0 ) ? fractionX : -fractionX;
 
 		long double dOriginY;
 		long double fractionY = std::modfl( dY, &dOriginY );
-		dOriginY -= ( dOriginY >= 0 ) ? fractionY : -fractionY;
-
-		//if ( fractionY == 0 ) fractionY = ( originPosition.y >= 0 ) ? 1 : -1;
-		//if ( fractionX == 0 ) fractionX = ( originPosition.x >= 0 ) ? 1 : -1;
-
-		//if ( fractionY == 0 ) fractionY = ( originPosition.y >= 0 ) ? 0.99 : -0.99;
-		//if ( fractionX == 0 ) fractionX = ( originPosition.x >= 0 ) ? 0.99 : -0.99;
 
 		if ( originPosition.x >= 0 && originPosition.y >= 0 )
 		{
 			// bottom right
-			//if ( fractionY == 0 ) fractionY = ( originPosition.y >= 0 ) ? 0.99 : -0.99;
-			//if ( fractionX == 0 ) fractionX = ( originPosition.x >= 0 ) ? 0.99 : -0.99;
-
-			/*
-			if ( cardinality == 0 )
-			{
-				return ( 2 * tile.x - 1 + fractionX - 0.5 ) / ( 2 * tile.y - fractionY + 0.5 );
-			}
-			else if ( cardinality == 1 )
-			{
-				return ( 2 * tile.x - 1 + fractionY - 0.5 ) / ( 2 * tile.y + fractionX - 0.5 );
-			}
-			else if ( cardinality == 2 )
-			{
-				return ( 2 * tile.x - 1 + fractionX - 0.5 ) / ( 2 * tile.y + fractionY - 0.5 );
-			}
-			else if ( cardinality == 3 )
-			{
-				return ( 2 * tile.x - 1 + fractionY - 0.5 ) / ( 2 * tile.y - fractionX + 0.5 );
-			}
-			else
-			{
-				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-			}
-			*/
-
-			//if ( fractionY == 0 ) fractionY = ( originPosition.y >= 0 ) ? -1 : 1;
-			//if ( fractionX == 0 ) fractionX = ( originPosition.x >= 0 ) ? -1 : 1;
-
 			/*
 			if ( cardinality == 0 )
 			{
@@ -102,10 +65,9 @@ struct LightCastQuadrant
 				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
 			}
 			*/
-
 			if ( cardinality == 0 )
 			{
-				return ( 2 * tile.x - 1 - ( fractionX - 0.5 ) ) / ( 2 * tile.y - ( -fractionY + 0.5 ) );
+				return ( 2 * tile.x - 1 - ( fractionX - 0.5 ) ) / ( 2 * tile.y + ( fractionY - 0.5 ) );
 			}
 			else if ( cardinality == 1 )
 			{
@@ -117,7 +79,7 @@ struct LightCastQuadrant
 			}
 			else if ( cardinality == 3 )
 			{
-				return ( 2 * tile.x - 1 - ( fractionY - 0.5 ) ) / ( 2 * tile.y - ( -fractionX + 0.5 ) );
+				return ( 2 * tile.x - 1 - ( fractionY - 0.5 ) ) / ( 2 * tile.y + ( fractionX - 0.5 ) );
 			}
 			else
 			{
@@ -127,9 +89,7 @@ struct LightCastQuadrant
 		else if ( originPosition.x < 0 && originPosition.y >= 0 )
 		{
 			// bottom left
-
 			/*
-			if ( fractionX == 0 ) fractionX = -1;
 			if ( cardinality == 0 )
 			{
 				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y + fractionY - 0.5 );
@@ -154,55 +114,29 @@ struct LightCastQuadrant
 
 			if ( cardinality == 0 )
 			{
-				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y + fractionY - 0.5 );
+				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y + ( fractionY - 0.5 ) );
 			}
 			else if ( cardinality == 1 )
 			{
-				return ( 2 * tile.x - 1 - fractionY + 0.5 ) / ( 2 * tile.y - ( fractionX + 0.5 ) );
+				return ( 2 * tile.x - 1 - ( fractionY - 0.5 ) ) / ( 2 * tile.y - ( fractionX + 0.5 ) );
 			}
 			else if ( cardinality == 2 )
 			{
-				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y - fractionY + 0.5 );
+				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y - ( fractionY - 0.5 ) );
 			}
 			else if ( cardinality == 3 )
 			{
-				return ( 2 * tile.x - 1 - fractionY + 0.5 ) / ( 2 * tile.y - ( -fractionX - 0.5 ) );
+				return ( 2 * tile.x - 1 - ( fractionY - 0.5 ) ) / ( 2 * tile.y + ( fractionX + 0.5 ) );
 			}
 			else
 			{
 				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
 			}
-
-
 		}
 		else if ( originPosition.x >= 0 && originPosition.y < 0 )
 		{
 			// top right
 			/*
-			if ( cardinality == 0 )
-			{
-				return ( 2 * tile.x - 1 + fractionX - 0.5 ) / ( 2 * tile.y - ( -fractionY - 0.5 ) );
-			}
-			else if ( cardinality == 1 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY + 0.5 ) ) / ( 2 * tile.y + fractionX - 0.5 );
-			}
-			else if ( cardinality == 2 )
-			{
-				return ( 2 * tile.x - 1 + fractionX - 0.5 ) / ( 2 * tile.y - ( fractionY + 0.5 ) );
-			}
-			else if ( cardinality == 3 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY + 0.5 ) ) / ( 2 * tile.y - fractionX + 0.5 );
-			}
-			else
-			{
-				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-			}
-			*/
-			// fractionX = ( fractionX != 0 ) ? fractionX : 1;
-
-			
 			if ( cardinality == 0 )
 			{
 				return ( 2 * tile.x - 1 - ( fractionX - 0.5 ) ) / ( 2 * tile.y - ( -fractionY - 0.5 ) );
@@ -223,39 +157,32 @@ struct LightCastQuadrant
 			{
 				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
 			}
-			
-		}
-		else // if ( originPosition.x < 0 && originPosition.y < 0 )
-		{
-			//fractionX = ( fractionX != 0 ) ? fractionX : -1;
-			//fractionY = ( fractionY != 0 ) ? fractionY : -1;
-
-			// top left
-			/*
+			*/
 			if ( cardinality == 0 )
 			{
-				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y - ( -fractionY - 0.5 ) );
+				return ( 2 * tile.x - 1 - ( fractionX - 0.5 ) ) / ( 2 * tile.y + ( fractionY + 0.5 ) );
 			}
 			else if ( cardinality == 1 )
 			{
-				return ( 2 * tile.x - 1 - ( fractionY + 0.5 ) ) / ( 2 * tile.y - ( fractionX + 0.5 ) );
+				return ( 2 * tile.x - 1 - ( fractionY + 0.5 ) ) / ( 2 * tile.y - ( fractionX - 0.5 ) );
 			}
 			else if ( cardinality == 2 )
 			{
-				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y - ( fractionY + 0.5 ) );
+				return ( 2 * tile.x - 1 - ( fractionX - 0.5 ) ) / ( 2 * tile.y - ( fractionY + 0.5 ) );
 			}
 			else if ( cardinality == 3 )
 			{
-				return ( 2 * tile.x - 1 - ( fractionY + 0.5 ) ) / ( 2 * tile.y - ( -fractionX - 0.5 ) );
+				return ( 2 * tile.x - 1 - ( fractionY + 0.5 ) ) / ( 2 * tile.y + ( fractionX - 0.5 ) );
 			}
 			else
 			{
 				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
 			}
-			*/
-
-			//fractionX = ( fractionX != 0 ) ? fractionX : -1;
-
+		}
+		else // if ( originPosition.x < 0 && originPosition.y < 0 )
+		{
+			// top left
+			/*
 			if ( cardinality == 0 )
 			{
 				return ( 2 * tile.x - 1 + ( -fractionX - 0.5 ) ) / ( 2 * tile.y - ( -fractionY - 0.5 ) );
@@ -267,6 +194,27 @@ struct LightCastQuadrant
 			else if ( cardinality == 2 )
 			{
 				return ( 2 * tile.x - 1 + ( -fractionX - 0.5 ) ) / ( 2 * tile.y - ( fractionY + 0.5 ) );
+			}
+			else if ( cardinality == 3 )
+			{
+				return ( 2 * tile.x - 1 - ( fractionY + 0.5 ) ) / ( 2 * tile.y + ( fractionX + 0.5 ) );
+			}
+			else
+			{
+				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
+			}
+			*/
+			if ( cardinality == 0 )
+			{
+				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y + ( fractionY + 0.5 ) );
+			}
+			else if ( cardinality == 1 )
+			{
+				return ( 2 * tile.x - 1 - ( fractionY + 0.5 ) ) / ( 2 * tile.y - ( fractionX + 0.5 ) );
+			}
+			else if ( cardinality == 2 )
+			{
+				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y - ( fractionY + 0.5 ) );
 			}
 			else if ( cardinality == 3 )
 			{

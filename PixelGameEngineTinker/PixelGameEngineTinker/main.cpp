@@ -158,6 +158,10 @@ public:
 		{
 			tileId = 3;
 		}
+		else if ( GetKey( olc::Key::K4 ).bPressed )
+		{
+			tileId = 4;
+		}
 
 		// Insert to world Debug 
 		long double tilePositionX;
@@ -172,9 +176,10 @@ public:
 
 
 
-		if ( GetKey( olc::Key::P ).bPressed )
+		if ( GetKey( olc::Key::P ).bPressed || GetKey( olc::Key::P ).bHeld )
 		{
-			world->insert( tileIndex.x, tileIndex.y, 1, 1, tileId );
+			//world->insert( tileIndex.x, tileIndex.y, 1, 1, tileId );
+			world->insert( static_cast<TileIdentity>( tileId ), tileIndex.x, tileIndex.y, 1, 1 );
 		}
 
 
@@ -185,8 +190,12 @@ public:
 
 		if ( GetKey( olc::Key::L ).bPressed )
 		{
-			//std::cout << world->getLight( 63, 14 )->getBlue() << std::endl;
-			std::cout << world->getLight( 0, 1 )->getBlue() << std::endl;
+			//world->insertTorch( tileIndex.x, tileIndex.y, tileId );
+			// insert -> insertTile
+			//		  -> insertTorch
+			//		  -> insert...
+
+			// emit static light... iterate through all worldChunks for all lightSources. See if lightsource radial distance are within camera view. emit
 		}
 
 
@@ -214,7 +223,9 @@ public:
 
 		// updateLighting
 		this->world->resetLighting();
-		this->world->activateCursorLightSource( tilePositionX, tilePositionY, 15 );
+		//this->world->activateCursorLightSource( tilePositionX, tilePositionY, 15 );
+		this->world->activateCursorLightSource( tileIndex.x, tileIndex.y, 15 );
+
 		this->world->updateLighting();
 
 

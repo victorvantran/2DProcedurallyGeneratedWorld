@@ -3,6 +3,10 @@
 #include "WorldChunkMemory.h"
 
 
+
+
+
+
 unsigned char World::copyBits( unsigned char& destination, unsigned char copy, unsigned startIndex, unsigned char endIndex )
 {
 	// Copy a subset of bits from one byte to another using the same positions within each byte
@@ -268,11 +272,55 @@ void World::initializeWorldChunks()
 }
 
 
-void World::insert( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Modification
+
+
+
+void World::insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	// Pointer to a method is slightly different than a pointer to a function
+	//World::funcType method = World::insertMethods[0];
+	//( this->*method )( tileId, x, y, width, height );
+	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
+
+	std::thread addSpriteTileThread( &World::addSpriteTile, this, ( std::uint64_t )tileId );
+	addSpriteTileThread.join(); // [change]
+
+	for ( int i = 0; i < this->_numWorldChunks; i++ )
+	{
+		if ( BoundingBox<std::int64_t>( x, y, width, height ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
+		{
+			this->_worldChunks[i].insert( tileId, x, y, width, height );
+		}
+	}
+	return;
+}
+
+
+void World::insert( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, std::uint64_t id )
 {
 	// Insert a tile ( or tiles ) into the proper world chunk.
 
-	std::lock_guard<std::mutex> lockModify( this->_modifyWordChunksMutex );
+	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
 
 	std::thread addSpriteTileThread( &World::addSpriteTile, this, id );
 	addSpriteTileThread.join(); // [change]
@@ -281,7 +329,7 @@ void World::insert( std::int64_t x, std::int64_t y, std::int64_t width, std::int
 	{
 		if ( BoundingBox<std::int64_t>( x, y, width, height ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
 		{
-			this->_worldChunks[i].insert( x, y, width, height, id );
+			this->_worldChunks[i].insertTile( x, y, width, height, id );
 		}
 	}
 	return;
@@ -292,7 +340,7 @@ void World::remove( std::int64_t x, std::int64_t y, std::int64_t width, std::int
 {
 	// Remove a tile ( or tiles ) from the proper world chunk.
 
-	std::lock_guard<std::mutex> lockModify( this->_modifyWordChunksMutex );
+	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
@@ -903,7 +951,8 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 				addSpriteTileThread.join();
 				historyTileIds.insert( tileId );
 			}
-			worldChunk.insert( worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1, tileId );
+			//worldChunk.insertTile( worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1, tileId );
+			worldChunk.insert( static_cast<TileIdentity>( tileId ), worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1 );
 
 			remainingSegmentBits -= numBitsPerKey;
 		}
@@ -953,7 +1002,8 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 				addSpriteTileThread.join();
 				historyTileIds.insert( tileId );
 			}
-			worldChunk.insert( worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1, tileId );
+			//worldChunk.insertTile( worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1, tileId );
+			worldChunk.insert( static_cast<TileIdentity>( tileId ), worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1 );
 		}
 
 		if ( remainingSegmentBits == 0 )
@@ -1458,7 +1508,6 @@ void World::scanDynamic( LightCastQuadrant& quadrant, LightCastRow& row,
 	{
 		return;
 	}
-
 	const olc::v2d_generic<long double>* prevTile = nullptr;
 	for ( const olc::v2d_generic<long double>& tile : row.getTiles() )
 	{
@@ -1470,7 +1519,7 @@ void World::scanDynamic( LightCastQuadrant& quadrant, LightCastRow& row,
 		if ( !inBounds ) return;
 
 		if ( this->isOpaque( quadrant, tile, originPosition ) || LightCastQuadrant::isSymmetric( row, tile ) )
-		{
+ 		{
 			this->revealDynamic( quadrant, tile, originPosition, lightSource, maxRadius );
 		}
 		if ( prevTile != nullptr && this->isOpaque( quadrant, *prevTile, originPosition ) && this->isTransparent( quadrant, tile, originPosition ) )
@@ -1485,7 +1534,6 @@ void World::scanDynamic( LightCastQuadrant& quadrant, LightCastRow& row,
 		}
 
 		prevTile = &tile;
-
 	}
 
 	if ( prevTile != nullptr && this->isTransparent( quadrant, *prevTile, originPosition ) )
@@ -1549,18 +1597,16 @@ void World::activateCursorLightSource( long double dX, long double dY, std::int6
 
 	long double dOriginX;
 	long double fractionX = std::modfl( dX, &dOriginX );
-	//dOriginX -= ( dOriginX >= 0 ) ? fractionX : -fractionX;
-	//std::int64_t originX = ( dOriginX >= 0 ) ? ( std::int64_t )std::ceil( dOriginX ) : ( std::int64_t )std::floor( dOriginX );
+
 
 	long double dOriginY;
 	long double fractionY = std::modfl( dY, &dOriginY );
-	//dOriginY -= ( dOriginY >= 0 ) ? fractionY : -fractionY;
-	//std::int64_t originY = ( dOriginY >= 0 ) ? ( std::int64_t )std::ceil( dOriginY ) : ( std::int64_t )std::floor( dOriginY );
 
 
 	olc::v2d_generic<long double> originPosition;
 	std::int64_t originX;
 	std::int64_t originY;
+
 	if ( dX >= 0 && dY >= 0 )
 	{
 		originPosition = olc::v2d_generic<long double>{ dX, dY };
@@ -1586,14 +1632,10 @@ void World::activateCursorLightSource( long double dX, long double dY, std::int6
 
 		long double rayDistance = std::hypot( dOriginX - ( ( long double )originX - 0.5 ), dOriginY - ( ( long double )originY - 0.5 ) );
 		long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / radius ) ) );
-		//this->addLight( originX, originY, lightSource, intensity );
-		//this->addLight( ( std::int64_t )std::floor( dX ), ( std::int64_t )std::floor( dY ), lightSource, intensity );
 		this->addLight( originX - 1, originY, lightSource, intensity );
-
 
 		for ( int cardinality = 0; cardinality < 4; cardinality++ )
 		{
-			//LightCastQuadrant quadrant( cardinality, originPosition.x, dOriginY );
 			LightCastQuadrant quadrant( cardinality, dOriginX - 1, dOriginY );
 			LightCastRow initialRow = LightCastRow( 1.0f, -1.0f, 1.0f );
 			this->scanDynamic( quadrant, initialRow, originPosition, lightSource, radius );
@@ -1607,13 +1649,10 @@ void World::activateCursorLightSource( long double dX, long double dY, std::int6
 
 		long double rayDistance = std::hypot( dOriginX - ( ( long double )originX - 0.5 ), dOriginY - ( ( long double )originY - 0.5 ) );
 		long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / radius ) ) );
-		//this->addLight( originX, originY, lightSource, intensity );
-		//this->addLight( ( std::int64_t )std::floor( dX ), ( std::int64_t )std::floor( dY ), lightSource, intensity );
 		this->addLight( originX, originY - 1, lightSource, intensity );
 
 		for ( int cardinality = 0; cardinality < 4; cardinality++ )
 		{
-			//LightCastQuadrant quadrant( cardinality, dOriginX, originPosition.y );
 			LightCastQuadrant quadrant( cardinality, dOriginX, dOriginY - 1 );
 			LightCastRow initialRow = LightCastRow( 1.0f, -1.0f, 1.0f );
 			this->scanDynamic( quadrant, initialRow, originPosition, lightSource, radius );
@@ -1627,16 +1666,10 @@ void World::activateCursorLightSource( long double dX, long double dY, std::int6
 
 		long double rayDistance = std::hypot( dOriginX - ( ( long double )originX - 0.5 ), dOriginY - ( ( long double )originY - 0.5 ) );
 		long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / radius ) ) );
-		//this->addLight( originX, originY, lightSource, intensity );
-		//this->addLight( ( std::int64_t )std::floor( dX ), ( std::int64_t )std::floor( dY ), lightSource, intensity );
 		this->addLight( originX - 1, originY - 1, lightSource, intensity );
-
-
 
 		for ( int cardinality = 0; cardinality < 4; cardinality++ )
 		{
-			//LightCastQuadrant quadrant( cardinality, dOriginX, dOriginY );
-			//LightCastQuadrant quadrant( cardinality, originPosition.x, originPosition.y );
 			LightCastQuadrant quadrant( cardinality, dOriginX - 1, dOriginY - 1 );
 			LightCastRow initialRow = LightCastRow( 1.0f, -1.0f, 1.0f );
 			this->scanDynamic( quadrant, initialRow, originPosition, lightSource, radius );
@@ -1644,31 +1677,8 @@ void World::activateCursorLightSource( long double dX, long double dY, std::int6
 	}
 
 
+	// std::cout << originPosition.x << ", " << originPosition.y << std::endl;
 
-
-
-
-
-
-
-	//olc::v2d_generic<long double> originPosition{ dOriginX, dOriginY }; // bottomRight
-	//olc::v2d_generic<long double> originPosition{ dX, dY }; // ( topLeft)
-	//originPosition = olc::v2d_generic<long double>{ dX, dY };
-
-	//std::cout << originPosition.x << ", " << originPosition.y << std::endl;
-	//std::cout << std::numeric_limits<long double>::epsilon() << std::endl;
-
-
-
-	/*
-	for ( int cardinality = 0; cardinality < 4; cardinality++ )
-	{
-		//LightCastQuadrant quadrant( cardinality, dOriginX, dOriginY );
-		LightCastQuadrant quadrant( cardinality, originPosition.x, originPosition.y );
-		LightCastRow initialRow = LightCastRow( 1.0f, -1.0f, 1.0f );
-		this->scanDynamic( quadrant, initialRow, originPosition, lightSource, radius );
-	}
-	*/
 
 	return;
 }

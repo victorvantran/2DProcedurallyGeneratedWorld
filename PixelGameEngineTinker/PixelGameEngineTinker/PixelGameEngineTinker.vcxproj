@@ -40,6 +40,7 @@
     <ClInclude Include="BoundingBox.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Cell.h" />
+    <ClInclude Include="Modify.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="LightCastQuadrant.h" />
     <ClInclude Include="LightCastRow.h" />

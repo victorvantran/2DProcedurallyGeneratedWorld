@@ -51,7 +51,7 @@ private:
 
 	// Memory
 	std::mutex _worldDatabaseMutex;
-	std::mutex _modifyWordChunksMutex; // [!] get rid of saveworldchunksmutex and load, and set it to modify/access
+	std::mutex _modifyWorldChunksMutex; // [!] get rid of saveworldchunksmutex and load, and set it to modify/access
 
 	std::vector<WorldChunkMemory*> _saveWorldChunks;
 	std::atomic<bool> _runningSaveWorldGeography;
@@ -87,8 +87,38 @@ public:
 	void initializeDelimits( const BoundingBox<long double>& cameraView );
 	void initializeWorldChunks();
 
-	// Modify
+	// Modify World
+	// Insertion
+	void insertTile( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertLightSource( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+
+	typedef void ( World::*funcType )( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+	static const funcType insertMethods[( unsigned long long )TileIdentity::count];
+
+	void insertWater( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertStone( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertDirt( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertTorch( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	
+	void insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+	/*
+	void insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+	{
+		(*World::insertFunctions[( unsigned long long )tileId])( tileId, x, y, width, height );
+
+		//( *insertFunctions[( unsigned long long )tileId] )( tileId, x, y, width, height );
+	}
+	*/
+
+
+
+
 	void insert( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
+
+	// Removal
 	void remove( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
 
 	// World Chunks
@@ -169,12 +199,5 @@ public:
 
 
 };
-
-
-
-
-
-
-
 
 
