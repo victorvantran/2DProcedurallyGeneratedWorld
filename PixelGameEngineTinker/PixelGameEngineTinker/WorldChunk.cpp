@@ -237,7 +237,7 @@ void WorldChunk::insertTorch( std::int64_t x, std::int64_t y, std::int64_t width
 	this->insertLightSource( TileIdentity::Torch, 255, 255, 255, 255, 20, x, y, width, height );
 	*/
 	this->insertLightSourceTile( TileIdentity::Torch, false,
-		255, 255, 255, 255, 20,
+		255, 255, 255, 255, 15,
 		x, y, width, height );
 
 

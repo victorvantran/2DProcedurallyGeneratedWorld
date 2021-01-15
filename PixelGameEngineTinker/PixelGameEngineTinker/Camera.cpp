@@ -60,6 +60,8 @@ void Camera::worldToScreen( long double cellX, long double cellY, std::int64_t& 
 
 void Camera::renderWorld() const // [!] leave to rendering to world
 {
+	pge->Clear( olc::BLACK );
+
 	WorldChunk* worldChunks = this->_world->getWorldChunks();
 	int numWorldChunks = this->_world->getNumWorldChunks();
 
@@ -100,7 +102,7 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 		std::to_string( worldChunk.getRelativeChunkIndex() ),
 		olc::GREEN
 	);
-
+	
 	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas, worldChunk.getLightRenders() );
 	this->renderLightRenders( worldChunk.getLightRenders()[0] );
 

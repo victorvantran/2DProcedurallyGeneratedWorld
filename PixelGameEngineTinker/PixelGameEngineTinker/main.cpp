@@ -178,7 +178,7 @@ public:
 
 		if ( GetKey( olc::Key::P ).bPressed || GetKey( olc::Key::P ).bHeld )
 		{
-			world->insert( static_cast<TileIdentity>( tileId ), tileIndex.x, tileIndex.y, 1, 1 );
+			world->insert( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 5, 5 );
 		}
 
 
@@ -211,29 +211,28 @@ public:
 		if ( GetMouse( 0 ).bPressed || GetMouse( 0 ).bHeld )
 			//if ( GetMouse( 0 ).bPressed )
 		{
-			world->insert( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 5, 5 );
+			world->insert( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 1, 1 );
+
 		}
 
 		if ( GetMouse( 1 ).bPressed || GetMouse( 1 ).bHeld )
 			//if ( GetMouse( 1 ).bPressed )
 		{
-			world->remove( static_cast<TileIdentity>( tileId ), tileIndex.x, tileIndex.y, 5, 5 );
+			world->remove( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 5, 5 );
 		}
 
 		// updateLighting
-		this->world->resetLighting();
-		this->world->emitStaticLightSources();
-		this->world->activateCursorLightSource( tilePositionX, tilePositionY, 15 );
-		//this->world->activateCursorLightSource( tileIndex.x, tileIndex.y, 15 );
-
-		this->world->updateLighting();
+		//this->world->updateLighting( tilePositionX, tilePositionY );
 
 
 		// Render
+		this->world->render();
+
+		/*
 		Clear( olc::BLACK );
 		this->camera->renderWorld();
 		this->world->updateDecals();
-	
+		*/
 
 		// DEBUG
 		drawTileIndexString( tileIndex );

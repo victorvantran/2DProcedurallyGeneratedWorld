@@ -457,6 +457,7 @@ void World::startWorldMemorySystem()
 	this->_saveWorldGeographyThread = std::thread( &World::saveWorldGeographyTask, this );
 	this->_loadWorldGeographyThread = std::thread( &World::loadWorldGeographyTask, this );
 	this->_loadSpriteTilesThread = std::thread( &World::loadSpriteTilesTask, this );
+	this->_updateLightingThread = std::thread( &World::updateLightingTask, this );
 	return;
 }
 
@@ -473,6 +474,9 @@ void World::stopWorldMemorySystem()
 	this->_condModifyAtlas.notify_one();
 	this->_loadSpriteTilesThread.join();
 
+	this->_runningUpdateLighting = false;
+	this->_condRenderWorld.notify_one();
+	this->_updateLightingThread.join();
 	return;
 }
 
@@ -1204,7 +1208,7 @@ void World::resetLighting()
 }
 
 
-void World::updateLighting()
+void World::calculateLightCells()
 {
 	const BoundingBox<long double>& cameraView = this->_camera->getView();
 	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
@@ -1283,25 +1287,25 @@ void World::updateLighting()
 						return;
 					}
 
-					std::uint8_t corner0R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getRed() + nwLight->getRed() + nLight->getRed() + wLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner0G = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getGreen() + nwLight->getGreen() + nLight->getGreen() + wLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner0B = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getBlue() + nwLight->getBlue() + nLight->getBlue() + wLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner0A = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getAlpha() + nwLight->getAlpha() + nLight->getAlpha() + wLight->getAlpha() ) / 4 ), 255 ) );
+					std::uint8_t corner0R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + nwLight->getRed() + nLight->getRed() + wLight->getRed() ) / 4 ), 255 ) );
+					std::uint8_t corner0G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + nwLight->getGreen() + nLight->getGreen() + wLight->getGreen() ) / 4 ), 255 ) );
+					std::uint8_t corner0B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + nwLight->getBlue() + nLight->getBlue() + wLight->getBlue() ) / 4 ), 255 ) );
+					std::uint8_t corner0A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + nwLight->getAlpha() + nLight->getAlpha() + wLight->getAlpha() ) / 4 ), 255 ) );
 
-					std::uint8_t corner1R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getRed() + swLight->getRed() + sLight->getRed() + wLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner1G = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getGreen() + swLight->getGreen() + sLight->getGreen() + wLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner1B = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getBlue() + swLight->getBlue() + sLight->getBlue() + wLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner1A = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getAlpha() + swLight->getAlpha() + sLight->getAlpha() + wLight->getAlpha() ) / 4 ), 255 ) );
+					std::uint8_t corner1R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + swLight->getRed() + sLight->getRed() + wLight->getRed() ) / 4 ), 255 ) );
+					std::uint8_t corner1G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + swLight->getGreen() + sLight->getGreen() + wLight->getGreen() ) / 4 ), 255 ) );
+					std::uint8_t corner1B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + swLight->getBlue() + sLight->getBlue() + wLight->getBlue() ) / 4 ), 255 ) );
+					std::uint8_t corner1A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + swLight->getAlpha() + sLight->getAlpha() + wLight->getAlpha() ) / 4 ), 255 ) );
 
-					std::uint8_t corner2R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getRed() + seLight->getRed() + sLight->getRed() + eLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner2G = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getGreen() + seLight->getGreen() + sLight->getGreen() + eLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner2B = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getBlue() + seLight->getBlue() + sLight->getBlue() + eLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner2A = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getAlpha() + seLight->getAlpha() + sLight->getAlpha() + eLight->getAlpha() ) / 4 ), 255 ) );
+					std::uint8_t corner2R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + seLight->getRed() + sLight->getRed() + eLight->getRed() ) / 4 ), 255 ) );
+					std::uint8_t corner2G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + seLight->getGreen() + sLight->getGreen() + eLight->getGreen() ) / 4 ), 255 ) );
+					std::uint8_t corner2B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + seLight->getBlue() + sLight->getBlue() + eLight->getBlue() ) / 4 ), 255 ) );
+					std::uint8_t corner2A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + seLight->getAlpha() + sLight->getAlpha() + eLight->getAlpha() ) / 4 ), 255 ) );
 
-					std::uint8_t corner3R = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getRed() + neLight->getRed() + nLight->getRed() + eLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner3G = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getGreen() + neLight->getGreen() + nLight->getGreen() + eLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner3B = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getBlue() + neLight->getBlue() + nLight->getBlue() + eLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner3A = ( std::uint8_t )std::max<int>( 0, std::min<int>( ( ( cLight->getAlpha() + neLight->getAlpha() + nLight->getAlpha() + eLight->getAlpha() ) / 4 ), 255 ) );
+					std::uint8_t corner3R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + neLight->getRed() + nLight->getRed() + eLight->getRed() ) / 4 ), 255 ) );
+					std::uint8_t corner3G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + neLight->getGreen() + nLight->getGreen() + eLight->getGreen() ) / 4 ), 255 ) );
+					std::uint8_t corner3B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + neLight->getBlue() + nLight->getBlue() + eLight->getBlue() ) / 4 ), 255 ) );
+					std::uint8_t corner3A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + neLight->getAlpha() + nLight->getAlpha() + eLight->getAlpha() ) / 4 ), 255 ) );
 
 					std::uint32_t corner0 = ( corner0R << 24 ) + ( corner0G << 16 ) + ( corner0B << 8 ) + ( corner0A );
 					std::uint32_t corner1 = ( corner1R << 24 ) + ( corner1G << 16 ) + ( corner1B << 8 ) + ( corner1A );
@@ -1542,36 +1546,70 @@ void World::emitStaticLightSources()
 				const LightSource& lightSource = it->second;
 
 				// If light is in view of the camera, light it up
+				
 				if (
 					(
-						chunkBounds.getX() + localX + lightSource.getRadius() >= cameraView.getX() &&
-						chunkBounds.getY() + localY + lightSource.getRadius() >= cameraView.getY() &&
-						chunkBounds.getX() + localX + lightSource.getRadius() <= cameraView.getX() + cameraView.getWidth() &&
-						chunkBounds.getY() + localY + lightSource.getRadius() <= cameraView.getY() + cameraView.getHeight()
+						( chunkBounds.getX() + localX ) + lightSource.getRadius() >= cameraView.getX() &&
+						( chunkBounds.getY() + localY ) + lightSource.getRadius() >= cameraView.getY() &&
+						( chunkBounds.getX() + localX ) + lightSource.getRadius() <= cameraView.getX() + cameraView.getWidth() &&
+						( chunkBounds.getY() + localY ) + lightSource.getRadius() <= cameraView.getY() + cameraView.getHeight()
 						) ||
 					(
-						chunkBounds.getX() + localX - lightSource.getRadius() >= cameraView.getX() &&
-						chunkBounds.getY() + localY + lightSource.getRadius() >= cameraView.getY() &&
-						chunkBounds.getX() + localX - lightSource.getRadius() <= cameraView.getX() + cameraView.getWidth() &&
-						chunkBounds.getY() + localY + lightSource.getRadius() <= cameraView.getY() + cameraView.getHeight()
+						( chunkBounds.getX() + localX ) - lightSource.getRadius() >= cameraView.getX() &&
+						( chunkBounds.getY() + localY ) + lightSource.getRadius() >= cameraView.getY() &&
+						( chunkBounds.getX() + localX ) - lightSource.getRadius() <= cameraView.getX() + cameraView.getWidth() &&
+						( chunkBounds.getY() + localY ) + lightSource.getRadius() <= cameraView.getY() + cameraView.getHeight()
 						) ||
 					(
-						chunkBounds.getX() + localX + lightSource.getRadius() >= cameraView.getX() &&
-						chunkBounds.getY() + localY - lightSource.getRadius() >= cameraView.getY() &&
-						chunkBounds.getX() + localX + lightSource.getRadius() <= cameraView.getX() + cameraView.getWidth() &&
-						chunkBounds.getY() + localY - lightSource.getRadius() <= cameraView.getY() + cameraView.getHeight()
+						( chunkBounds.getX() + localX ) + lightSource.getRadius() >= cameraView.getX() &&
+						( chunkBounds.getY() + localY ) - lightSource.getRadius() >= cameraView.getY() &&
+						( chunkBounds.getX() + localX ) + lightSource.getRadius() <= cameraView.getX() + cameraView.getWidth() &&
+						( chunkBounds.getY() + localY ) - lightSource.getRadius() <= cameraView.getY() + cameraView.getHeight()
 						) ||
 					(
-						chunkBounds.getX() + localX - lightSource.getRadius() >= cameraView.getX() &&
-						chunkBounds.getY() + localY - lightSource.getRadius() >= cameraView.getY() &&
-						chunkBounds.getX() + localX - lightSource.getRadius() <= cameraView.getX() + cameraView.getWidth() &&
-						chunkBounds.getY() + localY - lightSource.getRadius() <= cameraView.getY() + cameraView.getHeight()
+						( chunkBounds.getX() + localX ) - lightSource.getRadius() >= cameraView.getX() &&
+						( chunkBounds.getY() + localY ) - lightSource.getRadius() >= cameraView.getY() &&
+						( chunkBounds.getX() + localX ) - lightSource.getRadius() <= cameraView.getX() + cameraView.getWidth() &&
+						( chunkBounds.getY() + localY ) - lightSource.getRadius() <= cameraView.getY() + cameraView.getHeight()
 						)
 					)
 				{
 
 					this->emitStaticLightSource( lightSource, chunkBounds.getX() + localX, chunkBounds.getY() + localY );
 				}
+				
+				/*
+				if (
+					(
+						( ( chunkBounds.getX() + localX ) + lightSource.getRadius() >= cameraView.getX() &&
+						( chunkBounds.getY() + localY ) + lightSource.getRadius() >= cameraView.getY() ) ||
+						( ( chunkBounds.getX() + localX ) + lightSource.getRadius() <= cameraView.getX() + cameraView.getWidth() &&
+						( chunkBounds.getY() + localY ) + lightSource.getRadius() <= cameraView.getY() + cameraView.getHeight() )
+						) ||
+					(
+						( ( chunkBounds.getX() + localX ) - lightSource.getRadius() >= cameraView.getX() &&
+						( chunkBounds.getY() + localY ) + lightSource.getRadius() >= cameraView.getY() ) ||
+						( ( chunkBounds.getX() + localX ) - lightSource.getRadius() <= cameraView.getX() + cameraView.getWidth() &&
+						( chunkBounds.getY() + localY ) + lightSource.getRadius() <= cameraView.getY() + cameraView.getHeight() )
+						) ||
+					(
+						( ( chunkBounds.getX() + localX ) + lightSource.getRadius() >= cameraView.getX() &&
+						( chunkBounds.getY() + localY ) - lightSource.getRadius() >= cameraView.getY() ) ||
+						( ( chunkBounds.getX() + localX ) + lightSource.getRadius() <= cameraView.getX() + cameraView.getWidth() &&
+						( chunkBounds.getY() + localY ) - lightSource.getRadius() <= cameraView.getY() + cameraView.getHeight() )
+						) ||
+					(
+						( ( chunkBounds.getX() + localX ) - lightSource.getRadius() >= cameraView.getX() &&
+						( chunkBounds.getY() + localY ) - lightSource.getRadius() >= cameraView.getY() ) ||
+						( ( chunkBounds.getX() + localX ) - lightSource.getRadius() <= cameraView.getX() + cameraView.getWidth() &&
+						( chunkBounds.getY() + localY ) - lightSource.getRadius() <= cameraView.getY() + cameraView.getHeight() )
+						)
+					)
+				{
+
+					this->emitStaticLightSource( lightSource, chunkBounds.getX() + localX, chunkBounds.getY() + localY );
+				}
+				*/
 			}
 		}
 	}
@@ -1676,5 +1714,70 @@ void World::activateCursorLightSource( long double dX, long double dY, std::int6
 	}
 	
 
+	return;
+}
+
+
+
+
+void World::updateLightingTask()
+{
+	this->_runningUpdateLighting = true;
+	while ( this->_runningUpdateLighting )
+	{
+		this->updateLighting();
+	}
+
+	return;
+}
+
+void World::updateLighting()
+{
+	std::unique_lock<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
+	//std::chrono::system_clock::time_point secondsPassed = std::chrono::system_clock::now() + std::chrono::seconds( ( long long )Settings::World::SPRITE_TILE_REFRESH_RATE );
+	//this->_condRenderWorld.wait_until( lockUpdateLighting, secondsPassed );
+	this->_condRenderWorld.wait( lockUpdateLighting );
+
+
+
+	//std::lock_guard<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
+	//std::cout << "Lighting" << std::endl;
+	this->resetLighting();
+	this->emitStaticLightSources();
+	this->calculateLightCells();
+	//this->_condRenderWorld.notify_one();
+	return;
+}
+
+
+/*
+void World::updateLighting( long double tilePositionX, long double tilePositionY )
+{
+	this->resetLighting();
+	this->emitStaticLightSources();
+	this->activateCursorLightSource( tilePositionX, tilePositionY, 15 );
+	this->calculateLightCells();
+
+	return;
+}
+*/	//this->_updateLightingThread = std::thread( &World::updateLighting, this );
+
+
+
+void World::render()
+{
+	//std::unique_lock<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
+	//std::chrono::system_clock::time_point secondsPassed = std::chrono::system_clock::now() + std::chrono::seconds( ( long long )Settings::World::SPRITE_TILE_REFRESH_RATE );
+	//this->_condRenderWorld.wait_until( lockUpdateLighting, secondsPassed );
+	//this->_condRenderWorld.wait( lockUpdateLighting );
+
+	//std::lock_guard<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
+	
+	std::lock_guard<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
+
+	this->_camera->renderWorld();
+	this->updateDecals();
+
+	this->_condRenderWorld.notify_one();
 	return;
 }

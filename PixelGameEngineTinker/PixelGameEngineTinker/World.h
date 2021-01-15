@@ -48,6 +48,13 @@ private:
 	std::int64_t _focalChunkIndexX;
 	std::int64_t _focalChunkIndexY;
 
+	// Lighting
+	std::atomic<bool> _runningUpdateLighting;
+	std::thread _updateLightingThread;
+	std::mutex _mutexUpdateLighting;
+	std::condition_variable _condRenderWorld;
+
+
 	// Memory
 	std::mutex _worldDatabaseMutex;
 	std::mutex _modifyWorldChunksMutex; // [!] get rid of saveworldchunksmutex and load, and set it to modify/access
@@ -146,7 +153,7 @@ public:
 	//void addLight( std::int64_t x, std::int64_t y, std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a );
 	void addLight( std::int64_t x, std::int64_t y, const LightSource& lightSource, long double intensity );
 	void resetLighting();
-	void updateLighting();
+	void calculateLightCells();
 
 
 
@@ -164,6 +171,13 @@ public:
 	void activateCursorLightSource( long double dX, long double dY, std::int64_t radius );
 
 
+	void updateLightingTask();
+	void updateLighting();
+	//void updateLighting( long double tilePositionX, long double tilePositionY );
+
+
+
+	void render();
 };
 
 
