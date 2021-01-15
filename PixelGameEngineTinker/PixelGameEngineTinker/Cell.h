@@ -29,5 +29,6 @@ public:
 	std::int64_t setWidth( std::int64_t width );
 	std::int64_t setHeight( std::int64_t height );
 
-	void clear();
+	virtual void clear() = 0;
+	//virtual void clear();
 };

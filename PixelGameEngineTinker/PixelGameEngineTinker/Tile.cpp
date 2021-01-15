@@ -1,27 +1,33 @@
 #include "Tile.h"
 
 Tile::Tile()
-	: _id( TileIdentity::Void ), _borders( 0 )
+	: _id( TileIdentity::Void ), _opaque( false ), _borders( 0 )
 {
 	// setType
 }
+
 
 Tile::~Tile()
 {
 }
 
 
-Tile::Tile( TileIdentity id )
-	: _id( id ), _borders( 0 )
+Tile::Tile( TileIdentity id, bool opaque )
+	: _id( id ), _opaque( opaque ), _borders( 0 )
 {
 }
-
-
 
 
 void Tile::setId( TileIdentity id )
 {
 	this->_id = id;
+	return;
+}
+
+
+void Tile::setOpaque( bool opaque )
+{
+	this->_opaque = opaque;
 	return;
 }
 
@@ -49,6 +55,11 @@ TileIdentity Tile::getId() const
 	return this->_id;
 }
 
+
+bool Tile::getOpaque() const
+{
+	return this->_opaque;
+}
 
 
 std::uint8_t Tile::getBorders() const

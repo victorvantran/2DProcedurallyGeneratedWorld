@@ -153,9 +153,4 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <Text Include="Atlas_backup.txt">
-      <Filter>Header Files\Render</Filter>
-    </Text>
-  </ItemGroup>
 </Project>

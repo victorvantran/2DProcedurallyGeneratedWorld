@@ -1,34 +1,41 @@
+/*
 #include "LightCastQuadrant.h"
 
-LightCastQuadrant::LightCastQuadrant( std::int8_t cardinal_, long double originX_, long double originY_ ) : cardinal( cardinal_ ), origin( originX_, originY_ ) {}
+template <class T>
+LightCastQuadrant<T>::LightCastQuadrant( std::int8_t cardinal_, T originX_, T originY_ ) : cardinal( cardinal_ ), origin( originX_, originY_ ) {}
+
+template <class T>
+LightCastQuadrant<T>::~LightCastQuadrant() {}
 
 
-LightCastQuadrant::~LightCastQuadrant() {}
-
-
-olc::v2d_generic<long double> LightCastQuadrant::transform( const olc::v2d_generic<long double>& tile )
+template <class T>
+olc::v2d_generic<T> LightCastQuadrant<T>::transform( const olc::v2d_generic<T>& tile )
 {
-	long double col = tile.x;
-	long double row = tile.y;
+
+	T col = tile.x;
+	T row = tile.y;
 	if ( this->cardinal == LightCastQuadrant::NORTH )
 	{
-		return this->origin + olc::v2d_generic<long double>{ col, -row };
+		return this->origin + olc::v2d_generic<T>{ col, -row };
 	}
 	else if ( this->cardinal == LightCastQuadrant::SOUTH )
 	{
-		return this->origin + olc::v2d_generic<long double>{ col, row };
+		return this->origin + olc::v2d_generic<T>{ col, row };
 	}
 	else if ( this->cardinal == LightCastQuadrant::EAST )
 	{
-		return this->origin + olc::v2d_generic<long double>{ row, col };
+		return this->origin + olc::v2d_generic<T>{ row, col };
 	}
 	else if ( this->cardinal == LightCastQuadrant::WEST )
 	{
-		return this->origin + olc::v2d_generic<long double>{ -row, col };
+		return this->origin + olc::v2d_generic<T>{ -row, col };
 	}
 	else
 	{
 		return this->origin;
 	}
+
+
 }
 
+*/

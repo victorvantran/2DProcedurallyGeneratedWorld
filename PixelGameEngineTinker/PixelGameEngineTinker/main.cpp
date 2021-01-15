@@ -68,7 +68,7 @@ public:
 		long double mouseY = ( long double )GetMouseY();
 
 		//long double panSpeed = 20.0f;
-		long double panSpeed = 32.0f;
+		long double panSpeed = 12.0f;
 
 		if ( GetKey( olc::Key::UP ).bPressed || GetKey( olc::Key::UP ).bHeld )
 		{
@@ -178,7 +178,6 @@ public:
 
 		if ( GetKey( olc::Key::P ).bPressed || GetKey( olc::Key::P ).bHeld )
 		{
-			//world->insert( tileIndex.x, tileIndex.y, 1, 1, tileId );
 			world->insert( static_cast<TileIdentity>( tileId ), tileIndex.x, tileIndex.y, 1, 1 );
 		}
 
@@ -223,8 +222,8 @@ public:
 
 		// updateLighting
 		this->world->resetLighting();
-		//this->world->activateCursorLightSource( tilePositionX, tilePositionY, 15 );
-		this->world->activateCursorLightSource( tileIndex.x, tileIndex.y, 15 );
+		this->world->activateCursorLightSource( tilePositionX, tilePositionY, 15 );
+		//this->world->activateCursorLightSource( tileIndex.x, tileIndex.y, 15 );
 
 		this->world->updateLighting();
 

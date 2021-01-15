@@ -33,4 +33,5 @@ public:
 			this->getHeight() == rhs.getHeight();
 	}
 
+	void clear();
 };

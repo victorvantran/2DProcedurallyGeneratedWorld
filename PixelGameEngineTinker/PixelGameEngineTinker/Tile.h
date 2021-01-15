@@ -55,7 +55,10 @@ private:
 	const static std::map<std::uint8_t, std::uint8_t> _borderValueToDecalIndex;
 
 	TileIdentity _id;
+	bool _opaque;
+
 	std::uint8_t _borders;
+
 
 	//TileType _tileType;
 	// bool isDynamic;
@@ -64,11 +67,12 @@ public:
 	Tile();
 	~Tile();
 
-	Tile( TileIdentity id );
+	Tile( TileIdentity id, bool opaque );
 
 	// Constructor that accounts for edges
 
 	void setId( TileIdentity id );
+	void setOpaque( bool opaque );
 
 	void setBorders( std::uint8_t borders );
 	void setBorder( TileBorder border );
@@ -76,6 +80,7 @@ public:
 
 
 	TileIdentity getId() const;
+	bool getOpaque() const;
 	std::uint8_t getBorders() const;
 	bool getBorder( TileBorder border ) const;
 	std::uint8_t getBordersDecalIndex() const;

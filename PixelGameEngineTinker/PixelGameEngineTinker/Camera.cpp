@@ -257,8 +257,8 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 			std::uint8_t alpha = ( std::uint8_t )( ( corner0 & 0x000000ff ) );
 			olc::Pixel color = olc::Pixel{ r, g, b, alpha };
 			
-			//pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
-			pge->SetDecalMode( olc::DecalMode::ADDITIVE );
+			pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
+			//pge->SetDecalMode( olc::DecalMode::ADDITIVE );
 			pge->FillRectDecal(
 				startPos,
 				olc::vf2d{ (float)this->_zoomX * ( float )tileSize, ( float )this->_zoomY * ( float )tileSize } *( float )scale,
@@ -324,8 +324,8 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 					textureCoordinates[3] = olc::vf2d{ 1.0f, 0.0f };
 						
 					olc::Decal* lightDecal = this->_decalLight;
-					//pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
-					pge->SetDecalMode( olc::DecalMode::ADDITIVE );
+					pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
+					//pge->SetDecalMode( olc::DecalMode::ADDITIVE );
 					pge->DrawExplicitDecal(
 						lightDecal,
 						verticiesB,

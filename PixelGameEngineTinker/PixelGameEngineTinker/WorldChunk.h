@@ -34,53 +34,16 @@ private:
 
 
 public:
-
+	// Constructors
 	WorldChunk();
+	WorldChunk( std::uint16_t relChunkIndex, std::int64_t indexX, std::int64_t indexY );
 	~WorldChunk();
 
-	WorldChunk( std::uint16_t relChunkIndex, std::int64_t indexX, std::int64_t indexY );
-
-
 	void construct();
-	void fill( TileIdentity id );
 
+	// Getters
 	std::uint16_t getRelativeChunkIndex() const;
 	void setRelativeChunkIndex( std::uint16_t relChunkIndex );
-
-
-
-	// Insertion
-	void insertTiles( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertTileRenders( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertTile( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertLightSource( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-
-
-	typedef void ( WorldChunk::* funcType )( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	static const funcType insertMethods[( unsigned long long )TileIdentity::count];
-	void insertWater( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertStone( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertDirt( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertTorch( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-
-	void insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-
-
-
-
-
-
-	void remove( TileIdentity id, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void removeTiles( TileIdentity id, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void removeTileRenders( TileIdentity id, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void wipeRender();
-
-	const std::map<TileIdentity, unsigned short> createPalette() const;
-
-	void delimit( std::int64_t indexX, std::int64_t indexY );
-	void clear();
-
-
 	std::int64_t getChunkIndexX() const;
 	std::int64_t getChunkIndexY() const;
 	std::int64_t getRelativeChunkIndexX( const BoundingBox<long double>& boundingBox ) const;
@@ -90,11 +53,50 @@ public:
 	std::int64_t getPositionX() const;
 	std::int64_t getPositionY() const;
 
+
+	// Insertion
+	typedef void ( WorldChunk::* funcType )( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+	void insertTiles( TileIdentity tileId, bool opaque, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertTileRenders( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertTile( TileIdentity tileId, bool opaque, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertLightSource( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+	void insertVoid( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertWater( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertDirt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	static const funcType insertMethods[( unsigned long long )TileIdentity::count];
+	void insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+
+	// Removal
+	void removeTiles( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeTileRenders( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeTile( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeLightSource( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+	void removeVoid( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeWater( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeDirt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	static const funcType removeMethods[( unsigned long long )TileIdentity::count];
+	void remove( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+
+
+
+
+
+
+
+	// Geography
 	const Tile* getTiles();
 	// Tile getTile( int x, int y )
 	QuadTree<TileRender>& getTileRendersRoot();
-	std::vector<TileIdentity> getPalette();
-	WorldChunkMemory* createMemory();
+
 
 
 	// Lighting
@@ -102,13 +104,22 @@ public:
 	Light* getLight( std::int64_t x, std::int64_t y );
 	const std::map<std::uint16_t, LightSource>& getLightSources();
 	QuadTree<LightRender>* getLightRenders();
-
 	void resetLights();
 	void wipeLightRender();
 	void blackenLights();
 	void clearLightSources();
-
 	void insertLightRender( std::uint32_t corner0, std::uint32_t corner1, std::uint32_t corner2, std::uint32_t corner3, bool exist, std::int64_t x, std::int64_t y ); // [!] overhaul and model after insert
 	void insertLightRenders( std::uint32_t corner0, std::uint32_t corner1, std::uint32_t corner2, std::uint32_t corner3, bool exist, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+
+
+	// Memory Management
+	void wipeRender();
+	void delimit( std::int64_t indexX, std::int64_t indexY );
+	void clear();
+
+	const std::map<TileIdentity, unsigned short> createPalette() const;
+	std::vector<TileIdentity> getPalette();
+	WorldChunkMemory* createMemory();
 };
 

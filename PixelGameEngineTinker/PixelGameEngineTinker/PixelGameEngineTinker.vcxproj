@@ -74,9 +74,6 @@
     <ClCompile Include="WorldChunkMemory.cpp" />
     <ClCompile Include="World.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <Text Include="Atlas_backup.txt" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{8056944B-86C2-4355-8F49-B7D8406DAB54}</ProjectGuid>

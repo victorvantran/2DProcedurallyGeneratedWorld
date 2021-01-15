@@ -102,8 +102,10 @@ std::int64_t Cell::setHeight( std::int64_t height )
 }
 
 
+/*
 void Cell::clear()
 {
 	//this->_id = 0;
 	this->_bounds.clear();
 }
+*/

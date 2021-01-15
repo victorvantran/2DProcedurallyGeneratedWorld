@@ -27,4 +27,7 @@ public:
 		return corner0 == rhs.corner0 && corner1 == rhs.corner1 && corner2 == rhs.corner2 && corner3 == rhs.corner3 &&
 			this->isSolid() && rhs.isSolid();
 	}
+
+	void clear();
+
 };

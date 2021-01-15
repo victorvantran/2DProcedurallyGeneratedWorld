@@ -295,7 +295,8 @@ void QuadTree<TileRender>::remove( const TileRender& rRenderCell )
 				int localCellIndexX = this->_cell[i].getBounds().getX() - this->_referenceNodes[0].getBounds().getX();
 				int localCellIndexY = this->_cell[i].getBounds().getY() - this->_referenceNodes[0].getBounds().getY();
 
-				this->_cell[i].setId( TileIdentity::Void );
+				//this->_cell[i].setId( TileIdentity::Void );
+				this->_cell[i].clear();
 				this->_cellCount -= 1;
 				this->_consolidated = false;
 			}
@@ -309,7 +310,8 @@ void QuadTree<TileRender>::remove( const TileRender& rRenderCell )
 		{
 			if ( this->_cell[i].exists() && rBoundingBox.intersects( this->_cell[i].getBounds() ) && this->_cell[i].getId() == rRenderCell.getId() )
 			{
-				this->_cell[i].setId( TileIdentity::Void );
+				//this->_cell[i].setId( TileIdentity::Void );
+				this->_cell[i].clear();
 				this->_cellCount -= 1;
 				this->_consolidated = false;
 			}
@@ -679,6 +681,7 @@ void QuadTree<LightRender>::remove( const LightRender& rRenderCell )
 
 				/*this->_cell[i].setId( TileIdentity::Void );*/
 				//this->_cell[i].blacken();
+				this->_cell[i].clear();
 				this->_cellCount -= 1;
 				this->_consolidated = false;
 			}
@@ -694,6 +697,7 @@ void QuadTree<LightRender>::remove( const LightRender& rRenderCell )
 			{
 				//this->_cell[i].setId( TileIdentity::Void );
 				//this->_cell[i].blacken();
+				this->_cell[i].clear();
 				this->_cellCount -= 1;
 				this->_consolidated = false;
 			}

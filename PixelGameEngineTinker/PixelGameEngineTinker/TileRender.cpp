@@ -50,3 +50,11 @@ bool TileRender::exists() const
 	return this->_id != TileIdentity::Void;
 }
 
+
+
+void TileRender::clear()
+{
+	this->_id = TileIdentity::Void;
+	return;
+}
+

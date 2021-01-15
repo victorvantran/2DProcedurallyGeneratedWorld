@@ -3,6 +3,8 @@
 #include "olcPixelGameEngine.h"
 #include "LightCastRow.h"
 
+
+template <class T>
 struct LightCastQuadrant
 {
 	static constexpr int NORTH = 0;
@@ -11,227 +13,52 @@ struct LightCastQuadrant
 	static constexpr int WEST = 3;
 
 	std::int8_t cardinal;
-	olc::v2d_generic<long double> origin;
+	olc::v2d_generic<T> origin;
 
-	LightCastQuadrant( std::int8_t cardinal_, long double originX_, long double originY_ );
-	~LightCastQuadrant();
+	LightCastQuadrant( std::int8_t cardinal_, T originX_, T originY_ ) : cardinal( cardinal_ ), origin( originX_, originY_ ) {}
 
-	olc::v2d_generic<long double> transform( const olc::v2d_generic<long double>& tile );
-
+	~LightCastQuadrant() {}
 
 
-	static float slopeStatic( const olc::v2d_generic<long double>& tile )
+	olc::v2d_generic<T> transform( const olc::v2d_generic<T>& tile )
 	{
-		long double tileCol = tile.x;
-		long double rowDepth = tile.y;
+		T col = tile.x;
+		T row = tile.y;
+		if ( this->cardinal == LightCastQuadrant::NORTH )
+		{
+			return this->origin + olc::v2d_generic<T>{ col, -row };
+		}
+		else if ( this->cardinal == LightCastQuadrant::SOUTH )
+		{
+			return this->origin + olc::v2d_generic<T>{ col, row };
+		}
+		else if ( this->cardinal == LightCastQuadrant::EAST )
+		{
+			return this->origin + olc::v2d_generic<T>{ row, col };
+		}
+		else if ( this->cardinal == LightCastQuadrant::WEST )
+		{
+			return this->origin + olc::v2d_generic<T>{ -row, col };
+		}
+		else
+		{
+			return this->origin;
+		}
+	}
+
+
+	static float slopeStatic( const olc::v2d_generic<T>& tile )
+	{
+		T tileCol = tile.x;
+		T rowDepth = tile.y;
 		return ( float )( 2 * tileCol - 1 ) / ( float )( 2 * rowDepth );
 	}
 
-	
-	static float slopeDynamic( const olc::v2d_generic<long double>& tile, const olc::v2d_generic<long double> originPosition, const std::uint8_t cardinality )
+
+	static bool isSymmetric( const LightCastRow& row, const olc::v2d_generic<T>& tile )
 	{
-		// Tangent Slope for subcell positions
-		long double dX = originPosition.x;
-		long double dY = originPosition.y;
-
-		long double dOriginX;
-		long double fractionX = std::modfl( dX, &dOriginX );
-
-		long double dOriginY;
-		long double fractionY = std::modfl( dY, &dOriginY );
-
-		if ( originPosition.x >= 0 && originPosition.y >= 0 )
-		{
-			// bottom right
-			/*
-			if ( cardinality == 0 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionX - 0.5 ) ) / ( 2 * tile.y - ( -fractionY + 0.5 ) );
-			}
-			else if ( cardinality == 1 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY - 0.5 ) ) / ( 2 * tile.y - ( fractionX - 0.5 ) );
-			}
-			else if ( cardinality == 2 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionX - 0.5 ) ) / ( 2 * tile.y - ( fractionY - 0.5 ) );
-			}
-			else if ( cardinality == 3 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY - 0.5 ) ) / ( 2 * tile.y - ( -fractionX + 0.5 ) );
-			}
-			else
-			{
-				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-			}
-			*/
-			if ( cardinality == 0 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionX - 0.5 ) ) / ( 2 * tile.y + ( fractionY - 0.5 ) );
-			}
-			else if ( cardinality == 1 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY - 0.5 ) ) / ( 2 * tile.y - ( fractionX - 0.5 ) );
-			}
-			else if ( cardinality == 2 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionX - 0.5 ) ) / ( 2 * tile.y - ( fractionY - 0.5 ) );
-			}
-			else if ( cardinality == 3 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY - 0.5 ) ) / ( 2 * tile.y + ( fractionX - 0.5 ) );
-			}
-			else
-			{
-				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-			}
-		}
-		else if ( originPosition.x < 0 && originPosition.y >= 0 )
-		{
-			// bottom left
-			/*
-			if ( cardinality == 0 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y + fractionY - 0.5 );
-			}
-			else if ( cardinality == 1 )
-			{
-				return ( 2 * tile.x - 1 - fractionY + 0.5 ) / ( 2 * tile.y - ( fractionX + 0.5 ) );
-			}
-			else if ( cardinality == 2 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y - fractionY + 0.5 );
-			}
-			else if ( cardinality == 3 )
-			{
-				return ( 2 * tile.x - 1 - fractionY + 0.5 ) / ( 2 * tile.y - ( -fractionX - 0.5 ) );
-			}
-			else
-			{
-				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-			}
-			*/
-
-			if ( cardinality == 0 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y + ( fractionY - 0.5 ) );
-			}
-			else if ( cardinality == 1 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY - 0.5 ) ) / ( 2 * tile.y - ( fractionX + 0.5 ) );
-			}
-			else if ( cardinality == 2 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y - ( fractionY - 0.5 ) );
-			}
-			else if ( cardinality == 3 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY - 0.5 ) ) / ( 2 * tile.y + ( fractionX + 0.5 ) );
-			}
-			else
-			{
-				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-			}
-		}
-		else if ( originPosition.x >= 0 && originPosition.y < 0 )
-		{
-			// top right
-			/*
-			if ( cardinality == 0 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionX - 0.5 ) ) / ( 2 * tile.y - ( -fractionY - 0.5 ) );
-			}
-			else if ( cardinality == 1 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY + 0.5 ) ) / ( 2 * tile.y - ( fractionX - 0.5 ) );
-			}
-			else if ( cardinality == 2 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionX - 0.5 ) ) / ( 2 * tile.y - ( fractionY + 0.5 ) );
-			}
-			else if ( cardinality == 3 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY + 0.5 ) ) / ( 2 * tile.y - ( -fractionX + 0.5 ) );
-			}
-			else
-			{
-				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-			}
-			*/
-			if ( cardinality == 0 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionX - 0.5 ) ) / ( 2 * tile.y + ( fractionY + 0.5 ) );
-			}
-			else if ( cardinality == 1 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY + 0.5 ) ) / ( 2 * tile.y - ( fractionX - 0.5 ) );
-			}
-			else if ( cardinality == 2 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionX - 0.5 ) ) / ( 2 * tile.y - ( fractionY + 0.5 ) );
-			}
-			else if ( cardinality == 3 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY + 0.5 ) ) / ( 2 * tile.y + ( fractionX - 0.5 ) );
-			}
-			else
-			{
-				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-			}
-		}
-		else // if ( originPosition.x < 0 && originPosition.y < 0 )
-		{
-			// top left
-			/*
-			if ( cardinality == 0 )
-			{
-				return ( 2 * tile.x - 1 + ( -fractionX - 0.5 ) ) / ( 2 * tile.y - ( -fractionY - 0.5 ) );
-			}
-			else if ( cardinality == 1 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY + 0.5 ) ) / ( 2 * tile.y + ( -fractionX - 0.5 ) );
-			}
-			else if ( cardinality == 2 )
-			{
-				return ( 2 * tile.x - 1 + ( -fractionX - 0.5 ) ) / ( 2 * tile.y - ( fractionY + 0.5 ) );
-			}
-			else if ( cardinality == 3 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY + 0.5 ) ) / ( 2 * tile.y + ( fractionX + 0.5 ) );
-			}
-			else
-			{
-				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-			}
-			*/
-			if ( cardinality == 0 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y + ( fractionY + 0.5 ) );
-			}
-			else if ( cardinality == 1 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY + 0.5 ) ) / ( 2 * tile.y - ( fractionX + 0.5 ) );
-			}
-			else if ( cardinality == 2 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionX + 0.5 ) ) / ( 2 * tile.y - ( fractionY + 0.5 ) );
-			}
-			else if ( cardinality == 3 )
-			{
-				return ( 2 * tile.x - 1 - ( fractionY + 0.5 ) ) / ( 2 * tile.y + ( fractionX + 0.5 ) );
-			}
-			else
-			{
-				return ( 2 * tile.x - 1 ) / ( 2 * tile.y );
-			}
-		}
-	}
-	
-
-	static bool isSymmetric( const LightCastRow& row, const olc::v2d_generic<long double>& tile )
-	{
-		long double tileCol = tile.x;
-		long double rowDepth = tile.y;
+		T tileCol = tile.x;
+		T rowDepth = tile.y;
 		return tileCol >= row.depth * row.startSlope && tileCol <= row.depth * row.endSlope;
 	}
 
