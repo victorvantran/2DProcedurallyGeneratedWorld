@@ -302,7 +302,7 @@ void World::insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::in
 	//( this->*method )( tileId, x, y, width, height );
 	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
 
-	std::thread addSpriteTileThread( &World::addSpriteTile, this, ( std::uint64_t )tileId );
+	std::thread addSpriteTileThread( &World::addSpriteTile, this, tileId );
 	addSpriteTileThread.join(); // [change]
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
@@ -316,27 +316,11 @@ void World::insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::in
 }
 
 
-void World::insert( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, std::uint64_t id )
-{
-	// Insert a tile ( or tiles ) into the proper world chunk.
-
-	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
-
-	std::thread addSpriteTileThread( &World::addSpriteTile, this, id );
-	addSpriteTileThread.join(); // [change]
-
-	for ( int i = 0; i < this->_numWorldChunks; i++ )
-	{
-		if ( BoundingBox<std::int64_t>( x, y, width, height ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
-		{
-			this->_worldChunks[i].insertTile( x, y, width, height, id );
-		}
-	}
-	return;
-}
 
 
-void World::remove( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id )
+
+/*
+void World::remove( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
 	// Remove a tile ( or tiles ) from the proper world chunk.
 
@@ -346,7 +330,25 @@ void World::remove( std::int64_t x, std::int64_t y, std::int64_t width, std::int
 	{
 		if ( BoundingBox<std::int64_t>( x, y, width, height ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
 		{
-			this->_worldChunks[i].remove( x, y, width, height, id );
+			this->_worldChunks[i].remove( tileId, x, y, width, height );
+		}
+	}
+	return;
+}
+*/
+
+
+void World::remove( TileIdentity id, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	// Remove a tile ( or tiles ) from the proper world chunk.
+
+	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
+
+	for ( int i = 0; i < this->_numWorldChunks; i++ )
+	{
+		if ( BoundingBox<std::int64_t>( x, y, width, height ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
+		{
+			this->_worldChunks[i].remove( id, x, y, width, height );
 		}
 	}
 	return;
@@ -553,7 +555,7 @@ void World::saveWorldGeography()
 }
 
 
-unsigned char* World::createTilesBlob( const Tile* tiles, std::vector<std::uint64_t>& palette )
+unsigned char* World::createTilesBlob( const Tile* tiles, std::vector<TileIdentity>& palette )
 {
 	// Create tilesBlob which is an array of bytes representing the tiles of the worldChunk. However, the tiles are mapped to smaller bit keys in order to save memory.
 
@@ -569,7 +571,7 @@ unsigned char* World::createTilesBlob( const Tile* tiles, std::vector<std::uint6
 	std::map<std::uint64_t, std::uint16_t> paletteMap;
 	for ( int i = 0; i < numUniqueKeys; i++ )
 	{
-		paletteMap.emplace( palette[i], i );
+		paletteMap.emplace( ( std::uint64_t )palette[i], i );
 	}
 
 	// Create a condensed array of bytes that holds numTiles of n-bit keys 
@@ -578,7 +580,7 @@ unsigned char* World::createTilesBlob( const Tile* tiles, std::vector<std::uint6
 	std::uint8_t remainingSegmentBits = numBitsPerSegment;
 	for ( int i = numTiles - 1; i >= 0; i-- )
 	{
-		uint64_t tileId = tiles[i].getId();
+		uint64_t tileId = ( uint64_t )tiles[i].getId();
 		uint16_t key = paletteMap.at( tileId );
 
 		// If there is enough bits left on the byte to fill the entire key, then fill
@@ -638,7 +640,7 @@ unsigned char* World::createTilesBlob( const Tile* tiles, std::vector<std::uint6
 }
 
 
-std::uint64_t* World::createPaletteBlob( std::vector<std::uint64_t>& palette )
+std::uint64_t* World::createPaletteBlob( std::vector<TileIdentity>& palette )
 {
 	// Create a paletteBlob which is an array of bytes.
 	std::uint16_t numUniqueKeys = palette.size(); // max is 32*32
@@ -646,7 +648,7 @@ std::uint64_t* World::createPaletteBlob( std::vector<std::uint64_t>& palette )
 
 	for ( std::uint16_t i = 0; i < numUniqueKeys; i++ )
 	{
-		paletteBlob[i] = palette[i];
+		paletteBlob[i] = ( std::uint64_t )palette[i];
 	}
 
 	return paletteBlob;
@@ -947,7 +949,7 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 			std::uint64_t tileId = paletteData[key];
 			if ( historyTileIds.find( tileId ) == historyTileIds.end() ) // [!] Make sure that render quad tree jsut continues if it can't find the sprite because it may try to render before the tileId is added
 			{
-				std::thread addSpriteTileThread( &World::addSpriteTile, this, tileId );
+				std::thread addSpriteTileThread( &World::addSpriteTile, this, static_cast<TileIdentity>( tileId ) );
 				addSpriteTileThread.join();
 				historyTileIds.insert( tileId );
 			}
@@ -998,7 +1000,7 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 			std::uint64_t tileId = paletteData[key];
 			if ( historyTileIds.find( tileId ) == historyTileIds.end() ) // [!] Make sure that render quad tree jsut continues if it can't find the sprite because it may try to render before the tileId is added
 			{
-				std::thread addSpriteTileThread( &World::addSpriteTile, this, tileId );
+				std::thread addSpriteTileThread( &World::addSpriteTile, this, static_cast< TileIdentity >( tileId ) );
 				addSpriteTileThread.join();
 				historyTileIds.insert( tileId );
 			}
@@ -1036,7 +1038,7 @@ void World::loadSpriteTiles()
 	this->_condModifyAtlas.wait_until( lockModifyTileSprites, secondsPassed );
 	//this->_condModifyAtlas.wait( lockModifyTileSprites );
 
-	std::set<std::uint64_t> tileIds;
+	std::set<TileIdentity> tileIds;
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
 		const Tile* tiles = this->_worldChunks[i].getTiles();
@@ -1052,7 +1054,7 @@ void World::loadSpriteTiles()
 }
 
 
-void World::addSpriteTile( std::uint64_t tileId )
+void World::addSpriteTile( TileIdentity tileId )
 {
 	// directly adds
 	std::lock_guard<std::mutex> lockModifyTileSprites( this->_mutexModifyAtlas );

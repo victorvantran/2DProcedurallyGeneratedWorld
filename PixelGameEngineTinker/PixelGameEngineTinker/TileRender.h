@@ -2,21 +2,22 @@
 
 #include <cstdint>
 
+#include "Tile.h"
 #include "Cell.h"
 #include "TileBorder.h"
 
 class TileRender : public Cell
 {
 private:
-	std::uint64_t _id;
+	TileIdentity _id;
 	std::uint8_t _bordersDecalIndex;
 public:
 	TileRender();
 	~TileRender();
-	TileRender( std::uint64_t id, const BoundingBox<std::int64_t>& bounds );
+	TileRender( TileIdentity id, const BoundingBox<std::int64_t>& bounds );
 
-	std::uint64_t getId() const;
-	std::uint64_t setId( std::uint64_t id );
+	TileIdentity getId() const;
+	TileIdentity setId( TileIdentity id );
 
 	bool exists() const;
 

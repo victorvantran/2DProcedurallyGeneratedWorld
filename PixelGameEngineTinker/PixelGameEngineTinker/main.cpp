@@ -212,13 +212,13 @@ public:
 		if ( GetMouse( 0 ).bPressed || GetMouse( 0 ).bHeld )
 			//if ( GetMouse( 0 ).bPressed )
 		{
-			world->insert( tileIndex.x, tileIndex.y, 5, 5, tileId );
+			world->insert( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 5, 5 );
 		}
 
 		if ( GetMouse( 1 ).bPressed || GetMouse( 1 ).bHeld )
 			//if ( GetMouse( 1 ).bPressed )
 		{
-			world->remove( tileIndex.x, tileIndex.y, 5, 5, tileId );
+			world->remove( static_cast<TileIdentity>( tileId ), tileIndex.x, tileIndex.y, 5, 5 );
 		}
 
 		// updateLighting

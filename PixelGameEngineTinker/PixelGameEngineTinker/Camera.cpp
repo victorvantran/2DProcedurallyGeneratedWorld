@@ -136,7 +136,7 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas,
 	{
 		if ( this->_view.intersects( currQuadTree.getBounds() ) && currQuadTree.getCells()[0].exists() && !isShadowEncapsulated )
 		{
-			std::uint64_t id = currQuadTree.getCells()[0].getId();
+			TileIdentity id = currQuadTree.getCells()[0].getId();
 			olc::Decal* tileDecal = atlas.getDecal( id );
 			if ( tileDecal == nullptr )
 			{
@@ -174,7 +174,7 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas,
 			{
 				if ( cells[i].exists() && this->_view.intersects( cells[i].getBounds() ) && !isShadowEncapsulated )
 				{
-					std::uint64_t id = cells[i].getId();
+					TileIdentity id = cells[i].getId();
 					olc::Decal* tileDecal = atlas.getDecal( id );
 					if ( tileDecal == nullptr )
 					{
@@ -405,14 +405,14 @@ void Camera::renderTilesDebug( WorldChunk& worldChunk ) const
 			Tile tile = tiles[y * chunkSize + x];
 			if ( !tile.isVoid() )
 			{
-				std::uint64_t id = tile.getId();
+				TileIdentity id = tile.getId();
 				worldToScreen( worldPositionX + x, worldPositionY + y, tilePixelX, tilePixelY );
 				tileStartPos = olc::v2d_generic<std::int64_t>{ tilePixelX, tilePixelY };
 
 				pge->FillRect(
 					tileStartPos,
 					tilePixelSize,
-					id == 1 ? olc::DARK_CYAN : ( id == 2 ? olc::DARK_GREY : olc::DARK_GREEN )
+					( std::uint64_t )id == 1 ? olc::DARK_CYAN : ( ( std::uint64_t )id == 2 ? olc::DARK_GREY : olc::DARK_GREEN )
 				);
 
 			}

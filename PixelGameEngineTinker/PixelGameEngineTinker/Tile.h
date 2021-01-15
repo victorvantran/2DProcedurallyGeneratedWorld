@@ -54,7 +54,7 @@ class Tile
 private:
 	const static std::map<std::uint8_t, std::uint8_t> _borderValueToDecalIndex;
 
-	std::uint64_t _id;
+	TileIdentity _id;
 	std::uint8_t _borders;
 
 	//TileType _tileType;
@@ -64,21 +64,18 @@ public:
 	Tile();
 	~Tile();
 
-	Tile( std::uint64_t id );
-	Tile( TileIdentity identity );
+	Tile( TileIdentity id );
 
 	// Constructor that accounts for edges
 
-	void setId( std::uint64_t id );
-	void setIdentity( TileIdentity identity );
+	void setId( TileIdentity id );
 
 	void setBorders( std::uint8_t borders );
 	void setBorder( TileBorder border );
 	void unsetBorder( TileBorder border );
 
 
-	std::uint64_t getId() const;
-	TileIdentity getIdentity() const;
+	TileIdentity getId() const;
 	std::uint8_t getBorders() const;
 	bool getBorder( TileBorder border ) const;
 	std::uint8_t getBordersDecalIndex() const;

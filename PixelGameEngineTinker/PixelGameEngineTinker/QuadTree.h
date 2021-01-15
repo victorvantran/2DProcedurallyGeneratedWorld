@@ -261,7 +261,7 @@ void QuadTree<TRender>::consolidate( int level )
 	// 2) Given the position and size of the boundingBoxes from the array, determine if they "fill" the bounds of the QuadTree
 	// Height check not necessary if our bounding box is a square, but for formality
 
-	if (_cell[0].getId() != 0 && 
+	if (_cell[0].getId() != /*TileIdentity::Void*/ 0 &&
 		_cell[0].exists() &&
 		_cell[0].getWidth() == ( ( 2 << ( this->_level ) ) / 2 ) &&
 		_cell[0].getHeight() == ( ( 2 << ( this->_level ) ) / 2 ) &&
@@ -276,6 +276,7 @@ void QuadTree<TRender>::consolidate( int level )
 		int posY = std::min<std::int64_t>( std::min<std::int64_t>( _cell[0].getY(), _cell[1].getY() ), std::min<std::int64_t>( _cell[2].getY(), _cell[3].getY() ) );
 		int width = _cell[0].getWidth() * 2;
 		int height = _cell[0].getHeight() * 2;
+		//TileIdentity id = _cell[0].getId();
 		int id = _cell[0].getId();
 		bool exist = _cell[0].exists();
 
@@ -359,6 +360,7 @@ void QuadTree<TRender>::insert( const TRender& aRenderCell )
 	{
 		int x = aBoundingBox.getX();
 		int y = aBoundingBox.getY();
+		// TileIdentity id = aRenderCell.getId();
 		int id = aRenderCell.getId();
 		bool exist = aRenderCell.exists();
 
@@ -389,6 +391,7 @@ void QuadTree<TRender>::insert( const TRender& aRenderCell )
 	if ( this->_level == this->_minLevel )
 	{
 		// Find the index by using the bounds, and the position of the single-cell bounding box
+		//TileIdentity rId = aRenderCell.getId();
 		int rId = aRenderCell.getId();
 		for ( int i = 0; i < 4; i++ )
 		{
@@ -466,7 +469,7 @@ void QuadTree<TRender>::remove( const TRender& rRenderCell )
 				int localCellIndexX = this->_cell[i].getBounds().getX() - this->_referenceNodes[0].getBounds().getX();
 				int localCellIndexY = this->_cell[i].getBounds().getY() - this->_referenceNodes[0].getBounds().getY();
 
-				this->_cell[i].setId( 0 );
+				this->_cell[i].setId( /*TileIdentity::Void*/ 0 );
 				this->_cellCount -= 1;
 				this->_consolidated = false;
 			}
@@ -480,7 +483,7 @@ void QuadTree<TRender>::remove( const TRender& rRenderCell )
 		{
 			if ( this->_cell[i].exists() && rBoundingBox.intersects( this->_cell[i].getBounds() ) && this->_cell[i].getId() == rRenderCell.getId() )
 			{
-				this->_cell[i].setId( 0 );
+				this->_cell[i].setId( /*TileIdentity::Void*/ 0 );
 				this->_cellCount -= 1;
 				this->_consolidated = false;
 			}
@@ -495,7 +498,8 @@ void QuadTree<TRender>::remove( const TRender& rRenderCell )
 		// Divide bounding boxes
 		int x = rBoundingBox.getX();
 		int y = rBoundingBox.getY();
-		int id = rRenderCell.getId();
+		//TileIdentity id = rRenderCell.getId();
+		int  id = rRenderCell.getId();
 		bool exist = rRenderCell.exists();
 
 		int subWidth1 = rBoundingBox.getWidth() / 2;
@@ -679,16 +683,30 @@ float QuadTree<TRender>::getMinCellSize() const
 
 
 // Template Specilization
+
+// TileRender
 template<>
 void QuadTree<TileRender>::divide();
 
 template<>
+void QuadTree<TileRender>::consolidate( int level );
+
+template<>
+void QuadTree<TileRender>::insert( const TileRender& aRenderCell );
+
+template<>
+void QuadTree<TileRender>::remove( const TileRender& aRenderCell );
+
+// LightRender
+
+template<>
 void QuadTree<LightRender>::divide();
 
+template<>
+void QuadTree<LightRender>::consolidate( int level );
 
 template<>
 void QuadTree<LightRender>::insert( const LightRender& aRenderCell );
 
-
 template<>
-void QuadTree<LightRender>::consolidate( int level );
+void QuadTree<LightRender>::remove( const LightRender& aRenderCell );

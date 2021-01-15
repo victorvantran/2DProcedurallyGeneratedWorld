@@ -6,6 +6,7 @@
 #include <mutex>
 
 #include "olcPixelGameEngine.h"
+#include "Tile.h"
 #include "Assets.h"
 
 #include <iostream>
@@ -14,8 +15,8 @@ class Atlas
 {
 private:
 	std::mutex _mutexAccessAtlas;
-	std::map< std::uint64_t, olc::Sprite*> _atlasSprites;
-	std::map< std::uint64_t, olc::Decal*> _atlasDecals;
+	std::map<TileIdentity, olc::Sprite*> _atlasSprites;
+	std::map<TileIdentity, olc::Decal*> _atlasDecals;
 
 public:
 	Atlas()
@@ -27,14 +28,14 @@ public:
 	~Atlas()
 	{
 		// Deallocate all Sprites and Decals
-		std::map<std::uint64_t, olc::Sprite*>::iterator it1;
+		std::map<TileIdentity, olc::Sprite*>::iterator it1;
 		for ( it1 = this->_atlasSprites.begin(); it1 != this->_atlasSprites.end(); )
 		{
 			delete it1->second;
 			this->_atlasSprites.erase( it1++ );
 		}
 
-		std::map<std::uint64_t, olc::Decal*>::iterator it2;
+		std::map<TileIdentity, olc::Decal*>::iterator it2;
 		for ( it2 = this->_atlasDecals.begin(); it2 != this->_atlasDecals.end(); )
 		{
 			delete it2->second;
@@ -43,7 +44,7 @@ public:
 	}
 
 
-	void insert( std::uint64_t tileId )
+	void insert( TileIdentity tileId )
 	{
 		// Load a sprite from the SQLite database and insert it into this spriteTileMap.
 		// Only create sprite and not decal because this will be called on a separate thread
@@ -52,7 +53,7 @@ public:
 		std::lock_guard lockAcesssAtlas( this->_mutexAccessAtlas );
 		if ( this->_atlasSprites.find( tileId ) == this->_atlasSprites.end() )
 		{
-			olc::Sprite* spriteTile = Assets::loadSpriteTile( tileId );
+			olc::Sprite* spriteTile = Assets::loadSpriteTile( ( std::uint64_t )tileId );
 			this->_atlasSprites.emplace( tileId, spriteTile );
 		}
 
@@ -60,14 +61,14 @@ public:
 	}
 
 
-	void refresh( std::set<std::uint64_t> tileIds )
+	void refresh( std::set<TileIdentity> tileIds )
 	{
 		// Refresh/clean up any extraneous sprites and decals that are not needed for the current render frame,
 		// keeping the necessary sprites/decals based on tileIds
 
 		std::lock_guard<std::mutex> lockAccessAtlas( this->_mutexAccessAtlas );
 
-		std::map<std::uint64_t, olc::Sprite*>::iterator it1;
+		std::map<TileIdentity, olc::Sprite*>::iterator it1;
 		for ( it1 = this->_atlasSprites.begin(); it1 != this->_atlasSprites.end(); )
 		{
 			if ( tileIds.find( it1->first ) == tileIds.end() )
@@ -93,7 +94,7 @@ public:
 		std::lock_guard<std::mutex> lockAccessAtlas( this->_mutexAccessAtlas );
 
 		// Create decals
-		std::map<std::uint64_t, olc::Sprite*>::iterator it1;
+		std::map<TileIdentity, olc::Sprite*>::iterator it1;
 		for ( it1 = this->_atlasSprites.begin(); it1 != this->_atlasSprites.end(); it1++ )
 		{
 			if ( it1->second != nullptr )
@@ -106,7 +107,7 @@ public:
 		}
 
 		// Delete extraneous decals
-		std::map<std::uint64_t, olc::Decal*>::iterator it2;
+		std::map<TileIdentity, olc::Decal*>::iterator it2;
 		for ( it2 = this->_atlasDecals.begin(); it2 != this->_atlasDecals.end(); )
 		{
 			if ( this->_atlasSprites.find( it2->first ) == this->_atlasSprites.end() )
@@ -124,7 +125,7 @@ public:
 	}
 
 
-	olc::Sprite* getSprite( std::uint64_t tileId ) //const
+	olc::Sprite* getSprite( TileIdentity tileId ) //const
 	{
 		// Returns a pointer to a sprite to be used to render a tile based on tileD
 
@@ -139,7 +140,7 @@ public:
 	}
 
 
-	olc::Decal* getDecal( std::uint64_t tileId ) //const
+	olc::Decal* getDecal( TileIdentity tileId ) //const
 	{
 		// Returns a pointer to a decal to be used to render a tile based on tileD
 
@@ -159,17 +160,17 @@ public:
 		// [DEBUG]
 
 		std::cout << "Sprites" << std::endl;
-		std::map<std::uint64_t, olc::Sprite*>::iterator it1;
+		std::map<TileIdentity, olc::Sprite*>::iterator it1;
 		for ( it1 = this->_atlasSprites.begin(); it1 != this->_atlasSprites.end(); it1++ )
 		{
-			std::cout << it1->first << ": " << it1->second << std::endl;
+			std::cout << ( std::uint64_t )it1->first << ": " << it1->second << std::endl;
 		}
 
 		std::cout << "Decals" << std::endl;
-		std::map<std::uint64_t, olc::Decal*>::iterator it2;
+		std::map<TileIdentity, olc::Decal*>::iterator it2;
 		for ( it2 = this->_atlasDecals.begin(); it2 != this->_atlasDecals.end(); it2++ )
 		{
-			std::cout << it2->first << ": " << it2->second << std::endl;
+			std::cout << ( std::uint64_t )it2->first << ": " << it2->second << std::endl;
 		}
 
 		return;

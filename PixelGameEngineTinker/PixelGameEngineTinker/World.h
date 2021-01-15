@@ -88,38 +88,8 @@ public:
 	void initializeWorldChunks();
 
 	// Modify World
-	// Insertion
-	void insertTile( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertLightSource( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-
-
-	typedef void ( World::*funcType )( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-
-	static const funcType insertMethods[( unsigned long long )TileIdentity::count];
-
-	void insertWater( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertStone( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertDirt( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertTorch( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	
 	void insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-
-	/*
-	void insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
-	{
-		(*World::insertFunctions[( unsigned long long )tileId])( tileId, x, y, width, height );
-
-		//( *insertFunctions[( unsigned long long )tileId] )( tileId, x, y, width, height );
-	}
-	*/
-
-
-
-
-	void insert( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
-
-	// Removal
-	void remove( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id );
+	void remove( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 
 	// World Chunks
 	WorldChunk* getWorldChunks();
@@ -138,8 +108,8 @@ public:
 	// Save
 	void saveWorldGeographyTask();
 	void saveWorldGeography();
-	static unsigned char* createTilesBlob( const Tile* tiles, std::vector<std::uint64_t>& palette );
-	static std::uint64_t* createPaletteBlob( std::vector<std::uint64_t>& palette );
+	static unsigned char* createTilesBlob( const Tile* tiles, std::vector<TileIdentity>& palette );
+	static std::uint64_t* createPaletteBlob( std::vector<TileIdentity>& palette );
 	void addMemory( WorldChunkMemory* worldChunkMemory );
 
 	// Load
@@ -157,7 +127,7 @@ public:
 	// TileDecals
 	void loadSpriteTilesTask();
 	void loadSpriteTiles();
-	void addSpriteTile( std::uint64_t tileId );
+	void addSpriteTile( TileIdentity tileId );
 	Atlas& getAtlas();
 	void updateDecals();
 

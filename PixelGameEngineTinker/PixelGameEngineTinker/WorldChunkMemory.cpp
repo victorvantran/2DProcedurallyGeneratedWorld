@@ -17,7 +17,7 @@ WorldChunkMemory::WorldChunkMemory( WorldChunk* worldChunk )
 
 	// Get tiles and palette from the worldChunk
 	const Tile* tiles = worldChunk->getTiles();
-	std::vector<std::uint64_t> palette = worldChunk->getPalette();
+	std::vector<TileIdentity> palette = worldChunk->getPalette();
 
 	// Get the worldChunk index used as the primary composite key to our table
 	this->_chunkIndexX = worldChunk->getChunkIndexX();

@@ -1,7 +1,7 @@
 #include "Tile.h"
 
 Tile::Tile()
-	: _id( 0 ), _borders( 0 )
+	: _id( TileIdentity::Void ), _borders( 0 )
 {
 	// setType
 }
@@ -11,30 +11,18 @@ Tile::~Tile()
 }
 
 
-Tile::Tile( std::uint64_t id )
+Tile::Tile( TileIdentity id )
 	: _id( id ), _borders( 0 )
 {
 }
 
 
-Tile::Tile( TileIdentity identity )
-	: _id( (std::uint64_t)identity ), _borders( 0 )
-{
 
 
-}
-
-
-void Tile::setId( std::uint64_t id )
+void Tile::setId( TileIdentity id )
 {
 	this->_id = id;
 	return;
-}
-
-
-void Tile::setIdentity( TileIdentity identity )
-{
-	this->_id = ( std::uint64_t )identity;
 }
 
 
@@ -56,16 +44,11 @@ void Tile::unsetBorder( TileBorder border )
 }
 
 
-std::uint64_t Tile::getId() const
+TileIdentity Tile::getId() const
 {
 	return this->_id;
 }
 
-
-TileIdentity Tile::getIdentity() const
-{
-	return static_cast<TileIdentity>( this->_id );
-}
 
 
 std::uint8_t Tile::getBorders() const
@@ -88,13 +71,13 @@ std::uint8_t Tile::getBordersDecalIndex() const
 
 bool Tile::exists() const
 {
-	return this->_id != 0;
+	return this->_id != TileIdentity::Void;
 }
 
 
 bool Tile::isVoid() const
 {
-	return this->_id == 0;
+	return this->_id == TileIdentity::Void;
 }
 
 
@@ -137,7 +120,7 @@ bool Tile::isLedge() const
 
 void Tile::clear()
 {
-	this->_id = -1;
+	this->_id = TileIdentity::Void;
 	//this->_TileType = TileType::Empty;
 	return;
 }

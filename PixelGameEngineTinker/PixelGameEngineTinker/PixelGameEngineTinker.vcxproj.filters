@@ -105,9 +105,6 @@
     <ClInclude Include="LightCastRow.h">
       <Filter>Header Files\World</Filter>
     </ClInclude>
-    <ClInclude Include="Modify.h">
-      <Filter>Header Files\World</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cell.cpp">
@@ -155,5 +152,10 @@
     <ClCompile Include="LightCastQuadrant.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Atlas_backup.txt">
+      <Filter>Header Files\Render</Filter>
+    </Text>
   </ItemGroup>
 </Project>

@@ -63,9 +63,9 @@ void WorldChunk::wipeRender()
 }
 
 
-void WorldChunk::fill( uint64_t id )
+void WorldChunk::fill( TileIdentity id )
 {
-	this->insertTile( this->getChunkIndexX() * this->_size, this->getChunkIndexY() * this->_size, this->_size, this->_size, id );
+	this->insertTile( id, this->getChunkIndexX() * this->_size, this->getChunkIndexY() * this->_size, this->_size, this->_size );
 	return;
 }
 
@@ -91,13 +91,50 @@ void WorldChunk::setRelativeChunkIndex( std::uint16_t relChunkIndex )
 
 // Modification
 
+void WorldChunk::insertTiles( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	// insert to Tiles[] (game logic)
+	std::int64_t localCellStartIndexX = x - this->_chunkIndexX * this->_size;
+	std::int64_t localCellStartIndexY = y - this->_chunkIndexY * this->_size;
+
+	std::int64_t localCellIndexX;
+	std::int64_t localCellIndexY;
+	for ( std::int64_t x = 0; x < width; x++ )
+	{
+		for ( std::int64_t y = 0; y < height; y++ )
+		{
+			localCellIndexX = localCellStartIndexX + x;
+			localCellIndexY = localCellStartIndexY + y;
+
+			if ( localCellIndexX >= 0 && localCellIndexY >= 0 && localCellIndexX < this->_size && localCellIndexY < this->_size )
+			{
+				Tile* selectedTile = &this->_tiles[localCellIndexY * this->_size + localCellIndexX];
+				if ( selectedTile->isVoid() )
+				{
+					selectedTile->setId( tileId );
+				}
+			}
+		}
+	}
+
+	return;
+}
+
+
+void WorldChunk::insertTileRenders( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->_tileRenders[0].insert( TileRender( tileId, BoundingBox<std::int64_t>( x, y, width, height ) ) );
+	return;
+}
+
+
 void WorldChunk::insertTile( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
 	//this->insertTiles( tileId, x, y, width, height );
 	//this->insertTileRenders( tileId, x, y, width, height );
 
-	this->insertTiles( x, y, width, height, ( std::uint64_t )( tileId ) );
-	this->insertTileRenders( x, y, width, height, ( std::uint64_t )( tileId ) );
+	this->insertTiles( tileId, x, y, width, height );
+	this->insertTileRenders( tileId, x, y, width, height );
 	return;
 }
 
@@ -106,6 +143,9 @@ void WorldChunk::insertLightSource( TileIdentity tileId, std::int64_t x, std::in
 {
 	return;
 }
+
+
+
 
 
 const WorldChunk::funcType WorldChunk::insertMethods[( unsigned long long )TileIdentity::count]{ &WorldChunk::insertWater, &WorldChunk::insertStone, &WorldChunk::insertDirt, &WorldChunk::insertTorch };
@@ -171,60 +211,16 @@ void WorldChunk::insert( TileIdentity tileId, std::int64_t x, std::int64_t y, st
 
 
 
-void WorldChunk::insertTile( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id )
+
+void WorldChunk::remove( TileIdentity id, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
-	this->insertTiles( x, y, width, height, id );
-	this->insertTileRenders( x, y, width, height, id );
+	this->removeTiles( id, x, y, width, height );
+	this->removeTileRenders( id, x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertTiles( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id )
-{
-	// insert to Tiles[] (game logic)
-	std::int64_t localCellStartIndexX = x - this->_chunkIndexX * this->_size;
-	std::int64_t localCellStartIndexY = y - this->_chunkIndexY * this->_size;
-
-	std::int64_t localCellIndexX;
-	std::int64_t localCellIndexY;
-	for ( std::int64_t x = 0; x < width; x++ )
-	{
-		for ( std::int64_t y = 0; y < height; y++ )
-		{
-			localCellIndexX = localCellStartIndexX + x;
-			localCellIndexY = localCellStartIndexY + y;
-
-			if ( localCellIndexX >= 0 && localCellIndexY >= 0 && localCellIndexX < this->_size && localCellIndexY < this->_size )
-			{
-				Tile* selectedTile = &this->_tiles[localCellIndexY * this->_size + localCellIndexX];
-				if ( selectedTile->isVoid() )
-				{
-					selectedTile->setId( id );
-				}
-			}
-		}
-	}
-
-	return;
-}
-
-
-void WorldChunk::insertTileRenders( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id )
-{
-	this->_tileRenders[0].insert( TileRender( id, BoundingBox<std::int64_t>( x, y, width, height ) ) );
-	return;
-}
-
-
-void WorldChunk::remove( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id )
-{
-	this->removeTiles( x, y, width, height, id );
-	this->removeTileRenders( x, y, width, height, id );
-	return;
-}
-
-
-void WorldChunk::removeTiles( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id )
+void WorldChunk::removeTiles( TileIdentity id, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
 	// remove from Tiles[] (game logic)
 	std::int64_t localCellStartIndexX = x - this->_chunkIndexX * this->_size;
@@ -244,7 +240,7 @@ void WorldChunk::removeTiles( std::int64_t x, std::int64_t y, std::int64_t width
 				Tile* selectedTile = &this->_tiles[localCellIndexY * this->_size + localCellIndexX];
 				if ( selectedTile->getId() == id )
 				{
-					selectedTile->setId( 0 ); // [!] void
+					selectedTile->setId( TileIdentity::Void );
 				}
 			}
 		}
@@ -254,16 +250,16 @@ void WorldChunk::removeTiles( std::int64_t x, std::int64_t y, std::int64_t width
 }
 
 
-void WorldChunk::removeTileRenders( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height, uint64_t id )
+void WorldChunk::removeTileRenders( TileIdentity id, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
 	this->_tileRenders[0].remove( TileRender( id, BoundingBox<std::int64_t>( x, y, width, height ) ) );
 	return;
 }
 
 
-const std::map<uint64_t, unsigned short> WorldChunk::createPalette() const
+const std::map<TileIdentity, unsigned short> WorldChunk::createPalette() const
 {
-	std::map<uint64_t, unsigned short> palette;
+	std::map<TileIdentity, unsigned short> palette;
 	std::int64_t numTiles = this->_size * this->_size;
 	for ( std::int64_t i = 0; i < numTiles; i++ )
 	{
@@ -375,14 +371,14 @@ QuadTree<TileRender>& WorldChunk::getTileRendersRoot()
 
 
 
-std::vector<std::uint64_t> WorldChunk::getPalette()
+std::vector<TileIdentity> WorldChunk::getPalette()
 {
 	// Create a vector of unique tileIds to be used as mappings of smaller-bit keys.
-	std::set<std::uint64_t> history;
-	std::vector<std::uint64_t> palette;
+	std::set<TileIdentity> history;
+	std::vector<TileIdentity> palette;
 	std::uint16_t numTiles = this->_size * this->_size;
 
-	std::uint64_t tileId;
+	TileIdentity tileId;
 	for ( int i = numTiles - 1; i >= 0; i-- )
 	{
 		tileId = this->_tiles[i].getId();
@@ -392,7 +388,7 @@ std::vector<std::uint64_t> WorldChunk::getPalette()
 		}
 	}
 
-	for ( std::uint64_t tileId : history )
+	for ( TileIdentity tileId : history )
 	{
 		palette.push_back( tileId );
 	}

@@ -40,7 +40,6 @@
     <ClInclude Include="BoundingBox.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Cell.h" />
-    <ClInclude Include="Modify.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="LightCastQuadrant.h" />
     <ClInclude Include="LightCastRow.h" />
@@ -74,6 +73,9 @@
     <ClCompile Include="WorldChunk.cpp" />
     <ClCompile Include="WorldChunkMemory.cpp" />
     <ClCompile Include="World.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="Atlas_backup.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
