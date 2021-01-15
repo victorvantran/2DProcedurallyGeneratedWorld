@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <set>
+#include <map>
 #include "Settings.h"
 #include "QuadTree.h"
 #include "Tile.h"
@@ -32,7 +33,6 @@ private:
 	//LightSource _lightSources[WorldChunk::_size * WorldChunk::_size];
 	std::map<std::uint16_t, LightSource> _lightSources;
 
-
 public:
 	// Constructors
 	WorldChunk();
@@ -52,6 +52,8 @@ public:
 	std::int16_t getNumTileRenders() const;
 	std::int64_t getPositionX() const;
 	std::int64_t getPositionY() const;
+	BoundingBox<std::int64_t> getBounds() const;
+	
 
 
 	// Insertion
@@ -60,8 +62,11 @@ public:
 	void insertTiles( TileIdentity tileId, bool opaque, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertTileRenders( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertTile( TileIdentity tileId, bool opaque, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertLightSource( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-
+	void insertLightSources( TileIdentity tileId, std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a, std::int16_t radius,
+		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertLightSourceTile( TileIdentity tileId, bool opaque,
+		std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a, std::int16_t radius, 
+		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertVoid( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertWater( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
@@ -75,7 +80,10 @@ public:
 	void removeTiles( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeTileRenders( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeTile( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void removeLightSource( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeLightSources( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeLightSourceTiles( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+
 
 	void removeVoid( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeWater( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
@@ -84,9 +92,6 @@ public:
 	void removeTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	static const funcType removeMethods[( unsigned long long )TileIdentity::count];
 	void remove( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-
-
-
 
 
 
@@ -102,7 +107,7 @@ public:
 	// Lighting
 	Light* getLights();
 	Light* getLight( std::int64_t x, std::int64_t y );
-	const std::map<std::uint16_t, LightSource>& getLightSources();
+	std::map<std::uint16_t, LightSource>& getLightSources();
 	QuadTree<LightRender>* getLightRenders();
 	void resetLights();
 	void wipeLightRender();

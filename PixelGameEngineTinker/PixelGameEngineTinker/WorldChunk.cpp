@@ -125,24 +125,85 @@ void WorldChunk::insertTileRenders( TileIdentity tileId, std::int64_t x, std::in
 
 void WorldChunk::insertTile( TileIdentity tileId, bool opaque, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
-	//this->insertTiles( tileId, x, y, width, height );
-	//this->insertTileRenders( tileId, x, y, width, height );
-
+	// Adds the tile to the world and worldRender
 	this->insertTiles( tileId, opaque, x, y, width, height );
 	this->insertTileRenders( tileId, x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertLightSource( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertLightSources( TileIdentity tileId, std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a, std::int16_t radius,
+	std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
+	std::int64_t localCellStartIndexX = x - this->_chunkIndexX * this->_size;
+	std::int64_t localCellStartIndexY = y - this->_chunkIndexY * this->_size;
+
+	std::int64_t localCellIndexX;
+	std::int64_t localCellIndexY;
+	for ( std::int64_t x = 0; x < width; x++ )
+	{
+		for ( std::int64_t y = 0; y < height; y++ )
+		{
+			localCellIndexX = localCellStartIndexX + x;
+			localCellIndexY = localCellStartIndexY + y;
+
+			if ( localCellIndexX >= 0 && localCellIndexY >= 0 && localCellIndexX < this->_size && localCellIndexY < this->_size )
+			{
+				std::uint16_t lightSourceIndex = localCellIndexY * this->_size + localCellIndexX;
+
+				if ( this->_lightSources.find( lightSourceIndex ) == this->_lightSources.end() )
+				{
+					this->_lightSources.emplace( lightSourceIndex, LightSource( tileId, r, g, b, a, radius ) );
+				}
+			}
+		}
+	}
+	return;
+}
+
+
+
+void WorldChunk::insertLightSourceTile( TileIdentity tileId, bool opaque,
+	std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a, std::int16_t radius,
+	std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	// Insert tile and  light source pair contingent on both existing
+	std::int64_t localCellStartIndexX = x - this->_chunkIndexX * this->_size;
+	std::int64_t localCellStartIndexY = y - this->_chunkIndexY * this->_size;
+
+	std::int64_t localCellIndexX;
+	std::int64_t localCellIndexY;
+	for ( std::int64_t x = 0; x < width; x++ )
+	{
+		for ( std::int64_t y = 0; y < height; y++ )
+		{
+			localCellIndexX = localCellStartIndexX + x;
+			localCellIndexY = localCellStartIndexY + y;
+
+			if ( localCellIndexX >= 0 && localCellIndexY >= 0 && localCellIndexX < this->_size && localCellIndexY < this->_size )
+			{
+				std::uint16_t lightSourceIndex = localCellIndexY * this->_size + localCellIndexX;
+
+				Tile* selectedTile = &this->_tiles[lightSourceIndex];
+				if ( selectedTile->isVoid() && this->_lightSources.find( lightSourceIndex ) == this->_lightSources.end() )
+				{
+					selectedTile->setId( tileId );
+					selectedTile->setOpaque( false );
+
+					this->_lightSources.emplace( lightSourceIndex, LightSource( tileId, r, g, b, a, radius ) );
+
+				}
+			}
+		}
+	}
+
+	this->insertTileRenders( tileId, x, y, width, height );
 	return;
 }
 
 
 void WorldChunk::insertVoid( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
-	//this->insertTile( TileIdentity::Void, x, y, width, height );
 	return;
 }
 
@@ -170,9 +231,16 @@ void WorldChunk::insertDirt( std::int64_t x, std::int64_t y, std::int64_t width,
 
 void WorldChunk::insertTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
+	/*
 	this->insertTile( TileIdentity::Torch, false,
 		x, y, width, height );
-	this->insertLightSource( TileIdentity::Torch, x, y, width, height );
+	this->insertLightSource( TileIdentity::Torch, 255, 255, 255, 255, 20, x, y, width, height );
+	*/
+	this->insertLightSourceTile( TileIdentity::Torch, false,
+		255, 255, 255, 255, 20,
+		x, y, width, height );
+
+
 	return;
 }
 
@@ -257,8 +325,72 @@ void WorldChunk::removeTile( TileIdentity id, std::int64_t x, std::int64_t y, st
 }
 
 
-void WorldChunk::removeLightSource( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::removeLightSources( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
+	std::int64_t localCellStartIndexX = x - this->_chunkIndexX * this->_size;
+	std::int64_t localCellStartIndexY = y - this->_chunkIndexY * this->_size;
+
+	std::int64_t localCellIndexX;
+	std::int64_t localCellIndexY;
+	for ( std::int64_t x = 0; x < width; x++ )
+	{
+		for ( std::int64_t y = 0; y < height; y++ )
+		{
+			localCellIndexX = localCellStartIndexX + x;
+			localCellIndexY = localCellStartIndexY + y;
+
+			if ( localCellIndexX >= 0 && localCellIndexY >= 0 && localCellIndexX < this->_size && localCellIndexY < this->_size )
+			{
+				std::uint16_t lightSourceIndex = localCellIndexY * this->_size + localCellIndexX;
+
+				if ( this->_lightSources.find( lightSourceIndex ) != this->_lightSources.end() && this->_lightSources.at( lightSourceIndex ).getTileId() == tileId )
+				{
+					this->_lightSources.erase( lightSourceIndex );
+				}
+			}
+		}
+	}
+
+	this->removeTileRenders( tileId, x, y, width, height );
+
+	return;
+}
+
+
+void WorldChunk::removeLightSourceTiles( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	// Remove tile and light source pair contingent on both existing
+	std::int64_t localCellStartIndexX = x - this->_chunkIndexX * this->_size;
+	std::int64_t localCellStartIndexY = y - this->_chunkIndexY * this->_size;
+
+	std::int64_t localCellIndexX;
+	std::int64_t localCellIndexY;
+	for ( std::int64_t x = 0; x < width; x++ )
+	{
+		for ( std::int64_t y = 0; y < height; y++ )
+		{
+			localCellIndexX = localCellStartIndexX + x;
+			localCellIndexY = localCellStartIndexY + y;
+
+			if ( localCellIndexX >= 0 && localCellIndexY >= 0 && localCellIndexX < this->_size && localCellIndexY < this->_size )
+			{
+				Tile* selectedTile = &this->_tiles[localCellIndexY * this->_size + localCellIndexX];
+				std::uint16_t lightSourceIndex = localCellIndexY * this->_size + localCellIndexX;
+
+
+				if ( selectedTile->getId() == tileId &&
+					this->_lightSources.find( lightSourceIndex ) != this->_lightSources.end() && this->_lightSources.at( lightSourceIndex ).getTileId() == tileId )
+				{
+					selectedTile->setId( TileIdentity::Void );
+					selectedTile->setOpaque( false );
+					this->_lightSources.erase( lightSourceIndex );
+				}
+			}
+		}
+	}
+
+	this->removeTileRenders( tileId, x, y, width, height );
+
 	return;
 }
 
@@ -291,7 +423,11 @@ void WorldChunk::removeDirt( std::int64_t x, std::int64_t y, std::int64_t width,
 
 void WorldChunk::removeTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
+	/*
 	this->removeTile( TileIdentity::Torch, x, y, width, height );
+	this->removeLightSources( TileIdentity::Torch, x, y, width, height );
+	*/
+	this->removeLightSourceTiles( TileIdentity::Torch, x, y, width, height );
 	return;
 }
 
@@ -337,7 +473,7 @@ const std::map<TileIdentity, unsigned short> WorldChunk::createPalette() const
 
 void WorldChunk::clear()
 {
-	// Clears the tile array
+	// Clears the tile array, lights, and lightSources
 	this->_chunkIndexX = 0;
 	this->_chunkIndexY = 0;
 
@@ -351,21 +487,11 @@ void WorldChunk::clear()
 
 void WorldChunk::delimit( std::int64_t indexX, std::int64_t indexY )
 {
-	// pass tile by reference
-	// copy contents of tile into this->_tiles
-	// reset quadtree
+	this->clear();
 	this->_chunkIndexX = indexX;
 	this->_chunkIndexY = indexY;
-
-
-	//this->_lighting.setChunkIndexX( indexX );
-	//this->_lighting.setChunkIndexY( indexY );
-
-	// [!] Do the same for geography when isolated black boxed
-	//this->_geography.setChunkIndexX( indexX );
-	//this->_geography.setChunkIndexY( indexY );
-
-
+	this->wipeRender();
+	this->wipeLightRender();
 	return;
 }
 
@@ -421,6 +547,20 @@ std::int64_t WorldChunk::getPositionY() const
 {
 	return this->_chunkIndexY * this->_size;
 }
+
+
+BoundingBox<std::int64_t> WorldChunk::getBounds() const
+{
+	return BoundingBox<std::int64_t>( this->_chunkIndexX * this->_size, this->_chunkIndexY * this->_size, this->_size, this->_size );
+}
+
+
+
+
+
+
+
+
 
 
 const Tile* WorldChunk::getTiles()
@@ -484,7 +624,7 @@ Light* WorldChunk::getLight( std::int64_t x, std::int64_t y )
 }
 
 
-const std::map<std::uint16_t, LightSource>& WorldChunk::getLightSources()
+std::map<std::uint16_t, LightSource>& WorldChunk::getLightSources()
 {
 	return this->_lightSources;
 }
@@ -556,8 +696,8 @@ void WorldChunk::wipeLightRender()
 
 void WorldChunk::insertLightRender( std::uint32_t corner0, std::uint32_t corner1, std::uint32_t corner2, std::uint32_t corner3, bool exist, std::int64_t x, std::int64_t y )
 {
-	// model after insert
-
+	this->_lightRenders[0].insert( LightRender( corner0, corner1, corner2, corner3, exist,
+		BoundingBox<std::int64_t>( x, y, 1, 1 ) ) );
 	return;
 }
 

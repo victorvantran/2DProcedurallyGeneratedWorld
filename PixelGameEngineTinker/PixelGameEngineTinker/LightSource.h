@@ -1,10 +1,14 @@
 #pragma once
 
+#include "Tile.h"
 #include <cstdint>
 
 class LightSource
 {
 private:
+	TileIdentity _tileId;
+
+
 	std::int16_t _r;
 	std::int16_t _g;
 	std::int16_t _b;
@@ -14,13 +18,18 @@ private:
 
 public:
 	LightSource()
-		: _r( 0 ), _g( 0 ), _b( 0 ), _a( 0 ), _radius( 0 ) {}
+		: _tileId( TileIdentity::Void ), _r( 0 ), _g( 0 ), _b( 0 ), _a( 0 ), _radius( 0 ) {}
 
-	LightSource( std::int16_t r_, std::int16_t g_, std::int16_t b_, std::int16_t a_, std::int16_t radius_ )
-		: _r( r_ ), _g( g_ ), _b( b_ ), _a( a_ ), _radius( radius_ ) {}
+	LightSource( TileIdentity tileId, std::int16_t r_, std::int16_t g_, std::int16_t b_, std::int16_t a_, std::int16_t radius_ )
+		: _tileId( tileId ), _r( r_ ), _g( g_ ), _b( b_ ), _a( a_ ), _radius( radius_ ) {}
 
 
 	// Getters
+	TileIdentity getTileId() const
+	{
+		return this->_tileId;
+	}
+
 	std::int16_t getRed() const
 	{
 		return this->_r;

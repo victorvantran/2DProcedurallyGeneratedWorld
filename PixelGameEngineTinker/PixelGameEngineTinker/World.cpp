@@ -905,9 +905,7 @@ std::vector<std::tuple<std::uint64_t, std::int64_t, std::int64_t>> World::delimi
 void World::delimitWorldChunk( WorldChunk& worldChunk, std::int64_t chunkIndexX, std::int64_t chunkIndexY )
 {
 	// Clears the worldChunk, updates its proper index, and wipes the render in preparation to load in new data	and new render
-	worldChunk.clear();
 	worldChunk.delimit( chunkIndexX, chunkIndexY );
-	worldChunk.wipeRender();
 	return;
 }
 
@@ -1227,8 +1225,9 @@ void World::updateLighting()
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
-		const BoundingBox<std::int64_t> chunkBounds = BoundingBox<std::int64_t>( _worldChunks[i].getChunkIndexX() * chunkSize, _worldChunks[i].getChunkIndexY() * chunkSize, chunkSize, chunkSize );
-		// [!] add a method to retreive chunkBounds
+		//const BoundingBox<std::int64_t> chunkBounds = BoundingBox<std::int64_t>( _worldChunks[i].getChunkIndexX() * chunkSize, _worldChunks[i].getChunkIndexY() * chunkSize, chunkSize, chunkSize );
+		const BoundingBox<std::int64_t> chunkBounds = _worldChunks[i].getBounds();
+
 		// No need to render if camera cannot see it
 		if ( cameraView.intersects( chunkBounds ) )
 		{
@@ -1309,14 +1308,6 @@ void World::updateLighting()
 					std::uint32_t corner2 = ( corner2R << 24 ) + ( corner2G << 16 ) + ( corner2B << 8 ) + ( corner2A );
 					std::uint32_t corner3 = ( corner3R << 24 ) + ( corner3G << 16 ) + ( corner3B << 8 ) + ( corner3A );
 
-
-					/*
-					if ( ( corner0R << 24 ) > 0 )
-					{
-						std::cout << "YES" << std::endl;
-					}
-					*/
-
 					currWorldChunk.insertLightRenders( corner0, corner1, corner2, corner3, true, worldPosX, worldPosY, 1, 1 );
 				}
 			}
@@ -1355,7 +1346,6 @@ void World::revealStatic( LightCastQuadrant<long double>& quadrant, const olc::v
 	}
 	else if ( originPosition.x < 0 && originPosition.y >= 0 )
 	{
-		//this->addLight( ( std::int64_t )std::floor( castPosition.x ), ( std::int64_t )std::ceil( castPosition.y ), lightSource, intensity );
 		this->addLight( ( std::int64_t )std::floor( castPosition.x ), ( std::int64_t )std::ceil( castPosition.y ), lightSource, intensity );
 	}
 	else if ( originPosition.x >= 0 && originPosition.y < 0 )
@@ -1374,13 +1364,8 @@ void World::revealStatic( LightCastQuadrant<long double>& quadrant, const olc::v
 
 bool World::isOpaque( const olc::v2d_generic<long double>& originPosition, const olc::v2d_generic<long double>& castPosition )
 {
-	//std::int64_t tilePosX = ( originPosition.x >= 0 ) ? ( std::int64_t )std::ceil( castPos.x ) : ( std::int64_t )std::floor( castPos.x );
-	//std::int64_t tilePosY = ( originPosition.y >= 0 ) ? ( std::int64_t )std::ceil( castPos.y ) : ( std::int64_t )std::floor( castPos.y );
 	std::int64_t tilePosX = ( originPosition.x >= 0 ) ? ( std::int64_t )std::floor( castPosition.x ) : ( std::int64_t )std::ceil( castPosition.x );
 	std::int64_t tilePosY = ( originPosition.y >= 0 ) ? ( std::int64_t )std::floor( castPosition.y ) : ( std::int64_t )std::ceil( castPosition.y );
-
-	//std::int64_t tilePosX = ( std::int64_t )std::floor( castPos.x );
-	//std::int64_t tilePosY = ( std::int64_t )std::floor( castPos.y );
 
 	const Tile* tile = this->getTile( tilePosX, tilePosY );
 	if ( tile == nullptr )
@@ -1396,15 +1381,8 @@ bool World::isOpaque( const olc::v2d_generic<long double>& originPosition, const
 
 bool World::isTransparent( const olc::v2d_generic<long double>& originPosition, const olc::v2d_generic<long double>& castPosition )
 {
-	//std::int64_t tilePosX = ( originPosition.x >= 0 ) ? ( std::int64_t )std::ceil( castPos.x ) : ( std::int64_t )std::floor( castPos.x );
-	//std::int64_t tilePosY = ( originPosition.y >= 0 ) ? ( std::int64_t )std::ceil( castPos.y ) : ( std::int64_t )std::floor( castPos.y );
-
 	std::int64_t tilePosX = ( originPosition.x >= 0 ) ? ( std::int64_t )std::floor( castPosition.x ) : ( std::int64_t )std::ceil( castPosition.x );
 	std::int64_t tilePosY = ( originPosition.y >= 0 ) ? ( std::int64_t )std::floor( castPosition.y ) : ( std::int64_t )std::ceil( castPosition.y );
-
-
-	//std::int64_t tilePosX = ( std::int64_t )std::floor( castPos.x );
-	//std::int64_t tilePosY = ( std::int64_t )std::floor( castPos.y );
 
 	const Tile* tile = this->getTile( tilePosX, tilePosY );
 	if ( tile == nullptr )
@@ -1416,51 +1394,6 @@ bool World::isTransparent( const olc::v2d_generic<long double>& originPosition, 
 		return !tile->getOpaque();
 	}
 }
-
-
-/*
-void World::scanStatic( LightCastQuadrant<std::int64_t>& quadrant, LightCastRow& row, const olc::v2d_generic<long double> originPosition, const LightSource& lightSource )
-{
-	
-	if ( row.depth >= lightSource.getRadius() )
-	{
-		return;
-	}
-
-	const olc::v2d_generic<std::int64_t>* prevTile = nullptr;
-	for ( const olc::v2d_generic<std::int64_t>& tile : row.getTiles() )
-	{
-		olc::v2d_generic<std::int64_t> castPosition = quadrant.transform( tile );
-		
-		if ( this->isOpaque( originPosition, castPosition ) || LightCastQuadrant<std::int64_t>::isSymmetric( row, tile ) )
-		{
-			this->revealStatic( quadrant, tile, castPosition, originPosition, lightSource );
-		}
-		if ( prevTile != nullptr && this->isOpaque( originPosition, quadrant.transform( *prevTile ) ) && this->isTransparent( originPosition, castPosition ) )
-		{
-			row.startSlope = LightCastQuadrant<std::int64_t>::slopeStatic( tile );
-		}
-		if ( prevTile != nullptr && this->isTransparent( originPosition, quadrant.transform( *prevTile ) ) && this->isOpaque( originPosition, castPosition ) )
-		{
-			LightCastRow nextRow = row.getNext();
-			nextRow.endSlope = LightCastQuadrant<std::int64_t>::slopeStatic( tile );
-			this->scanStatic( quadrant, nextRow, originPosition, lightSource );
-		}
-
-		prevTile = &tile;
-	}
-	
-
-
-	if ( prevTile != nullptr && this->isTransparent( originPosition, quadrant.transform( *prevTile ) ) )
-	{
-		LightCastRow nextRow = row.getNext();
-		this->scanStatic( quadrant, nextRow, originPosition, lightSource );
-	}
-	
-	return;
-}
-*/
 
 
 
@@ -1508,19 +1441,155 @@ void World::scanStatic( LightCastQuadrant<long double>& quadrant, LightCastRow& 
 
 
 
+void World::emitStaticLightSource( const LightSource& lightSource, std::int64_t x, std::int64_t y )
+{
+	olc::v2d_generic<long double> originPosition = olc::v2d_generic<long double>{ ( long double )x, ( long double )y};
+	std::int64_t originX;
+	std::int64_t originY;
+
+	if ( x >= 0 && y >= 0 )
+	{
+		originX = ( std::int64_t )std::floor( originPosition.x );
+		originY = ( std::int64_t )std::floor( originPosition.y );
+
+		long double rayDistance = std::hypot( ( ( ( long double )originX - x ) + 0.5 ), ( ( ( long double )originY - y ) + 0.5 ) );
+		long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / lightSource.getRadius() ) ) );
+
+		this->addLight( originX, originY, lightSource, intensity );
+
+		for ( int cardinality = 0; cardinality < 4; cardinality++ )
+		{
+			LightCastQuadrant<long double> quadrant( cardinality, originX, originY );
+			LightCastRow initialRow = LightCastRow( 1.0f, -1.0f, 1.0f );
+			this->scanStatic( quadrant, initialRow, originPosition, lightSource );
+		}
+	}
+	else if ( x < 0 && y >= 0 )
+	{
+		originX = ( std::int64_t )std::ceil( originPosition.x - 1 );
+		originY = ( std::int64_t )std::floor( originPosition.y );
+
+		long double rayDistance = std::hypot( ( ( ( long double )originX - x ) - 0.5 ), ( ( ( long double )originY - y ) + 0.5 ) );
+		long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / lightSource.getRadius() ) ) );
+		this->addLight( originX, originY, lightSource, intensity );
+
+		for ( int cardinality = 0; cardinality < 4; cardinality++ )
+		{
+			LightCastQuadrant<long double> quadrant( cardinality, originX, originY );
+			LightCastRow initialRow = LightCastRow( 1.0f, -1.0f, 1.0f );
+			this->scanStatic( quadrant, initialRow, originPosition, lightSource );
+		}
+	}
+	else if ( x >= 0 && y < 0 )
+	{
+		originX = ( std::int64_t )std::floor( originPosition.x );
+		originY = ( std::int64_t )std::ceil( originPosition.y - 1 );
+
+		long double rayDistance = std::hypot( ( ( ( long double )originX - x ) + 0.5 ), ( ( ( long double )originY - y ) - 0.5 ) );
+		long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / lightSource.getRadius() ) ) );
+		this->addLight( originX, originY, lightSource, intensity );
+
+		for ( int cardinality = 0; cardinality < 4; cardinality++ )
+		{
+			LightCastQuadrant<long double> quadrant( cardinality, originX, originY );
+			LightCastRow initialRow = LightCastRow( 1.0f, -1.0f, 1.0f );
+			this->scanStatic( quadrant, initialRow, originPosition, lightSource );
+		}
+	}
+	else // if ( dX < 0 && dY < 0 )
+	{
+		originX = ( std::int64_t )std::ceil( originPosition.x - 1 );
+		originY = ( std::int64_t )std::ceil( originPosition.y - 1 );
+
+		long double rayDistance = std::hypot( ( ( ( long double )originX - x ) - 0.5 ), ( ( ( long double )originY - y ) - 0.5 ) );
+		long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / lightSource.getRadius() ) ) );
+		this->addLight( originX, originY, lightSource, intensity );
+
+		for ( int cardinality = 0; cardinality < 4; cardinality++ )
+		{
+			LightCastQuadrant<long double> quadrant( cardinality, originX, originY );
+			LightCastRow initialRow = LightCastRow( 1.0f, -1.0f, 1.0f );
+			this->scanStatic( quadrant, initialRow, originPosition, lightSource );
+		}
+	}
+
+
+	return;
+}
+
+
+
+
+void World::emitStaticLightSources()
+{
+	const BoundingBox<long double>& cameraView = this->_camera->getView();
+
+	for ( int i = 0; i < this->_numWorldChunks; i++ )
+	{
+		WorldChunk& currWorldChunk = this->_worldChunks[i];
+		const BoundingBox<std::int64_t> chunkBounds = currWorldChunk.getBounds();
+		if ( cameraView.intersects( chunkBounds ) )
+		{
+			std::map<std::uint16_t, LightSource>& currLightSources = currWorldChunk.getLightSources();
+			for ( std::map<std::uint16_t, LightSource>::iterator it = currLightSources.begin(); it != currLightSources.end(); it++ )
+			{
+				std::uint16_t localX = it->first % currWorldChunk.getSize();
+				std::uint16_t localY = it->first / currWorldChunk.getSize();
+
+
+				chunkBounds.getX();
+
+				const LightSource& lightSource = it->second;
+
+				// If light is in view of the camera, light it up
+				if (
+					(
+						chunkBounds.getX() + localX + lightSource.getRadius() >= cameraView.getX() &&
+						chunkBounds.getY() + localY + lightSource.getRadius() >= cameraView.getY() &&
+						chunkBounds.getX() + localX + lightSource.getRadius() <= cameraView.getX() + cameraView.getWidth() &&
+						chunkBounds.getY() + localY + lightSource.getRadius() <= cameraView.getY() + cameraView.getHeight()
+						) ||
+					(
+						chunkBounds.getX() + localX - lightSource.getRadius() >= cameraView.getX() &&
+						chunkBounds.getY() + localY + lightSource.getRadius() >= cameraView.getY() &&
+						chunkBounds.getX() + localX - lightSource.getRadius() <= cameraView.getX() + cameraView.getWidth() &&
+						chunkBounds.getY() + localY + lightSource.getRadius() <= cameraView.getY() + cameraView.getHeight()
+						) ||
+					(
+						chunkBounds.getX() + localX + lightSource.getRadius() >= cameraView.getX() &&
+						chunkBounds.getY() + localY - lightSource.getRadius() >= cameraView.getY() &&
+						chunkBounds.getX() + localX + lightSource.getRadius() <= cameraView.getX() + cameraView.getWidth() &&
+						chunkBounds.getY() + localY - lightSource.getRadius() <= cameraView.getY() + cameraView.getHeight()
+						) ||
+					(
+						chunkBounds.getX() + localX - lightSource.getRadius() >= cameraView.getX() &&
+						chunkBounds.getY() + localY - lightSource.getRadius() >= cameraView.getY() &&
+						chunkBounds.getX() + localX - lightSource.getRadius() <= cameraView.getX() + cameraView.getWidth() &&
+						chunkBounds.getY() + localY - lightSource.getRadius() <= cameraView.getY() + cameraView.getHeight()
+						)
+					)
+				{
+
+					this->emitStaticLightSource( lightSource, chunkBounds.getX() + localX, chunkBounds.getY() + localY );
+				}
+			}
+		}
+	}
+
+	return;
+}
+
+
+
 void World::activateCursorLightSource( long double dX, long double dY, std::int64_t radius )
 {
-
-	const LightSource& lightSource = LightSource( 255, 255, 255, 255, ( std::int16_t )radius );
-	
+	const LightSource& lightSource = LightSource( TileIdentity::Void, 255, 255, 255, 255, ( std::int16_t )radius );
 	
 	long double dOriginX;
 	long double fractionX = std::modfl( dX, &dOriginX );
 
 	long double dOriginY;
 	long double fractionY = std::modfl( dY, &dOriginY );
-	
-
 	
 
 	olc::v2d_generic<long double> originPosition;
@@ -1605,9 +1674,6 @@ void World::activateCursorLightSource( long double dX, long double dY, std::int6
 			this->scanStatic( quadrant, initialRow, originPosition, lightSource );
 		}
 	}
-
-	std::cout << originX << ", " << originY << std::endl;
-	// std::cout << originPosition.x << ", " << originPosition.y << std::endl;
 	
 
 	return;

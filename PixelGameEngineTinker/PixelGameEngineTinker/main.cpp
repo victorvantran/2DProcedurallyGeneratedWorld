@@ -68,7 +68,7 @@ public:
 		long double mouseY = ( long double )GetMouseY();
 
 		//long double panSpeed = 20.0f;
-		long double panSpeed = 12.0f;
+		long double panSpeed = 32.0f;
 
 		if ( GetKey( olc::Key::UP ).bPressed || GetKey( olc::Key::UP ).bHeld )
 		{
@@ -222,6 +222,7 @@ public:
 
 		// updateLighting
 		this->world->resetLighting();
+		this->world->emitStaticLightSources();
 		this->world->activateCursorLightSource( tilePositionX, tilePositionY, 15 );
 		//this->world->activateCursorLightSource( tileIndex.x, tileIndex.y, 15 );
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <map>
 #include <set>
 #include <vector>
 #include <string>
@@ -150,29 +149,18 @@ public:
 	void updateLighting();
 
 
-	//void revealDynamic( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& tile, 
-	//	const olc::v2d_generic<long double>& originPosition, const LightSource& lightSource, const int maxRadius );
-	//bool isOpaque( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& tile, const olc::v2d_generic<long double>& originPosition );
-	//bool isTransparent( LightCastQuadrant& quadrant, const olc::v2d_generic<long double>& tile, const olc::v2d_generic<long double>& originPosition );
-
-
-
-	//void emitDynamicLight( long double dX, long double dY, std::int64_t radius );
-	//void scanDynamic( LightCastQuadrant& quadrant, LightCastRow& row, const olc::v2d_generic<long double>& originPosition, const LightSource& lightSource, const std::uint16_t maxRadius );
-
-
-	//bool isOpaque( const olc::v2d_generic<long double>& originPosition, const olc::v2d_generic<std::int64_t>& castPosition );
-	//bool isTransparent( const olc::v2d_generic<long double>& originPosition, const olc::v2d_generic<std::int64_t>& castPosition );
 
 	bool isOpaque( const olc::v2d_generic<long double>& originPosition, const olc::v2d_generic<long double>& castPosition );
 	bool isTransparent( const olc::v2d_generic<long double>& originPosition, const olc::v2d_generic<long double>& castPosition );
 
-	//void scanStatic( LightCastQuadrant<std::int64_t>& quadrant, LightCastRow& row, const olc::v2d_generic<long double> originPosition, const LightSource& lightSource );
 	void scanStatic( LightCastQuadrant<long double>& quadrant, LightCastRow& row, const olc::v2d_generic<long double> originPosition, const LightSource& lightSource );
-	//void revealStatic( LightCastQuadrant<std::int64_t>& quadrant, const olc::v2d_generic<std::int64_t>& tile, const olc::v2d_generic<std::int64_t>& castPosition,
-	//	const olc::v2d_generic<long double>& originPosition, const LightSource& lightSource );
+
 	void revealStatic( LightCastQuadrant<long double>& quadrant, const olc::v2d_generic<long double>& tile, const olc::v2d_generic<long double>& castPosition,
 			const olc::v2d_generic<long double>& originPosition, const LightSource& lightSource );
+
+
+	void emitStaticLightSource( const LightSource& lightSource, std::int64_t x, std::int64_t y );
+	void emitStaticLightSources();
 	void activateCursorLightSource( long double dX, long double dY, std::int64_t radius );
 
 
