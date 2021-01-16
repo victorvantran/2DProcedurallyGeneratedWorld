@@ -204,8 +204,49 @@ public:
 			std::uint8_t g = std::rand() % 256;
 			std::uint8_t b = std::rand() % 256;
 
+		}
+
+
+		if ( GetKey( olc::Key::B ).bPressed || GetKey( olc::Key::B ).bHeld )
+		{
+			std::cout << (int)world->getTile( tileIndex.x, tileIndex.y )->getBorder( TileBorder::North ) << std::endl;
 			//world->insertLightTile( tileIndex.x, tileIndex.y, r, g, b, 255, 20 );
 		}
+
+
+		if ( GetKey( olc::Key::NP7 ).bPressed )
+		{
+			std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getBorder( TileBorder::NorthWest ) << std::endl;
+		}
+		if ( GetKey( olc::Key::NP8 ).bPressed )
+		{
+			std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getBorder( TileBorder::North ) << std::endl;
+		}
+		if ( GetKey( olc::Key::NP9 ).bPressed )
+		{
+			std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getBorder( TileBorder::NorthEast ) << std::endl;
+		}
+		if ( GetKey( olc::Key::NP6 ).bPressed )
+		{
+			std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getBorder( TileBorder::East ) << std::endl;
+		}
+		if ( GetKey( olc::Key::NP3 ).bPressed )
+		{
+			std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getBorder( TileBorder::SouthEast ) << std::endl;
+		}
+		if ( GetKey( olc::Key::NP2 ).bPressed )
+		{
+			std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getBorder( TileBorder::South ) << std::endl;
+		}
+		if ( GetKey( olc::Key::NP1 ).bPressed )
+		{
+			std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getBorder( TileBorder::SouthWest ) << std::endl;
+		}
+		if ( GetKey( olc::Key::NP4 ).bPressed )
+		{
+			std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getBorder( TileBorder::West ) << std::endl;
+		}
+
 
 
 		if ( GetMouse( 0 ).bPressed || GetMouse( 0 ).bHeld )

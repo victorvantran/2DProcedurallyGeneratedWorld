@@ -48,12 +48,23 @@ private:
 	std::int64_t _focalChunkIndexX;
 	std::int64_t _focalChunkIndexY;
 
+
+	std::condition_variable _condRenderWorld;
+
+
+
+
+	// Geography
+	std::atomic<bool> _runningUpdateGeography;
+	std::thread _updateGeographyThread;
+	std::mutex _mutexUpdateGeography;
+	std::condition_variable _condUpdateGeography;
+
 	// Lighting
 	std::atomic<bool> _runningUpdateLighting;
 	std::thread _updateLightingThread;
 	std::mutex _mutexUpdateLighting;
-	std::condition_variable _condRenderWorld;
-
+	std::condition_variable _condUpdateLighting;
 
 	// Memory
 	std::mutex _worldDatabaseMutex;
@@ -62,11 +73,11 @@ private:
 	std::vector<WorldChunkMemory*> _saveWorldChunks;
 	std::atomic<bool> _runningSaveWorldGeography;
 	std::thread _saveWorldGeographyThread;
-	std::mutex _saveWorldChunksMutex;
+	std::mutex _mutexSaveWorldChunks;
 
 	std::atomic<bool> _runningLoadWorldGeography;
 	std::thread _loadWorldGeographyThread;
-	std::mutex _loadWorldChunksMutex;
+	std::mutex _mutexLoadWorldChunks;
 
 	Atlas _atlas;
 
@@ -104,7 +115,6 @@ public:
 	std::uint16_t getNumWorldChunks() const;
 	std::uint16_t getNumChunkWidth() const;
 	std::uint16_t getNumChunkHeight() const;
-	const Tile* getTile( std::int64_t x, std::int64_t y ) const;
 
 
 	// Save/Load System
@@ -142,10 +152,18 @@ public:
 	// Debug
 	void DEBUG_PRINT_TILE_SPRITES();
 
-	
 
+
+
+
+
+	static std::int16_t getRelativeChunkIndex( std::int64_t x, std::int64_t y, std::int64_t focalChunkIndexX, std::int64_t focalChunkIndexY );
+	static std::uint16_t getRelativeTileIndex( std::int64_t x, std::int64_t y );
 	// Geography
-
+	const Tile* getTile( std::int64_t x, std::int64_t y ) const;
+	void calculateTileRenders();
+	void updateGeographyTask();
+	void updateGeography();
 
 	// Lighting
 	const Light* getLight( std::int64_t x, std::int64_t y ) const;
@@ -153,7 +171,7 @@ public:
 	//void addLight( std::int64_t x, std::int64_t y, std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a );
 	void addLight( std::int64_t x, std::int64_t y, const LightSource& lightSource, long double intensity );
 	void resetLighting();
-	void calculateLightCells();
+	void calculateLightRenders();
 
 
 
@@ -163,7 +181,7 @@ public:
 	void scanStatic( LightCastQuadrant<long double>& quadrant, LightCastRow& row, const olc::v2d_generic<long double> originPosition, const LightSource& lightSource );
 
 	void revealStatic( LightCastQuadrant<long double>& quadrant, const olc::v2d_generic<long double>& tile, const olc::v2d_generic<long double>& castPosition,
-			const olc::v2d_generic<long double>& originPosition, const LightSource& lightSource );
+		const olc::v2d_generic<long double>& originPosition, const LightSource& lightSource );
 
 
 	void emitStaticLightSource( const LightSource& lightSource, std::int64_t x, std::int64_t y );

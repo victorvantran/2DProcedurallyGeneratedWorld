@@ -107,6 +107,7 @@ void WorldChunk::insertTiles( TileIdentity tileId, bool opaque, std::int64_t x, 
 				{
 					selectedTile->setId( tileId );
 					selectedTile->setOpaque( opaque );
+					selectedTile->setBorders( 0 ); // [!] dummy border (updated later)
 				}
 			}
 		}
@@ -116,9 +117,9 @@ void WorldChunk::insertTiles( TileIdentity tileId, bool opaque, std::int64_t x, 
 }
 
 
-void WorldChunk::insertTileRenders( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertTileRenders( TileIdentity tileId, std::uint8_t bordersDecalIndex, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
-	this->_tileRenders[0].insert( TileRender( tileId, BoundingBox<std::int64_t>( x, y, width, height ) ) );
+	this->_tileRenders[0].insert( TileRender( tileId, bordersDecalIndex, BoundingBox<std::int64_t>( x, y, width, height ) ) );
 	return;
 }
 
@@ -127,7 +128,7 @@ void WorldChunk::insertTile( TileIdentity tileId, bool opaque, std::int64_t x, s
 {
 	// Adds the tile to the world and worldRender
 	this->insertTiles( tileId, opaque, x, y, width, height );
-	this->insertTileRenders( tileId, x, y, width, height );
+	this->insertTileRenders( tileId, 0, x, y, width, height ); // [!] dummy border
 	return;
 }
 
@@ -197,7 +198,7 @@ void WorldChunk::insertLightSourceTile( TileIdentity tileId, bool opaque,
 		}
 	}
 
-	this->insertTileRenders( tileId, x, y, width, height );
+	this->insertTileRenders( tileId, 0, x, y, width, height ); // [!] dummy border
 	return;
 }
 
@@ -311,7 +312,7 @@ void WorldChunk::removeTiles( TileIdentity id, std::int64_t x, std::int64_t y, s
 
 void WorldChunk::removeTileRenders( TileIdentity id, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
-	this->_tileRenders[0].remove( TileRender( id, BoundingBox<std::int64_t>( x, y, width, height ) ) );
+	this->_tileRenders[0].remove( TileRender( id, 0, BoundingBox<std::int64_t>( x, y, width, height ) ) );
 	return;
 }
 
@@ -562,8 +563,7 @@ BoundingBox<std::int64_t> WorldChunk::getBounds() const
 
 
 
-
-const Tile* WorldChunk::getTiles()
+Tile* WorldChunk::getTiles()
 {
 	return this->_tiles;
 }

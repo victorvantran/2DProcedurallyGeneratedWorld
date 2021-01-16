@@ -13,8 +13,8 @@ TileRender::~TileRender()
 }
 
 
-TileRender::TileRender( TileIdentity id, const BoundingBox<std::int64_t>& bounds )
-	: Cell( bounds ), _bordersDecalIndex( 0 ), _id( id )
+TileRender::TileRender( TileIdentity id, std::uint8_t bordersDecalIndex, const BoundingBox<std::int64_t>& bounds )
+	: Cell( bounds ), _bordersDecalIndex( bordersDecalIndex ), _id( id )
 {
 
 }
@@ -55,6 +55,7 @@ bool TileRender::exists() const
 void TileRender::clear()
 {
 	this->_id = TileIdentity::Void;
+	this->_bordersDecalIndex = 0;
 	return;
 }
 

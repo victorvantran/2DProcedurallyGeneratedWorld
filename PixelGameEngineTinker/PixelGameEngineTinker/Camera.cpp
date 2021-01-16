@@ -91,6 +91,7 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 	olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
 	olc::v2d_generic<std::int64_t> size = olc::v2d_generic<std::int64_t>{ ( int )( chunkSize * ( this->_zoomX * tileSize ) ), ( int )( chunkSize * ( this->_zoomY * tileSize ) ) };
 
+	/*
 	pge->DrawRect(
 		startPos,
 		size,
@@ -102,6 +103,7 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 		std::to_string( worldChunk.getRelativeChunkIndex() ),
 		olc::GREEN
 	);
+	*/
 	
 	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas, worldChunk.getLightRenders() );
 	this->renderLightRenders( worldChunk.getLightRenders()[0] );
@@ -190,11 +192,15 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas,
 					worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
 					olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
 
+
+					std::uint8_t bordersDecalIndex = cells[i].getBordersDecalIndex();
+
 					pge->DrawPartialDecal(
 						startPos,
 						olc::v2d_generic<long double>{ ( tileSize * this->_zoomX ), ( tileSize * this->_zoomY ) },
 						tileDecal,
-						olc::vf2d{ 0, 128 }, // [!] temp based on configuration
+						olc::vf2d{ ( float )( bordersDecalIndex % 8 ), ( float )( bordersDecalIndex / 8 ) } *( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE ), // [!] 8 settings
+						//olc::vf2d{ 0, 128 }, // [!] temp based on configuration
 						olc::vf2d{ 1, 1 } * ( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE )
 					);
 

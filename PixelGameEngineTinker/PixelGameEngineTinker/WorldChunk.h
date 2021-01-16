@@ -60,7 +60,7 @@ public:
 	typedef void ( WorldChunk::* funcType )( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 
 	void insertTiles( TileIdentity tileId, bool opaque, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertTileRenders( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertTileRenders( TileIdentity tileId, std::uint8_t bordersDecalIndex, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertTile( TileIdentity tileId, bool opaque, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertLightSources( TileIdentity tileId, std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a, std::int16_t radius,
 		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
@@ -98,7 +98,8 @@ public:
 
 
 	// Geography
-	const Tile* getTiles();
+	Tile* getTiles();
+
 	// Tile getTile( int x, int y )
 	QuadTree<TileRender>& getTileRendersRoot();
 

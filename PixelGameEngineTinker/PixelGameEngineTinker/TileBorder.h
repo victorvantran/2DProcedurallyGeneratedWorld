@@ -2,12 +2,12 @@
 
 enum class TileBorder
 {
-	TopLeft = 0,
-	Top = 1,
-	TopRight = 2,
-	Right = 3,
-	BottomRight = 4,
-	Bottom = 5,
-	BottomLeft = 6,
-	Left = 7
+	NorthWest = 0,
+	North = 1,
+	NorthEast = 2,
+	East = 3,
+	SouthEast = 4,
+	South = 5,
+	SouthWest = 6,
+	West = 7
 };
