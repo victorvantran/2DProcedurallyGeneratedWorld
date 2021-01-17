@@ -47,7 +47,7 @@ public:
 	{
 		static const std::uint16_t CHUNK_CELL_SIZE = 32; // chunk cell size ( n x n ) // [hardcode]
 		static const std::uint16_t NUM_CELLS_PER_CHUNK = CHUNK_CELL_SIZE * CHUNK_CELL_SIZE;
-		static const std::uint16_t CHUNK_RADIUS = 2;
+		static const std::uint16_t CHUNK_RADIUS = 3;
 
 		static const std::uint16_t MAX_SAVED_CHUNKS = 50; // Maximum number of chunks in queue to save before discarding
 		static const std::uint16_t SPRITE_TILE_REFRESH_RATE = 300; // Every 5 minutes, refresh the tileDecals if it has not yet from condition variable notification

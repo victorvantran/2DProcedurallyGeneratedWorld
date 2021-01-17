@@ -67,12 +67,21 @@ public:
 	void insertLightSourceTile( TileIdentity tileId, bool opaque,
 		std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a, std::int16_t radius, 
 		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+
 	void insertVoid( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertWater( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertDirt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertSand( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertElmBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertElmLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertMapleBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	static const funcType insertMethods[( unsigned long long )TileIdentity::count];
+
+
 	void insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 
 
@@ -89,7 +98,15 @@ public:
 	void removeWater( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeDirt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeSand( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeElmBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeElmLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeMapleBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+
+
 	static const funcType removeMethods[( unsigned long long )TileIdentity::count];
 	void remove( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 

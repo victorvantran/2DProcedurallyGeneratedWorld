@@ -1246,7 +1246,9 @@ void World::calculateTileRenders()
 						( ( wTile == nullptr || wTile->getId() == TileIdentity::Void ) ? 0 : 1 << 7 )
 						);
 
+
 					cTile->setBorders( borders );
+					// cTile->setBorders( std::rand() % 47 );
 					
 					currWorldChunk.insertTileRenders( cTile->getId(), cTile->getBordersDecalIndex(),
 						worldPosX, worldPosY, 1, 1 );

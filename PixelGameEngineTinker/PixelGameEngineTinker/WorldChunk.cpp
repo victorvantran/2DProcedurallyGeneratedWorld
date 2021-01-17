@@ -230,23 +230,79 @@ void WorldChunk::insertDirt( std::int64_t x, std::int64_t y, std::int64_t width,
 	return;
 }
 
-void WorldChunk::insertTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+
+
+
+
+void WorldChunk::insertSand( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
-	/*
-	this->insertTile( TileIdentity::Torch, false,
+	this->insertTile( TileIdentity::Sand, false,
 		x, y, width, height );
-	this->insertLightSource( TileIdentity::Torch, 255, 255, 255, 255, 20, x, y, width, height );
-	*/
-	this->insertLightSourceTile( TileIdentity::Torch, false,
-		255, 255, 255, 255, 15,
+	return;
+}
+
+void WorldChunk::insertElmBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::ElmBark, true,
 		x, y, width, height );
+	return;
+}
 
-
+void WorldChunk::insertElmLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::ElmLeaves, false,
+		x, y, width, height );
 	return;
 }
 
 
-const WorldChunk::funcType WorldChunk::insertMethods[( unsigned long long )TileIdentity::count]{ &WorldChunk::insertVoid, &WorldChunk::insertWater, &WorldChunk::insertStone, &WorldChunk::insertDirt, &WorldChunk::insertTorch };
+void WorldChunk::insertMapleBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::MapleBark, true,
+		x, y, width, height );
+	return;
+}
+
+void WorldChunk::insertMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::MapleLeaves, false,
+		x, y, width, height );
+	return;
+}
+
+
+
+void WorldChunk::insertTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertLightSourceTile( TileIdentity::Torch, false,
+		255, 255, 255, 255, 15,
+		x, y, width, height );
+
+	/*
+	this->insertLightSourceTile( TileIdentity::Torch, false,
+		std::rand() % 256, std::rand() % 256, std::rand() % 256, std::rand() % 256, 15,
+		x, y, width, height );
+	*/
+	return;
+}
+
+
+const WorldChunk::funcType WorldChunk::insertMethods[( unsigned long long )TileIdentity::count]{
+	&WorldChunk::insertVoid,
+	&WorldChunk::insertWater, 
+	&WorldChunk::insertStone,
+	&WorldChunk::insertDirt,
+
+	&WorldChunk::insertSand,
+	&WorldChunk::insertElmBark,
+	&WorldChunk::insertElmLeaves,
+	&WorldChunk::insertMapleBark,
+	&WorldChunk::insertMapleLeaves,
+
+	&WorldChunk::insertTorch 
+
+
+};
 
 
 void WorldChunk::insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
@@ -422,6 +478,42 @@ void WorldChunk::removeDirt( std::int64_t x, std::int64_t y, std::int64_t width,
 }
 
 
+void WorldChunk::removeSand( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Sand, x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeElmBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::ElmBark, x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeElmLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::ElmLeaves, x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeMapleBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::MapleBark, x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::MapleLeaves, x, y, width, height );
+	return;
+}
+
+
+
 void WorldChunk::removeTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
 	/*
@@ -432,7 +524,24 @@ void WorldChunk::removeTorch( std::int64_t x, std::int64_t y, std::int64_t width
 	return;
 }
 
-const WorldChunk::funcType WorldChunk::removeMethods[( unsigned long long )TileIdentity::count]{ &WorldChunk::removeVoid, &WorldChunk::removeWater, &WorldChunk::removeStone, &WorldChunk::removeDirt, &WorldChunk::removeTorch };
+const WorldChunk::funcType WorldChunk::removeMethods[( unsigned long long )TileIdentity::count]{
+	&WorldChunk::removeVoid,
+	&WorldChunk::removeWater,
+	&WorldChunk::removeStone, 
+	&WorldChunk::removeDirt,
+
+	&WorldChunk::removeSand,
+	&WorldChunk::removeElmBark,
+	&WorldChunk::removeElmLeaves,
+	&WorldChunk::removeMapleBark,
+	&WorldChunk::removeMapleLeaves,
+
+
+	&WorldChunk::removeTorch 
+
+
+
+};
 
 
 

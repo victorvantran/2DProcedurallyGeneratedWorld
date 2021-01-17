@@ -36,7 +36,8 @@ public:
 
 	olc::vi2d gridDimension;
 
-	int tileId = 1; // never insert a void block (0) unless you know how to remove it without seeing it
+
+	TileIdentity tileId = TileIdentity::Water;
 private:
 
 
@@ -148,20 +149,41 @@ public:
 
 		if ( GetKey( olc::Key::K1 ).bPressed )
 		{
-			tileId = 1;
+			tileId = TileIdentity::Water;
 		}
 		else if ( GetKey( olc::Key::K2 ).bPressed )
 		{
-			tileId = 2;
+			tileId = TileIdentity::Stone;
 		}
 		else if ( GetKey( olc::Key::K3 ).bPressed )
 		{
-			tileId = 3;
+			tileId = TileIdentity::Dirt;
 		}
 		else if ( GetKey( olc::Key::K4 ).bPressed )
 		{
-			tileId = 4;
+			tileId = TileIdentity::Sand;
 		}
+		else if ( GetKey( olc::Key::K5 ).bPressed )
+		{
+			tileId = TileIdentity::ElmBark;
+		}
+		else if ( GetKey( olc::Key::K6 ).bPressed )
+		{
+			tileId = TileIdentity::ElmLeaves;
+		}
+		else if ( GetKey( olc::Key::K7 ).bPressed )
+		{
+			tileId = TileIdentity::MapleBark;
+		}
+		else if ( GetKey( olc::Key::K8 ).bPressed )
+		{
+			tileId = TileIdentity::MapleLeaves;
+		}
+		else if ( GetKey( olc::Key::K9 ).bPressed )
+		{
+			tileId = TileIdentity::Torch;
+		}
+
 
 		// Insert to world Debug 
 		long double tilePositionX;
@@ -184,7 +206,7 @@ public:
 
 		if ( GetKey( olc::Key::O ).bPressed )
 		{
-			world->getTile( tileIndex.x, tileIndex.y );
+			world->remove( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 5, 5 );
 		}
 
 		if ( GetKey( olc::Key::L ).bPressed )
@@ -259,7 +281,7 @@ public:
 		if ( GetMouse( 1 ).bPressed || GetMouse( 1 ).bHeld )
 			//if ( GetMouse( 1 ).bPressed )
 		{
-			world->remove( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 5, 5 );
+			world->remove( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 1, 1 );
 		}
 
 		// updateLighting

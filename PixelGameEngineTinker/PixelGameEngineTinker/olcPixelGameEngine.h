@@ -2664,8 +2664,13 @@ namespace olc
 		int32_t sy = 0;
 		Pixel::Mode m = nPixelMode;
 		// Thanks @tucna, spotted bug with col.ALPHA :P
-		if ( col.a != 255 )		SetPixelMode( Pixel::ALPHA );
-		else					SetPixelMode( Pixel::MASK );
+		//if ( col.a != 255 )		SetPixelMode( Pixel::ALPHA );
+		//else					SetPixelMode( Pixel::MASK );
+		if ( m != olc::Pixel::Mode::CUSTOM ) // [!]
+		{
+			if ( col.a != 255 ) SetPixelMode( Pixel::ALPHA );
+			else SetPixelMode( Pixel::MASK );
+		}
 		for ( auto c : sText )
 		{
 			if ( c == '\n' )

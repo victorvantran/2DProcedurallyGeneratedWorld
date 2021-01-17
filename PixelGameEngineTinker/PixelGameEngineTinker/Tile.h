@@ -9,11 +9,39 @@
 
 enum class TileIdentity // uint64_t MAX
 {
+
+	Void = 0,
+	Water = 1,
+	Stone = 2,
+	Dirt = 3,
+	Sand = 4,
+
+	ElmBark = 5,
+	ElmLeaves = 6,
+	MapleBark = 7,
+	MapleLeaves = 8,
+
+	Torch = 9,
+
+	Oak_Wood,
+	Birch_Wood,
+	Aspen_Wood,
+	Redwood_Wood,
+	Maple_Wood,
+	Evergreen_Wood,
+
+
+	count
+
+
+	/*
 	Void = 0,
 	Water = 1,
 	Stone = 2,
 	Dirt = 3,
 	Torch = 4,
+
+
 	RedTorch = 5,
 	GreenTorch = 6,
 	BlueTorth = 7,
@@ -35,6 +63,7 @@ enum class TileIdentity // uint64_t MAX
 
 
 	count
+	*/
 };
 
 
