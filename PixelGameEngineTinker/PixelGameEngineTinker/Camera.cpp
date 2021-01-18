@@ -391,6 +391,46 @@ void Camera::renderCamera() const
 }
 
 
+
+
+
+
+void Camera::renderPlayer( Player& player ) const
+{
+	// Render Character
+	const Character& character = player.getCharacter();
+	const AABB& aabb = character.getAABB();
+	const olc::vf2d& aabbOffset = character.getAABBOffset();
+	const olc::vf2d& characterScale = character.getScale();
+
+
+	olc::v2d_generic<long double> topLeft = aabb.getTopLeft();
+	long double worldPositionX = topLeft.x + aabbOffset.x;
+	long double worldPositionY = topLeft.y - aabbOffset.y; // negative because negY = worldPosY
+	std::int64_t pixelX;
+	std::int64_t pixelY;
+	worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
+	olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
+
+	pge->FillRectDecal(
+		startPos,
+		olc::v2d_generic<long double>{ 
+			( long double )this->_zoomX * ( ( long double )aabb.getHalfSize().x * 2 ) * Settings::Screen::CELL_PIXEL_SIZE,
+			( long double )this->_zoomY * ( ( long double )aabb.getHalfSize().y * 2 ) * Settings::Screen::CELL_PIXEL_SIZE
+		},
+		olc::DARK_CYAN
+	);
+
+	return;
+}
+
+
+
+
+
+
+
+
 void Camera::renderTilesDebug( WorldChunk& worldChunk ) const
 {
 	// Render every single tile directly from the array of tiles for each worldChunk

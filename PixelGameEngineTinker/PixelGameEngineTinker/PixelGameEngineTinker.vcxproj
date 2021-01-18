@@ -35,17 +35,21 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AABB.h" />
     <ClInclude Include="Assets.h" />
     <ClInclude Include="Atlas.h" />
     <ClInclude Include="BoundingBox.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Cell.h" />
+    <ClInclude Include="Character.h" />
+    <ClInclude Include="DynamicObject.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="LightCastQuadrant.h" />
     <ClInclude Include="LightCastRow.h" />
     <ClInclude Include="LightRender.h" />
     <ClInclude Include="LightSource.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="QuadTree.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="SpriteTilesMap.h" />

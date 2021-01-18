@@ -1,7 +1,5 @@
 #define OLC_PGE_APPLICATION
 
-
-
 #include "olcPixelGameEngine.h"
 #include "Settings.h"
 #include "Assets.h"
@@ -9,6 +7,7 @@
 #include "Tile.h"
 #include "TileRender.h"
 #include "Camera.h"
+#include "Player.h"
 
 #include <cmath> // std::floorf
 
@@ -27,6 +26,7 @@ public:
 
 public:
 	World* world = nullptr;
+	Player* player = nullptr;
 	Camera* camera = nullptr;
 
 	olc::vi2d decalGridDimension;
@@ -51,6 +51,7 @@ public:
 	{
 		delete world;
 		delete camera;
+		delete player;
 	}
 
 public:
@@ -58,15 +59,29 @@ public:
 	{
 		loadAssets();
 		createWorld();
+		createPlayer();
 		return true;
 	}
 
 
 	bool OnUserUpdate( float fElapsedTime ) override
 	{
+		// 
+		//player->resetInputs();
+
+		// Update player inputs
+
+
+
 		// Camera Debug
 		long double mouseX = ( long double )GetMouseX();
 		long double mouseY = ( long double )GetMouseY();
+
+
+
+		//player->updateInputs( *this );
+
+
 
 		//long double panSpeed = 20.0f;
 		long double panSpeed = 32.0f;
@@ -92,7 +107,7 @@ public:
 			camera->pan( panSpeed * ( long double )fElapsedTime, panSpeed * ( long double )fElapsedTime );
 		}
 
-
+		/*
 		if ( GetKey( olc::Key::W ).bPressed )
 		{
 			camera->panY( -1.0f );
@@ -109,6 +124,7 @@ public:
 		{
 			camera->panY( 1.0f );
 		}
+		*/
 
 		if ( GetKey( olc::Key::F1 ).bPressed )
 		{
@@ -183,6 +199,8 @@ public:
 		{
 			tileId = TileIdentity::Torch;
 		}
+
+
 
 
 		// Insert to world Debug 
@@ -288,7 +306,15 @@ public:
 		//this->world->updateLighting( tilePositionX, tilePositionY );
 
 
+
+
+		// Update
+		this->player->update( fElapsedTime, *this );
+
+
 		// Render
+		this->camera->renderPlayer( *player );
+		// this->camera->renderWorld();
 		this->world->render();
 
 		/*
@@ -331,6 +357,20 @@ public:
 		this->world->initializeDelimits( this->camera->getFocalPoint() );
 		this->world->initializeWorldChunks();
 		this->world->startWorldMemorySystem();
+
+		return;
+	}
+
+	void createPlayer()
+	{
+		this->player = new Player(
+			olc::v2d_generic<long double>{ Settings::Player::Character::DEFAULT_CENTER_X, Settings::Player::Character::DEFAULT_CENTER_Y },
+			olc::vf2d{ Settings::Player::Character::DEFAULT_HALF_SIZE_X, Settings::Player::Character::DEFAULT_HALF_SIZE_Y },
+			CharacterState::Stand,
+			Settings::Player::Character::DEFAULT_RUN_SPEED,
+			Settings::Player::Character::DEFAULT_JUMP_SPEED
+		);
+		return;
 	}
 
 
@@ -339,6 +379,36 @@ public:
 		Assets::get();
 		return;
 	}
+	
+
+
+
+
+
+
+
+
+
+	void renderPlayer()
+	{
+		const Character& character = this->player->getCharacter();
+		const AABB& aabb = character.getAABB();
+		const olc::vf2d& aabbOffset = character.getAABBOffset();
+		const olc::vf2d& characterScale = character.getScale();
+		//.getAABB().getCenter();
+		
+		return;
+	}
+
+
+
+
+
+
+
+
+
+
 
 
 	void drawTileIndexString( const olc::vi2d& tileIndex )

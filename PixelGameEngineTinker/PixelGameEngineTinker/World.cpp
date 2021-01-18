@@ -1499,7 +1499,7 @@ void World::scanStatic( LightCastQuadrant<long double>& quadrant, LightCastRow& 
 	}
 
 
-	if ( prevTile != nullptr && this->isTransparent( originPosition, quadrant.transform( *prevTile ) ) )
+	if ( prevTile != nullptr && this->isTransparent( originPosition, quadrant.transform( *prevTile ) ) ) // [!] [!] [!] access violation!
 	{
 		LightCastRow nextRow = row.getNext();
 		this->scanStatic( quadrant, nextRow, originPosition, lightSource );

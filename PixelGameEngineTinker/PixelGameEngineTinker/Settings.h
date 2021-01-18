@@ -1,6 +1,8 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include "olcPixelGameEngine.h"
+
 
 class Settings
 {
@@ -52,8 +54,20 @@ public:
 		static const std::uint16_t MAX_SAVED_CHUNKS = 50; // Maximum number of chunks in queue to save before discarding
 		static const std::uint16_t SPRITE_TILE_REFRESH_RATE = 300; // Every 5 minutes, refresh the tileDecals if it has not yet from condition variable notification
 
-
 		static const std::uint16_t NUM_WORLD_CHUNKS = ( 1 + CHUNK_RADIUS * 2 ) * ( 1 + CHUNK_RADIUS * 2 );
+
+
+
+
+		static constexpr float GRAVITY = -70.0f;
+		static constexpr float TERMINAL_VELOCITY = -50.0f;
+
+
+
+
+
+
+
 	};
 
 
@@ -108,6 +122,27 @@ public:
 	{
 		static const std::uint8_t MIN_INTENSITY = 0;
 		static const std::uint8_t MAX_INTENSITY = 9;
+	};
+
+
+
+
+
+	struct Player
+	{
+
+		struct Character
+		{
+			static constexpr float DEFAULT_CENTER_X = 0.0f;
+			static constexpr float DEFAULT_CENTER_Y = 0.0f;
+			static constexpr float DEFAULT_HALF_SIZE_X = 0.75f;
+			static constexpr float DEFAULT_HALF_SIZE_Y = 1.5f;
+
+			static constexpr float DEFAULT_RUN_SPEED = 10.0f;
+			static constexpr float DEFAULT_JUMP_SPEED = 20.0f;
+			static constexpr float DEFAULT_MIN_JUMP_RATIO = 0.5f;
+
+		};
 	};
 };
 
