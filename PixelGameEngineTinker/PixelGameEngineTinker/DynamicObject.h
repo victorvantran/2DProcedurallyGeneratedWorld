@@ -52,5 +52,9 @@ public:
 
 	// Methods
 	bool isCollidingDown( const World* world, long double& worldGroundY, bool& onOneWayPlatform );
+	bool isCollidingUp( const World* world, long double& worldCeilingY );
+	bool isCollidingLeft( const World* world, long double& worldLeftWallX );
+	bool isCollidingRight( const World* world, long double& worldRightWallX );
+
 	void updatePhysics( const World* world, float deltaTime );
 };
