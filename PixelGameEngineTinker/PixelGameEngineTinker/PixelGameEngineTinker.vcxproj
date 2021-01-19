@@ -65,10 +65,13 @@
     <ClCompile Include="Assets.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Cell.cpp" />
+    <ClCompile Include="Character.cpp" />
+    <ClCompile Include="DynamicObject.cpp" />
     <ClCompile Include="LightCastQuadrant.cpp" />
     <ClCompile Include="LightCastRow.cpp" />
     <ClCompile Include="LightRender.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="QuadTree.cpp" />
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="sqlite\sqlite3.c" />

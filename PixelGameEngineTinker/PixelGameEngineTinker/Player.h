@@ -3,7 +3,6 @@
 #include "olcPixelGameEngine.h"
 #include "Character.h"
 
-
 enum class PlayerKeyInput
 {
 	ZERO,
@@ -53,19 +52,26 @@ enum class PlayerKeyInput
 // Character ->read Commands
 // Fixed Update
 
+
+
+class World;
+
 class Player
 {
 private:
+	Character _character;
+	World* _world;
+
 	bool _prevInputs[( std::size_t )PlayerKeyInput::count];
 	bool _currInputs[( std::size_t )PlayerKeyInput::count];
-
-	Character _character;
 public:
 	// Constructors/Destructors
-	Player() : _character() {}
+	Player() : _character(), _world( nullptr ), _prevInputs{ false }, _currInputs{ false } {}
 
-	Player( olc::v2d_generic<long double> center, olc::vf2d halfSize, CharacterState characterState, float runSpeed, float jumpSpeed ) :
-		_character( center, halfSize, characterState, runSpeed, jumpSpeed ) {}
+	Player( olc::v2d_generic<long double> center, olc::vf2d halfSize, CharacterState characterState, float runSpeed, float jumpSpeed, World* world ) :
+		_character( center, halfSize, characterState, runSpeed, jumpSpeed, world ),
+		_world( world ),
+		_prevInputs{ false }, _currInputs{ false } {}
 	/*
 	Player( olc::v2d_generic<long double> center, olc::vf2d halfSize, CharacterState characterState, float runSpeed, float jumpSpeed ) :
 		_character( center, halfSize, CharacterState::Stand, Settings::Player::Character::RUN_SPEED, Settings::Player::Character::JUMP_SPEED ) {}

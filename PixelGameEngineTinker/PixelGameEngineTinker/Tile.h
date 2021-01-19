@@ -67,11 +67,11 @@ enum class TileIdentity // uint64_t MAX
 };
 
 
-enum class TileTypez
+enum class TileType
 {
 	Empty = 0,
 	Block = 1,
-	OneWayPlatform = 2,
+	OneWay = 2,
 	count
 	// liquid
 	// climbable
@@ -84,6 +84,7 @@ private:
 	// const static std::map<std::uint8_t, std::uint8_t> _borderValueToDecalIndex;
 
 	TileIdentity _id;
+	TileType _type;
 	bool _opaque;
 
 	std::uint8_t _borders;
@@ -118,11 +119,12 @@ public:
 	Tile();
 	~Tile();
 
-	Tile( TileIdentity id, bool opaque );
+	Tile( TileIdentity id, TileType type, bool opaque );
 
 	// Constructor that accounts for edges
 
 	void setId( TileIdentity id );
+	void setType( TileType type );
 	void setOpaque( bool opaque );
 
 	void setBorders( std::uint8_t borders );
@@ -131,6 +133,7 @@ public:
 
 
 	TileIdentity getId() const;
+	TileType getType() const;
 	bool getOpaque() const;
 	std::uint8_t getBorders() const;
 	bool getBorder( TileBorder border ) const;
@@ -141,11 +144,11 @@ public:
 	bool isVoid() const;
 
 	bool isEmpty() const;
-	bool isBlock() const;
-	bool isOneWayPlatform() const;
-
 	bool isObstacle() const;
 	bool isGround() const;
+	bool isOneWayPlatform() const;
+
+
 	bool isLedge() const;
 
 	void clear();

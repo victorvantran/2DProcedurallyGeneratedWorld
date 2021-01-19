@@ -1,7 +1,7 @@
 #include "Tile.h"
 
 Tile::Tile()
-	: _id( TileIdentity::Void ), _opaque( false ), _borders( 0 )
+	: _id( TileIdentity::Void ), _type( TileType::Empty ), _opaque( false ), _borders( 0 )
 {
 	// setType
 }
@@ -12,8 +12,8 @@ Tile::~Tile()
 }
 
 
-Tile::Tile( TileIdentity id, bool opaque )
-	: _id( id ), _opaque( opaque ), _borders( 0 )
+Tile::Tile( TileIdentity id, TileType type, bool opaque )
+	: _id( id ), _type( type ), _opaque( opaque ), _borders( 0 )
 {
 }
 
@@ -21,6 +21,13 @@ Tile::Tile( TileIdentity id, bool opaque )
 void Tile::setId( TileIdentity id )
 {
 	this->_id = id;
+	return;
+}
+
+
+void Tile::setType( TileType type )
+{
+	this->_type = type;
 	return;
 }
 
@@ -53,6 +60,12 @@ void Tile::unsetBorder( TileBorder border )
 TileIdentity Tile::getId() const
 {
 	return this->_id;
+}
+
+
+TileType Tile::getType() const
+{
+	return this->_type;
 }
 
 
@@ -94,32 +107,29 @@ bool Tile::isVoid() const
 
 bool Tile::isEmpty() const
 {
-	return false;
+	return this->_type == TileType::Empty;
 }
 
-
-bool Tile::isBlock() const
-{
-	return false;
-}
-
-
-bool Tile::isOneWayPlatform() const
-{
-	return false;
-}
 
 
 bool Tile::isObstacle() const
 {
-	return false;
+	return this->_type == TileType::Block;
 }
 
 
 bool Tile::isGround() const
 {
-	return false;
+	return this->_type == TileType::Block || this->_type == TileType::OneWay;
 }
+
+
+bool Tile::isOneWayPlatform() const
+{
+	return this->_type == TileType::OneWay;
+}
+
+
 
 
 bool Tile::isLedge() const
@@ -132,7 +142,9 @@ bool Tile::isLedge() const
 void Tile::clear()
 {
 	this->_id = TileIdentity::Void;
-	//this->_TileType = TileType::Empty;
+	this->_type = TileType::Empty;
+	this->_opaque = false;
+	this->_borders = 0;
 	return;
 }
 

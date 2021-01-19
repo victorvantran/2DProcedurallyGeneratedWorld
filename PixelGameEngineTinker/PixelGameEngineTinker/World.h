@@ -28,6 +28,7 @@
 
 
 class WorldChunkMemory; // Forward Declaration
+class Player;
 
 class World
 {
@@ -160,6 +161,7 @@ public:
 	static std::int16_t getRelativeChunkIndex( std::int64_t x, std::int64_t y, std::int64_t focalChunkIndexX, std::int64_t focalChunkIndexY );
 	static std::uint16_t getRelativeTileIndex( std::int64_t x, std::int64_t y );
 	// Geography
+	const Tile* getTile( long double dX, long double dY ) const;
 	const Tile* getTile( std::int64_t x, std::int64_t y ) const;
 	void calculateTileRenders();
 	void updateGeographyTask();

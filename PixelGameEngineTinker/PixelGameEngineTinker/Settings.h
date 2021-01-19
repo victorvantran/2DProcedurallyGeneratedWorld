@@ -28,25 +28,11 @@ public:
 		static const std::string SPRITES_FILE_PATH;
 	};
 
-	// Screen
-	struct Screen
-	{
-		static const std::uint16_t SCREEN_RESOLUTION_X = 1920;
-		static const std::uint16_t SCREEN_RESOLUTION_Y = 1080;
-
-		static const std::uint16_t PIXEL_SIZE = 1;
-		static const std::uint16_t SCREEN_PIXEL_WIDTH = SCREEN_RESOLUTION_X / PIXEL_SIZE;
-		static const std::uint16_t SCREEN_PIXEL_HEIGHT = SCREEN_RESOLUTION_Y / PIXEL_SIZE;
-		static const std::uint16_t CELL_PIXEL_SIZE = 16 / PIXEL_SIZE;
-
-		static const std::uint16_t SCREEN_CELL_WIDTH = SCREEN_PIXEL_WIDTH / CELL_PIXEL_SIZE;
-		static const std::uint16_t SCREEN_CELL_HEIGHT = SCREEN_PIXEL_HEIGHT / CELL_PIXEL_SIZE;
-	};
-
 
 	// World
 	struct World
 	{
+		static const std::uint16_t CELL_SIZE = 16;
 		static const std::uint16_t CHUNK_CELL_SIZE = 32; // chunk cell size ( n x n ) // [hardcode]
 		static const std::uint16_t NUM_CELLS_PER_CHUNK = CHUNK_CELL_SIZE * CHUNK_CELL_SIZE;
 		static const std::uint16_t CHUNK_RADIUS = 3;
@@ -59,15 +45,26 @@ public:
 
 
 
-		static constexpr float GRAVITY = -70.0f;
-		static constexpr float TERMINAL_VELOCITY = -50.0f;
+		static constexpr float GRAVITY = -98.0f;
+		static constexpr float TERMINAL_VELOCITY = -2000.0f;
 
 
+	};
 
 
+	// Screen
+	struct Screen
+	{
+		static const std::uint16_t SCREEN_RESOLUTION_X = 1920;
+		static const std::uint16_t SCREEN_RESOLUTION_Y = 1080;
 
+		static const std::uint16_t PIXEL_SIZE = 1;
+		static const std::uint16_t SCREEN_PIXEL_WIDTH = SCREEN_RESOLUTION_X / PIXEL_SIZE;
+		static const std::uint16_t SCREEN_PIXEL_HEIGHT = SCREEN_RESOLUTION_Y / PIXEL_SIZE;
+		static const std::uint16_t CELL_PIXEL_SIZE = World::CELL_SIZE / PIXEL_SIZE;
 
-
+		static const std::uint16_t SCREEN_CELL_WIDTH = SCREEN_PIXEL_WIDTH / CELL_PIXEL_SIZE;
+		static const std::uint16_t SCREEN_CELL_HEIGHT = SCREEN_PIXEL_HEIGHT / CELL_PIXEL_SIZE;
 	};
 
 
@@ -139,7 +136,7 @@ public:
 			static constexpr float DEFAULT_HALF_SIZE_Y = 1.5f;
 
 			static constexpr float DEFAULT_RUN_SPEED = 10.0f;
-			static constexpr float DEFAULT_JUMP_SPEED = 20.0f;
+			static constexpr float DEFAULT_JUMP_SPEED = 25.0f;
 			static constexpr float DEFAULT_MIN_JUMP_RATIO = 0.5f;
 
 		};

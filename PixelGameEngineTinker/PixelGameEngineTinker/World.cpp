@@ -1,6 +1,7 @@
 #include "Settings.h"
 #include "World.h"
 #include "WorldChunkMemory.h"
+#include "Player.h"
 
 
 
@@ -1071,6 +1072,26 @@ std::uint16_t World::getRelativeTileIndex( std::int64_t x, std::int64_t y )
 
 
 // Geography
+const Tile* World::getTile( long double dX, long double dY ) const
+{
+	// Given worldPosition, return the reference of Tile as a pointer
+	// The reason for conditionals is to account for negative quadrant offsets
+	// Used for edge meshing of tiles
+	std::int64_t x = ( std::int64_t )std::floor( dX );
+	std::int64_t y = ( std::int64_t )std::floor( dY );
+
+	std::int16_t relativeChunkIndex = World::getRelativeChunkIndex( x, y, this->_focalChunkIndexX, this->_focalChunkIndexY );
+
+	// Out of bounds
+	if ( relativeChunkIndex < 0 || relativeChunkIndex >= this->_numWorldChunks ) return nullptr;
+
+	std::uint16_t relativeTileIndex = World::getRelativeTileIndex( x, y );
+
+	return &this->_worldChunkPointers[relativeChunkIndex]->getTiles()[relativeTileIndex];
+}
+
+
+
 const Tile* World::getTile( std::int64_t x, std::int64_t y ) const
 {
 	// Given worldPosition, return the reference of Tile as a pointer

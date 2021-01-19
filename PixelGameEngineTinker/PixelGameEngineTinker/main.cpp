@@ -86,6 +86,7 @@ public:
 		//long double panSpeed = 20.0f;
 		long double panSpeed = 32.0f;
 
+
 		if ( GetKey( olc::Key::UP ).bPressed || GetKey( olc::Key::UP ).bHeld )
 		{
 			camera->panY( -panSpeed * (long double)fElapsedTime );
@@ -229,6 +230,13 @@ public:
 
 		if ( GetKey( olc::Key::L ).bPressed )
 		{
+
+			//const Tile* tile = this->world->getTile( tileIndex.x, tileIndex.y );
+			//std::cout << (int)tile->getType() << std::endl;
+			const Tile* tile = this->world->getTile( tilePositionX, tilePositionY );
+			std::cout << (int)tile->getType() << std::endl;
+
+			//std::cout << tileIndex.x << ", " << tileIndex.y << std::endl;
 			//world->insertTorch( tileIndex.x, tileIndex.y, tileId );
 			// insert -> insertTile
 			//		  -> insertTorch
@@ -311,10 +319,13 @@ public:
 		// Update
 		this->player->update( fElapsedTime, *this );
 
-
+		if ( GetKey( olc::Key::Q ).bPressed || GetKey( olc::Key::Q ).bHeld )
+		{
+			camera->setPosition( this->player->getCharacter().getAABB().getCenter().x, this->player->getCharacter().getAABB().getCenter().y );
+		}
 		// Render
 		this->camera->renderPlayer( *player );
-		// this->camera->renderWorld();
+		// this->camera->renderWorld( *world );
 		this->world->render();
 
 		/*
@@ -368,7 +379,8 @@ public:
 			olc::vf2d{ Settings::Player::Character::DEFAULT_HALF_SIZE_X, Settings::Player::Character::DEFAULT_HALF_SIZE_Y },
 			CharacterState::Stand,
 			Settings::Player::Character::DEFAULT_RUN_SPEED,
-			Settings::Player::Character::DEFAULT_JUMP_SPEED
+			Settings::Player::Character::DEFAULT_JUMP_SPEED,
+			this->world
 		);
 		return;
 	}
