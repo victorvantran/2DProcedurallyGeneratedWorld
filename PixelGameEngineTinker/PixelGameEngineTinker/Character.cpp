@@ -93,8 +93,14 @@ void Character::updateState( float deltaTime )
 			this->transitionState( CharacterState::Jump );
 			break;
 		}
+		else if ( this->commandState( Command::Drop ) )
+		{
+			if ( this->_onOneWayPlatform )
+			{
+				this->_currPosition.y += Settings::DynamicObject::ONE_WAY_PLATFORM_THRESHOLD;
+			}
+		}
 		break;
-
 
 	case CharacterState::Run:
 		// [!] animateRun
@@ -149,6 +155,15 @@ void Character::updateState( float deltaTime )
 			// Airborn -> jump -> fall
 			this->transitionState( CharacterState::Jump );
 			break;
+		}
+
+
+		if ( this->commandState( Command::Drop ) )
+		{
+			if ( this->_onOneWayPlatform )
+			{
+				this->_currPosition.y += Settings::DynamicObject::ONE_WAY_PLATFORM_THRESHOLD;
+			}
 		}
 		break;
 

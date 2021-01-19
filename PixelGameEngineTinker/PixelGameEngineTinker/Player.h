@@ -148,7 +148,8 @@ public:
 		characterCommands[( std::size_t )Command::GoRight] = this->_currInputs[( std::size_t )PlayerKeyInput::D];
 		characterCommands[( std::size_t )Command::GoLeft] = this->_currInputs[( std::size_t )PlayerKeyInput::A];
 		characterCommands[( std::size_t )Command::Jump] = this->_currInputs[( std::size_t )PlayerKeyInput::W];
-		characterCommands[( std::size_t )Command::Drop] = false; // [!] no drop implemented yet
+		characterCommands[( std::size_t )Command::Drop] = this->_currInputs[( std::size_t )PlayerKeyInput::S];
+		//characterCommands[( std::size_t )Command::Drop] = false; // [!] no drop implemented yet
 
 		return characterCommands;
 	}

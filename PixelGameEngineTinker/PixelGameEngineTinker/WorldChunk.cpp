@@ -238,7 +238,7 @@ void WorldChunk::insertDirt( std::int64_t x, std::int64_t y, std::int64_t width,
 
 void WorldChunk::insertSand( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Sand, TileType::Block, false,
+	this->insertTile( TileIdentity::Sand, TileType::OneWay, false,
 		x, y, width, height );
 	return;
 }

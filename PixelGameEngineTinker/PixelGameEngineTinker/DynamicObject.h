@@ -27,6 +27,7 @@ protected:
 	bool _pushedUp; // wasAtCeiling
 	bool _pushingUp; // atCeiling
 
+	bool _onOneWayPlatform;
 
 	olc::vf2d _prevVelocity;
 	olc::vf2d _currVelocity;
@@ -50,6 +51,6 @@ public:
 
 
 	// Methods
-	bool isCollidingDown( const World* world, long double& worldGroundY );
+	bool isCollidingDown( const World* world, long double& worldGroundY, bool& onOneWayPlatform );
 	void updatePhysics( const World* world, float deltaTime );
 };

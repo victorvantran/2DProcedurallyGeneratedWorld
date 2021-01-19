@@ -48,7 +48,6 @@ public:
 		static constexpr float GRAVITY = -98.0f;
 		static constexpr float TERMINAL_VELOCITY = -2000.0f;
 
-
 	};
 
 
@@ -122,9 +121,14 @@ public:
 	};
 
 
+	// DynamicObject
+	struct DynamicObject
+	{
+		static constexpr float ONE_WAY_PLATFORM_THRESHOLD = ( 2.0f / ( float )World::CELL_SIZE );// 0.125f;
+	};
 
 
-
+	// Player
 	struct Player
 	{
 
