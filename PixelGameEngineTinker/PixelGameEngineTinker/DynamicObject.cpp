@@ -58,37 +58,57 @@ olc::vf2d DynamicObject::getAABBOffset() const
 
 
 // Methods
-bool DynamicObject::hasGround( const World* world, long double& worldGroundY )
+bool DynamicObject::isCollidingDown( const World* world, long double& worldGroundY )
 {
-	olc::v2d_generic center = this->_currPosition + olc::v2d_generic<long double>( this->_aabbOffset.x, -this->_aabbOffset.y );
+	olc::v2d_generic<long double> prevCenter = this->_prevPosition + olc::v2d_generic<long double>( this->_aabbOffset.x, -this->_aabbOffset.y );
+	olc::v2d_generic<long double> currCenter = this->_currPosition + olc::v2d_generic<long double>( this->_aabbOffset.x, -this->_aabbOffset.y );
 
-	// Bottom sensor line
 	std::uint16_t tileSize = Settings::World::CELL_SIZE;
-	long double give = ( 1.0 / ( long double )tileSize ); // Give
-	olc::v2d_generic bottomSensorLeft = center - olc::v2d_generic<long double>( this->_aabb.getHalfSize().x - give, - this->_aabb.getHalfSize().y - give );
-	olc::v2d_generic bottomSensorRight = olc::v2d_generic( bottomSensorLeft.x + ( ( long double )this->_aabb.getHalfSize().x * 2.0 ) - 2.0 * give, bottomSensorLeft.y );
+	long double give = ( 1.0 / ( long double )tileSize );
 
-	// Check the tiles along the sensor line
-	for ( olc::v2d_generic<long double> checkedTile = bottomSensorLeft; ; checkedTile.x += 1.0 )
+	// Prev bottom sensor line
+	olc::v2d_generic<long double> prevBottomSensorLeft = prevCenter - olc::v2d_generic<long double>( this->_aabb.getHalfSize().x - give, -this->_aabb.getHalfSize().y - give );
+
+	// Curr bottom sensor line
+	olc::v2d_generic<long double> currBottomSensorLeft = currCenter - olc::v2d_generic<long double>( this->_aabb.getHalfSize().x - give, - this->_aabb.getHalfSize().y - give );
+	olc::v2d_generic<long double> currBottomSensorRight = olc::v2d_generic( currBottomSensorLeft.x + ( ( long double )this->_aabb.getHalfSize().x * 2.0 ) - 2.0 * give, currBottomSensorLeft.y );
+
+
+	// Interpolate on Y range
+	std::int64_t endY = ( std::int64_t )std::floor( currBottomSensorLeft.y );
+	std::int64_t begY = std::min( ( std::int64_t )(std::floor( prevBottomSensorLeft.y ) + 1 ), endY );
+	std::int64_t dist = std::max<int>( std::abs( endY - begY ), 1 ); // Mininmum of 1 to use next iteration position for detecting
+
+	std::int64_t tileIndexX;
+
+	// Can optimize by only using interpolation checks on objects that go past a certain velocity (at a fixed max fps update),
+	// and objects that go slow enough as to never be able to pass through multiple tiles (at a fixed max fps update) will use crude but fast checks [~]
+	for ( std::int64_t tileIndexY = begY; tileIndexY <= endY; tileIndexY++ )
 	{
-		checkedTile.x = std::min( checkedTile.x, bottomSensorRight.x );
-
-		std::int64_t tileIndexX = std::floor( checkedTile.x );
-		std::int64_t tileIndexY = std::floor( checkedTile.y );
-
-		worldGroundY = ( long double )( tileIndexY );
-
-		const Tile* contactTile = world->getTile( tileIndexX, tileIndexY );
-		if ( contactTile == nullptr )
+		// Interpolate
+		long double t = std::abs( endY - tileIndexY ) / dist;
+		olc::v2d_generic<long double> checkBottomLeft = ( currBottomSensorLeft * t + prevBottomSensorLeft * ( 1 - t ) );
+		olc::v2d_generic<long double> checkBottomRight = olc::v2d_generic<long double>{ checkBottomLeft.x + ( ( long double )this->_aabb.getHalfSize().x * 2.0 ) - 2.0 * give, checkBottomLeft.y };
+	
+		for ( olc::v2d_generic<long double> checkedTile = checkBottomLeft; ; checkedTile.x += 1.0 )
 		{
-			return true; // [!] Throw error
-		}
-		else if ( contactTile->isObstacle() )
-		{
-			return true;
-		}
+			checkedTile.x = std::min( checkedTile.x, checkBottomRight.x );
 
-		if ( checkedTile.x >= bottomSensorRight.x ) break;
+			std::int64_t tileIndexX = std::floor( checkedTile.x );
+			worldGroundY = ( long double )( tileIndexY );
+
+			const Tile* contactTile = world->getTile( tileIndexX, tileIndexY );
+			if ( contactTile == nullptr )
+			{
+				return true; // [!] Throw error
+			}
+			else if ( contactTile->isObstacle() )
+			{
+				return true;
+			}
+
+			if ( checkedTile.x >= checkBottomRight.x ) break;
+		}
 	}
 
 	return false;
@@ -111,21 +131,8 @@ void DynamicObject::updatePhysics( const World* world, float deltaTime )
 	// Update position using the current speed
 	this->_currPosition = this->_currPosition + ( olc::v2d_generic<long double>( this->_currVelocity.x, -this->_currVelocity.y ) * deltaTime );
 
-	/*
-	// Temp, if vertical position in world greater than zero assume character is on ground for testing purposes [!]
-	if ( this->_currPosition.y > 0.0 ) // posY = worldNegY
-	{
-		this->_currPosition.y = 0.0;
-		this->_pushingDown = true;
-	}
-	else
-	{
-		this->_pushingDown = false;
-	}
-	*/
-
 	long double worldGroundY = this->_currPosition.y + this->_aabbOffset.y;
-	if ( this->_currVelocity.y <= 0.0f && this->hasGround( world, worldGroundY ) )
+	if ( this->_currVelocity.y <= 0.0f && this->isCollidingDown( world, worldGroundY ) )
 	{
 		this->_currPosition.y = worldGroundY - this->_aabb.getHalfSize().y + this->_aabbOffset.y;
 		this->_currVelocity.y = 0.0;

@@ -50,6 +50,6 @@ public:
 
 
 	// Methods
-	bool hasGround( const World* world, long double& worldGroundY );
+	bool isCollidingDown( const World* world, long double& worldGroundY );
 	void updatePhysics( const World* world, float deltaTime );
 };
