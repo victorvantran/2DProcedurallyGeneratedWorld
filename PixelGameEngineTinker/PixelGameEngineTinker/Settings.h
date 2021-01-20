@@ -143,6 +143,11 @@ public:
 			static constexpr float DEFAULT_JUMP_SPEED = 25.0f;
 			static constexpr float DEFAULT_MIN_JUMP_RATIO = 0.5f;
 
+
+			static constexpr float GRAB_LEDGE_START_Y = 0.0f;
+			static constexpr float GRAB_LEDGE_END_Y = ( 4.0f / ( float )World::CELL_SIZE );
+			static constexpr float GRAB_LEDGE_TILE_OFFSET_Y = -( 4.0f / ( float )World::CELL_SIZE );
+
 		};
 	};
 };

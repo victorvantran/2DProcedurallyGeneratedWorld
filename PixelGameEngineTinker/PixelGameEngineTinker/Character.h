@@ -38,6 +38,16 @@ private:
 	float _runSpeed;
 	float _jumpSpeed;
 
+
+
+	// LedgeWork
+	olc::v2d_generic<std::int64_t> _ledgeTile;
+	std::int16_t _cannotGoLeftFrames;
+	std::int16_t _cannotGoRightFrames;
+
+
+
+
 	World* _world;
 
 
@@ -51,17 +61,25 @@ protected:
 	bool _prevCommands[( std::size_t )Command::count];
 	bool _currCommands[( std::size_t )Command::count];
 
-	bool cease( Command command )
+	bool cease( Command command ) const
 	{
 		return !this->_currCommands[( std::size_t )command] && this->_prevCommands[( std::size_t )command];
 	}
 
-	bool commandState( Command command )
+	bool commandState( Command command ) const
 	{
 		return this->_currCommands[( std::size_t )command];
 	}
 
-	bool execute( Command command )
+
+	void setCommandState( Command command, bool setting )
+	{
+		this->_currCommands[( std::size_t )command] = setting;
+		return;
+	}
+
+
+	bool execute( Command command ) const
 	{
 		return this->_currCommands[( std::size_t )command] && !this->_prevCommands[( std::size_t )command];
 	}

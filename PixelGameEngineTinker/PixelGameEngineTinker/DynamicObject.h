@@ -13,7 +13,7 @@ private:
 
 protected:
 	olc::v2d_generic<long double> _prevPosition;
-	olc::v2d_generic<long double> _currPosition; // worldPosition ( Everything follows x,y except Position which follows x, -y to match worldPosition)
+	olc::v2d_generic<long double> _currPosition; // worldPosition ( Everything follows x,y except Position which follows x, -y to match worldPosition). Center position
 	
 	bool _pushedRight;
 	bool _pushingRight;
