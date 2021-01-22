@@ -312,8 +312,8 @@ void WorldChunk::insert( TileIdentity tileId, std::int64_t x, std::int64_t y, st
 	// Pointer to a method is slightly different than a pointer to a function
 	//World::funcType method = World::insertMethods[0];
 	//( this->*method )( tileId, x, y, width, height );
-
-	( this->*WorldChunk::insertMethods[( unsigned long long )tileId] )( x, y, width, height );
+	//std::cout << ( unsigned long long )tileId << std::endl;
+	( this->*WorldChunk::insertMethods[( unsigned long long )tileId] )( x, y, width, height ); // [!] error need thread mutex
 	return;
 }
 

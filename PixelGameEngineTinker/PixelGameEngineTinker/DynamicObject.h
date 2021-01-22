@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include "olcPixelGameEngine.h"
 #include "Settings.h"
 #include "AABB.h"
@@ -39,16 +40,25 @@ protected:
 public:
 	// Constructors/Destructors
 	DynamicObject();
-	DynamicObject( olc::v2d_generic<long double> center, olc::vf2d halfSize );
+	DynamicObject( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale );
 	~DynamicObject();
 
 	// Getters
 	olc::vf2d getScale() const;
+	float getScaleX() const;
+	float getScaleY() const;
 	AABB getAABB() const;
 	olc::vf2d getAABBOffset() const;
+	float getAABBOffsetX() const;
+	float getAABBOffsetY() const;
 
 	// Setters
-
+	void setScale( const olc::vf2d& scale );
+	void setScaleX( float x );
+	void setScaleY( float y );
+	void setAABBOffset( const olc::vf2d& aabbOffset );
+	void setAABBOffsetX( float x );
+	void setAABBOffsetY( float y );
 
 	// Methods
 	bool isCollidingDown( const World* world, long double& worldGroundY, bool& onOneWayPlatform );

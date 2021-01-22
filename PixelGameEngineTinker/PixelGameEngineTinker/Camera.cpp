@@ -415,8 +415,8 @@ void Camera::renderPlayer( Player& player ) const
 	pge->FillRectDecal(
 		startPos,
 		olc::v2d_generic<long double>{ 
-			( long double )this->_zoomX * ( ( long double )aabb.getHalfSize().x * 2 ) * Settings::Screen::CELL_PIXEL_SIZE,
-			( long double )this->_zoomY * ( ( long double )aabb.getHalfSize().y * 2 ) * Settings::Screen::CELL_PIXEL_SIZE
+			( long double )this->_zoomX * ( ( long double )aabb.getHalfSizeX() * 2 )* Settings::Screen::CELL_PIXEL_SIZE,
+			( long double )this->_zoomY * ( ( long double )aabb.getHalfSizeY() * 2 ) * Settings::Screen::CELL_PIXEL_SIZE
 		},
 		olc::DARK_CYAN
 	);

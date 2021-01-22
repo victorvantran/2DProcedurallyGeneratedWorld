@@ -27,8 +27,14 @@
 #include "LightCastQuadrant.h"
 
 
-class WorldChunkMemory; // Forward Declaration
+
+
+// Forward Declarations
+class WorldChunkMemory; 
 class Player;
+// class DynamicObject [?]
+class QuadTreeCollision;
+
 
 class World
 {
@@ -51,8 +57,6 @@ private:
 
 
 	std::condition_variable _condRenderWorld;
-
-
 
 
 	// Geography
@@ -89,6 +93,10 @@ private:
 
 	// Camera
 	Camera* _camera = nullptr;
+
+
+	//
+	//QuadTreeCollision* _quadTreeCollision;
 
 
 private:

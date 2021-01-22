@@ -45,6 +45,8 @@ private:
 	std::int16_t _cannotGoLeftFrames;
 	std::int16_t _cannotGoRightFrames;
 
+	// Jump
+	std::int32_t _framesFromJumpStart;
 
 
 
@@ -87,7 +89,7 @@ protected:
 public:
 	// Constructors/Destructors
 	Character();
-	Character( olc::v2d_generic<long double> center, olc::vf2d halfSize, CharacterState characterState, float runSpeed, float jumpSpeed,
+	Character( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale, CharacterState characterState, float runSpeed, float jumpSpeed,
 		World* world );
 	~Character();
 

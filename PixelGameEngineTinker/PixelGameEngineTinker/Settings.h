@@ -138,6 +138,8 @@ public:
 			static constexpr float DEFAULT_CENTER_Y = 0.0f;
 			static constexpr float DEFAULT_HALF_SIZE_X = 0.75f;
 			static constexpr float DEFAULT_HALF_SIZE_Y = 1.5f;
+			static constexpr float DEFAULT_SCALE_X = 1.0f;
+			static constexpr float DEFAULT_SCALE_Y = 1.0f;
 
 			static constexpr float DEFAULT_RUN_SPEED = 10.0f;
 			static constexpr float DEFAULT_JUMP_SPEED = 25.0f;
@@ -147,8 +149,18 @@ public:
 			static constexpr float GRAB_LEDGE_START_Y = 0.0f;
 			static constexpr float GRAB_LEDGE_END_Y = ( 4.0f / ( float )World::CELL_SIZE );
 			static constexpr float GRAB_LEDGE_TILE_OFFSET_Y = -( 4.0f / ( float )World::CELL_SIZE );
-
+			static constexpr std::int32_t GRAB_LEDGE_LET_GO_FRAMES = 3;
+			static constexpr std::int32_t JUMP_FRAMES_THREASHOLD = 4;
 		};
+	};
+
+
+
+	// QuadTreeCollision
+	struct QuadTreeCollision
+	{
+		static constexpr std::int32_t GRID_WIDTH = 16;
+		static constexpr std::int32_t GRID_HEIGHT = 16;
 	};
 };
 

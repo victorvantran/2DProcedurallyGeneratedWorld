@@ -18,9 +18,9 @@ DynamicObject::DynamicObject() :
 }
 
 
-DynamicObject::DynamicObject( olc::v2d_generic<long double> center, olc::vf2d halfSize ) :
-	_aabb( center, halfSize ),
-	_aabbOffset( olc::vf2d{ 0.0f, 0.0f } ), _scale( olc::vf2d{ 1.0, 1.0 } ),
+DynamicObject::DynamicObject( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale ) :
+	_aabb( center, halfSize, olc::vf2d{ std::abs( scale.x ), std::abs( scale.y ) } ),
+	_aabbOffset( olc::vf2d{ 0.0f, 0.0f } ), _scale( scale ),
 	_prevPosition( olc::v2d_generic<long double>{ 0.0, 0.0 } ), _currPosition( olc::v2d_generic<long double>{ 0.0, 0.0 } ),
 	_prevVelocity( olc::vf2d{ 0.0f, 0.0f } ), _currVelocity( olc::vf2d{ 0.0f, 0.0f } ),
 	_pushedRight( false ), _pushingRight( false ),
@@ -45,6 +45,16 @@ olc::vf2d DynamicObject::getScale() const
 	return this->_scale;
 }
 
+float DynamicObject::getScaleX() const
+{
+	return this->_scale.x;
+}
+
+float DynamicObject::getScaleY() const
+{
+	return this->_scale.y;
+}
+
 AABB DynamicObject::getAABB() const
 {
 	return this->_aabb;
@@ -52,11 +62,65 @@ AABB DynamicObject::getAABB() const
 
 olc::vf2d DynamicObject::getAABBOffset() const
 {
-	return this->_aabbOffset;
+	return this->_aabbOffset * this->_scale;
+}
+
+float DynamicObject::getAABBOffsetX() const
+{
+	return this->_aabbOffset.x * this->_scale.x;
+}
+
+float DynamicObject::getAABBOffsetY() const
+{
+	return this->_aabbOffset.y * this->_scale.y;
 }
 
 
 // Setters
+void DynamicObject::setScale( const olc::vf2d& scale )
+{
+	this->_scale = scale;
+	this->_aabb.setScale( scale );
+	return;
+}
+
+
+void DynamicObject::setScaleX( float x )
+{
+	this->_scale.x = x;
+	this->_aabb.setScaleX( x );
+	return;
+}
+
+
+void DynamicObject::setScaleY( float y )
+{
+	this->_scale.y = y;
+	this->_aabb.setScaleY( y );
+	return;
+}
+
+
+void DynamicObject::setAABBOffset( const olc::vf2d& aabbOffset )
+{
+	this->_aabbOffset = aabbOffset;
+	return;
+}
+
+
+void DynamicObject::setAABBOffsetX( float x )
+{
+	this->_aabbOffset.x = x;
+	return;
+}
+
+
+void DynamicObject::setAABBOffsetY( float y )
+{
+	this->_aabbOffset.y = y;
+	return;
+}
+
 
 
 // Methods
@@ -69,11 +133,11 @@ bool DynamicObject::isCollidingDown( const World* world, long double& worldGroun
 	long double give = ( 1.0 / ( long double )tileSize );
 
 	// Prev bottom sensor line
-	olc::v2d_generic<long double> prevBottomSensorLeft = prevCenter - olc::v2d_generic<long double>( this->_aabb.getHalfSize().x - give, -this->_aabb.getHalfSize().y - give );
+	olc::v2d_generic<long double> prevBottomSensorLeft = prevCenter - olc::v2d_generic<long double>( this->_aabb.getHalfSizeX() - give, -this->_aabb.getHalfSizeY() - give );
 
 	// Curr bottom sensor line
-	olc::v2d_generic<long double> currBottomSensorLeft = currCenter - olc::v2d_generic<long double>( this->_aabb.getHalfSize().x - give, - this->_aabb.getHalfSize().y - give );
-	olc::v2d_generic<long double> currBottomSensorRight = olc::v2d_generic( currBottomSensorLeft.x + ( ( long double )this->_aabb.getHalfSize().x * 2.0 ) - 2.0 * give, currBottomSensorLeft.y );
+	olc::v2d_generic<long double> currBottomSensorLeft = currCenter - olc::v2d_generic<long double>( this->_aabb.getHalfSizeX() - give, - this->_aabb.getHalfSizeY() - give );
+	olc::v2d_generic<long double> currBottomSensorRight = olc::v2d_generic( currBottomSensorLeft.x + ( ( long double )this->_aabb.getHalfSizeX() * 2.0 ) - 2.0 * give, currBottomSensorLeft.y );
 
 
 	// Interpolate on Y range
@@ -90,7 +154,7 @@ bool DynamicObject::isCollidingDown( const World* world, long double& worldGroun
 		// Interpolate
 		long double t = std::abs( endY - checkTileIndexY ) / dist;
 		olc::v2d_generic<long double> checkBottomLeft = ( currBottomSensorLeft * t + prevBottomSensorLeft * ( 1 - t ) );
-		olc::v2d_generic<long double> checkBottomRight = olc::v2d_generic<long double>{ checkBottomLeft.x + ( ( long double )this->_aabb.getHalfSize().x * 2.0 ) - 2.0 * give, checkBottomLeft.y };
+		olc::v2d_generic<long double> checkBottomRight = olc::v2d_generic<long double>{ checkBottomLeft.x + ( ( long double )this->_aabb.getHalfSizeX() * 2.0 ) - 2.0 * give, checkBottomLeft.y };
 	
 		for ( olc::v2d_generic<long double> checkedTile = checkBottomLeft; ; checkedTile.x += 1.0 )
 		{
@@ -145,11 +209,11 @@ bool DynamicObject::isCollidingUp( const World* world, long double& worldCeiling
 	long double give = ( 1.0 / ( long double )tileSize );
 
 	// Prev bottom sensor line
-	olc::v2d_generic<long double> prevTopSensorRight = prevCenter + olc::v2d_generic<long double>( this->_aabb.getHalfSize().x - give, -this->_aabb.getHalfSize().y - give );
+	olc::v2d_generic<long double> prevTopSensorRight = prevCenter + olc::v2d_generic<long double>( this->_aabb.getHalfSizeX() - give, -this->_aabb.getHalfSizeY() - give );
 
 	// Curr bottom sensor line
-	olc::v2d_generic<long double> currTopSensorRight = currCenter + olc::v2d_generic<long double>( this->_aabb.getHalfSize().x - give, -this->_aabb.getHalfSize().y - give );
-	olc::v2d_generic<long double> currTopSensorLeft = olc::v2d_generic<long double>( currTopSensorRight.x - ( ( long double )this->_aabb.getHalfSize().x * 2.0 ) + 2.0 * give, currTopSensorRight.y );
+	olc::v2d_generic<long double> currTopSensorRight = currCenter + olc::v2d_generic<long double>( this->_aabb.getHalfSizeX() - give, -this->_aabb.getHalfSizeY() - give );
+	olc::v2d_generic<long double> currTopSensorLeft = olc::v2d_generic<long double>( currTopSensorRight.x - ( ( long double )this->_aabb.getHalfSizeX() * 2.0 ) + 2.0 * give, currTopSensorRight.y );
 
 
 	// Interpolate on Y range
@@ -166,7 +230,7 @@ bool DynamicObject::isCollidingUp( const World* world, long double& worldCeiling
 		// Interpolate
 		long double t = std::abs( endY - checkTileIndexY ) / dist;
 		olc::v2d_generic<long double> checkTopRight = ( currTopSensorRight * t + prevTopSensorRight * ( 1 - t ) );
-		olc::v2d_generic<long double> checkTopLeft = olc::v2d_generic<long double>{ checkTopRight.x - ( ( long double )this->_aabb.getHalfSize().x * 2.0 ) + 2.0 * give, checkTopRight.y };
+		olc::v2d_generic<long double> checkTopLeft = olc::v2d_generic<long double>{ checkTopRight.x - ( ( long double )this->_aabb.getHalfSizeX() * 2.0 ) + 2.0 * give, checkTopRight.y };
 
 		for ( olc::v2d_generic<long double> checkedTile = checkTopLeft; ; checkedTile.x += 1.0 )
 		{
@@ -204,11 +268,11 @@ bool DynamicObject::isCollidingLeft( const World* world, long double& worldLeftW
 	long double give = ( 1.0 / ( long double )tileSize );
 
 	// Prev bottom sensor line
-	olc::v2d_generic<long double> prevLeftSensorBottom = prevCenter - olc::v2d_generic<long double>( this->_aabb.getHalfSize().x + give, -this->_aabb.getHalfSize().y + give );
+	olc::v2d_generic<long double> prevLeftSensorBottom = prevCenter - olc::v2d_generic<long double>( this->_aabb.getHalfSizeX() + give, -this->_aabb.getHalfSizeY() + give );
 
 	// Curr bottom sensor line
-	olc::v2d_generic<long double> currLeftSensorBottom = currCenter - olc::v2d_generic<long double>( this->_aabb.getHalfSize().x + give, -this->_aabb.getHalfSize().y + give );
-	olc::v2d_generic<long double> currLeftSensorTop = olc::v2d_generic<long double>( currLeftSensorBottom.x, currLeftSensorBottom.y - ( this->_aabb.getHalfSize().y * 2.0 ) + 2.0 * give );
+	olc::v2d_generic<long double> currLeftSensorBottom = currCenter - olc::v2d_generic<long double>( this->_aabb.getHalfSizeX() + give, -this->_aabb.getHalfSizeY() + give );
+	olc::v2d_generic<long double> currLeftSensorTop = olc::v2d_generic<long double>( currLeftSensorBottom.x, currLeftSensorBottom.y - ( this->_aabb.getHalfSizeY() * 2.0 ) + 2.0 * give );
 
 
 	// Interpolate on X range
@@ -225,7 +289,7 @@ bool DynamicObject::isCollidingLeft( const World* world, long double& worldLeftW
 		// Interpolate
 		long double t = std::abs( endX - checkTileIndexX ) / dist;
 		olc::v2d_generic<long double> checkBottomLeft = ( currLeftSensorBottom * t + prevLeftSensorBottom * ( 1 - t ) );
-		olc::v2d_generic<long double> checkTopLeft = olc::v2d_generic<long double>{ checkBottomLeft.x, checkBottomLeft.y - ( this->_aabb.getHalfSize().y * 2.0 ) + 2.0 * give };
+		olc::v2d_generic<long double> checkTopLeft = olc::v2d_generic<long double>{ checkBottomLeft.x, checkBottomLeft.y - ( this->_aabb.getHalfSizeY() * 2.0 ) + 2.0 * give };
 
 		for ( olc::v2d_generic<long double> checkedTile = checkBottomLeft; ; checkedTile.y -= 1.0 )
 		{
@@ -263,11 +327,11 @@ bool DynamicObject::isCollidingRight( const World* world, long double& worldRigh
 	long double give = ( 1.0 / ( long double )tileSize );
 
 	// Prev bottom sensor line
-	olc::v2d_generic<long double> prevRightSensorBottom = prevCenter + olc::v2d_generic<long double>( this->_aabb.getHalfSize().x + give, this->_aabb.getHalfSize().y - give );
+	olc::v2d_generic<long double> prevRightSensorBottom = prevCenter + olc::v2d_generic<long double>( this->_aabb.getHalfSizeX() + give, this->_aabb.getHalfSizeY() - give );
 
 	// Curr bottom sensor line
-	olc::v2d_generic<long double> currRightSensorBottom = currCenter + olc::v2d_generic<long double>( this->_aabb.getHalfSize().x + give, this->_aabb.getHalfSize().y - give );
-	olc::v2d_generic<long double> currRightSensorTop = olc::v2d_generic<long double>( currRightSensorBottom.x, currRightSensorBottom.y - ( this->_aabb.getHalfSize().y * 2.0 ) + 2.0 * give );
+	olc::v2d_generic<long double> currRightSensorBottom = currCenter + olc::v2d_generic<long double>( this->_aabb.getHalfSizeX() + give, this->_aabb.getHalfSizeY() - give );
+	olc::v2d_generic<long double> currRightSensorTop = olc::v2d_generic<long double>( currRightSensorBottom.x, currRightSensorBottom.y - ( this->_aabb.getHalfSizeY() * 2.0 ) + 2.0 * give );
 
 
 	// Interpolate on X range
@@ -284,7 +348,7 @@ bool DynamicObject::isCollidingRight( const World* world, long double& worldRigh
 		// Interpolate
 		long double t = std::abs( endX - checkTileIndexX ) / dist;
 		olc::v2d_generic<long double> checkBottomRight = ( currRightSensorBottom * t + prevRightSensorBottom * ( 1 - t ) );
-		olc::v2d_generic<long double> checkTopRight = olc::v2d_generic<long double>{ checkBottomRight.x, checkBottomRight.y - ( this->_aabb.getHalfSize().y * 2.0 ) + 2.0 * give };
+		olc::v2d_generic<long double> checkTopRight = olc::v2d_generic<long double>{ checkBottomRight.x, checkBottomRight.y - ( this->_aabb.getHalfSizeY() * 2.0 ) + 2.0 * give };
 
 		for ( olc::v2d_generic<long double> checkedTile = checkBottomRight; ; checkedTile.y -= 1.0 )
 		{
@@ -319,7 +383,7 @@ void DynamicObject::updatePhysics( const World* world, float deltaTime )
 	this->_prevPosition = this->_currPosition;
 	this->_pushedRight = this->_pushingRight;
 	this->_pushedLeft = this->_pushingLeft;
-	this->_pushedDown = this->_pushedDown;
+	this->_pushedDown = this->_pushingDown;
 	this->_pushedUp = this->_pushingUp;
 	this->_prevVelocity = this->_currVelocity;
 
@@ -329,10 +393,10 @@ void DynamicObject::updatePhysics( const World* world, float deltaTime )
 	// Update position using the current speed
 	this->_currPosition = this->_currPosition + ( olc::v2d_generic<long double>( this->_currVelocity.x, -this->_currVelocity.y ) * deltaTime );
 
-	long double worldGroundY = this->_currPosition.y + this->_aabb.getHalfSize().y + this->_aabbOffset.y;
-	long double worldCeilingY = this->_currPosition.y - this->_aabb.getHalfSize().y + this->_aabbOffset.y;
-	long double worldLeftWallX = this->_currPosition.x - this->_aabb.getHalfSize().x + this->_aabbOffset.x;
-	long double worldRightWallX = this->_currPosition.x + this->_aabb.getHalfSize().x + this->_aabbOffset.x;
+	long double worldGroundY = this->_currPosition.y + this->_aabb.getHalfSizeY() + this->_aabbOffset.y;
+	long double worldCeilingY = this->_currPosition.y - this->_aabb.getHalfSizeY() + this->_aabbOffset.y;
+	long double worldLeftWallX = this->_currPosition.x - this->_aabb.getHalfSizeX() + this->_aabbOffset.x;
+	long double worldRightWallX = this->_currPosition.x + this->_aabb.getHalfSizeX() + this->_aabbOffset.x;
 
 
 	// Prioritize horizontal collision detection over verticle
@@ -344,9 +408,9 @@ void DynamicObject::updatePhysics( const World* world, float deltaTime )
 	if ( this->_currVelocity.x <= 0.0f &&
 		this->isCollidingLeft( world, worldLeftWallX ) )
 	{
-		if ( this->_prevPosition.x - this->_aabb.getHalfSize().x + this->_aabbOffset.x >= worldLeftWallX )
+		if ( this->_prevPosition.x - this->_aabb.getHalfSizeX() + this->_aabbOffset.x >= worldLeftWallX )
 		{
-			this->_currPosition.x = worldLeftWallX + this->_aabb.getHalfSize().x - this->_aabbOffset.x + 1.0;
+			this->_currPosition.x = worldLeftWallX + this->_aabb.getHalfSizeX() - this->_aabbOffset.x + 1.0;
 			this->_pushingLeft = true;
 		}
 		this->_currVelocity.x = std::max( this->_currVelocity.x, 0.0f);
@@ -360,9 +424,9 @@ void DynamicObject::updatePhysics( const World* world, float deltaTime )
 	if ( this->_currVelocity.x >= 0.0f &&
 		this->isCollidingRight( world, worldRightWallX ) )
 	{
-		if ( this->_prevPosition.x + this->_aabb.getHalfSize().x + this->_aabbOffset.x <= worldRightWallX )
+		if ( this->_prevPosition.x + this->_aabb.getHalfSizeX() + this->_aabbOffset.x <= worldRightWallX )
 		{
-			this->_currPosition.x = worldRightWallX - this->_aabb.getHalfSize().x - this->_aabbOffset.x;
+			this->_currPosition.x = worldRightWallX - this->_aabb.getHalfSizeX() - this->_aabbOffset.x;
 			this->_pushingRight = true;
 		}
 		this->_currVelocity.x = std::min( this->_currVelocity.x, 0.0f );
@@ -376,7 +440,7 @@ void DynamicObject::updatePhysics( const World* world, float deltaTime )
 	if ( this->_currVelocity.y <= 0.0f && 
 		this->isCollidingDown( world, worldGroundY, this->_onOneWayPlatform ) )
 	{
-		this->_currPosition.y = worldGroundY - this->_aabb.getHalfSize().y + this->_aabbOffset.y;
+		this->_currPosition.y = worldGroundY - this->_aabb.getHalfSizeY() + this->_aabbOffset.y;
 		this->_currVelocity.y = 0.0;
 		this->_pushingDown = true;
 	}
@@ -389,7 +453,7 @@ void DynamicObject::updatePhysics( const World* world, float deltaTime )
 	if ( this->_currVelocity.y >= 0.0f &&
 		this->isCollidingUp( world, worldCeilingY ) )
 	{
-		this->_currPosition.y = worldCeilingY + this->_aabb.getHalfSize().y + this->_aabbOffset.y + 1.0;
+		this->_currPosition.y = worldCeilingY + this->_aabb.getHalfSizeY() + this->_aabbOffset.y + 1.0;
 		this->_currVelocity.y = 0.0;
 		this->_pushingUp = true;
 	}

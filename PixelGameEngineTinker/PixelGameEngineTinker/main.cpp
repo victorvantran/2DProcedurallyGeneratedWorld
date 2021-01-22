@@ -377,6 +377,7 @@ public:
 		this->player = new Player(
 			olc::v2d_generic<long double>{ Settings::Player::Character::DEFAULT_CENTER_X, Settings::Player::Character::DEFAULT_CENTER_Y },
 			olc::vf2d{ Settings::Player::Character::DEFAULT_HALF_SIZE_X, Settings::Player::Character::DEFAULT_HALF_SIZE_Y },
+			olc::vf2d{ Settings::Player::Character::DEFAULT_SCALE_X, Settings::Player::Character::DEFAULT_SCALE_Y },
 			CharacterState::Stand,
 			Settings::Player::Character::DEFAULT_RUN_SPEED,
 			Settings::Player::Character::DEFAULT_JUMP_SPEED,

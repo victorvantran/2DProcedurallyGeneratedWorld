@@ -51,6 +51,7 @@
     <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="QuadTree.h" />
+    <ClInclude Include="QuadTreeCollision.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="SpriteTilesMap.h" />
     <ClInclude Include="TileBorder.h" />
@@ -73,6 +74,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="QuadTree.cpp" />
+    <ClCompile Include="QuadTreeCollision.cpp" />
     <ClCompile Include="Settings.cpp" />
     <ClCompile Include="sqlite\sqlite3.c" />
     <ClCompile Include="TileRender.cpp" />

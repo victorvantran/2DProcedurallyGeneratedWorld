@@ -6,15 +6,17 @@
 Character::Character() :
 	DynamicObject(),
 	_ledgeTile( olc::v2d_generic<std::int64_t>{ 0, 0 } ), _cannotGoLeftFrames( 0 ), _cannotGoRightFrames( 0 ),
+	_framesFromJumpStart( 0 ),
 	_currentState( CharacterState::Stand ), _runSpeed( 0 ), _jumpSpeed( 0 ), _prevCommands{ false }, _currCommands{ false },
 	_world( nullptr )
 {}
 
 
-Character::Character( olc::v2d_generic<long double> center, olc::vf2d halfSize, CharacterState characterState, float runSpeed, float jumpSpeed,
+Character::Character( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale, CharacterState characterState, float runSpeed, float jumpSpeed,
 	World* world ) :
-	DynamicObject( center, halfSize ),
+	DynamicObject( center, halfSize, scale ),
 	_ledgeTile( olc::v2d_generic<std::int64_t>{ 0, 0 } ), _cannotGoLeftFrames( 0 ), _cannotGoRightFrames( 0 ),
+	_framesFromJumpStart( 0 ),
 	_currentState( characterState ), _runSpeed( runSpeed ), _jumpSpeed( jumpSpeed ), _prevCommands{ false }, _currCommands{ false },
 	_world( world )
 {}
@@ -173,6 +175,26 @@ void Character::updateState( float deltaTime )
 	case CharacterState::Jump:
 		// [!] animateJump
 
+		//this->_framesFromJumpStart++;
+		//std::cout << this->_framesFromJumpStart << std::endl;
+
+		if ( this->_framesFromJumpStart <= Settings::Player::Character::JUMP_FRAMES_THREASHOLD )
+		{
+			this->_framesFromJumpStart++;
+			// No "midair jump" if hit ceiling or at verticle speed already
+
+			if ( this->_pushingUp || this->_currVelocity.y > 0.0 )
+			{
+				this->_framesFromJumpStart = Settings::Player::Character::JUMP_FRAMES_THREASHOLD + 1;
+			}
+			else if ( this->commandState( Command::Jump ) )
+			{
+				this->_currVelocity.y = this->_jumpSpeed;
+			}
+		}
+
+
+
 		// Gravity
 		this->_currVelocity.y += Settings::World::GRAVITY * deltaTime;
 		this->_currVelocity.y = std::max( this->_currVelocity.y, Settings::World::TERMINAL_VELOCITY ); // Termial velocity cap
@@ -266,11 +288,11 @@ void Character::updateState( float deltaTime )
 			olc::v2d_generic<long double> cornerOffset;
 			if ( this->_pushingRight && this->commandState( Command::GoRight ) )
 			{
-				cornerOffset = olc::v2d_generic<long double>( this->_aabb.getHalfSize().x + give, -this->_aabb.getHalfSize().y );
+				cornerOffset = olc::v2d_generic<long double>( this->_aabb.getHalfSizeX() + give, -this->_aabb.getHalfSizeY() );
 			}
 			else
 			{
-				cornerOffset = olc::v2d_generic<long double>( -this->_aabb.getHalfSize().x - give, -this->_aabb.getHalfSize().y );
+				cornerOffset = olc::v2d_generic<long double>( -this->_aabb.getHalfSizeX() - give, -this->_aabb.getHalfSizeY() );
 			}
 
 			std::int64_t checkTileX = ( std::int64_t )std::floor( this->_currPosition.x + cornerOffset.x );
@@ -318,13 +340,8 @@ void Character::updateState( float deltaTime )
 				}
 
 			}
-
-
 		}
-
-
 		break;
-
 
 	case CharacterState::GrabLedge:
 		// Determine if the ledge is to the left or right of the character
@@ -339,26 +356,22 @@ void Character::updateState( float deltaTime )
 		{
 			if ( ledgeOnLeft )
 			{
-				this->_cannotGoLeftFrames = 3; // [!] Constant
+				this->_cannotGoLeftFrames = Settings::Player::Character::GRAB_LEDGE_LET_GO_FRAMES;
 			}
 			else
 			{
-				this->_cannotGoRightFrames = 3; // [!] Constant
+				this->_cannotGoRightFrames = Settings::Player::Character::GRAB_LEDGE_LET_GO_FRAMES;
 			}
 
 			this->transitionState( CharacterState::Jump );
-			break; // [~]
+			break;
 		}
 		else if ( this->commandState( Command::Jump ) )
 		{
 			this->_currVelocity.y = this->_jumpSpeed;
 			this->transitionState( CharacterState::Jump );
-			break; // [~]
+			break;
 		}
-
-
-
-
 		break;
 	}
 
@@ -390,5 +403,14 @@ void Character::update( float deltaTime, bool* commands )
 	//std::cout << (int)this->_currentState << std::endl;
 
 	this->updatePhysics( this->_world, deltaTime );
+
+
+	// Every time we leave the ground, set frame start to 0. Incremented every time in the jump state
+	if ( this->_pushedDown && !this->_pushingDown )
+	{
+		this->_framesFromJumpStart = 0;
+	}
+
+
 	this->updatePrevCommands();
 }

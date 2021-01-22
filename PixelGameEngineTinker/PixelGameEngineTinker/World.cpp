@@ -2,7 +2,7 @@
 #include "World.h"
 #include "WorldChunkMemory.h"
 #include "Player.h"
-
+#include "QuadTreeCollision.h"
 
 
 
@@ -191,7 +191,6 @@ void World::initializeDelimits( const BoundingBox<long double>& focalPoint )
 void World::initializeWorldChunks()
 {
 	// Load in the tiles of the initial starting chunks
-
 	std::lock_guard<std::mutex> lockLoad( this->_mutexLoadWorldChunks );
 	std::lock_guard<std::mutex> lockDatabase( this->_worldDatabaseMutex );
 
@@ -433,13 +432,29 @@ void World::saveWorldGeographyTask()
 void World::saveWorldGeography()
 {
 	// Saves all the worldChunks that have been built up in the queue into the SQLite database
-
 	std::lock_guard<std::mutex> lockSave( this->_mutexSaveWorldChunks );
 
 	if ( this->_saveWorldChunks.empty() )
 	{
 		return;
 	}
+
+	/*
+	long accumulator = 0;
+	long double* a = new long double[2048 * 2048];
+	for ( int i = 0; i < 2048 * 2048; i++)
+	{
+		a[i] = std::rand() / RAND_MAX;
+		if ( (int)(a[i] * 256) % 2 == 0 )
+		{
+			accumulator += a[i];
+		}
+	}
+
+
+	delete[] a;
+	std::cout << accumulator << std::endl;
+	*/
 
 	//std::lock_guard<std::mutex> lockDatabase( _worldDatabaseMutex );
 	std::unique_lock<std::mutex> lockDatabase( this->_worldDatabaseMutex );
@@ -753,13 +768,13 @@ void World::loadWorldGeography()
 
 	// Allow the tileSprites to refresh
 	this->_condModifyAtlas.notify_one();
-
 	return;
 }
 
 
 void World::updateWorldChunkRelativity( const BoundingBox<long double>& focalPoint )
 {
+	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
 	std::lock_guard<std::mutex> lockLoad( this->_mutexLoadWorldChunks );
 
 	//std::lock_guard<std::mutex> lockUpdateGeography( this->_mutexUpdateGeography );
@@ -907,6 +922,9 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 			}
 			//worldChunk.insertTile( worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1, tileId );
 
+			//std::cout << "1: " << ( unsigned long long )tileId << std::endl; 
+			//if ( ( unsigned long long )tileId > 100 ) tileId = 0; // [!] crude corruption detection debug
+
 			if ( static_cast< TileIdentity >( tileId ) != TileIdentity::Void )
 			{
 				worldChunk.insert( static_cast< TileIdentity >( tileId ), worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1 );
@@ -961,6 +979,8 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 				historyTileIds.insert( tileId );
 			}
 			//worldChunk.insertTile( worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1, tileId );
+			//std::cout << "2: " << ( unsigned long long )tileId << std::endl;
+			//if ( ( unsigned long long )tileId > 100 ) tileId = 0; // [!] crude corruption detection debug
 
 			if ( static_cast< TileIdentity >( tileId ) != TileIdentity::Void )
 			{
@@ -1747,6 +1767,16 @@ void World::updateLighting()
 	this->resetLighting();
 	this->emitStaticLightSources();
 	this->calculateLightRenders();
+
+	
+	/*
+	this->_quadTreeCollision = new QuadTreeCollision( 0, 0, this );
+	this->_quadTreeCollision->updateAreas();
+	delete this->_quadTreeCollision;
+	this->_quadTreeCollision = nullptr;
+	//this->_quadTreeCollision->updateAreas( 0 );
+	*/
+
 
 	//this->_condUpdateWorld.notify_one();
 

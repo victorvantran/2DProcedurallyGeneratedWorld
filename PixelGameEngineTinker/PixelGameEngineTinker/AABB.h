@@ -8,11 +8,12 @@ class AABB
 private:
 	olc::v2d_generic<long double> _center;
 	olc::vf2d _halfSize;
+	olc::vf2d _scale;
 public:
 
 	// Constructors/Destructor
-	AABB() : _center( olc::v2d_generic<long double>{ 0.0, 0.0 } ), _halfSize( olc::v2d_generic<long double>{ 0.0, 0.0 } ) {}
-	AABB( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize ) : _center( center ), _halfSize( halfSize ) {}
+	AABB() : _center( olc::v2d_generic<long double>{ 0.0, 0.0 } ), _halfSize( olc::vf2d{ 0.0f, 0.0f } ), _scale( olc::vf2d{ 0.0f, 0.0f } ) {}
+	AABB( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale ) : _center( center ), _halfSize( halfSize ), _scale( scale ) {}
 	~AABB() {}
 
 
@@ -24,13 +25,40 @@ public:
 
 	olc::vf2d getHalfSize() const
 	{
-		return this->_halfSize;
+		return this->_halfSize * this->_scale;
 	}
+
+	float getHalfSizeX() const
+	{
+		return this->_halfSize.x * this->_scale.x;
+	}
+	
+	float getHalfSizeY() const
+	{
+		return this->_halfSize.y * this->_scale.y;
+	}
+
+	olc::vf2d getScale() const
+	{
+		return this->_scale;
+	}
+
+	float getScaleX() const
+	{
+		return this->_scale.x;
+	}
+
+	float getScaleY() const
+	{
+		return this->_scale.y;
+	}
+
 
 	olc::v2d_generic<long double> getTopLeft() const
 	{
-		return this->_center - olc::v2d_generic<long double>{ ( long double )this->_halfSize.x, ( long double )this->_halfSize.y };
+		return this->_center - olc::v2d_generic<long double>{ ( long double )this->getHalfSizeX(), ( long double )this->getHalfSizeY() };
 	}
+
 
 
 	// Setters
@@ -47,11 +75,46 @@ public:
 		return;
 	}
 
+
+	void setHalfSizeX( float x )
+	{
+		this->_halfSize.x = x;
+		return;
+	}
+
+
+	void setHalfSizeY( float y )
+	{
+		this->_halfSize.y = y;
+		return;
+	}
+
+
+	void setScale( const olc::vf2d& scale )
+	{
+		this->_scale = olc::vf2d{ std::abs( scale.x ), std::abs( scale.y ) };
+		return;
+	}
+
+
+	void setScaleX( float x )
+	{
+		this->_scale.x = std::abs( x );
+		return;
+	}
+
+
+	void setScaleY( float y )
+	{
+		this->_scale.y = std::abs( y );
+		return;
+	}
+
 	// Methods
 	bool overlaps( const AABB& otherAABB )
 	{
-		if ( std::abs( this->_center.x - otherAABB.getCenter().x ) > ( ( long double )this->_halfSize.x + otherAABB.getHalfSize().x ) ) return false;
-		if ( std::abs( this->_center.y - otherAABB.getCenter().y ) > ( ( long double )this->_halfSize.y + otherAABB.getHalfSize().y ) ) return false;
+		if ( std::abs( this->_center.x - otherAABB.getCenter().x ) > ( ( long double )this->getHalfSizeX() + otherAABB.getHalfSizeX() ) ) return false;
+		if ( std::abs( this->_center.y - otherAABB.getCenter().y ) > ( ( long double )this->getHalfSizeY() + otherAABB.getHalfSizeY() ) ) return false;
 		return true;
 	}
 
