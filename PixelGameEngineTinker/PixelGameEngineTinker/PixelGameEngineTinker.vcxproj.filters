@@ -120,6 +120,12 @@
     <ClInclude Include="QuadTreeCollision.h">
       <Filter>Header Files\Physics</Filter>
     </ClInclude>
+    <ClInclude Include="PerlinNoise1D.h">
+      <Filter>Header Files\World</Filter>
+    </ClInclude>
+    <ClInclude Include="PerlinNoise2D.h">
+      <Filter>Header Files\World</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cell.cpp">

@@ -49,6 +49,8 @@
     <ClInclude Include="LightRender.h" />
     <ClInclude Include="LightSource.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
+    <ClInclude Include="PerlinNoise1D.h" />
+    <ClInclude Include="PerlinNoise2D.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="QuadTree.h" />
     <ClInclude Include="QuadTreeCollision.h" />
