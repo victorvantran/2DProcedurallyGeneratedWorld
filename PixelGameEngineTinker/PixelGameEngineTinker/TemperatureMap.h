@@ -1,69 +1,26 @@
 #pragma once
 
-// Purposefully abstain from abstract class for micro-optimization since getPerlinValue will be called many times
+#include "PerlinNoise2D.h"
 
-#include <cmath>
-#include <cstdint>
-
-#include "olcPixelGameEngine.h"
-
-class PerlinNoise2D
+class TemperatureMap : public PerlinNoise2D
 {
-protected:
-	std::int64_t _seed;
-	std::int64_t _primeX; //32701125943;
-	std::int64_t _primeY; //323536891;
+private:
 
-	std::int64_t _octave;
-	std::int64_t _width; // 1024
-	std::int64_t _height; // 1536
-
-
-	static std::int64_t hashFunction( std::int64_t seed, std::int64_t xPrimed, std::int64_t yPrimed )
-	{
-		std::int64_t hash = seed ^ xPrimed ^ yPrimed;
-		hash *= 0x27d4eb2f;
-		return hash;
-	}
-
-
-	static float valCoord( std::int64_t seed, std::int64_t xPrimed, std::int64_t yPrimed )
-	{
-		std::int64_t hash = hashFunction( seed, xPrimed, yPrimed );
-
-		hash *= hash;
-		hash ^= hash << 19;
-		return hash * ( 1.0 / ( long double )std::numeric_limits<std::int64_t>::max() );
-	}
-
-
-	static float getNoiseValue( std::int64_t seed, std::int64_t primeX, std::int64_t primeY, std::int64_t x, std::int64_t y )
-	{
-		return std::abs( valCoord( seed, x * primeX, y * primeY ) );
-	}
-
-
-	float functionScalingFactor( float scalingFactor ) const
-	{
-		return scalingFactor / 2.0f;
-	}
 public:
-	PerlinNoise2D()
-		: _seed( 0 ), _primeX( 0 ), _primeY( 0 ),
-		_octave( 0 ), _width( 0 ), _height( 0 )
+	TemperatureMap()
+		: PerlinNoise2D()
 	{
 
 	}
 
-	PerlinNoise2D( std::int64_t seed, std::int64_t primeX, std::int64_t primeY, std::int32_t octave, std::int64_t width, std::int64_t height )
-		: _seed( seed ), _primeX( primeX ), _primeY( primeY ),
-		_octave( octave ), _width( width ), _height( height )
+	TemperatureMap( std::int64_t seed, std::int64_t primeX, std::int64_t primeY, std::int32_t octave, std::int64_t width, std::int64_t height )
+		: PerlinNoise2D( seed, primeX, primeY, octave, width, height )
 	{
 
 	}
 
 
-	~PerlinNoise2D()
+	~TemperatureMap()
 	{
 
 	}
@@ -113,7 +70,6 @@ public:
 
 		return fNormalizedNoise;
 	}
-
 
 
 };
