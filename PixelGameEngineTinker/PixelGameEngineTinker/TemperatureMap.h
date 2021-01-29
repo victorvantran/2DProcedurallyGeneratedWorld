@@ -5,7 +5,10 @@
 class TemperatureMap : public PerlinNoise2D
 {
 private:
-
+	float functionScalingFactor( float scalingFactor ) const
+	{
+		return scalingFactor / 2.0f;
+	}
 public:
 	TemperatureMap()
 		: PerlinNoise2D()

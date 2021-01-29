@@ -126,6 +126,48 @@
     <ClInclude Include="PerlinNoise2D.h">
       <Filter>Header Files\World</Filter>
     </ClInclude>
+    <ClInclude Include="PrimaryHeightMap.h">
+      <Filter>Header Files\World</Filter>
+    </ClInclude>
+    <ClInclude Include="SecondaryHeightMap.h">
+      <Filter>Header Files\World</Filter>
+    </ClInclude>
+    <ClInclude Include="TemperatureMap.h">
+      <Filter>Header Files\World</Filter>
+    </ClInclude>
+    <ClInclude Include="PrecipitationMap.h">
+      <Filter>Header Files\World</Filter>
+    </ClInclude>
+    <ClInclude Include="CaveMap.h">
+      <Filter>Header Files\World</Filter>
+    </ClInclude>
+    <ClInclude Include="BorealForest.h">
+      <Filter>Header Files\World\Biomes</Filter>
+    </ClInclude>
+    <ClInclude Include="SubtropicalDesert.h">
+      <Filter>Header Files\World\Biomes</Filter>
+    </ClInclude>
+    <ClInclude Include="TemperateGrassland.h">
+      <Filter>Header Files\World\Biomes</Filter>
+    </ClInclude>
+    <ClInclude Include="TemperateRainforest.h">
+      <Filter>Header Files\World\Biomes</Filter>
+    </ClInclude>
+    <ClInclude Include="TemperateSeasonalForest.h">
+      <Filter>Header Files\World\Biomes</Filter>
+    </ClInclude>
+    <ClInclude Include="TropicalRainforest.h">
+      <Filter>Header Files\World\Biomes</Filter>
+    </ClInclude>
+    <ClInclude Include="TropicalSeasonalForest.h">
+      <Filter>Header Files\World\Biomes</Filter>
+    </ClInclude>
+    <ClInclude Include="Tundra.h">
+      <Filter>Header Files\World\Biomes</Filter>
+    </ClInclude>
+    <ClInclude Include="Woodland.h">
+      <Filter>Header Files\World\Biomes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cell.cpp">

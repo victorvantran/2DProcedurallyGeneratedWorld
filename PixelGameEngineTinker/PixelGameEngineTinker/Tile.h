@@ -30,6 +30,36 @@ enum class TileIdentity // uint64_t MAX
 	Maple_Wood,
 	Evergreen_Wood,
 
+	MossDirt,
+	MossStone,
+	Mull,
+	Mor,
+	LightClay,
+	DarkClay,
+	Gravel,
+	Charcoal,
+	Snow,
+	Permafrost,
+	Podzol,
+	BleachedSand,
+	Shale,
+	IronOxide,
+	AluminiumOxide,
+	Laterite,
+	Aridsol,
+	Entisol,
+	Saltstone,
+	Quartz,
+
+	Alfisol,
+	YellowClay,
+	RedClay,
+
+	Cambisol,
+	Silt,
+
+	IronOre,
+	AluminiumOre,
 
 	count
 

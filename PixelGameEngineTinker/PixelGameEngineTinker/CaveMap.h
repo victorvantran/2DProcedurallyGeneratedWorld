@@ -5,7 +5,10 @@
 class CaveMap : public PerlinNoise2D
 {
 private:
-
+	float functionScalingFactor( float scalingFactor ) const
+	{
+		return scalingFactor / 2.0f;
+	}
 public:
 	CaveMap()
 		: PerlinNoise2D()

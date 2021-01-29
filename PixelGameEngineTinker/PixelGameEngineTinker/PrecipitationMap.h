@@ -5,7 +5,10 @@
 class PrecipitationMap : public PerlinNoise2D
 {
 private:
-
+	float functionScalingFactor( float scalingFactor ) const
+	{
+		return scalingFactor / 2.0f;
+	}
 public:
 	PrecipitationMap()
 		: PerlinNoise2D()

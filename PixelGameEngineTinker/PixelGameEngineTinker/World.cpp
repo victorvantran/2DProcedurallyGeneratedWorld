@@ -768,6 +768,78 @@ void World::loadWorldGeography()
 
 	// Allow the tileSprites to refresh
 	this->_condModifyAtlas.notify_one();
+	//////
+
+	/*
+	long double accumulate = 0;
+	std::int64_t numcalculations = 0;
+	for ( int i = 0; i < 10; i++ )
+	{
+		long double acc = 0;
+		for ( int x = 0; x < 32; x++)
+		{
+			for ( int y = 0; y < 32; y++ )
+			{
+				for ( int i = 0; i < 20; i++ )
+				{
+					numcalculations++;
+
+					std::int64_t hash = 657576373737 ^ 24243263266877 ^ 6452774574444;
+					hash *= 0x27d4eb2f;
+					hash *= hash;
+					hash ^= hash << 19;
+					hash = hash* ( 1.0 / ( long double )std::numeric_limits<std::int64_t>::max() );
+
+					acc = std::rand();
+
+					float blend = std::rand() / RAND_MAX;
+					long double hashld = ( long double )hash;
+					hashld = ( hashld * blend ) + ( 1 - blend ) * acc;
+					accumulate += hashld;
+				}
+				for ( int i = 0; i < 20; i++ )
+				{
+					numcalculations++;
+
+					std::int64_t hash = 62456247277 ^ 345324672472 ^ 452345262;
+					hash *= 0x27d4eb2f;
+					hash *= hash;
+					hash ^= hash << 19;
+					hash = hash * ( 1.0 / ( long double )std::numeric_limits<std::int64_t>::max() );
+
+					acc = std::rand();
+
+					float blend = std::rand() / RAND_MAX;
+					long double hashld = ( long double )hash;
+					hashld = ( hashld * blend ) + ( 1 - blend ) * acc;
+					accumulate += hashld;
+				}
+				for ( int i = 0; i < 20; i++ )
+				{
+					numcalculations++;
+
+					std::int64_t hash = 64373457 ^ 46532466 ^ 34532377;
+					hash *= 0x27d4eb2f;
+					hash *= hash;
+					hash ^= hash << 19;
+					hash = hash * ( 1.0 / ( long double )std::numeric_limits<std::int64_t>::max() );
+
+					acc = std::rand();
+
+					float blend = std::rand() / RAND_MAX;
+					long double hashld = ( long double )hash;
+					hashld = ( hashld * blend ) + ( 1 - blend ) * acc;
+					accumulate += hashld;
+				}
+			}
+		}
+	}
+
+	std::cout << accumulate << std::endl;
+	std::cout << numcalculations << std::endl;
+	*/
+
+	///////
 	return;
 }
 
