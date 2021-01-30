@@ -297,13 +297,8 @@ void World::initializeWorldChunks()
 
 void World::insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
-	// Pointer to a method is slightly different than a pointer to a function
-	//World::funcType method = World::insertMethods[0];
-	//( this->*method )( tileId, x, y, width, height );
+	// Insert a tile ( or tiles ) to proper worldChunk
 	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
-
-	std::thread addSpriteTileThread( &World::addSpriteTile, this, tileId );
-	addSpriteTileThread.join(); // [change]
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
@@ -320,7 +315,6 @@ void World::insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::in
 void World::remove( TileIdentity id, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
 	// Remove a tile ( or tiles ) from the proper world chunk.
-
 	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
@@ -379,7 +373,7 @@ void World::startWorldMemorySystem()
 	// Daemon threads
 	this->_saveWorldGeographyThread = std::thread( &World::saveWorldGeographyTask, this );
 	this->_loadWorldGeographyThread = std::thread( &World::loadWorldGeographyTask, this );
-	this->_loadSpriteTilesThread = std::thread( &World::loadSpriteTilesTask, this );
+	// this->_loadSpriteTilesThread = std::thread( &World::loadSpriteTilesTask, this );
 	this->_updateGeographyThread = std::thread( &World::updateGeographyTask, this );
 	this->_updateLightingThread = std::thread( &World::updateLightingTask, this );
 	return;
@@ -397,8 +391,7 @@ void World::stopWorldMemorySystem()
 
 	this->_condModifyAtlas.notify_all();
 	this->_runningLoadSpriteTiles = false;
-	//this->_condModifyAtlas.notify_one();
-	this->_loadSpriteTilesThread.join();
+	// this->_loadSpriteTilesThread.join();
 
 
 
@@ -961,7 +954,7 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 	std::uint16_t numUniqueKeys = numBytesPalette / sizeof( std::uint64_t );
 
 	// Seen tileId to limit the amount of threads for addSpriteTiles
-	std::set<uint64_t> historyTileIds;
+	std::set<TileIdentity> historyTileIds;
 
 	// Uncondense the keys, map it to the correct tileId using paletteData, and set the tile to the respective id.
 	uint16_t key = 0;
@@ -986,11 +979,11 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 
 			// Insert tiles to the Tile[] and the tileSprites map
 			std::uint64_t tileId = paletteData[key];
-			if ( historyTileIds.find( tileId ) == historyTileIds.end() ) // [!] Make sure that render quad tree jsut continues if it can't find the sprite because it may try to render before the tileId is added
+			if ( historyTileIds.find( static_cast<TileIdentity>( tileId ) ) == historyTileIds.end() ) // [!] Make sure that render quad tree jsut continues if it can't find the sprite because it may try to render before the tileId is added
 			{
-				std::thread addSpriteTileThread( &World::addSpriteTile, this, static_cast< TileIdentity >( tileId ) );
-				addSpriteTileThread.join();
-				historyTileIds.insert( tileId );
+				//std::thread addSpriteTileThread( &World::addSpriteTile, this, static_cast< TileIdentity >( tileId ) );
+				//addSpriteTileThread.join();
+				historyTileIds.insert( static_cast<TileIdentity>( tileId ) );
 			}
 			//worldChunk.insertTile( worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1, tileId );
 
@@ -1044,11 +1037,11 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 
 			// Insert tiles to the Tile[] and the tileSprites map
 			std::uint64_t tileId = paletteData[key];
-			if ( historyTileIds.find( tileId ) == historyTileIds.end() ) // [!] Make sure that render quad tree jsut continues if it can't find the sprite because it may try to render before the tileId is added
+			if ( historyTileIds.find( static_cast<TileIdentity>( tileId ) ) == historyTileIds.end() ) // [!] Make sure that render quad tree jsut continues if it can't find the sprite because it may try to render before the tileId is added
 			{
-				std::thread addSpriteTileThread( &World::addSpriteTile, this, static_cast< TileIdentity >( tileId ) );
-				addSpriteTileThread.join();
-				historyTileIds.insert( tileId );
+				//std::thread addSpriteTileThread( &World::addSpriteTile, this, static_cast< TileIdentity >( tileId ) );
+				//addSpriteTileThread.join();
+				historyTileIds.insert( static_cast<TileIdentity>( tileId ) );
 			}
 			//worldChunk.insertTile( worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1, tileId );
 			//std::cout << "2: " << ( unsigned long long )tileId << std::endl;
@@ -1068,6 +1061,11 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 		}
 	}
 
+
+	// Load in the necessary new sprites
+	std::thread addSpriteTileThread( &World::addSpriteTiles, this, historyTileIds );
+	addSpriteTileThread.join();
+
 	return;
 }
 
@@ -1083,14 +1081,32 @@ void World::loadSpriteTilesTask()
 }
 
 
+
+void World::initializeSprites()
+{
+	std::set<TileIdentity> tileIds;
+	for ( std::uint64_t tileId = 0; tileId < ( std::uint64_t )TileIdentity::count; tileId++ )
+	{
+		for ( std::uint16_t j = 0; j < Settings::World::NUM_CELLS_PER_CHUNK; j++ )
+		{
+			tileIds.insert( static_cast<TileIdentity>( tileId ) );
+		}
+	}
+
+	this->addSpriteTiles( tileIds );
+	this->_atlas.refresh( tileIds );
+	return;
+}
+
+
+
 void World::loadSpriteTiles()
 {
 	// refresh/clean up
 	std::unique_lock<std::mutex> lockModifyTileSprites( this->_mutexModifyAtlas ); // [!] change to mutexmodifyspritetilesmap
 	std::chrono::system_clock::time_point secondsPassed = std::chrono::system_clock::now() + std::chrono::seconds( ( long long )Settings::World::SPRITE_TILE_REFRESH_RATE );
 	this->_condModifyAtlas.wait_until( lockModifyTileSprites, secondsPassed );
-	//this->_condModifyAtlas.wait( lockModifyTileSprites );
-
+	
 	std::set<TileIdentity> tileIds;
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
@@ -1102,6 +1118,7 @@ void World::loadSpriteTiles()
 		}
 	}
 
+	this->addSpriteTiles( tileIds );
 	this->_atlas.refresh( tileIds );
 	return;
 }
@@ -1112,6 +1129,14 @@ void World::addSpriteTile( TileIdentity tileId )
 	// directly adds
 	std::lock_guard<std::mutex> lockModifyTileSprites( this->_mutexModifyAtlas );
 	this->_atlas.insert( tileId );
+	return;
+}
+
+
+void World::addSpriteTiles( std::set<TileIdentity> tileIds )
+{
+	// directly adds
+	this->_atlas.insert( tileIds );
 	return;
 }
 

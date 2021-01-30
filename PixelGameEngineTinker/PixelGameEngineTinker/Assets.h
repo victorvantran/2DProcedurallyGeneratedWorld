@@ -39,5 +39,6 @@ public:
 
 	static Assets& get();
 	static olc::Sprite* loadSpriteTile( std::uint64_t tileId );
+	static std::map<std::uint64_t, olc::Sprite*> loadSpriteTiles( std::vector<std::uint64_t> tileIds );
 
 };

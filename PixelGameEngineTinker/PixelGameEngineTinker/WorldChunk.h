@@ -81,6 +81,35 @@ public:
 	void insertMapleBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertMossDirt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertMossStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertMull( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertMor( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertLightClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertDarkClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertGravel( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertCharcoal( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertSnow( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertPermafrost( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertPodzol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertBleachedSand( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertShale( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertIronOxide( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertAluminiumOxide( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertLaterite( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertAridsol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertEntisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertSaltstone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertQuartz( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertAlfisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertYellowClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertRedClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertCambisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertSilt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertIronOre( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertAluminiumOre( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+
 	static const funcType insertMethods[( unsigned long long )TileIdentity::count];
 
 
@@ -95,7 +124,6 @@ public:
 	void removeLightSourceTiles( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 
 
-
 	void removeVoid( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeWater( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
@@ -106,7 +134,33 @@ public:
 	void removeMapleBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-
+	void removeMossDirt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeMossStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeMull( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeMor( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeLightClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeDarkClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeGravel( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeCharcoal( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeSnow( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removePermafrost( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removePodzol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeBleachedSand( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeShale( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeIronOxide( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeAluminiumOxide( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeLaterite( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeAridsol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeEntisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeSaltstone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeQuartz( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeAlfisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeYellowClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeRedClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeCambisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeSilt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeIronOre( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeAluminiumOre( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 
 
 	static const funcType removeMethods[( unsigned long long )TileIdentity::count];

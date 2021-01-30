@@ -150,9 +150,11 @@ public:
 	void loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::uint16_t tilesNumBytes, std::uint64_t* paletteData, std::uint16_t numUniqueKeys );
 
 	// TileDecals
+	void initializeSprites();
 	void loadSpriteTilesTask();
 	void loadSpriteTiles();
 	void addSpriteTile( TileIdentity tileId );
+	void addSpriteTiles( std::set<TileIdentity> tileIds );
 	Atlas& getAtlas();
 	void updateDecals();
 

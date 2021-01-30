@@ -61,11 +61,36 @@ public:
 	}
 
 
+	void insert( std::set<TileIdentity> tileIds )
+	{
+		// Load all sprites from the SQLite database and insert it into this spriteTileMap.
+		// Only create sprite and not decal because this will be called on a separate thread
+		// that does not own the OpenGL context
+		std::lock_guard lockAcesssAtlas( this->_mutexAccessAtlas );
+
+		std::vector<std::uint64_t> newTileIds;
+		for ( TileIdentity tileId : tileIds )
+		{
+			if ( this->_atlasSprites.find( tileId ) == this->_atlasSprites.end() )
+			{
+				newTileIds.push_back( ( std::uint64_t )tileId );
+			}
+		}
+
+		std::map<std::uint64_t, olc::Sprite*> spriteTiles = Assets::loadSpriteTiles( newTileIds );
+		for ( const std::pair<std::uint64_t, olc::Sprite*>& spriteTile : spriteTiles )
+		{
+			this->_atlasSprites.emplace( static_cast<TileIdentity>( spriteTile.first ), spriteTile.second );
+		}
+
+		return;
+	}
+
+
 	void refresh( std::set<TileIdentity> tileIds )
 	{
 		// Refresh/clean up any extraneous sprites and decals that are not needed for the current render frame,
 		// keeping the necessary sprites/decals based on tileIds
-
 		std::lock_guard<std::mutex> lockAccessAtlas( this->_mutexAccessAtlas );
 
 		std::map<TileIdentity, olc::Sprite*>::iterator it1;
@@ -90,18 +115,28 @@ public:
 	{
 		// Create decals within the Atlas, given a sprite has been created from a different thread. 
 		// Creating tiles needs to be called on the thread that owns the openGL context.
-
 		std::lock_guard<std::mutex> lockAccessAtlas( this->_mutexAccessAtlas );
 
 		// Create decals
 		std::map<TileIdentity, olc::Sprite*>::iterator it1;
+		// std::cout << this->_atlasSprites.size() << std::endl;
+		int maxLoad = 5;
+		int currLoad = 0;
 		for ( it1 = this->_atlasSprites.begin(); it1 != this->_atlasSprites.end(); it1++ )
 		{
+			if ( currLoad == maxLoad )
+			{
+				std::cout << (int)it1->first << std::endl;
+				break;
+			}
+
+
 			if ( it1->second != nullptr )
 			{
 				if ( this->_atlasDecals.find( it1->first ) == this->_atlasDecals.end() )
 				{
 					this->_atlasDecals.emplace( it1->first, new olc::Decal( it1->second ) );
+					currLoad++;
 				}
 			}
 		}

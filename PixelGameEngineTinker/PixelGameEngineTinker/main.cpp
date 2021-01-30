@@ -37,7 +37,7 @@ public:
 	olc::vi2d gridDimension;
 
 
-	TileIdentity tileId = TileIdentity::Water;
+	TileIdentity tileId = TileIdentity::MossDirt;
 private:
 
 
@@ -164,6 +164,50 @@ public:
 			this->camera->setZoom( 1.0 );
 		}
 
+
+
+		if ( GetKey( olc::Key::K1 ).bPressed )
+		{
+			tileId = TileIdentity::Alfisol;
+		}
+		else if ( GetKey( olc::Key::K2 ).bPressed )
+		{
+			tileId = TileIdentity::YellowClay;
+		}
+		else if ( GetKey( olc::Key::K3 ).bPressed )
+		{
+			tileId = TileIdentity::RedClay;
+		}
+		else if ( GetKey( olc::Key::K4 ).bPressed )
+		{
+			tileId = TileIdentity::Cambisol;
+		}
+		else if ( GetKey( olc::Key::K5 ).bPressed )
+		{
+			tileId = TileIdentity::Silt;
+		}
+		else if ( GetKey( olc::Key::K6 ).bPressed )
+		{
+			tileId = TileIdentity::IronOre;
+		}
+		else if ( GetKey( olc::Key::K7 ).bPressed )
+		{
+			tileId = TileIdentity::AluminiumOre;
+		}
+		else if ( GetKey( olc::Key::K8 ).bPressed )
+		{
+			tileId = TileIdentity::Entisol;
+		}
+		else if ( GetKey( olc::Key::K9 ).bPressed )
+		{
+			tileId = TileIdentity::Saltstone;
+		}
+		else if ( GetKey( olc::Key::K0 ).bPressed )
+		{
+			tileId = TileIdentity::Quartz;
+		}
+
+		/*
 		if ( GetKey( olc::Key::K1 ).bPressed )
 		{
 			tileId = TileIdentity::Water;
@@ -200,7 +244,7 @@ public:
 		{
 			tileId = TileIdentity::Torch;
 		}
-
+		*/
 
 
 
@@ -365,6 +409,7 @@ public:
 		// Initialize world [!]
 		this->world->initializeCamera( this->camera );
 		this->world->initializeDatabase();
+		this->world->initializeSprites();
 		this->world->initializeDelimits( this->camera->getFocalPoint() );
 		this->world->initializeWorldChunks();
 		this->world->startWorldMemorySystem();

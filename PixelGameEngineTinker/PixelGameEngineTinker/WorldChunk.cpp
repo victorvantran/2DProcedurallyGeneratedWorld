@@ -289,21 +289,260 @@ void WorldChunk::insertTorch( std::int64_t x, std::int64_t y, std::int64_t width
 }
 
 
+void WorldChunk::insertMossDirt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::MossDirt, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertMossStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::MossStone, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertMull( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::Mull, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertMor( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::Mor, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertLightClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::LightClay, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertDarkClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::DarkClay, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertGravel( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::Gravel, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertCharcoal( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::Charcoal, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertSnow( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::Snow, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertPermafrost( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::Permafrost, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertPodzol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::Podzol, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertBleachedSand( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::BleachedSand, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertShale( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::Shale, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertIronOxide( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::IronOxide, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertAluminiumOxide( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::AluminiumOxide, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertLaterite( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::Laterite, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertAridsol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::Aridsol, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertEntisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::Entisol, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertSaltstone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::Saltstone, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertQuartz( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::Quartz, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertAlfisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::Alfisol, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertYellowClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::YellowClay, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertRedClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::RedClay, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertCambisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::Cambisol, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertSilt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::Silt, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertIronOre( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::IronOre, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertAluminiumOre( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::AluminiumOre, TileType::Block, true,
+		x, y, width, height );
+	return;
+}
+
+
 const WorldChunk::funcType WorldChunk::insertMethods[( unsigned long long )TileIdentity::count]{
 	&WorldChunk::insertVoid,
 	&WorldChunk::insertWater, 
 	&WorldChunk::insertStone,
 	&WorldChunk::insertDirt,
-
 	&WorldChunk::insertSand,
 	&WorldChunk::insertElmBark,
 	&WorldChunk::insertElmLeaves,
 	&WorldChunk::insertMapleBark,
 	&WorldChunk::insertMapleLeaves,
-
-	&WorldChunk::insertTorch 
-
-
+	&WorldChunk::insertTorch,
+	&WorldChunk::insertMossDirt,
+	&WorldChunk::insertMossStone,
+	&WorldChunk::insertMull,
+	&WorldChunk::insertMor,
+	&WorldChunk::insertLightClay,
+	&WorldChunk::insertDarkClay,
+	&WorldChunk::insertGravel,
+	&WorldChunk::insertCharcoal,
+	&WorldChunk::insertSnow,
+	&WorldChunk::insertPermafrost,
+	&WorldChunk::insertPodzol,
+	&WorldChunk::insertBleachedSand,
+	&WorldChunk::insertShale,
+	&WorldChunk::insertIronOxide,
+	&WorldChunk::insertAluminiumOxide,
+	&WorldChunk::insertLaterite,
+	&WorldChunk::insertAridsol,
+	&WorldChunk::insertEntisol,
+	&WorldChunk::insertSaltstone,
+	&WorldChunk::insertQuartz,
+	&WorldChunk::insertAlfisol,
+	&WorldChunk::insertYellowClay,
+	&WorldChunk::insertRedClay,
+	&WorldChunk::insertCambisol,
+	&WorldChunk::insertSilt,
+	&WorldChunk::insertIronOre,
+	&WorldChunk::insertAluminiumOre
 };
 
 
@@ -524,7 +763,6 @@ void WorldChunk::removeMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t
 }
 
 
-
 void WorldChunk::removeTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
 	/*
@@ -534,6 +772,225 @@ void WorldChunk::removeTorch( std::int64_t x, std::int64_t y, std::int64_t width
 	this->removeLightSourceTiles( TileIdentity::Torch, x, y, width, height );
 	return;
 }
+
+
+void WorldChunk::removeMossDirt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::MossDirt,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeMossStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::MossStone,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeMull( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Mull,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeMor( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Mor,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeLightClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::LightClay,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeDarkClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::DarkClay,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeGravel( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Gravel,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeCharcoal( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Charcoal,
+		x, y, width, height );
+	return;
+}
+
+void WorldChunk::removeSnow( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Snow,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removePermafrost( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Permafrost,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removePodzol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Podzol,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeBleachedSand( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::BleachedSand,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeShale( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Shale,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeIronOxide( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::IronOxide,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeAluminiumOxide( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::AluminiumOxide,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeLaterite( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Laterite,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeAridsol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Aridsol,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeEntisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Entisol,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeSaltstone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Saltstone,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeQuartz( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Quartz,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeAlfisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Alfisol,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeYellowClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::YellowClay,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeRedClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::RedClay,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeCambisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Cambisol,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeSilt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::Silt,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeIronOre( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::IronOre,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeAluminiumOre( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::AluminiumOre,
+		x, y, width, height );
+	return;
+}
+
+
+
+
 
 const WorldChunk::funcType WorldChunk::removeMethods[( unsigned long long )TileIdentity::count]{
 	&WorldChunk::removeVoid,
@@ -548,9 +1005,35 @@ const WorldChunk::funcType WorldChunk::removeMethods[( unsigned long long )TileI
 	&WorldChunk::removeMapleLeaves,
 
 
-	&WorldChunk::removeTorch 
+	&WorldChunk::removeTorch,
 
-
+	&WorldChunk::removeMossDirt,
+	&WorldChunk::removeMossStone,
+	&WorldChunk::removeMull,
+	&WorldChunk::removeMor,
+	&WorldChunk::removeLightClay,
+	&WorldChunk::removeDarkClay,
+	&WorldChunk::removeGravel,
+	&WorldChunk::removeCharcoal,
+	&WorldChunk::removeSnow,
+	&WorldChunk::removePermafrost,
+	&WorldChunk::removePodzol,
+	&WorldChunk::removeBleachedSand,
+	&WorldChunk::removeShale,
+	&WorldChunk::removeIronOxide,
+	&WorldChunk::removeAluminiumOxide,
+	&WorldChunk::removeLaterite,
+	&WorldChunk::removeAridsol,
+	&WorldChunk::removeEntisol,
+	&WorldChunk::removeSaltstone,
+	&WorldChunk::removeQuartz,
+	&WorldChunk::removeAlfisol,
+	&WorldChunk::removeYellowClay,
+	&WorldChunk::removeRedClay,
+	&WorldChunk::removeCambisol,
+	&WorldChunk::removeSilt,
+	&WorldChunk::removeIronOre,
+	&WorldChunk::removeAluminiumOre
 
 };
 
