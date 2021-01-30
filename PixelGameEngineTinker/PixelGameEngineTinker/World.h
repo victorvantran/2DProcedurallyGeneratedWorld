@@ -27,6 +27,15 @@
 #include "LightCastQuadrant.h"
 
 
+#include "TerraneanHeightMap.h"
+#include "SubterraneanHeightMap.h"
+#include "TemperatureMap.h"
+#include "PrecipitationMap.h"
+#include "BiomeSubstanceMap.h"
+#include "CaveMap.h"
+
+#include "Biome.h"
+
 
 
 // Forward Declarations
@@ -55,9 +64,7 @@ private:
 	std::int64_t _focalChunkIndexX;
 	std::int64_t _focalChunkIndexY;
 
-
 	std::condition_variable _condRenderWorld;
-
 
 	// Geography
 	std::atomic<bool> _runningUpdateGeography;
@@ -99,12 +106,36 @@ private:
 	//QuadTreeCollision* _quadTreeCollision;
 
 
+	// World Properties
+	std::int64_t _seed;
+	TerraneanHeightMap _terraneanHeightMap;
+	SubterraneanHeightMap _subterraneanHeightMap;
+
+	TemperatureMap _temperatureMap;
+	PrecipitationMap _precipitationMap;
+	BiomeSubstanceMap _biomeSubstanceMap;
+
+	CaveMap _upperCaveMap;
+	CaveMap _lowerCaveMap;
+
+
 private:
 	static unsigned char copyBits( unsigned char& destination, unsigned char copy, unsigned startIndex, unsigned char endIndex );
 	static unsigned char copyBits( unsigned char& destination, unsigned dStartIndex, unsigned char dEndIndex, unsigned char copy, unsigned cStartIndex, unsigned char cEndIndex );
 
 public:
 	World();
+	World( std::int64_t seed,
+		const TerraneanHeightMap& terraneanHeightMap,
+		const SubterraneanHeightMap& subterraneanHeightMap,
+
+		const TemperatureMap& temperatureMap,
+		const PrecipitationMap& precipitationMap,
+		const BiomeSubstanceMap& biomeSubstanceMap,
+
+		const CaveMap& upperCaveMap,
+		const CaveMap& lowerCaveMap );
+
 	~World();
 
 	// Initialization
@@ -148,6 +179,30 @@ public:
 	std::vector<std::tuple<std::uint64_t, std::int64_t, std::int64_t>> delimitWorldChunks( const BoundingBox<long double>& cameraView );
 	void delimitWorldChunk( WorldChunk& worldChunk, std::int64_t newIndexX, std::int64_t newIndexY );
 	void loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::uint16_t tilesNumBytes, std::uint64_t* paletteData, std::uint16_t numUniqueKeys );
+	
+	
+	
+	// World Generation
+	static long double normalizeHistogram( long double value );
+	static long double biomeLine1( long double x );
+	static long double biomeLine2( long double x );
+	static long double biomeLine3( long double x );
+	static long double biomeLine4( long double x );
+	static long double biomeLine5( long double x );
+	static long double biomeLine6( long double x );
+	std::int64_t getSeed() const;
+	const TerraneanHeightMap& getTerraneanHeightMap() const;
+	const SubterraneanHeightMap& getSubterraneanHeightMap() const;
+	const TemperatureMap& getTemperatureMap() const;
+	const PrecipitationMap& getPrecipitationMap() const;
+	const BiomeSubstanceMap& getBiomeSubstanceMap() const;
+	const CaveMap& getUpperCaveMap() const;
+	const CaveMap& getLowerCaveMap() const;
+	Biome getBiome( std::int64_t tileX, std::int64_t tileY ) const;
+	TileIdentity getTerraneanSubstance( std::int64_t tileX, std::int64_t tileY ) const;
+	TileIdentity* getProceduralChunk( std::int64_t chunkIndexX, std::int64_t chunkIndexY );
+	void procedurallyGenerate( WorldChunk& worldChunk );
+
 
 	// TileDecals
 	void initializeSprites();

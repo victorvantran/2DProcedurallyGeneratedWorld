@@ -37,7 +37,7 @@ public:
 	olc::vi2d gridDimension;
 
 
-	TileIdentity tileId = TileIdentity::MossDirt;
+	TileIdentity tileId = TileIdentity::Torch;
 private:
 
 
@@ -59,7 +59,7 @@ public:
 	{
 		loadAssets();
 		createWorld();
-		createPlayer();
+		// createPlayer();
 		return true;
 	}
 
@@ -168,7 +168,7 @@ public:
 
 		if ( GetKey( olc::Key::K1 ).bPressed )
 		{
-			tileId = TileIdentity::Alfisol;
+			tileId = TileIdentity::Torch;
 		}
 		else if ( GetKey( olc::Key::K2 ).bPressed )
 		{
@@ -354,30 +354,22 @@ public:
 			world->remove( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 1, 1 );
 		}
 
-		// updateLighting
-		//this->world->updateLighting( tilePositionX, tilePositionY );
-
-
-
-
-		// Update
-		this->player->update( fElapsedTime, *this );
-
+		
 		if ( GetKey( olc::Key::Q ).bPressed || GetKey( olc::Key::Q ).bHeld )
 		{
 			camera->setPosition( this->player->getCharacter().getAABB().getCenter().x, this->player->getCharacter().getAABB().getCenter().y );
 		}
+
+
+		// Update
+		//this->player->update( fElapsedTime, *this );
+
+
 		// Render
-		this->camera->renderPlayer( *player );
-		// this->camera->renderWorld( *world );
+		// this->camera->renderPlayer( *player );
 		this->world->render();
 
-		/*
-		Clear( olc::BLACK );
-		this->camera->renderWorld();
-		this->world->updateDecals();
-		*/
-
+	
 		// DEBUG
 		drawTileIndexString( tileIndex );
 
@@ -398,8 +390,61 @@ public:
 
 	void createWorld()
 	{
+		std::int64_t seed = 4364566254;
+
+		TerraneanHeightMap terraneanHeightMap(
+			seed, 501125321,
+			7, 1024
+		);
+
+
+		SubterraneanHeightMap subterraneanHeightMap(
+			seed, 7765867141,
+			7, 1024 // 9, 1024*2
+		);
+
+		TemperatureMap temperatureMap(
+			seed, 246235489, 1136930381,
+			//3, 1024 * 3, 1536
+			8, 1024 * 3, 1536
+		);
+
+
+		PrecipitationMap precipitationMap(
+			seed, 7765867141, 4334744837,
+			//6, 1024 * 3, 1536
+			11, 1024 * 3, 1536
+		);
+
+
+		BiomeSubstanceMap biomeSubstanceMap(
+			seed, 111647323, 945784661,
+			6, 64, 64
+		);
+
+		CaveMap upperCaveMap(
+			seed, 713537467, 829439293,
+			9, 512, 1536
+		);
+
+
+		CaveMap lowerCaveMap(
+			seed, 4524575723, 457245726019,
+			9, 512, 1536
+		);
+
+
+		this->world = new World(
+			seed,
+			terraneanHeightMap,
+			subterraneanHeightMap,
+			temperatureMap,
+			precipitationMap,
+			biomeSubstanceMap,
+			upperCaveMap,
+			lowerCaveMap
 		
-		this->world = new World();
+		);
 		this->camera = new Camera(
 			BoundingBox<long double>( 0.0f, 0.0f, Settings::Camera::FOCAL_POINT_CELL_WIDTH, Settings::Camera::FOCAL_POINT_CELL_HEIGHT ),
 			BoundingBox<long double>( 0.0f, 0.0f, Settings::Camera::VIEW_CELL_WIDTH, Settings::Camera::VIEW_CELL_HEIGHT ),

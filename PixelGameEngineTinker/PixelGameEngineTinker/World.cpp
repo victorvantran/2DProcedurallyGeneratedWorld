@@ -75,7 +75,38 @@ World::World()
 	_focalChunkIndexX( 0 ), _focalChunkIndexY( 0 ),
 	_worldChunks( new WorldChunk[Settings::World::NUM_WORLD_CHUNKS] ),
 	_atlas(),
-	_camera( nullptr )
+	_camera( nullptr ),
+	_seed( 0 )
+{
+
+}
+
+
+World::World( std::int64_t seed,
+	const TerraneanHeightMap& terraneanHeightMap,
+	const SubterraneanHeightMap& subterraneanHeightMap,
+
+	const TemperatureMap& temperatureMap,
+	const PrecipitationMap& precipitationMap,
+	const BiomeSubstanceMap& biomeSubstanceMap,
+
+	const CaveMap& upperCaveMap,
+	const CaveMap& lowerCaveMap )
+	: _numChunkWidth( 1 + this->_chunkRadius * 2 ), _numChunkHeight( 1 + this->_chunkRadius * 2 ), _numWorldChunks( this->_numChunkWidth* this->_numChunkHeight ),
+	_focalChunkIndexX( 0 ), _focalChunkIndexY( 0 ),
+	_worldChunks( new WorldChunk[Settings::World::NUM_WORLD_CHUNKS] ),
+	_atlas(),
+	_camera( nullptr ),
+	_seed( seed ),
+	_terraneanHeightMap( terraneanHeightMap ),
+	_subterraneanHeightMap( subterraneanHeightMap ),
+
+	_temperatureMap( temperatureMap ),
+	_precipitationMap( precipitationMap ),
+	_biomeSubstanceMap( biomeSubstanceMap ),
+
+	_upperCaveMap( upperCaveMap ),
+	_lowerCaveMap( lowerCaveMap )
 {
 
 }
@@ -227,6 +258,7 @@ void World::initializeWorldChunks()
 			rc = sqlite3_finalize( statement );
 
 			std::cout << "Chunk does has not existed beforehand. Procedural generation" << std::endl;
+			this->procedurallyGenerate( this->_worldChunks[i] );
 			// [!] procedural generation here
 
 			continue;
@@ -684,9 +716,9 @@ void World::loadWorldGeography()
 
 	for ( int i = 0; i < chunkRecalls.size(); i++ )
 	{
-		int index = std::get<0>( chunkRecalls[i] );
-		int chunkIndexX = std::get<1>( chunkRecalls[i] );
-		int chunkIndexY = std::get<2>( chunkRecalls[i] );
+		std::int64_t index = std::get<0>( chunkRecalls[i] );
+		std::int64_t chunkIndexX = std::get<1>( chunkRecalls[i] );
+		std::int64_t chunkIndexY = std::get<2>( chunkRecalls[i] );
 
 
 		// Check if world chunk ( chunkIndexX, chunkIndexY ) exists
@@ -706,6 +738,15 @@ void World::loadWorldGeography()
 			rc = sqlite3_finalize( statement );
 
 			std::cout << "Chunk does has not existed beforehand. Procedural generation" << std::endl;
+			//this->procedurallyGenerate( this->_worldChunks[i] );
+			//std::cout << this->_worldChunks[i].getChunkIndexX() << ", " << this->_worldChunks[i].getChunkIndexY() << std::endl;
+			//std::cout << chunkIndexX << ", " << chunkIndexY << std::endl;
+			
+			WorldChunk* worldChunk = &this->_worldChunks[index];
+			std::cout << worldChunk->getChunkIndexX() << ", " << worldChunk->getChunkIndexY() << std::endl;
+			this->procedurallyGenerate( *worldChunk );
+
+			// Need to get proper chunk?
 			// [!] procedural generation here
 
 			continue;
@@ -1068,6 +1109,350 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 
 	return;
 }
+
+
+long double World::normalizeHistogram( long double value )
+{
+	if ( value <= 0.324 )
+	{
+		return 6.15421 * ( value * value * value ) - 1.70354 * ( value * value ) + 0.215019f * ( value );
+	}
+	else if ( value >= 0.324 && value <= 0.676 )
+	{
+		return -16.6757 * ( value * value * value ) + 25.0136 * ( value * value ) - 9.71832 * ( value )+1.19033;
+	}
+	else // if ( value >= 0.676 )
+	{
+		return 6.15421 * ( value * value * value ) - 16.7591 * ( value * value ) + 15.2706 * ( value )-3.66557;
+	}
+}
+
+
+long double World::biomeLine1( long double x ) { return 10.64 * x - 0.468; }
+long double World::biomeLine2( long double x ) { return 3.55 * x - 0.489; }
+long double World::biomeLine3( long double x ) { return 3.05 * x - 1.591; }
+long double World::biomeLine4( long double x ) { return 0.063 * x + 0.125; }
+long double World::biomeLine5( long double x ) { return 0.094 * x + 0.271; }
+long double World::biomeLine6( long double x ) { return -0.223 * x + 0.882; }
+
+
+std::int64_t World::getSeed() const { return this->_seed; }
+
+
+const TerraneanHeightMap& World::getTerraneanHeightMap() const { return this->_terraneanHeightMap; }
+const SubterraneanHeightMap& World::getSubterraneanHeightMap() const { return this->_subterraneanHeightMap; }
+const TemperatureMap& World::getTemperatureMap() const { return this->_temperatureMap; }
+const PrecipitationMap& World::getPrecipitationMap() const { return this->_precipitationMap; }
+const BiomeSubstanceMap& World::getBiomeSubstanceMap() const { return this->_biomeSubstanceMap; }
+const CaveMap& World::getUpperCaveMap() const { return this->_upperCaveMap; }
+const CaveMap& World::getLowerCaveMap() const { return this->_lowerCaveMap; }
+
+
+
+Biome World::getBiome( std::int64_t tileX, std::int64_t tileY ) const
+{
+	long double temperaturePerlinValue = this->getTemperatureMap().getPerlinValue( tileX, tileY );
+	long double normTemperaturePerlinValue = this->normalizeHistogram( temperaturePerlinValue );
+
+	long double precipitationPerlinValue = this->getPrecipitationMap().getPerlinValue( tileX, tileY );
+	long double normPrecipitationPerlinValue = normalizeHistogram( precipitationPerlinValue );
+
+	long double line1Val = this->biomeLine1( normTemperaturePerlinValue );
+	long double line2Val = this->biomeLine2( normTemperaturePerlinValue );
+	long double line3Val = this->biomeLine3( normTemperaturePerlinValue );
+	long double line4Val = this->biomeLine4( normTemperaturePerlinValue );
+	long double line5Val = this->biomeLine5( normTemperaturePerlinValue );
+	long double line6Val = this->biomeLine6( normTemperaturePerlinValue );
+
+	if ( normPrecipitationPerlinValue >= line1Val ) {
+		// Tundra
+		return Biome::Tundra;
+	}
+	else if (
+		normPrecipitationPerlinValue <= line1Val &&
+		normPrecipitationPerlinValue <= line4Val &&
+		normPrecipitationPerlinValue >= line3Val )
+	{
+		// Temperate GrassLand / Cold Desert
+		return Biome::TemperateGrassland;
+	}
+	else if (
+		normPrecipitationPerlinValue <= line1Val &&
+		normPrecipitationPerlinValue >= line4Val &&
+		normPrecipitationPerlinValue <= line5Val &&
+		normPrecipitationPerlinValue >= line3Val )
+	{
+		// Woodland / Shrubland
+		return Biome::Woodland;
+	}
+	else if (
+		normPrecipitationPerlinValue <= line1Val &&
+		normPrecipitationPerlinValue >= line2Val &&
+		normPrecipitationPerlinValue >= line5Val )
+	{
+		// Boreal Forest
+		return Biome::BorealForest;
+	}
+	else if (
+		normPrecipitationPerlinValue <= line2Val &&
+		normPrecipitationPerlinValue >= line3Val &&
+		normPrecipitationPerlinValue >= line5Val &&
+		normPrecipitationPerlinValue <= line6Val )
+	{
+		// Temperate Seasonal Forest
+		return Biome::TemperateSeasonalForest;
+	}
+	else if (
+		normPrecipitationPerlinValue <= line2Val &&
+		normPrecipitationPerlinValue >= line3Val &&
+		normPrecipitationPerlinValue >= line6Val )
+	{
+		// Temperate Rain Forest
+		return Biome::TemperateRainforest;
+	}
+	else if (
+		normPrecipitationPerlinValue <= line3Val &&
+		normPrecipitationPerlinValue <= line4Val )
+	{
+		// Subtropical Desert
+		return Biome::SubtropicalDesert;
+	}
+	else if (
+		normPrecipitationPerlinValue <= line3Val &&
+		normPrecipitationPerlinValue >= line4Val &&
+		normPrecipitationPerlinValue <= line6Val )
+	{
+		// Savanna
+		return Biome::TropicalSeasonalForest;
+	}
+	else if (
+		normPrecipitationPerlinValue <= line3Val &&
+		normPrecipitationPerlinValue >= line6Val )
+	{
+		return Biome::TropicalRainforest;
+	}
+	else
+	{
+		return Biome::Unknown;
+	}
+}
+
+
+
+TileIdentity World::getTerraneanSubstance( std::int64_t tileX, std::int64_t tileY ) const
+{
+	static const std::int64_t OVERWORLD_HEIGHT = 1536;
+
+	Biome biome = this->getBiome( tileX, tileY );
+
+	long double terraneanHeightPerlinVal = this->getTerraneanHeightMap().getPerlinValue( tileX );
+	std::int64_t yTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT ) + ( std::int64_t )OVERWORLD_HEIGHT;
+	long double subterraneanHeightPerlinVal = this->getSubterraneanHeightMap().getPerlinValue( tileX );
+	std::int64_t ySubterranean = ( std::int64_t )( subterraneanHeightPerlinVal * ( OVERWORLD_HEIGHT - yTerranean ) * 0.5f ) + yTerranean;
+
+	long double biomeSubstancePerlinVal = this->getBiomeSubstanceMap().getPerlinValue( tileX, tileY );
+	long double biomeSubstanceNormVal = this->normalizeHistogram( biomeSubstancePerlinVal );
+	long double biomeHeightPercentage = ( ySubterranean != yTerranean ) ? ( long double )( ySubterranean - tileY ) / ( long double )( ySubterranean - yTerranean ) : 1.0;
+
+	if ( biome == Biome::TemperateSeasonalForest )
+	{
+		return TemperateSeasonalForest::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
+	}
+	else if ( biome == Biome::TropicalSeasonalForest )
+	{
+		return TropicalSeasonalForest::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
+	}
+	else if ( biome == Biome::TropicalRainforest )
+	{
+		return TropicalRainforest::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
+	}
+	else if ( biome == Biome::Woodland )
+	{
+		return Woodland::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
+	}
+	else if ( biome == Biome::TemperateGrassland )
+	{
+		return TemperateGrassland::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
+	}
+	else if ( biome == Biome::SubtropicalDesert )
+	{
+		return SubtropicalDesert::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
+	}
+	else if ( biome == Biome::BorealForest )
+	{
+		return BorealForest::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
+	}
+	else if ( biome == Biome::TemperateRainforest )
+	{
+		return TemperateRainforest::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
+	}
+	else if ( biome == Biome::Tundra )
+	{
+		return Tundra::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
+	}
+	else
+	{
+		return TileIdentity::Stone;
+	}
+}
+
+
+TileIdentity* World::getProceduralChunk( std::int64_t chunkIndexX, std::int64_t chunkIndexY )
+{
+	// Get topleft coordinates of a chunk and procedurally generate
+	static const std::int64_t OVERWORLD_HEIGHT = 1536;
+
+	std::int64_t originX = chunkIndexX * 32;
+	std::int64_t originY = chunkIndexY * 32;
+
+	/*
+	TileIdentity chunk[32 * 32]; // [!] should be bedrock or unbreakable type
+	for ( std::int32_t row = 0; row < 32; row++ )
+	{
+		for ( std::int32_t col = 0; col < 32; col++ )
+		{
+			chunk[row * 32 + col] = TileIdentity::Stone;
+		}
+	}
+	*/
+	TileIdentity* chunk = new TileIdentity[32 * 32]{ TileIdentity::Stone };
+
+	for ( std::int64_t tileY = originY + OVERWORLD_HEIGHT; tileY < originY + OVERWORLD_HEIGHT + 32; tileY++ )
+	{
+		for ( std::int64_t tileX = originX; tileX < originX + 32; tileX++ )
+		{
+			// std::cout << tileX << ", " << tileY << std::endl;
+			long double terraneanHeightPerlinVal = this->getTerraneanHeightMap().getPerlinValue( tileX );
+			std::int64_t yTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT ) + OVERWORLD_HEIGHT;
+
+			long double subterraneanHeightPerlinVal = this->getSubterraneanHeightMap().getPerlinValue( tileX );
+			std::int64_t ySubterranean = ( std::int64_t )( subterraneanHeightPerlinVal * ( OVERWORLD_HEIGHT - yTerranean ) * 0.5 ) + yTerranean;
+
+			Biome biome = this->getBiome( tileX, yTerranean );
+			// std::cout << yTerranean << ", " << ySubterranean << std::endl;
+			// std::cout << tileX << ", " << tileY << std::endl;
+
+
+			// Over Terranean Generation
+			if ( tileY < 0 )
+			{
+				chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void; // Clouds
+			}
+			// On Top Of Terranean Generation
+			else if ( tileY < yTerranean )
+			{
+				chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void; // Features ( Trees, Bushes, Flowers )
+			}
+			// Terranean Generation
+			else if ( tileY >= yTerranean && tileY < ySubterranean )
+			{
+				// Height Map
+				long double temperaturePerlinValue = this->getTemperatureMap().getPerlinValue( tileX, tileY );
+
+
+				// Draw BioSubstance
+				TileIdentity bioSubstance = this->getTerraneanSubstance( tileX, tileY );
+				chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = bioSubstance;
+
+
+				// Bleed out tunnel voids
+				long double upperCavePerlinValue = this->getUpperCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D
+				int64_t tunnel = ( int64_t )( upperCavePerlinValue * 256 );
+
+				if ( ( terraneanHeightPerlinVal < subterraneanHeightPerlinVal * subterraneanHeightPerlinVal ) ||
+					( tunnel >= 183 && tunnel < 186 ) ||
+					( tunnel >= 62 && tunnel < 64 ) ||
+					( tunnel >= 125 && tunnel < 128 )
+
+					)
+				{
+					// Draw Bleeding Tunnel Map
+					if ( ( tunnel >= 183 && tunnel < 186 ) ||
+						( tunnel >= 62 && tunnel < 64 ) ||
+						( tunnel >= 125 && tunnel < 128 )
+						)
+					{
+						chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void;
+					}
+				}
+			}
+			// Subterranean Generation
+			else if ( tileY >= ySubterranean && tileY <= OVERWORLD_HEIGHT )
+			{
+				chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Stone;
+
+				// Draw Connecting Bleeding Tunnel Map
+				long double upperCavePerlinValue = this->getUpperCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D
+				int64_t tunnel = ( int64_t )( upperCavePerlinValue * 256 );
+				if (
+					(
+						( tunnel >= 137 && tunnel < 141 ) ||
+						( tunnel >= 183 && tunnel < 186 ) ||
+
+						( tunnel >= 14 && tunnel < 16 ) ||
+						( tunnel >= 62 && tunnel < 64 ) ||
+
+						( tunnel >= 125 && tunnel < 128 )
+
+						)
+					)
+				{
+					chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void;
+				}
+
+				// Draw Subterranean Tunnel Map
+				long double lowerCavePerlinValue = this->getLowerCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D // [!] Need another tunnel map instance
+				tunnel = ( int64_t )( lowerCavePerlinValue * 256 );
+				if (
+					(
+						( tunnel >= 41 && tunnel < 46 ) ||
+						( tunnel >= 97 && tunnel < 103 ) ||
+
+						( tunnel >= 157 && tunnel < 160 ) ||
+
+						( tunnel >= 234 && tunnel < 240 )
+						)
+					)
+				{
+					chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void;
+				}
+			}
+			else
+			{
+				// Generate Underworld
+				if ( tileY > OVERWORLD_HEIGHT )
+				{
+					chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Stone;
+				}
+			}
+
+		}
+	}
+
+	return chunk;
+}
+
+
+
+
+void World::procedurallyGenerate( WorldChunk& worldChunk )
+{
+	static const std::int64_t OVERWORLD_HEIGHT = 1536; // [!] put in settings
+	TileIdentity* proceduralChunk = this->getProceduralChunk( worldChunk.getChunkIndexX(), worldChunk.getChunkIndexY() );
+	for ( int row = 0; row < 32; row++ )
+	{
+		for ( int col = 0; col < 32; col++ )
+		{
+			//  std::cout << ( int )proceduralChunk[row * 32 + col] << std::endl;
+			worldChunk.insert( proceduralChunk[row * 32 + col], worldChunk.getChunkIndexX() * 32 + col, worldChunk.getChunkIndexY() * 32 + row, 1, 1 );
+		}
+	}
+
+	delete[] proceduralChunk;
+
+	return;
+}
+
 
 
 void World::loadSpriteTilesTask()

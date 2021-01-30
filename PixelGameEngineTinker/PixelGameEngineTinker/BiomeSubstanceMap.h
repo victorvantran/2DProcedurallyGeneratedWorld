@@ -2,25 +2,26 @@
 
 #include "PerlinNoise2D.h"
 
-class PrecipitationMap : public PerlinNoise2D
+class BiomeSubstanceMap : public PerlinNoise2D
 {
 private:
 
 public:
-	PrecipitationMap()
+	BiomeSubstanceMap()
 		: PerlinNoise2D()
 	{
 
 	}
 
-	PrecipitationMap( std::int64_t seed, std::int64_t primeX, std::int64_t primeY, std::int32_t octave, std::int64_t width, std::int64_t height )
+
+	BiomeSubstanceMap( std::int64_t seed, std::int64_t primeX, std::int64_t primeY, std::int32_t octave, std::int64_t width, std::int64_t height )
 		: PerlinNoise2D( seed, primeX, primeY, octave, width, height )
 	{
 
 	}
 
 
-	~PrecipitationMap()
+	~BiomeSubstanceMap()
 	{
 
 	}
@@ -70,4 +71,6 @@ public:
 
 		return normalizedNoise;
 	}
+
+
 };

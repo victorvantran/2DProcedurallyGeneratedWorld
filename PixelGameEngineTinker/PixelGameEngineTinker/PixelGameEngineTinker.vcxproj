@@ -38,6 +38,8 @@
     <ClInclude Include="AABB.h" />
     <ClInclude Include="Assets.h" />
     <ClInclude Include="Atlas.h" />
+    <ClInclude Include="Biome.h" />
+    <ClInclude Include="BiomeSubstanceMap.h" />
     <ClInclude Include="BorealForest.h" />
     <ClInclude Include="BoundingBox.h" />
     <ClInclude Include="Camera.h" />
@@ -55,10 +57,10 @@
     <ClInclude Include="PerlinNoise2D.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PrecipitationMap.h" />
-    <ClInclude Include="PrimaryHeightMap.h" />
+    <ClInclude Include="TerraneanHeightMap.h" />
     <ClInclude Include="QuadTree.h" />
     <ClInclude Include="QuadTreeCollision.h" />
-    <ClInclude Include="SecondaryHeightMap.h" />
+    <ClInclude Include="SubterraneanHeightMap.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="SpriteTilesMap.h" />
     <ClInclude Include="SubtropicalDesert.h" />

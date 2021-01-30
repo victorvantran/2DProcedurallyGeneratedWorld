@@ -3,257 +3,261 @@
 #include "Tile.h"
 
 // Permafrost ( thick )
+
+
+
 // Taiga
 // Little plant variety, acidic soil
 // Snow
 // Water
+
 
 class BorealForest
 {
 private:
 
 public:
-	static TileIdentity getSubstance( float heightPercentage, float substanceNormVal )
+	static TileIdentity getSubstance( long double heightPercentage, long double substanceNormVal )
 	{
 		if ( 0.98f <= heightPercentage && heightPercentage <= 1.00f )
 		{
-			if ( 0.75f <= substanceNormVal && substanceNormVal <= 1.0f )
+			if ( 0.825 <= substanceNormVal && substanceNormVal <= 1.0 )
 			{
 				return TileIdentity::Snow;
 			}
-			else if ( 0.65f <= substanceNormVal && substanceNormVal <= 0.75f )
+			else if ( 0.70 <= substanceNormVal && substanceNormVal <= 0.825 )
 			{
 				return TileIdentity::Stone;
 			}
-			else if ( 0.45f <= substanceNormVal && substanceNormVal <= 0.65f )
+			else if ( 0.475 <= substanceNormVal && substanceNormVal <= 0.70 )
 			{
 				return TileIdentity::Dirt;
 			}
-			else if ( 0.40f <= substanceNormVal && substanceNormVal <= 0.45f )
+			else if ( 0.45 <= substanceNormVal && substanceNormVal <= 0.475 )
 			{
 				return TileIdentity::Podzol;
 			}
-			else if ( 0.40f <= substanceNormVal && substanceNormVal <= 0.45f )
+			else if ( 0.40 <= substanceNormVal && substanceNormVal <= 0.45 )
 			{
 				return TileIdentity::Dirt;
 			}
-			else if ( 0.35f <= substanceNormVal && substanceNormVal <= 0.40f )
+			else if ( 0.35 <= substanceNormVal && substanceNormVal <= 0.40 )
 			{
 				return TileIdentity::Stone;
 			}
-			else if ( 0.30f <= substanceNormVal && substanceNormVal <= 0.35f )
+			else if ( 0.30 <= substanceNormVal && substanceNormVal <= 0.35 )
 			{
 				return TileIdentity::Dirt;
 			}
-			else if ( 0.29f <= substanceNormVal && substanceNormVal <= 0.30f )
+			else if ( 0.29 <= substanceNormVal && substanceNormVal <= 0.30 )
 			{
 				return TileIdentity::Mor;
 			}
-			else if ( 0.20f <= substanceNormVal && substanceNormVal <= 0.34f )
+			else if ( 0.20 <= substanceNormVal && substanceNormVal <= 0.29 )
 			{
 				return TileIdentity::Snow;
 			}
-			else if ( 0.10f <= substanceNormVal && substanceNormVal <= 0.20f )
+			else if ( 0.10 <= substanceNormVal && substanceNormVal <= 0.20 )
 			{
 				return TileIdentity::Stone;
 			}
-			else if ( 0.075f <= substanceNormVal && substanceNormVal <= 0.10f )
+			else if ( 0.075 <= substanceNormVal && substanceNormVal <= 0.10 )
 			{
 				return TileIdentity::Sand;
 			}
-			else if ( 0.05f <= substanceNormVal && substanceNormVal <= 0.075f )
+			else if ( 0.05 <= substanceNormVal && substanceNormVal <= 0.075 )
 			{
 				return TileIdentity::Stone;
 			}
-			else if ( 0.05f <= substanceNormVal && substanceNormVal <= 0.10f )
+			else if ( 0.015 <= substanceNormVal && substanceNormVal <= 0.05 )
 			{
 				return TileIdentity::Snow;
+			}
+			else // if ( 0.0 <= substanceNormVal && substanceNormVal <= 0.015 )
+			{
+				return TileIdentity::Gravel;
+			}
+		}
+		else if ( 0.9 <= heightPercentage && heightPercentage <= 0.98 )
+		{
+			if ( 0.80 <= substanceNormVal && substanceNormVal <= 1.0 )
+			{
+				return TileIdentity::Dirt;
+			}
+			else if ( 0.65 <= substanceNormVal && substanceNormVal <= 0.80 )
+			{
+				return TileIdentity::Snow;
+			}
+			else if ( 0.60 <= substanceNormVal && substanceNormVal <= 0.65 )
+			{
+				return TileIdentity::Dirt;
+			}
+			else if ( 0.50 <= substanceNormVal && substanceNormVal <= 0.60 )
+			{
+				return TileIdentity::Stone;
+			}
+			else if ( 0.40 <= substanceNormVal && substanceNormVal <= 0.50 )
+			{
+				return TileIdentity::Snow;
+			}
+			else if ( 0.30 <= substanceNormVal && substanceNormVal <= 0.40 )
+			{
+				return TileIdentity::Stone;
+			}
+			else if ( 0.28 <= substanceNormVal && substanceNormVal <= 0.30 )
+			{
+				return TileIdentity::Podzol;
+			}
+			else if ( 0.11 <= substanceNormVal && substanceNormVal <= 0.28 )
+			{
+				return TileIdentity::Dirt;
+			}
+			else if ( 0.09 <= substanceNormVal && substanceNormVal <= 0.11 )
+			{
+				return TileIdentity::Podzol;
+			}
+			else //  if ( 0.0 <= substanceNormVal && substanceNormVal <= 0.10 )
+			{
+				return TileIdentity::Snow;
+			}
+		}
+		else if ( 0.6 <= heightPercentage && heightPercentage <= 0.9 )
+		{
+			if ( 0.80 <= substanceNormVal && substanceNormVal <= 1.0 )
+			{
+				return TileIdentity::Dirt;
+			}
+			else if ( 0.65 <= substanceNormVal && substanceNormVal <= 0.80 )
+			{
+				return TileIdentity::Stone;
+			}
+			else if ( 0.64 <= substanceNormVal && substanceNormVal <= 0.65 )
+			{
+				return TileIdentity::Gravel;
+			}
+			else if ( 0.55 <= substanceNormVal && substanceNormVal <= 0.64 )
+			{
+				return TileIdentity::Dirt;
+			}
+			else if ( 0.525 <= substanceNormVal && substanceNormVal <= 0.55 )
+			{
+				return TileIdentity::Snow;
+			}
+			else if ( 0.45 <= substanceNormVal && substanceNormVal <= 0.525 )
+			{
+				return TileIdentity::Stone;
+			}
+			else if ( 0.425 <= substanceNormVal && substanceNormVal <= 0.45 )
+			{
+				return TileIdentity::Snow;
+			}
+			else if ( 0.35 <= substanceNormVal && substanceNormVal <= 0.425 )
+			{
+				return TileIdentity::Stone;
+			}
+			else if ( 0.20 <= substanceNormVal && substanceNormVal <= 0.35 )
+			{
+				return TileIdentity::Dirt;
+			}
+			else if ( 0.10 <= substanceNormVal && substanceNormVal <= 0.20 )
+			{
+				return TileIdentity::Stone;
+			}
+			else if ( 0.08 <= substanceNormVal && substanceNormVal <= 0.10 )
+			{
+				return TileIdentity::Gravel;
+			}
+			else // if ( 0.0 <= substanceNormVal && substanceNormVal <= 0.10 )
+			{
+				return TileIdentity::Dirt;
+			}
+		}
+		else if ( 0.5 <= heightPercentage && heightPercentage <= 0.6 )
+		{
+			if ( 0.70 <= substanceNormVal && substanceNormVal <= 1.0 )
+			{
+				return TileIdentity::Dirt;
+			}
+			else if ( 0.65 <= substanceNormVal && substanceNormVal <= 0.70 )
+			{
+				return TileIdentity::Permafrost;
+			}
+			else if ( 0.64 <= substanceNormVal && substanceNormVal <= 0.65 )
+			{
+				return TileIdentity::Gravel;
+			}
+			else if ( 0.55 <= substanceNormVal && substanceNormVal <= 0.64 )
+			{
+				return TileIdentity::Stone;
+			}
+			else if ( 0.30 <= substanceNormVal && substanceNormVal <= 0.55 )
+			{
+				return TileIdentity::Dirt;
+			}
+			else if ( 0.21 <= substanceNormVal && substanceNormVal <= 0.30 )
+			{
+				return TileIdentity::Stone;
+			}
+			else if ( 0.2075 <= substanceNormVal && substanceNormVal <= 0.21 )
+			{
+				return TileIdentity::Charcoal;
+			}
+			else if ( 0.10 <= substanceNormVal && substanceNormVal <= 0.2075 )
+			{
+				return TileIdentity::Stone;
+			}
+			else if ( 0.05 <= substanceNormVal && substanceNormVal <= 0.10 )
+			{
+				return TileIdentity::Gravel;
 			}
 			else // if ( 0.0 <= substanceNormVal && substanceNormVal <= 0.05 )
 			{
-				return TileIdentity::Gravel;
+				return TileIdentity::Stone;
 			}
 		}
-		else if ( 0.9f <= heightPercentage && heightPercentage <= 0.98f )
+		else if ( 0.25 <= heightPercentage && heightPercentage <= 0.5 )
 		{
-			if ( 0.80f <= substanceNormVal && substanceNormVal <= 1.0f )
-			{
-				return TileIdentity::Dirt;
-			}
-			else if ( 0.65f <= substanceNormVal && substanceNormVal <= 0.80f )
-			{
-				return TileIdentity::Snow;
-			}
-			else if ( 0.60f <= substanceNormVal && substanceNormVal <= 0.65f )
-			{
-				return TileIdentity::Dirt;
-			}
-			else if ( 0.50f <= substanceNormVal && substanceNormVal <= 0.60f )
-			{
-				return TileIdentity::Stone;
-			}
-			else if ( 0.40f <= substanceNormVal && substanceNormVal <= 0.50f )
-			{
-				return TileIdentity::Snow;
-			}
-			else if ( 0.30f <= substanceNormVal && substanceNormVal <= 0.40f )
-			{
-				return TileIdentity::Stone;
-			}
-			else if ( 0.28f <= substanceNormVal && substanceNormVal <= 0.30f )
-			{
-				return TileIdentity::Podzol;
-			}
-			else if ( 0.11f <= substanceNormVal && substanceNormVal <= 0.28f )
-			{
-				return TileIdentity::Dirt;
-			}
-			else if ( 0.09f <= substanceNormVal && substanceNormVal <= 0.11f )
-			{
-				return TileIdentity::Podzol;
-			}
-			else //  if ( 0.0f <= substanceNormVal && substanceNormVal <= 0.10f )
-			{
-				return TileIdentity::Snow;
-			}
-		}
-		else if ( 0.6f <= heightPercentage && heightPercentage <= 0.9f )
-		{
-			if ( 0.80f <= substanceNormVal && substanceNormVal <= 1.0f )
-			{
-				return TileIdentity::Dirt;
-			}
-			else if ( 0.65f <= substanceNormVal && substanceNormVal <= 0.80f )
-			{
-				return TileIdentity::Stone;
-			}
-			else if ( 0.64f <= substanceNormVal && substanceNormVal <= 0.65f )
-			{
-				return TileIdentity::Gravel;
-			}
-			else if ( 0.55f <= substanceNormVal && substanceNormVal <= 0.64f )
-			{
-				return TileIdentity::Dirt;
-			}
-			else if ( 0.525f <= substanceNormVal && substanceNormVal <= 0.55f )
-			{
-				return TileIdentity::Snow;
-			}
-			else if ( 0.45f <= substanceNormVal && substanceNormVal <= 0.525f )
-			{
-				return TileIdentity::Stone;
-			}
-			else if ( 0.425f <= substanceNormVal && substanceNormVal <= 0.45f )
-			{
-				return TileIdentity::Snow;
-			}
-			else if ( 0.35f <= substanceNormVal && substanceNormVal <= 0.425f )
-			{
-				return TileIdentity::Stone;
-			}
-			else if ( 0.20f <= substanceNormVal && substanceNormVal <= 0.35f )
-			{
-				return TileIdentity::Dirt;
-			}
-			else if ( 0.10f <= substanceNormVal && substanceNormVal <= 0.20f )
-			{
-				return TileIdentity::Stone;
-			}
-			else if ( 0.08f <= substanceNormVal && substanceNormVal <= 0.10f )
-			{
-				return TileIdentity::Gravel;
-			}
-			else // if ( 0.0f <= substanceNormVal && substanceNormVal <= 0.10f )
-			{
-				return TileIdentity::Dirt;
-			}
-		}
-		else if ( 0.5f <= heightPercentage && heightPercentage <= 0.6f )
-		{
-			if ( 0.70f <= substanceNormVal && substanceNormVal <= 1.0f )
-			{
-				return TileIdentity::Dirt;
-			}
-			else if ( 0.65f <= substanceNormVal && substanceNormVal <= 0.7f )
+			if ( 0.8 <= substanceNormVal && substanceNormVal <= 1.0 )
 			{
 				return TileIdentity::Permafrost;
 			}
-			else if ( 0.64f <= substanceNormVal && substanceNormVal <= 0.65f )
-			{
-				return TileIdentity::Gravel;
-			}
-			else if ( 0.55f <= substanceNormVal && substanceNormVal <= 0.64f )
+			else if ( 0.65 <= substanceNormVal && substanceNormVal <= 0.8 )
 			{
 				return TileIdentity::Stone;
 			}
-			else if ( 0.30f <= substanceNormVal && substanceNormVal <= 0.55f )
-			{
-				return TileIdentity::Dirt;
-			}
-			else if ( 0.21f <= substanceNormVal && substanceNormVal <= 0.30f )
-			{
-				return TileIdentity::Stone;
-			}
-			else if ( 0.2075f <= substanceNormVal && substanceNormVal <= 0.21f )
+			else if ( 0.645 <= substanceNormVal && substanceNormVal <= 0.65 )
 			{
 				return TileIdentity::Charcoal;
 			}
-			else if ( 0.10f <= substanceNormVal && substanceNormVal <= 0.2075f )
-			{
-				return TileIdentity::Stone;
-			}
-			else if ( 0.05f <= substanceNormVal && substanceNormVal <= 0.10f )
-			{
-				return TileIdentity::Gravel;
-			}
-			else // if ( 0.0f <= substanceNormVal && substanceNormVal <= 0.05f )
-			{
-				return TileIdentity::Stone;
-			}
-		}
-		else if ( 0.25f <= heightPercentage && heightPercentage <= 0.5f )
-		{
-			if ( 0.8f <= substanceNormVal && substanceNormVal <= 1.0f )
+			else if ( 0.34 <= substanceNormVal && substanceNormVal <= 0.645 )
 			{
 				return TileIdentity::Permafrost;
 			}
-			else if ( 0.65f <= substanceNormVal && substanceNormVal <= 0.8f )
+			else if ( 0.32 <= substanceNormVal && substanceNormVal <= 0.34 )
+			{
+				return TileIdentity::Gravel;
+			}
+			else if ( 0.25 <= substanceNormVal && substanceNormVal <= 0.32 )
 			{
 				return TileIdentity::Stone;
 			}
-			else if ( 0.645f <= substanceNormVal && substanceNormVal <= 0.65f )
+			else if ( 0.2475 <= substanceNormVal && substanceNormVal <= 0.25 )
 			{
 				return TileIdentity::Charcoal;
 			}
-			else if ( 0.34f <= substanceNormVal && substanceNormVal <= 0.645f )
-			{
-				return TileIdentity::Permafrost;
-			}
-			else if ( 0.32f <= substanceNormVal && substanceNormVal <= 0.34f )
-			{
-				return TileIdentity::Gravel;
-			}
-			else if ( 0.25f <= substanceNormVal && substanceNormVal <= 0.32f )
+			else if ( 0.15 <= substanceNormVal && substanceNormVal <= 0.2475 )
 			{
 				return TileIdentity::Stone;
 			}
-			else if ( 0.2475f <= substanceNormVal && substanceNormVal <= 0.25f )
-			{
-				return TileIdentity::Charcoal;
-			}
-			else if ( 0.15f <= substanceNormVal && substanceNormVal <= 0.2475f )
-			{
-				return TileIdentity::Stone;
-			}
-			else if ( 0.075f <= substanceNormVal && substanceNormVal <= 0.15f )
+			else if ( 0.075 <= substanceNormVal && substanceNormVal <= 0.15 )
 			{
 				return TileIdentity::Permafrost;
 			}
-			else if ( 0.04f <= substanceNormVal && substanceNormVal <= 0.075f )
+			else if ( 0.04 <= substanceNormVal && substanceNormVal <= 0.075 )
 			{
 				return TileIdentity::Gravel;
 			}
-			else // if ( 0.0f <= substanceNormVal && substanceNormVal <= 0.04f )
+			else // if ( 0.0 <= substanceNormVal && substanceNormVal <= 0.04 )
 			{
 				return TileIdentity::Stone;
 			}

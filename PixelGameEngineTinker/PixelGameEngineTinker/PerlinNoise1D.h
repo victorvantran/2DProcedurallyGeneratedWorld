@@ -23,7 +23,7 @@ protected:
 	}
 
 
-	static float valCoord( std::int64_t seed, std::int64_t xPrimed )
+	static long double valCoord( std::int64_t seed, std::int64_t xPrimed )
 	{
 		std::int64_t hash = hashFunction( seed, xPrimed );
 
@@ -33,15 +33,15 @@ protected:
 	}
 
 
-	static float getSeedValue( std::int64_t seed, std::int64_t primeX, std::int64_t x )
+	static long double getSeedValue( std::int64_t seed, std::int64_t primeX, std::int64_t x )
 	{
 		return std::abs( valCoord( seed, x * primeX ) );
 	}
 
 
-	float functionScalingFactor( float scalingFactor ) const
+	long double functionScalingFactor( long double scalingFactor ) const
 	{
-		return scalingFactor / 2.0f;
+		return scalingFactor / 2.0;
 	}
 
 public:
@@ -81,37 +81,37 @@ public:
 	}
 
 
-	float getPerlinValue( std::int64_t x ) const
+	long double getPerlinValue( std::int64_t x ) const
 	{
-		float fAccumulativeNoise = 0.0f;
-		float fScalingFactor = 1.0f;
-		float fAccumulativeScalingFactor = 0.0f;
+		long double accumulativeNoise = 0.0;
+		long double scalingFactor = 1.0;
+		long double accumulativeScalingFactor = 0.0;
 
 		for ( std::int32_t octave = 0; octave < this->_octave; octave++ )
 		{
-			std::int32_t nPitch = this->_width >> octave;
-			if ( nPitch == 0 ) return 0.0f;
+			std::int32_t pitch = this->_width >> octave;
+			if ( pitch == 0 ) return 0.0;
 
-			std::int64_t nSample1 = x / nPitch;
-			std::int64_t remainder = x % nPitch;
+			std::int64_t nSample1 = x / pitch;
+			std::int64_t remainder = x % pitch;
 			if ( remainder < 0 ) nSample1 -= 1;
-			nSample1 *= nPitch;
-			std::int64_t nSample2 = ( nSample1 + nPitch );
+			nSample1 *= pitch;
+			std::int64_t nSample2 = ( nSample1 + pitch );
 
 			// Linear interpolation
-			float fBlend = ( float )( x - nSample1 ) / ( float )nPitch; // How far into the pitch are we
-			float fSample = ( 1.0f - fBlend ) * ( this->getSeedValue( this->_seed, this->_primeX, ( std::int64_t )nSample1 ) ) +
+			long double fBlend = ( long double )( x - nSample1 ) / ( long double )pitch; // How far into the pitch are we
+			long double fSample = ( 1.0 - fBlend ) * ( this->getSeedValue( this->_seed, this->_primeX, ( std::int64_t )nSample1 ) ) +
 				( fBlend ) * ( this->getSeedValue( this->_seed, this->_primeX, ( std::int64_t )nSample2 ) );
 
-			fAccumulativeNoise += fSample * fScalingFactor;
-			fAccumulativeScalingFactor += fScalingFactor;
+			accumulativeNoise += fSample * scalingFactor;
+			accumulativeScalingFactor += scalingFactor;
 
-			fScalingFactor = this->functionScalingFactor( fScalingFactor );
+			scalingFactor = this->functionScalingFactor( scalingFactor );
 		}
 
 		// Scaled to seed range
-		float fNormalizedNoise = fAccumulativeNoise / fAccumulativeScalingFactor;
+		long double normalizedNoise = accumulativeNoise / accumulativeScalingFactor;
 
-		return fNormalizedNoise;
+		return normalizedNoise;
 	}
 };

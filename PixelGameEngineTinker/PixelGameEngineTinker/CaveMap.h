@@ -5,10 +5,7 @@
 class CaveMap : public PerlinNoise2D
 {
 private:
-	float functionScalingFactor( float scalingFactor ) const
-	{
-		return scalingFactor / 2.0f;
-	}
+
 public:
 	CaveMap()
 		: PerlinNoise2D()
@@ -30,50 +27,48 @@ public:
 	}
 
 
-	float getPerlinValue( std::int64_t x, std::int64_t y ) const
+	long double getPerlinValue( std::int64_t x, std::int64_t y ) const
 	{
-		float fAccumulativeNoise = 0.0f;
-		float fScalingFactor = 1.0f;
-		float fAccumulativeScalingFactor = 0.0f;
+		long double accumulativeNoise = 0.0;
+		long double scalingFactor = 1.0;
+		long double accumulativeScalingFactor = 0.0;
 
 		for ( std::int32_t octave = 0; octave < this->_octave; octave++ )
 		{
-			std::int32_t nPitch = this->_width >> octave;
-			if ( nPitch == 0 ) return 0.0f;
+			std::int32_t pitch = this->_width >> octave;
+			if ( pitch == 0 ) return 0.0f;
 
-			std::int64_t nSampleX1 = x / nPitch;
-			std::int64_t remainderX = x % nPitch;
-			if ( remainderX < 0 ) nSampleX1 -= 1;
-			nSampleX1 *= nPitch;
+			std::int64_t sampleX1 = x / pitch;
+			std::int64_t remainderX = x % pitch;
+			if ( remainderX < 0 ) sampleX1 -= 1;
+			sampleX1 *= pitch;
 
-			std::int64_t nSampleY1 = y / nPitch;
-			std::int64_t remainderY = y % nPitch;
-			if ( remainderY < 0 ) nSampleY1 -= 1;
-			nSampleY1 *= nPitch;
+			std::int64_t sampleY1 = y / pitch;
+			std::int64_t remainderY = y % pitch;
+			if ( remainderY < 0 ) sampleY1 -= 1;
+			sampleY1 *= pitch;
 
-			std::int64_t nSampleX2 = ( nSampleX1 + nPitch );
-			std::int64_t nSampleY2 = ( nSampleY1 + nPitch );
+			std::int64_t sampleX2 = ( sampleX1 + pitch );
+			std::int64_t sampleY2 = ( sampleY1 + pitch );
 
 			// Linear interpolation
-			float fBlendX = ( float )( x - nSampleX1 ) / ( float )nPitch;
-			float fBlendY = ( float )( y - nSampleY1 ) / ( float )nPitch;
+			long double blendX = ( long double )( x - sampleX1 ) / ( long double )pitch;
+			long double blendY = ( long double )( y - sampleY1 ) / ( long double )pitch;
 
-			float fSampleT = ( 1.0f - fBlendX ) * ( this->getNoiseValue( this->_seed, this->_primeX, this->_primeY, nSampleX1, nSampleY1 ) ) +
-				fBlendX * ( this->getNoiseValue( this->_seed, this->_primeX, this->_primeY, nSampleX2, nSampleY1 ) );
-			float fSampleB = ( 1.0f - fBlendX ) * ( this->getNoiseValue( this->_seed, this->_primeX, this->_primeY, nSampleX1, nSampleY2 ) ) +
-				fBlendX * ( this->getNoiseValue( this->_seed, this->_primeX, this->_primeY, nSampleX2, nSampleY2 ) );
+			long double sampleT = ( 1.0 - blendX ) * ( this->getNoiseValue( this->_seed, this->_primeX, this->_primeY, sampleX1, sampleY1 ) ) +
+				blendX * ( this->getNoiseValue( this->_seed, this->_primeX, this->_primeY, sampleX2, sampleY1 ) );
+			long double sampleB = ( 1.0 - blendX ) * ( this->getNoiseValue( this->_seed, this->_primeX, this->_primeY, sampleX1, sampleY2 ) ) +
+				blendX * ( this->getNoiseValue( this->_seed, this->_primeX, this->_primeY, sampleX2, sampleY2 ) );
 
 			// Interpolate by Y axis
-			fAccumulativeNoise += ( fBlendY * ( fSampleB - fSampleT ) + fSampleT ) * fScalingFactor;
-			fAccumulativeScalingFactor += fScalingFactor;
-			fScalingFactor = this->functionScalingFactor( fScalingFactor );
+			accumulativeNoise += ( blendY * ( sampleB - sampleT ) + sampleT ) * scalingFactor;
+			accumulativeScalingFactor += scalingFactor;
+			scalingFactor = this->functionScalingFactor( scalingFactor );
 		}
 
 		// Scaled to seed range
-		float fNormalizedNoise = fAccumulativeNoise / fAccumulativeScalingFactor;
+		long double normalizedNoise = accumulativeNoise / accumulativeScalingFactor;
 
-		return fNormalizedNoise;
+		return normalizedNoise;
 	}
-
-
 };

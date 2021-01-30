@@ -40,6 +40,9 @@
     <Filter Include="Header Files\Player">
       <UniqueIdentifier>{1628f9eb-bafa-46e2-af1b-b42ee286df1c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\World\Maps">
+      <UniqueIdentifier>{bebad696-628e-4284-a824-0bf1212c4b88}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Assets.h">
@@ -120,27 +123,6 @@
     <ClInclude Include="QuadTreeCollision.h">
       <Filter>Header Files\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="PerlinNoise1D.h">
-      <Filter>Header Files\World</Filter>
-    </ClInclude>
-    <ClInclude Include="PerlinNoise2D.h">
-      <Filter>Header Files\World</Filter>
-    </ClInclude>
-    <ClInclude Include="PrimaryHeightMap.h">
-      <Filter>Header Files\World</Filter>
-    </ClInclude>
-    <ClInclude Include="SecondaryHeightMap.h">
-      <Filter>Header Files\World</Filter>
-    </ClInclude>
-    <ClInclude Include="TemperatureMap.h">
-      <Filter>Header Files\World</Filter>
-    </ClInclude>
-    <ClInclude Include="PrecipitationMap.h">
-      <Filter>Header Files\World</Filter>
-    </ClInclude>
-    <ClInclude Include="CaveMap.h">
-      <Filter>Header Files\World</Filter>
-    </ClInclude>
     <ClInclude Include="BorealForest.h">
       <Filter>Header Files\World\Biomes</Filter>
     </ClInclude>
@@ -166,6 +148,33 @@
       <Filter>Header Files\World\Biomes</Filter>
     </ClInclude>
     <ClInclude Include="Woodland.h">
+      <Filter>Header Files\World\Biomes</Filter>
+    </ClInclude>
+    <ClInclude Include="BiomeSubstanceMap.h">
+      <Filter>Header Files\World\Maps</Filter>
+    </ClInclude>
+    <ClInclude Include="CaveMap.h">
+      <Filter>Header Files\World\Maps</Filter>
+    </ClInclude>
+    <ClInclude Include="PerlinNoise1D.h">
+      <Filter>Header Files\World\Maps</Filter>
+    </ClInclude>
+    <ClInclude Include="PerlinNoise2D.h">
+      <Filter>Header Files\World\Maps</Filter>
+    </ClInclude>
+    <ClInclude Include="PrecipitationMap.h">
+      <Filter>Header Files\World\Maps</Filter>
+    </ClInclude>
+    <ClInclude Include="TerraneanHeightMap.h">
+      <Filter>Header Files\World\Maps</Filter>
+    </ClInclude>
+    <ClInclude Include="SubterraneanHeightMap.h">
+      <Filter>Header Files\World\Maps</Filter>
+    </ClInclude>
+    <ClInclude Include="TemperatureMap.h">
+      <Filter>Header Files\World\Maps</Filter>
+    </ClInclude>
+    <ClInclude Include="Biome.h">
       <Filter>Header Files\World\Biomes</Filter>
     </ClInclude>
   </ItemGroup>
