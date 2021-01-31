@@ -1252,8 +1252,8 @@ void WorldChunk::blackenLights()
 	//std::cout << "blacken" << std::endl;
 	for ( std::uint16_t i = 0; i < this->_size * this->_size; i++ )
 	{
-		//this->_lights[i].blacken();
-		this->_lights[i].whiten();
+		this->_lights[i].blacken();
+		//this->_lights[i].whiten();
 
 	}
 	return;

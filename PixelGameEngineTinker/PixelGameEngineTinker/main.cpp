@@ -37,7 +37,7 @@ public:
 	olc::vi2d gridDimension;
 
 
-	TileIdentity tileId = TileIdentity::Torch;
+	TileIdentity tileId = TileIdentity::Stone;
 private:
 
 
@@ -59,28 +59,16 @@ public:
 	{
 		loadAssets();
 		createWorld();
-		// createPlayer();
+		createPlayer();
 		return true;
 	}
 
 
 	bool OnUserUpdate( float fElapsedTime ) override
 	{
-		// 
-		//player->resetInputs();
-
-		// Update player inputs
-
-
-
 		// Camera Debug
 		long double mouseX = ( long double )GetMouseX();
 		long double mouseY = ( long double )GetMouseY();
-
-
-
-		//player->updateInputs( *this );
-
 
 
 		//long double panSpeed = 20.0f;
@@ -168,35 +156,35 @@ public:
 
 		if ( GetKey( olc::Key::K1 ).bPressed )
 		{
-			tileId = TileIdentity::Torch;
+			tileId = TileIdentity::Dirt;
 		}
 		else if ( GetKey( olc::Key::K2 ).bPressed )
 		{
-			tileId = TileIdentity::YellowClay;
+			tileId = TileIdentity::Stone;
 		}
 		else if ( GetKey( olc::Key::K3 ).bPressed )
 		{
-			tileId = TileIdentity::RedClay;
+			tileId = TileIdentity::Sand;
 		}
 		else if ( GetKey( olc::Key::K4 ).bPressed )
 		{
-			tileId = TileIdentity::Cambisol;
+			tileId = TileIdentity::Torch;
 		}
 		else if ( GetKey( olc::Key::K5 ).bPressed )
 		{
-			tileId = TileIdentity::Silt;
+			tileId = TileIdentity::MossDirt;
 		}
 		else if ( GetKey( olc::Key::K6 ).bPressed )
 		{
-			tileId = TileIdentity::IronOre;
+			tileId = TileIdentity::Permafrost;
 		}
 		else if ( GetKey( olc::Key::K7 ).bPressed )
 		{
-			tileId = TileIdentity::AluminiumOre;
+			tileId = TileIdentity::MossStone;
 		}
 		else if ( GetKey( olc::Key::K8 ).bPressed )
 		{
-			tileId = TileIdentity::Entisol;
+			tileId = TileIdentity::Gravel;
 		}
 		else if ( GetKey( olc::Key::K9 ).bPressed )
 		{
@@ -292,9 +280,7 @@ public:
 
 		if ( GetKey( olc::Key::R ).bPressed || GetKey( olc::Key::R ).bHeld )
 		{
-			std::uint8_t r = std::rand() % 256;
-			std::uint8_t g = std::rand() % 256;
-			std::uint8_t b = std::rand() % 256;
+			std::cout << this->player->getCharacter().getAABB().getCenter().x << ", " << this->player->getCharacter().getAABB().getCenter().y << std::endl;
 
 		}
 
@@ -355,21 +341,25 @@ public:
 		}
 
 		
+	
+
+		// Update
+		this->player->update( fElapsedTime, *this );
+		camera->setPosition( this->player->getCharacter().getAABB().getCenter().x - 32/2, this->player->getCharacter().getAABB().getCenter().y - 32/2 );
+
+
+		// Render
+		this->camera->renderPlayer( *player );
+		this->world->render();
+
+	
+		/*
 		if ( GetKey( olc::Key::Q ).bPressed || GetKey( olc::Key::Q ).bHeld )
 		{
 			camera->setPosition( this->player->getCharacter().getAABB().getCenter().x, this->player->getCharacter().getAABB().getCenter().y );
 		}
+		*/
 
-
-		// Update
-		//this->player->update( fElapsedTime, *this );
-
-
-		// Render
-		// this->camera->renderPlayer( *player );
-		this->world->render();
-
-	
 		// DEBUG
 		drawTileIndexString( tileIndex );
 
@@ -394,13 +384,13 @@ public:
 
 		TerraneanHeightMap terraneanHeightMap(
 			seed, 501125321,
-			7, 1024
+			7, 1024 * 2
 		);
 
 
 		SubterraneanHeightMap subterraneanHeightMap(
 			seed, 7765867141,
-			7, 1024 // 9, 1024*2
+			7, 1024 * 2 // 9, 1024*2
 		);
 
 		TemperatureMap temperatureMap(
@@ -445,11 +435,19 @@ public:
 			lowerCaveMap
 		
 		);
+
+		/*
 		this->camera = new Camera(
 			BoundingBox<long double>( 0.0f, 0.0f, Settings::Camera::FOCAL_POINT_CELL_WIDTH, Settings::Camera::FOCAL_POINT_CELL_HEIGHT ),
 			BoundingBox<long double>( 0.0f, 0.0f, Settings::Camera::VIEW_CELL_WIDTH, Settings::Camera::VIEW_CELL_HEIGHT ),
 			1.0f, 1.0f,
 			this->world);
+			*/
+		this->camera = new Camera(
+			BoundingBox<long double>( 2624.0f, -448.0f, Settings::Camera::FOCAL_POINT_CELL_WIDTH, Settings::Camera::FOCAL_POINT_CELL_HEIGHT ),
+			BoundingBox<long double>( 0.0f, 0.0f, Settings::Camera::VIEW_CELL_WIDTH, Settings::Camera::VIEW_CELL_HEIGHT ),
+			1.0f, 1.0f,
+			this->world );
 
 		// Initialize world [!]
 		this->world->initializeCamera( this->camera );

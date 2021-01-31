@@ -258,7 +258,7 @@ void World::initializeWorldChunks()
 			rc = sqlite3_finalize( statement );
 
 			std::cout << "Chunk does has not existed beforehand. Procedural generation" << std::endl;
-			this->procedurallyGenerate( this->_worldChunks[i] );
+			this->procedurallyGenerate( this->_worldChunks[index] );
 			// [!] procedural generation here
 
 			continue;
@@ -738,16 +738,7 @@ void World::loadWorldGeography()
 			rc = sqlite3_finalize( statement );
 
 			std::cout << "Chunk does has not existed beforehand. Procedural generation" << std::endl;
-			//this->procedurallyGenerate( this->_worldChunks[i] );
-			//std::cout << this->_worldChunks[i].getChunkIndexX() << ", " << this->_worldChunks[i].getChunkIndexY() << std::endl;
-			//std::cout << chunkIndexX << ", " << chunkIndexY << std::endl;
-			
-			WorldChunk* worldChunk = &this->_worldChunks[index];
-			std::cout << worldChunk->getChunkIndexX() << ", " << worldChunk->getChunkIndexY() << std::endl;
-			this->procedurallyGenerate( *worldChunk );
-
-			// Need to get proper chunk?
-			// [!] procedural generation here
+			this->procedurallyGenerate( this->_worldChunks[index] );
 
 			continue;
 		}

@@ -21,7 +21,7 @@ DynamicObject::DynamicObject() :
 DynamicObject::DynamicObject( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale ) :
 	_aabb( center, halfSize, olc::vf2d{ std::abs( scale.x ), std::abs( scale.y ) } ),
 	_aabbOffset( olc::vf2d{ 0.0f, 0.0f } ), _scale( scale ),
-	_prevPosition( olc::v2d_generic<long double>{ 0.0, 0.0 } ), _currPosition( olc::v2d_generic<long double>{ 0.0, 0.0 } ),
+	_prevPosition( olc::v2d_generic<long double>{ center.x, center.y } ), _currPosition( olc::v2d_generic<long double>{ center.x, center.y } ),
 	_prevVelocity( olc::vf2d{ 0.0f, 0.0f } ), _currVelocity( olc::vf2d{ 0.0f, 0.0f } ),
 	_pushedRight( false ), _pushingRight( false ),
 	_pushedLeft( false ), _pushingLeft( false ),
