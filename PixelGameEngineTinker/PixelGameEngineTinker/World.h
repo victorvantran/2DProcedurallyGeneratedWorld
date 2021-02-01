@@ -39,10 +39,9 @@
 
 
 // Forward Declarations
-class WorldChunkMemory; 
-class Player;
-// class DynamicObject [?]
-class QuadTreeCollision;
+#include "WorldChunkMemory.h" // class WorldChunkMemory; 
+#include "Player.h" // class Player;
+#include "SpatialPartition.h" //class SpatialPartition;
 
 
 class World
@@ -103,7 +102,7 @@ private:
 
 
 	//
-	//QuadTreeCollision* _quadTreeCollision;
+	SpatialPartition _spatialParition;
 
 
 	// World Properties
@@ -151,6 +150,7 @@ public:
 	// World Chunks
 	WorldChunk* getWorldChunks();
 	WorldChunk& getWorldChunk( std::int64_t x, std::int64_t y );
+	WorldChunk* getRelativeWorldChunks( std::size_t index );
 	std::uint16_t getChunkRadius() const;
 	std::uint16_t getNumWorldChunks() const;
 	std::uint16_t getNumChunkWidth() const;
@@ -204,6 +204,15 @@ public:
 	void procedurallyGenerate( WorldChunk& worldChunk );
 
 
+	// Collision Detection
+	SpatialPartition& getSpatialPartition();
+
+
+
+
+
+
+
 	// TileDecals
 	void initializeSprites();
 	void loadSpriteTilesTask();
@@ -222,8 +231,7 @@ public:
 
 
 
-
-	static std::int16_t getRelativeChunkIndex( std::int64_t x, std::int64_t y, std::int64_t focalChunkIndexX, std::int64_t focalChunkIndexY );
+	std::int16_t getRelativeChunkIndex( std::int64_t x, std::int64_t y ) const;
 	static std::uint16_t getRelativeTileIndex( std::int64_t x, std::int64_t y );
 	// Geography
 	const Tile* getTile( long double dX, long double dY ) const;

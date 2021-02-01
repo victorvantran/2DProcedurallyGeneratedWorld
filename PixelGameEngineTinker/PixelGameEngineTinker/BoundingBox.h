@@ -42,6 +42,21 @@ struct BoundingBox
 	}
 
 
+	template<typename S>
+	bool encapsulates( const BoundingBox<S>& otherBoundingBox ) const
+	{
+		if ( this->x <= otherBoundingBox.x &&
+			this->x + this->width >= otherBoundingBox.width &&
+			this->y <= otherBoundingBox.x &&
+			this->y + this->height >= otherBoundingBox.y )
+		{
+			return true;
+		}
+		
+		return false;
+	}
+
+
 
 
 	void clear();

@@ -12,7 +12,8 @@ DynamicObject::DynamicObject() :
 	_pushedLeft( false ), _pushingLeft( false ),
 	_pushedUp( false ), _pushingUp( false ),
 	_pushedDown( false ), _pushingDown( false ),
-	_onOneWayPlatform( false )
+	_onOneWayPlatform( false ),
+	_mAreas()
 {
 
 }
@@ -27,7 +28,8 @@ DynamicObject::DynamicObject( const olc::v2d_generic<long double>& center, const
 	_pushedLeft( false ), _pushingLeft( false ),
 	_pushedUp( false ), _pushingUp( false ),
 	_pushedDown( false ), _pushingDown( false ),
-	_onOneWayPlatform( false )
+	_onOneWayPlatform( false ),
+	_mAreas()
 {
 
 }
@@ -76,6 +78,20 @@ float DynamicObject::getAABBOffsetY() const
 }
 
 
+std::set<std::pair<std::int64_t, std::size_t>>& DynamicObject::getSpaces()
+{
+	return this->_mAreas;
+}
+
+
+/*
+std::set<std::size_t>& DynamicObject::getIdsInSpaces()
+{
+	return this->_mIdsInAreas;
+}
+*/
+
+
 // Setters
 void DynamicObject::setScale( const olc::vf2d& scale )
 {
@@ -119,6 +135,12 @@ void DynamicObject::setAABBOffsetY( float y )
 {
 	this->_aabbOffset.y = y;
 	return;
+}
+
+
+void DynamicObject::addToSpaces( std::int64_t spaceIndex, std::size_t id )
+{
+	this->_mAreas.insert( std::pair<std::int64_t, std::size_t>{ spaceIndex, id });
 }
 
 

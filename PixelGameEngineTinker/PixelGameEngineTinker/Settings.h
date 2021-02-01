@@ -162,6 +162,16 @@ public:
 		static constexpr std::int32_t GRID_WIDTH = 16;
 		static constexpr std::int32_t GRID_HEIGHT = 16;
 	};
+
+
+	struct SpatialPartition
+	{
+		static constexpr std::int32_t WIDTH = 16;
+		static constexpr std::int32_t HEIGHT = 16;
+
+		static constexpr std::int64_t NUM_SPACE_COLS = ( Settings::WorldChunk::SIZE * ( 1 + Settings::World::CHUNK_RADIUS * 2 ) ) / ( Settings::SpatialPartition::WIDTH );
+		static constexpr std::int64_t NUM_SPACE_ROWS = ( Settings::WorldChunk::SIZE * ( 1 + Settings::World::CHUNK_RADIUS * 2 ) ) / ( Settings::SpatialPartition::HEIGHT );
+	};
 };
 
 

@@ -57,9 +57,9 @@
     <ClInclude Include="PerlinNoise2D.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="PrecipitationMap.h" />
+    <ClInclude Include="SpatialPartition.h" />
     <ClInclude Include="TerraneanHeightMap.h" />
     <ClInclude Include="QuadTree.h" />
-    <ClInclude Include="QuadTreeCollision.h" />
     <ClInclude Include="SubterraneanHeightMap.h" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="SpriteTilesMap.h" />
@@ -92,14 +92,17 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="QuadTree.cpp" />
-    <ClCompile Include="QuadTreeCollision.cpp" />
     <ClCompile Include="Settings.cpp" />
+    <ClCompile Include="SpatialPartition.cpp" />
     <ClCompile Include="sqlite\sqlite3.c" />
     <ClCompile Include="TileRender.cpp" />
     <ClCompile Include="Tile.cpp" />
     <ClCompile Include="WorldChunk.cpp" />
     <ClCompile Include="WorldChunkMemory.cpp" />
     <ClCompile Include="World.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="backup.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

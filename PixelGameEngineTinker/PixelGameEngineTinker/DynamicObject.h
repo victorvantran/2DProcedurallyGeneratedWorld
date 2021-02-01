@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <set>
 #include "olcPixelGameEngine.h"
 #include "Settings.h"
 #include "AABB.h"
@@ -37,6 +38,11 @@ protected:
 
 	AABB _aabb;
 	olc::vf2d _aabbOffset;
+
+
+	// Collision Detection
+	std::set<std::pair<std::int64_t,std::size_t>> _mAreas;
+	// std::set<std::size_t> _mIdsInAreas;
 public:
 	// Constructors/Destructors
 	DynamicObject();
@@ -51,6 +57,7 @@ public:
 	olc::vf2d getAABBOffset() const;
 	float getAABBOffsetX() const;
 	float getAABBOffsetY() const;
+	std::set<std::pair<std::int64_t, std::size_t>>& getSpaces();
 
 	// Setters
 	void setScale( const olc::vf2d& scale );
@@ -59,6 +66,7 @@ public:
 	void setAABBOffset( const olc::vf2d& aabbOffset );
 	void setAABBOffsetX( float x );
 	void setAABBOffsetY( float y );
+	void addToSpaces( std::int64_t spaceIndex, std::size_t id );
 
 	// Methods
 	bool isCollidingDown( const World* world, long double& worldGroundY, bool& onOneWayPlatform );

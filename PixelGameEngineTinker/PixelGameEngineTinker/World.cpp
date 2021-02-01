@@ -2,7 +2,6 @@
 #include "World.h"
 #include "WorldChunkMemory.h"
 #include "Player.h"
-#include "QuadTreeCollision.h"
 
 
 
@@ -76,6 +75,7 @@ World::World()
 	_worldChunks( new WorldChunk[Settings::World::NUM_WORLD_CHUNKS] ),
 	_atlas(),
 	_camera( nullptr ),
+	_spatialParition( this ),
 	_seed( 0 )
 {
 
@@ -97,6 +97,7 @@ World::World( std::int64_t seed,
 	_worldChunks( new WorldChunk[Settings::World::NUM_WORLD_CHUNKS] ),
 	_atlas(),
 	_camera( nullptr ),
+	_spatialParition( this ),
 	_seed( seed ),
 	_terraneanHeightMap( terraneanHeightMap ),
 	_subterraneanHeightMap( subterraneanHeightMap ),
@@ -369,6 +370,12 @@ WorldChunk* World::getWorldChunks()
 WorldChunk& World::getWorldChunk( std::int64_t x, std::int64_t y )
 {
 	return this->_worldChunks[y * this->_numChunkWidth + x];
+}
+
+
+WorldChunk* World::getRelativeWorldChunks( std::size_t index )
+{
+	return this->_worldChunkPointers[index];
 }
 
 
@@ -1446,6 +1453,16 @@ void World::procedurallyGenerate( WorldChunk& worldChunk )
 
 
 
+// Collision Detection
+
+SpatialPartition& World::getSpatialPartition()
+{
+	return this->_spatialParition;
+}
+
+
+
+
 void World::loadSpriteTilesTask()
 {
 	this->_runningLoadSpriteTiles = true;
@@ -1537,8 +1554,7 @@ void World::DEBUG_PRINT_TILE_SPRITES()
 
 
 
-
-std::int16_t World::getRelativeChunkIndex( std::int64_t x, std::int64_t y, std::int64_t focalChunkIndexX, std::int64_t focalChunkIndexY )
+std::int16_t World::getRelativeChunkIndex( std::int64_t x, std::int64_t y ) const
 {
 	// Get chunk index relative to the focal chunk
 	std::int16_t numChunksWidth = 1 + World::_chunkRadius * 2;
@@ -1546,11 +1562,10 @@ std::int16_t World::getRelativeChunkIndex( std::int64_t x, std::int64_t y, std::
 	std::int64_t chunkIndexX = ( x >= 0 ) ? ( std::int64_t )( x / World::_chunkCellSize ) : ( std::int64_t )( ( ( x + 1 ) - World::_chunkCellSize ) / World::_chunkCellSize );
 	std::int64_t chunkIndexY = ( y >= 0 ) ? ( std::int64_t )( y / World::_chunkCellSize ) : ( std::int64_t )( ( ( y + 1 ) - World::_chunkCellSize ) / World::_chunkCellSize );
 
-	std::int16_t relativeChunkIndex = ( ( chunkIndexY - focalChunkIndexY ) + World::_chunkRadius ) * numChunksWidth + ( ( chunkIndexX - focalChunkIndexX ) + World::_chunkRadius );
+	std::int16_t relativeChunkIndex = ( ( chunkIndexY - this->_focalChunkIndexY ) + World::_chunkRadius ) * numChunksWidth + ( ( chunkIndexX - this->_focalChunkIndexX ) + World::_chunkRadius );
 
 	return relativeChunkIndex;
 }
-
 
 
 std::uint16_t World::getRelativeTileIndex( std::int64_t x, std::int64_t y )
@@ -1573,7 +1588,7 @@ const Tile* World::getTile( long double dX, long double dY ) const
 	std::int64_t x = ( std::int64_t )std::floor( dX );
 	std::int64_t y = ( std::int64_t )std::floor( dY );
 
-	std::int16_t relativeChunkIndex = World::getRelativeChunkIndex( x, y, this->_focalChunkIndexX, this->_focalChunkIndexY );
+	std::int16_t relativeChunkIndex = this->getRelativeChunkIndex( x, y );
 
 	// Out of bounds
 	if ( relativeChunkIndex < 0 || relativeChunkIndex >= this->_numWorldChunks ) return nullptr;
@@ -1590,7 +1605,7 @@ const Tile* World::getTile( std::int64_t x, std::int64_t y ) const
 	// Given worldPosition, return the reference of Tile as a pointer
 	// The reason for conditionals is to account for negative quadrant offsets
 	// Used for edge meshing of tiles
-	std::int16_t relativeChunkIndex = World::getRelativeChunkIndex( x, y, this->_focalChunkIndexX, this->_focalChunkIndexY );
+	std::int16_t relativeChunkIndex = this->getRelativeChunkIndex( x, y );
 
 	// Out of bounds
 	if ( relativeChunkIndex < 0 || relativeChunkIndex >= this->_numWorldChunks ) return nullptr;
@@ -1607,7 +1622,7 @@ const Light* World::getLight( std::int64_t x, std::int64_t y ) const
 	// Given worldPosition, return the reference of Light as a pointer
 	// The reason for conditionals is to account for negative quadrant offsets
 	// Used for edge meshing of lights
-	std::int16_t relativeChunkIndex = World::getRelativeChunkIndex( x, y, this->_focalChunkIndexX, this->_focalChunkIndexY );
+	std::int16_t relativeChunkIndex = this->getRelativeChunkIndex( x, y );
 
 	// Out of bounds
 	if ( relativeChunkIndex < 0 || relativeChunkIndex >= this->_numWorldChunks ) return nullptr;
@@ -1623,7 +1638,7 @@ const LightSource* World::getLightSource( std::int64_t x, std::int64_t y ) const
 	// Given worldPosition, return the reference of Light as a pointer
 	// The reason for conditionals is to account for negative quadrant offsets
 	// Used for edge meshing of lights
-	std::int16_t relativeChunkIndex = World::getRelativeChunkIndex( x, y, this->_focalChunkIndexX, this->_focalChunkIndexY );
+	std::int16_t relativeChunkIndex = this->getRelativeChunkIndex( x, y );
 
 	// Out of bounds
 	if ( relativeChunkIndex < 0 || relativeChunkIndex >= this->_numWorldChunks ) return nullptr;
@@ -1639,7 +1654,7 @@ void World::addLight( std::int64_t x, std::int64_t y, const LightSource& lightSo
 	// Given worldPosition, return the reference of Light as a pointer
 	// The reason for conditionals is to account for negative quadrant offsets
 
-	std::int16_t relativeChunkIndex = World::getRelativeChunkIndex( x, y, this->_focalChunkIndexX, this->_focalChunkIndexY );
+	std::int16_t relativeChunkIndex = this->getRelativeChunkIndex( x, y );
 
 	// Out of bounds
 	if ( relativeChunkIndex < 0 || relativeChunkIndex >= this->_numWorldChunks ) return;

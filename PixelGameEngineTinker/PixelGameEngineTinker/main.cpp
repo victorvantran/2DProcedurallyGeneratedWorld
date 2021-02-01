@@ -345,7 +345,8 @@ public:
 
 		// Update
 		this->player->update( fElapsedTime, *this );
-		camera->setPosition( this->player->getCharacter().getAABB().getCenter().x - 32/2, this->player->getCharacter().getAABB().getCenter().y - 32/2 );
+		this->world->getSpatialPartition().updateSpaces( &this->player->getCharacter() );
+		//camera->setPosition( this->player->getCharacter().getAABB().getCenter().x - 32/2, this->player->getCharacter().getAABB().getCenter().y - 32/2 );
 
 
 		// Render
