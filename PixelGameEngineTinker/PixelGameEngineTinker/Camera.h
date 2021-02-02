@@ -11,6 +11,7 @@
 #include "TileRender.h"
 #include "LightRender.h"
 #include "Tile.h"
+#include "DynamicObject.h"
 #include "Player.h" // [!] May need to forward declare
 
 class World; // Forward Declaration
@@ -48,6 +49,7 @@ public:
 	void renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas, QuadTree<LightRender>* lightRenderEncapsulates ) const;
 	void renderLightRenders( QuadTree<LightRender>& lightRenders ) const;
 	void renderCamera() const;
+	void renderDynamicObject( DynamicObject& object ) const;
 	void renderPlayer( Player& player ) const;
 
 	void renderTilesDebug( WorldChunk& worldChunk ) const;

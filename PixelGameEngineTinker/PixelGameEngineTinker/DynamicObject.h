@@ -19,6 +19,7 @@ protected:
 	olc::v2d_generic<long double> _prevPosition;
 	olc::v2d_generic<long double> _currPosition; // worldPosition ( Everything follows x,y except Position which follows x, -y to match worldPosition). Center position
 	
+	// Optimize by setting these booleans as bits
 	bool _pushedRight;
 	bool _pushingRight;
 
@@ -31,6 +32,8 @@ protected:
 	bool _pushedUp; // wasAtCeiling
 	bool _pushingUp; // atCeiling
 
+
+
 	bool _onOneWayPlatform;
 
 	olc::vf2d _prevVelocity;
@@ -41,13 +44,25 @@ protected:
 	AABB _aabb;
 	olc::vf2d _aabbOffset;
 
-
 	// Miscellaneous
 	World* _world;
 
-	// Collision Detection
+	// Collision Detection/Response
 	std::set<std::pair<std::int64_t,std::size_t>> _spaces;
 	std::vector<CollisionData> _allCollisions;
+	bool _isKinematic;
+
+	bool _pushedLeftObject;
+	bool _pushingLeftObject;
+
+	bool _pushedRightObject;
+	bool _pushingRightObject;
+
+	bool _pushedBottomObject;
+	bool _pushingBottomObject;
+
+	bool _pushedTopObject;
+	bool _pushingTopObject;
 
 
 public:
@@ -69,12 +84,6 @@ public:
 	olc::vf2d getPrevVelocity() const;
 	olc::vf2d getCurrVelocity() const;
 
-
-	// Collision Detection
-	std::set<std::pair<std::int64_t, std::size_t>>& getSpaces();
-	std::vector<CollisionData>& getAllCollisions();
-	bool hasCollisionDataFor( DynamicObject* otherObject ) const;
-
 	// Setters
 	void setScale( const olc::vf2d& scale );
 	void setScaleX( float x );
@@ -91,5 +100,18 @@ public:
 	bool isCollidingRight( const World* world, long double& worldRightWallX );
 
 
+
+	// Collision Detection
+	std::set<std::pair<std::int64_t, std::size_t>>& getSpaces();
+	std::vector<CollisionData>& getAllCollisions();
+	bool hasCollisionDataFor( DynamicObject* otherObject ) const;
+
+	// Collision Response
+	bool isKinematic() const;
+	void updatePhysicsResponse();
+
+
+
 	void updatePhysics( const World* world, float deltaTime );
+	void updatePhysicsPart2( const World* world, float deltaTime );
 };

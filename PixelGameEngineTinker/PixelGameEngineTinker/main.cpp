@@ -365,7 +365,8 @@ public:
 		this->world->getSpatialPartition().checkCollisions();
 
 
-
+		this->player->getCharacter().updatePhysicsPart2( this->world, fElapsedTime );
+		this->enemy->updatePhysicsPart2( this->world, fElapsedTime );
 
 		// Camera
 		//camera->setPosition( this->player->getCharacter().getAABB().getCenter().x - 32/2, this->player->getCharacter().getAABB().getCenter().y - 32/2 );
@@ -373,7 +374,7 @@ public:
 
 		// Render
 		this->camera->renderPlayer( *player );
-		// this->camera->renderPlayer( *enemy );
+		this->camera->renderDynamicObject( *enemy );
 		this->world->render();
 
 	

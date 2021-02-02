@@ -68,35 +68,16 @@ void SpatialPartition::updateSpaces( DynamicObject* object )
 		if ( this->_overlappingSpaces.find( ( *spacesIter ).first ) == this->_overlappingSpaces.end() )
 		{
 			this->removeObjectFromSpace( ( *spacesIter ).first, ( *spacesIter ).second, object );
-			spacesIter++;
-			// spacesIter = spaces.erase( spacesIter );
+		}
+		if ( spaces.size() == 0 )
+		{
+			break;
 		}
 		else
 		{
 			spacesIter++;
 		}
 	}
-	/*
-	while ( spacesIter != spaces.end() )
-	{
-		if ( this->_overlappingSpaces.find( ( *spacesIter ).first ) == this->_overlappingSpaces.end() )
-		{
-			this->removeObjectFromSpace( ( *spacesIter ).first, ( *spacesIter ).second, object );
-			if ( spaces.size() == 1 )
-			{
-				spaces.clear();
-			}
-			else
-			{
-				spacesIter = spaces.erase( spacesIter );
-			}
-		}
-		else
-		{
-			spacesIter++;
-		}
-	}
-	*/
 
 	// Loop through new areas to add any potentional overlapping spaces
 	for ( std::int64_t spaceIndex : this->_overlappingSpaces )
@@ -106,7 +87,6 @@ void SpatialPartition::updateSpaces( DynamicObject* object )
 		if ( spacesIt == spaces.end() )
 		{
 			this->addObjectToSpace( spaceIndex, object );
-			std::cout << "__" << this->getObjectsInSpace()[spaceIndex].size() << std::endl;
 		}
 	}
 
@@ -125,14 +105,9 @@ void SpatialPartition::checkCollisions()
 	{
 		for ( std::size_t col = 0; col < Settings::SpatialPartition::NUM_SPACE_COLS; col++ )
 		{
-			// std::cout << "1: " << row * Settings::SpatialPartition::NUM_SPACE_COLS + col << std::endl;
-			std::vector<DynamicObject*>& objectsInSpace = this->getObjectsInSpace()[row * Settings::SpatialPartition::NUM_SPACE_COLS + col];
-			if ( objectsInSpace.size() > 0 ) std::cout << objectsInSpace.size() << std::endl;
-			
-			// std::cout << "2: " << objectsInSpace.size() << std::endl;
+			std::vector<DynamicObject*>& objectsInSpace = this->getObjectsInSpace()[row * Settings::SpatialPartition::NUM_SPACE_COLS + col];			
 			for ( std::int64_t i = 0; i < ( std::int64_t )objectsInSpace.size() - 1; i++ )
 			{
-				// std::cout << "3: " << i << ", " << objectsInSpace.size() - 1 << std::endl;
 				DynamicObject* object1 = objectsInSpace[i];
 				for ( std::size_t j = i + 1; j < objectsInSpace.size(); j++ )
 				{
@@ -141,7 +116,6 @@ void SpatialPartition::checkCollisions()
 					// [!] Optimization is to use a dictionary instead of a vector for DynamicObject._allCollisions in order to search in O(1) time
 					if ( object1->getAABB().overlapsSigned( object2->getAABB(), overlap ) && !object1->hasCollisionDataFor( object2 ) )
 					{
-
 						std::cout << "OVERLAP DETECTED" << std::endl;
 						// If overlap is detected, need to add collision data to both objects
 						object1->getAllCollisions().push_back( CollisionData(

@@ -393,6 +393,34 @@ void Camera::renderCamera() const
 
 
 
+void Camera::renderDynamicObject( DynamicObject& object ) const
+{
+	// Render Character
+	const AABB& aabb = object.getAABB();
+	const olc::vf2d& aabbOffset = object.getAABBOffset();
+	const olc::vf2d& characterScale = object.getScale();
+
+
+	olc::v2d_generic<long double> topLeft = aabb.getTopLeft();
+	long double worldPositionX = topLeft.x + aabbOffset.x;
+	long double worldPositionY = topLeft.y - aabbOffset.y; // negative because negY = worldPosY
+	std::int64_t pixelX;
+	std::int64_t pixelY;
+	worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
+	olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
+
+	pge->FillRectDecal(
+		startPos,
+		olc::v2d_generic<long double>{
+		( long double )this->_zoomX* ( ( long double )aabb.getHalfSizeX() * 2 )* Settings::Screen::CELL_PIXEL_SIZE,
+			( long double )this->_zoomY* ( ( long double )aabb.getHalfSizeY() * 2 )* Settings::Screen::CELL_PIXEL_SIZE
+	},
+		olc::RED
+	);
+
+	return;
+}
+
 
 
 void Camera::renderPlayer( Player& player ) const

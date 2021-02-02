@@ -13,10 +13,15 @@ DynamicObject::DynamicObject() :
 	_pushedLeft( false ), _pushingLeft( false ),
 	_pushedUp( false ), _pushingUp( false ),
 	_pushedDown( false ), _pushingDown( false ),
+	_pushedLeftObject( false ), _pushingLeftObject( false ),
+	_pushedRightObject( false ), _pushingRightObject( false ),
+	_pushedBottomObject( false ), _pushingBottomObject( false ),
+	_pushedTopObject( false ), _pushingTopObject( false ),
 	_onOneWayPlatform( false ),
 	_world( nullptr ),
 	_spaces(),
-	_allCollisions()
+	_allCollisions(),
+	_isKinematic( false )
 {
 
 }
@@ -31,10 +36,15 @@ DynamicObject::DynamicObject( const olc::v2d_generic<long double>& center, const
 	_pushedLeft( false ), _pushingLeft( false ),
 	_pushedUp( false ), _pushingUp( false ),
 	_pushedDown( false ), _pushingDown( false ),
+	_pushedLeftObject( false ), _pushingLeftObject( false ),
+	_pushedRightObject( false ), _pushingRightObject( false ),
+	_pushedBottomObject( false ), _pushingBottomObject( false ),
+	_pushedTopObject( false ), _pushingTopObject( false ),
 	_onOneWayPlatform( false ),
 	_world( world ),
 	_spaces(),
-	_allCollisions()
+	_allCollisions(),
+	_isKinematic( false )
 {
 
 }
@@ -110,35 +120,6 @@ olc::vf2d DynamicObject::getPrevVelocity() const
 olc::vf2d DynamicObject::getCurrVelocity() const
 {
 	return this->_currVelocity;
-}
-
-
-
-// Collision Detection
-
-std::set<std::pair<std::int64_t, std::size_t>>& DynamicObject::getSpaces()
-{
-	return this->_spaces;
-}
-
-
-std::vector<CollisionData>& DynamicObject::getAllCollisions()
-{
-	return this->_allCollisions;
-}
-
-
-bool DynamicObject::hasCollisionDataFor( DynamicObject* otherObject ) const
-{
-	for ( std::size_t i = 0; i < this->_allCollisions.size(); i++ )
-	{
-		if ( this->_allCollisions[i].otherObject == otherObject )
-		{
-			return true;
-		}
-	}
-
-	return false;
 }
 
 
@@ -450,6 +431,199 @@ bool DynamicObject::isCollidingRight( const World* world, long double& worldRigh
 }
 
 
+
+// Collision Detection
+
+std::set<std::pair<std::int64_t, std::size_t>>& DynamicObject::getSpaces()
+{
+	return this->_spaces;
+}
+
+
+std::vector<CollisionData>& DynamicObject::getAllCollisions()
+{
+	return this->_allCollisions;
+}
+
+
+bool DynamicObject::hasCollisionDataFor( DynamicObject* otherObject ) const
+{
+	for ( std::size_t i = 0; i < this->_allCollisions.size(); i++ )
+	{
+		if ( this->_allCollisions[i].otherObject == otherObject )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
+
+
+// Collision Response
+
+bool DynamicObject::isKinematic() const
+{
+	return this->_isKinematic;
+}
+
+
+void DynamicObject::updatePhysicsResponse()
+{
+	if ( this->_isKinematic ) return;
+
+	this->_pushedLeftObject = this->_pushingLeftObject;
+	this->_pushedRightObject = this->_pushingRightObject;
+	this->_pushedBottomObject = this->_pushingBottomObject;
+	this->_pushedTopObject = this->_pushingTopObject;
+
+	this->_pushingLeftObject = false;
+	this->_pushingRightObject = false;
+	this->_pushingBottomObject = false;
+	this->_pushingTopObject = false;
+
+	olc::v2d_generic<long double> offsetSum = olc::v2d_generic<long double>{ 0.0, 0.0 };
+
+	for ( std::size_t i = 0; i < this->_allCollisions.size(); i++ )
+	{
+		const CollisionData& collisionData = this->_allCollisions[i];
+		DynamicObject* otherObject = collisionData.otherObject;
+		olc::v2d_generic<long double> overlap = collisionData.overlap - offsetSum; // [!]
+
+		// Objects just touching each other on x axis
+		if ( overlap.x == 0.0 )
+		{
+			// Other object on right side
+			if ( otherObject->getAABB().getCenter().x > this->_aabb.getCenter().x )
+			{
+				this->_pushingRightObject = true;
+				this->_currVelocity.x = std::min<float>( this->_currVelocity.x, 0.0f );
+			}
+			// Other object on left side
+			else
+			{
+				this->_pushingLeftObject = true;
+				this->_currVelocity.x = std::max<float>( this->_currVelocity.x, 0.0f );
+			}
+			continue;
+		}
+		// Objects just touching each other on y axis
+		else if ( overlap.y == 0.0 )
+		{
+			// Other object on bottom side
+			if ( otherObject->getAABB().getCenter().y > this->_aabb.getCenter().y )
+			{
+				this->_pushingBottomObject = true;
+				this->_currVelocity.y = std::max<float>( this->_currVelocity.y, 0.0f );
+			}
+			// Other object on left side
+			else
+			{
+				this->_pushingTopObject = true;
+				this->_currVelocity.y = std::min<float>( this->_currVelocity.y, 0.0f );
+			}
+			continue;
+		}
+
+
+
+		olc::vf2d speed1 = olc::vf2d{ 
+			( float )std::abs( collisionData.currPosition1.x - collisionData.prevPosition1.x ), 
+			( float )std::abs( collisionData.currPosition1.y - collisionData.prevPosition1.y )
+		};
+
+		olc::vf2d speed2 = olc::vf2d{
+			( float )std::abs( collisionData.currPosition2.x - collisionData.prevPosition2.x ),
+			( float )std::abs( collisionData.currPosition2.y - collisionData.prevPosition2.y )
+		};
+
+		olc::vf2d speedSum = speed1 + speed2;
+
+
+		// Calculate speed ratios to calculate offset
+		float speedRatioX, speedRatioY;
+		if ( otherObject->isKinematic() )
+		{
+			speedRatioX = speedRatioY = 1.0f;
+		}
+		else
+		{
+			// If both overlap but no moving, split them apart by the middle
+			if ( speedSum.x == 0.0f && speedSum.y == 0.0f )
+			{
+				speedRatioX = speedRatioY = 0.5f;
+			}
+			else if ( speedSum.x == 0.0f )
+			{
+				speedRatioX = 0.5f;
+				speedRatioY = speed1.y / speedSum.y;
+			}
+			else if ( speedSum.y == 0.0f )
+			{
+				speedRatioX = speed1.x / speedSum.x;
+				speedRatioY = 0.5f;
+			}
+			else
+			{
+				speedRatioX = speed1.x / speedSum.x;
+				speedRatioY = speed1.y / speedSum.y;
+			}
+		}
+
+		float offsetX = overlap.x * speedRatioX;
+		float offsetY = overlap.y * speedRatioY;
+
+
+		// Moving out of the overlap in three cases: horizontally, vertically, or diagonally
+		bool overlappedLastFrameX = std::abs( collisionData.prevPosition1.x - collisionData.prevPosition2.x ) < this->_aabb.getHalfSizeX() + otherObject->getAABB().getHalfSizeX();
+		bool overlappedLastFrameY = std::abs( collisionData.prevPosition1.y - collisionData.prevPosition2.y ) < this->_aabb.getHalfSizeY() + otherObject->getAABB().getHalfSizeY();
+
+		if ( ( !overlappedLastFrameX && overlappedLastFrameY ) || 
+			 ( !overlappedLastFrameX && overlappedLastFrameY && std::abs( overlap.x ) <= std::abs( overlap.y ) ) 
+			)
+		{
+			this->_currPosition.x += offsetX;
+			offsetSum.x += offsetX;
+
+			if ( overlap.x < 0.0 )
+			{
+				this->_pushingRightObject = true;
+				this->_currVelocity.x = std::min( this->_currVelocity.x, 0.0f );
+			}
+			else
+			{
+				this->_pushingLeftObject = true;
+				this->_currVelocity.x = std::max( this->_currVelocity.x, 0.0f );
+			}
+		}
+		else
+		{
+			this->_currPosition.y += offsetY;
+			offsetSum.y += offsetY;
+
+			if ( overlap.y < 0.0 )
+			{
+				this->_pushingBottomObject = true;
+				this->_currVelocity.y = std::max( this->_currVelocity.y, 0.0f );
+			}
+			else
+			{
+				this->_pushingTopObject = true;
+				this->_currVelocity.y = std::min( this->_currVelocity.y, 0.0f );
+			}
+		}
+	}
+
+
+	
+
+
+	return;
+}
+
+
+
 void DynamicObject::updatePhysics( const World* world, float deltaTime )
 {
 	// Cache data of previous frame
@@ -537,6 +711,25 @@ void DynamicObject::updatePhysics( const World* world, float deltaTime )
 
 	// Update AABB of object to match new position
 	this->_aabb.setCenter( this->_currPosition + olc::v2d_generic<long double>( this->_aabbOffset.x, -this->_aabbOffset.y ) ); // negative because negY = worldPosY
+
+	return;
+}
+
+
+
+void DynamicObject::updatePhysicsPart2( const World* world, float deltaTime )
+{
+	this->updatePhysicsResponse();
+
+	this->_pushingLeft = this->_pushingLeft || this->_pushingLeftObject;
+	this->_pushingRight = this->_pushingRight || this->_pushingRightObject;
+	this->_pushingDown = this->_pushingDown || this->_pushingBottomObject;
+	this->_pushingUp = this->_pushingUp || this->_pushingTopObject;
+
+	// Update AABB
+	this->_aabb.setCenter( this->_currPosition );
+
+
 
 	return;
 }
