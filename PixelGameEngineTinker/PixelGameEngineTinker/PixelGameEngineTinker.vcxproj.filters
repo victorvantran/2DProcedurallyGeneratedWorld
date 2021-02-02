@@ -43,6 +43,9 @@
     <Filter Include="Header Files\World\Maps">
       <UniqueIdentifier>{bebad696-628e-4284-a824-0bf1212c4b88}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Physics\CollisionDetection">
+      <UniqueIdentifier>{6773beb4-2ba7-406e-9704-8570a1f2f0e6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Assets.h">
@@ -175,7 +178,10 @@
       <Filter>Header Files\World\Biomes</Filter>
     </ClInclude>
     <ClInclude Include="SpatialPartition.h">
-      <Filter>Header Files\Physics</Filter>
+      <Filter>Header Files\Physics\CollisionDetection</Filter>
+    </ClInclude>
+    <ClInclude Include="CollisionData.h">
+      <Filter>Header Files\Physics\CollisionDetection</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -236,10 +242,5 @@
     <ClCompile Include="SpatialPartition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="backup.txt">
-      <Filter>Header Files\Physics</Filter>
-    </Text>
   </ItemGroup>
 </Project>

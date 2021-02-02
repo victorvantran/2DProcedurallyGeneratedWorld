@@ -14,7 +14,7 @@ Character::Character() :
 
 Character::Character( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale, CharacterState characterState, float runSpeed, float jumpSpeed,
 	World* world ) :
-	DynamicObject( center, halfSize, scale ),
+	DynamicObject( center, halfSize, scale, world ),
 	_ledgeTile( olc::v2d_generic<std::int64_t>{ 0, 0 } ), _cannotGoLeftFrames( 0 ), _cannotGoRightFrames( 0 ),
 	_framesFromJumpStart( 0 ),
 	_currentState( characterState ), _runSpeed( runSpeed ), _jumpSpeed( jumpSpeed ), _prevCommands{ false }, _currCommands{ false },

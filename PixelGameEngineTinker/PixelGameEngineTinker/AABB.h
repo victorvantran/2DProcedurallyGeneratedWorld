@@ -118,5 +118,19 @@ public:
 		return true;
 	}
 
+	bool overlapsSigned( const AABB& otherAABB, olc::v2d_generic<long double>& overlap )
+	{
+		overlap = olc::v2d_generic<long double>{ 0.0, 0.0 };
 
+		if ( this->_halfSize.x == 0.0f || this->_halfSize.y == 0.0f || otherAABB.getHalfSizeX() == 0.0f || otherAABB.getHalfSizeY() == 0.0f ) return false;
+		if ( std::abs( this->_center.x - otherAABB.getCenter().x ) > ( ( long double )this->getHalfSizeX() + otherAABB.getHalfSizeX() ) ) return false;
+		if ( std::abs( this->_center.y - otherAABB.getCenter().y ) > ( ( long double )this->getHalfSizeY() + otherAABB.getHalfSizeY() ) ) return false;
+		
+		overlap = olc::v2d_generic<long double>{
+			( std::signbit( this->_center.x - otherAABB.getCenter().x ) ? -1 : 1 ) * ( ( this->_halfSize.x + otherAABB.getHalfSizeX() ) - std::abs( this->_center.x - otherAABB.getCenter().x ) ),
+			( std::signbit( this->_center.y - otherAABB.getCenter().y ) ? -1 : 1 ) * ( ( this->_halfSize.y + otherAABB.getHalfSizeY() ) - std::abs( this->_center.y - otherAABB.getCenter().y ) )
+		};
+
+		return true;
+	}
 };

@@ -5,9 +5,11 @@
 #include "olcPixelGameEngine.h"
 #include "Settings.h"
 #include "AABB.h"
+// #include "CollisionData.h"
 
 
 class World;
+class CollisionData;
 
 class DynamicObject
 {
@@ -40,13 +42,18 @@ protected:
 	olc::vf2d _aabbOffset;
 
 
+	// Miscellaneous
+	World* _world;
+
 	// Collision Detection
-	std::set<std::pair<std::int64_t,std::size_t>> _mAreas;
-	// std::set<std::size_t> _mIdsInAreas;
+	std::set<std::pair<std::int64_t,std::size_t>> _spaces;
+	std::vector<CollisionData> _allCollisions;
+
+
 public:
 	// Constructors/Destructors
 	DynamicObject();
-	DynamicObject( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale );
+	DynamicObject( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale, World* world );
 	~DynamicObject();
 
 	// Getters
@@ -57,7 +64,16 @@ public:
 	olc::vf2d getAABBOffset() const;
 	float getAABBOffsetX() const;
 	float getAABBOffsetY() const;
+	olc::v2d_generic<long double> getPrevPosition() const;
+	olc::v2d_generic<long double> getCurrPosition() const;
+	olc::vf2d getPrevVelocity() const;
+	olc::vf2d getCurrVelocity() const;
+
+
+	// Collision Detection
 	std::set<std::pair<std::int64_t, std::size_t>>& getSpaces();
+	std::vector<CollisionData>& getAllCollisions();
+	bool hasCollisionDataFor( DynamicObject* otherObject ) const;
 
 	// Setters
 	void setScale( const olc::vf2d& scale );
@@ -73,6 +89,7 @@ public:
 	bool isCollidingUp( const World* world, long double& worldCeilingY );
 	bool isCollidingLeft( const World* world, long double& worldLeftWallX );
 	bool isCollidingRight( const World* world, long double& worldRightWallX );
+
 
 	void updatePhysics( const World* world, float deltaTime );
 };

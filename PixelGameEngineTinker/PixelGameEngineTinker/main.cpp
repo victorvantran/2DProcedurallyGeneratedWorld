@@ -345,7 +345,18 @@ public:
 
 		// Update
 		this->player->update( fElapsedTime, *this );
+
+		// Collision Detection
 		this->world->getSpatialPartition().updateSpaces( &this->player->getCharacter() );
+		this->player->getCharacter().getAllCollisions().clear();
+
+
+		this->world->getSpatialPartition().checkCollisions();
+
+
+
+
+		// Camera
 		//camera->setPosition( this->player->getCharacter().getAABB().getCenter().x - 32/2, this->player->getCharacter().getAABB().getCenter().y - 32/2 );
 
 

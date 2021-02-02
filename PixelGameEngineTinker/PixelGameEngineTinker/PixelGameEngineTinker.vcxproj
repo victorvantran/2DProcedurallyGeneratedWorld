@@ -46,6 +46,7 @@
     <ClInclude Include="CaveMap.h" />
     <ClInclude Include="Cell.h" />
     <ClInclude Include="Character.h" />
+    <ClInclude Include="CollisionData.h" />
     <ClInclude Include="DynamicObject.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="LightCastQuadrant.h" />
@@ -100,9 +101,6 @@
     <ClCompile Include="WorldChunk.cpp" />
     <ClCompile Include="WorldChunkMemory.cpp" />
     <ClCompile Include="World.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="backup.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

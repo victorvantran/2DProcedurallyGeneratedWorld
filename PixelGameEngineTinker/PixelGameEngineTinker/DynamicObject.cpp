@@ -1,5 +1,6 @@
 #include "DynamicObject.h"
 #include "World.h"
+#include "CollisionData.h"
 
 
 // Constructors/Destructors
@@ -13,13 +14,15 @@ DynamicObject::DynamicObject() :
 	_pushedUp( false ), _pushingUp( false ),
 	_pushedDown( false ), _pushingDown( false ),
 	_onOneWayPlatform( false ),
-	_mAreas()
+	_world( nullptr ),
+	_spaces(),
+	_allCollisions()
 {
 
 }
 
 
-DynamicObject::DynamicObject( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale ) :
+DynamicObject::DynamicObject( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale, World* world ) :
 	_aabb( center, halfSize, olc::vf2d{ std::abs( scale.x ), std::abs( scale.y ) } ),
 	_aabbOffset( olc::vf2d{ 0.0f, 0.0f } ), _scale( scale ),
 	_prevPosition( olc::v2d_generic<long double>{ center.x, center.y } ), _currPosition( olc::v2d_generic<long double>{ center.x, center.y } ),
@@ -29,7 +32,9 @@ DynamicObject::DynamicObject( const olc::v2d_generic<long double>& center, const
 	_pushedUp( false ), _pushingUp( false ),
 	_pushedDown( false ), _pushingDown( false ),
 	_onOneWayPlatform( false ),
-	_mAreas()
+	_world( world ),
+	_spaces(),
+	_allCollisions()
 {
 
 }
@@ -47,30 +52,36 @@ olc::vf2d DynamicObject::getScale() const
 	return this->_scale;
 }
 
+
 float DynamicObject::getScaleX() const
 {
 	return this->_scale.x;
 }
+
 
 float DynamicObject::getScaleY() const
 {
 	return this->_scale.y;
 }
 
+
 AABB DynamicObject::getAABB() const
 {
 	return this->_aabb;
 }
+
 
 olc::vf2d DynamicObject::getAABBOffset() const
 {
 	return this->_aabbOffset * this->_scale;
 }
 
+
 float DynamicObject::getAABBOffsetX() const
 {
 	return this->_aabbOffset.x * this->_scale.x;
 }
+
 
 float DynamicObject::getAABBOffsetY() const
 {
@@ -78,18 +89,58 @@ float DynamicObject::getAABBOffsetY() const
 }
 
 
+olc::v2d_generic<long double> DynamicObject::getPrevPosition() const
+{
+	return this->_prevPosition;
+}
+
+
+olc::v2d_generic<long double> DynamicObject::getCurrPosition() const
+{
+	return this->_currPosition;
+}
+
+
+olc::vf2d DynamicObject::getPrevVelocity() const
+{
+	return this->_prevVelocity;
+}
+
+
+olc::vf2d DynamicObject::getCurrVelocity() const
+{
+	return this->_currVelocity;
+}
+
+
+
+// Collision Detection
+
 std::set<std::pair<std::int64_t, std::size_t>>& DynamicObject::getSpaces()
 {
-	return this->_mAreas;
+	return this->_spaces;
 }
 
 
-/*
-std::set<std::size_t>& DynamicObject::getIdsInSpaces()
+std::vector<CollisionData>& DynamicObject::getAllCollisions()
 {
-	return this->_mIdsInAreas;
+	return this->_allCollisions;
 }
-*/
+
+
+bool DynamicObject::hasCollisionDataFor( DynamicObject* otherObject ) const
+{
+	for ( std::size_t i = 0; i < this->_allCollisions.size(); i++ )
+	{
+		if ( this->_allCollisions[i].otherObject == otherObject )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 
 
 // Setters
@@ -140,7 +191,7 @@ void DynamicObject::setAABBOffsetY( float y )
 
 void DynamicObject::addToSpaces( std::int64_t spaceIndex, std::size_t id )
 {
-	this->_mAreas.insert( std::pair<std::int64_t, std::size_t>{ spaceIndex, id });
+	this->_spaces.insert( std::pair<std::int64_t, std::size_t>{ spaceIndex, id });
 }
 
 
