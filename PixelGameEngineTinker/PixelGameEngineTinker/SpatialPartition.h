@@ -62,13 +62,13 @@ public:
 	void addObjectToSpace( std::int64_t spaceIndex, DynamicObject* object )
 	{
 		// Adds object to a particular paritioned space
-		std::vector<DynamicObject*> space = this->_objectsInSpace[spaceIndex];
+		std::vector<DynamicObject*>& space = this->_objectsInSpace[spaceIndex];
 		object->addToSpaces( spaceIndex, space.size() );
 		space.push_back( object );
 	}
 
 
-
+	/*
 	void removeObjectFromSpace( std::int64_t spaceIndex, std::size_t objectIndexInSpace, DynamicObject* object )
 	{
 		// Removes object to a particular paritioned space ( swapping with last object in vector )
@@ -112,7 +112,53 @@ public:
 		// Remove the swapped last object
 		objectsInSpace.pop_back();
 	}
+	*/
 
+
+	void removeObjectFromSpace( std::int64_t spaceIndex, std::size_t objectIndexInSpace, DynamicObject* object )
+	{
+		// Removes object to a particular paritioned space ( swapping with last object in vector )
+		std::vector<DynamicObject*> objectsInSpace = this->_objectsInSpace[spaceIndex];
+		// Base Case 1
+		if ( objectsInSpace.size() == 0 )
+		{
+			return;
+		}
+
+		// Base Case 2
+		else if ( objectsInSpace.size() == 1 )
+		{
+			std::set<std::pair<std::int64_t, std::size_t>>& tempSpaces = object->getSpaces();
+			std::set<std::pair<std::int64_t, std::size_t>>::iterator spacesIt = std::find_if( tempSpaces.begin(), tempSpaces.end(), [&] ( const std::pair<std::int64_t, std::size_t>& p ) { return p.first == spaceIndex; } );
+			if ( spacesIt != tempSpaces.end() )
+			{
+				// ( *spacesIt ).first = std::pair < std::int64_t;
+				tempSpaces.erase( spacesIt );
+				tempSpaces.insert( std::pair<std::int64_t, std::size_t>{ spaceIndex, objectIndexInSpace } );
+				objectsInSpace.pop_back();
+				return;
+			}
+
+			return;
+		}
+
+		// Swap with last object to remove
+		DynamicObject* lastObject = objectsInSpace[objectsInSpace.size() - 1];
+		objectsInSpace[objectsInSpace.size() - 1] = object;
+		objectsInSpace[objectIndexInSpace] = lastObject;
+
+		// Update the swapped object's areas
+		std::set<std::pair<std::int64_t, std::size_t>>& tempSpaces = object->getSpaces();
+		std::set<std::pair<std::int64_t, std::size_t>>::iterator spacesIt = std::find_if( tempSpaces.begin(), tempSpaces.end(), [&] ( const std::pair<std::int64_t, std::size_t>& p ) { return p.first == spaceIndex; } );
+		if ( spacesIt != tempSpaces.end() )
+		{
+			tempSpaces.erase( spacesIt );
+			tempSpaces.insert( std::pair<std::int64_t, std::size_t>{ spaceIndex, objectIndexInSpace } );
+		}
+
+		// Remove the swapped last object
+		objectsInSpace.pop_back();
+	}
 
 	void checkCollisions();
 };

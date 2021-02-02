@@ -27,6 +27,7 @@ public:
 public:
 	World* world = nullptr;
 	Player* player = nullptr;
+	DynamicObject* enemy = nullptr;
 	Camera* camera = nullptr;
 
 	olc::vi2d decalGridDimension;
@@ -60,6 +61,7 @@ public:
 		loadAssets();
 		createWorld();
 		createPlayer();
+		createEnemy();
 		return true;
 	}
 
@@ -345,10 +347,19 @@ public:
 
 		// Update
 		this->player->update( fElapsedTime, *this );
+		this->enemy->updatePhysics( this->world, fElapsedTime );
+		// std::cout << this->enemy->getAABB().getCenter().x << ", " << this->enemy->getAABB().getCenter().y << std::endl;
+
+
+
 
 		// Collision Detection
 		this->world->getSpatialPartition().updateSpaces( &this->player->getCharacter() );
 		this->player->getCharacter().getAllCollisions().clear();
+
+		this->world->getSpatialPartition().updateSpaces( this->enemy );
+		this->enemy->getAllCollisions().clear();
+
 
 
 		this->world->getSpatialPartition().checkCollisions();
@@ -362,6 +373,7 @@ public:
 
 		// Render
 		this->camera->renderPlayer( *player );
+		// this->camera->renderPlayer( *enemy );
 		this->world->render();
 
 	
@@ -486,6 +498,17 @@ public:
 		return;
 	}
 
+
+	void createEnemy()
+	{
+		this->enemy = new DynamicObject(
+			olc::v2d_generic<long double>{ Settings::Player::Character::DEFAULT_CENTER_X, Settings::Player::Character::DEFAULT_CENTER_Y },
+			olc::vf2d{ Settings::Player::Character::DEFAULT_HALF_SIZE_X, Settings::Player::Character::DEFAULT_HALF_SIZE_Y },
+			olc::vf2d{ Settings::Player::Character::DEFAULT_SCALE_X, Settings::Player::Character::DEFAULT_SCALE_Y },
+			this->world
+		);
+		return;
+	}
 
 	void loadAssets()
 	{
