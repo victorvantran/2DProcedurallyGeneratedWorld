@@ -128,6 +128,7 @@ void SpatialPartition::updateSpaces( DynamicObject* object )
 
 
 	this->_overlappingSpaces.clear();
+	object->getAllCollisions().clear();
 
 	return;
 }

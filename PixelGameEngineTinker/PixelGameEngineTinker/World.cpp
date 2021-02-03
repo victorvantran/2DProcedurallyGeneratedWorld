@@ -2252,6 +2252,10 @@ void World::updateLighting()
 	std::unique_lock<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
 	this->_condUpdateLighting.wait( lockUpdateLighting );
 
+
+	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
+	std::lock_guard<std::mutex> lockLoad( this->_mutexLoadWorldChunks );
+
 	this->resetLighting();
 	this->emitStaticLightSources();
 	this->calculateLightRenders();

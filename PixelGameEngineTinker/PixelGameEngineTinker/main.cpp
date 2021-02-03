@@ -29,6 +29,8 @@ public:
 	World* world = nullptr;
 	Player* player = nullptr;
 	DynamicObject* enemy = nullptr;
+	DynamicObject* enemy2 = nullptr;
+	DynamicObject* enemy3 = nullptr;
 	Camera* camera = nullptr;
 
 	olc::vi2d decalGridDimension;
@@ -356,10 +358,13 @@ public:
 
 		zombieCommands[( std::size_t )Command::GoRight] = false;
 		zombieCommands[( std::size_t )Command::GoLeft] = false;
-		zombieCommands[( std::size_t )Command::Jump] = false;
+		zombieCommands[( std::size_t )Command::Jump] = true;
 		zombieCommands[( std::size_t )Command::Drop] = false;
 
 		this->enemy->update( fElapsedTime, zombieCommands );
+		this->enemy2->update( fElapsedTime, zombieCommands );
+		this->enemy3->update( fElapsedTime, zombieCommands );
+
 		//this->enemy->updateStaticPhysics( this->world, fElapsedTime );
 		// std::cout << this->enemy->getAABB().getCenter().x << ", " << this->enemy->getAABB().getCenter().y << std::endl;
 
@@ -368,11 +373,9 @@ public:
 
 		// Collision Detection
 		this->world->getSpatialPartition().updateSpaces( &this->player->getCharacter() );
-		this->player->getCharacter().getAllCollisions().clear();
-
 		this->world->getSpatialPartition().updateSpaces( this->enemy );
-		this->enemy->getAllCollisions().clear();
-
+		this->world->getSpatialPartition().updateSpaces( this->enemy2 );
+		this->world->getSpatialPartition().updateSpaces( this->enemy3 );
 
 
 		this->world->getSpatialPartition().checkCollisions();
@@ -380,6 +383,9 @@ public:
 
 		this->player->getCharacter().updateDynamicPhysics( this->world, fElapsedTime );
 		this->enemy->updateDynamicPhysics( this->world, fElapsedTime );
+		this->enemy2->updateDynamicPhysics( this->world, fElapsedTime );
+		this->enemy3->updateDynamicPhysics( this->world, fElapsedTime );
+
 
 		// Camera
 		//camera->setPosition( this->player->getCharacter().getAABB().getCenter().x - 32/2, this->player->getCharacter().getAABB().getCenter().y - 32/2 );
@@ -388,6 +394,9 @@ public:
 		// Render
 		this->camera->renderPlayer( *player );
 		this->camera->renderDynamicObject( *enemy );
+		this->camera->renderDynamicObject( *enemy2 );
+		this->camera->renderDynamicObject( *enemy3 );
+
 		this->world->render();
 
 	
@@ -517,6 +526,26 @@ public:
 	{
 		this->enemy = new Zombie(
 			olc::v2d_generic<long double>{ Settings::Player::Character::DEFAULT_CENTER_X, Settings::Player::Character::DEFAULT_CENTER_Y },
+			olc::vf2d{ Settings::Player::Character::DEFAULT_HALF_SIZE_X, Settings::Player::Character::DEFAULT_HALF_SIZE_Y },
+			olc::vf2d{ Settings::Player::Character::DEFAULT_SCALE_X, Settings::Player::Character::DEFAULT_SCALE_Y },
+			ZombieState::Stand,
+			10.0f,
+			25.0f,
+			this->world
+		);
+
+		this->enemy2 = new Zombie(
+			olc::v2d_generic<long double>{ Settings::Player::Character::DEFAULT_CENTER_X - 1, Settings::Player::Character::DEFAULT_CENTER_Y },
+			olc::vf2d{ Settings::Player::Character::DEFAULT_HALF_SIZE_X, Settings::Player::Character::DEFAULT_HALF_SIZE_Y },
+			olc::vf2d{ Settings::Player::Character::DEFAULT_SCALE_X, Settings::Player::Character::DEFAULT_SCALE_Y },
+			ZombieState::Stand,
+			10.0f,
+			25.0f,
+			this->world
+		);
+
+		this->enemy3 = new Zombie(
+			olc::v2d_generic<long double>{ Settings::Player::Character::DEFAULT_CENTER_X + 5, Settings::Player::Character::DEFAULT_CENTER_Y },
 			olc::vf2d{ Settings::Player::Character::DEFAULT_HALF_SIZE_X, Settings::Player::Character::DEFAULT_HALF_SIZE_Y },
 			olc::vf2d{ Settings::Player::Character::DEFAULT_SCALE_X, Settings::Player::Character::DEFAULT_SCALE_Y },
 			ZombieState::Stand,

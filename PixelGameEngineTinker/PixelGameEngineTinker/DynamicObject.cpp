@@ -572,8 +572,8 @@ void DynamicObject::updatePhysicsResponse()
 		}
 
 
-		overlap.x = overlap.x / ( this->_aabb.getHalfSizeX() * 2 );
-		overlap.y = overlap.y / ( this->_aabb.getHalfSizeY() * 2 );
+		//overlap.x = overlap.x / ( this->_aabb.getHalfSizeX() + otherObject->getAABB().getHalfSizeX() );
+		//overlap.y = overlap.y / ( this->_aabb.getHalfSizeY() + otherObject->getAABB().getHalfSizeY() );
 
 
 		float offsetX = overlap.x * speedRatioX;
@@ -591,7 +591,7 @@ void DynamicObject::updatePhysicsResponse()
 			//( !overlappedLastFrameX && overlappedLastFrameY && std::abs( overlap.x / ( this->_aabb.getHalfSizeX() * 2 ) ) <= std::abs( overlap.y / ( this->_aabb.getHalfSizeY() * 2 ) ) )
 			)
 		{
-			this->_currPosition.x += offsetX;
+			//this->_currPosition.x += offsetX;
 			offsetSum.x += offsetX;
 
 			if ( overlap.x < 0.0 )
@@ -612,7 +612,7 @@ void DynamicObject::updatePhysicsResponse()
 		{
 			std::cout << "X: " << overlappedLastFrameX << std::endl;
 			std::cout << "Y: " << overlappedLastFrameY << std::endl;
-			this->_currPosition.y += offsetY;
+			//this->_currPosition.y += offsetY;
 			offsetSum.y += offsetY;
 
 			if ( overlap.y < 0.0 )
