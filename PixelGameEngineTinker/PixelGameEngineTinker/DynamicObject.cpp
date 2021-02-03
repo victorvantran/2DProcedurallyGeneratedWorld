@@ -172,7 +172,7 @@ void DynamicObject::setAABBOffsetY( float y )
 
 void DynamicObject::addToSpaces( std::int64_t spaceIndex, std::size_t id )
 {
-	this->_spaces.insert( std::pair<std::int64_t, std::size_t>{ spaceIndex, id });
+	this->_spaces.push_back( std::pair<std::int64_t, std::size_t>{ spaceIndex, id });
 }
 
 
@@ -434,7 +434,7 @@ bool DynamicObject::isCollidingRight( const World* world, long double& worldRigh
 
 // Collision Detection
 
-std::set<std::pair<std::int64_t, std::size_t>>& DynamicObject::getSpaces()
+std::vector<std::pair<std::int64_t, std::size_t>>& DynamicObject::getSpaces()
 {
 	return this->_spaces;
 }
@@ -571,9 +571,16 @@ void DynamicObject::updatePhysicsResponse()
 			}
 		}
 
+
+		overlap.x = overlap.x / ( this->_aabb.getHalfSizeX() * 2 );
+		overlap.y = overlap.y / ( this->_aabb.getHalfSizeY() * 2 );
+
+
 		float offsetX = overlap.x * speedRatioX;
 		float offsetY = overlap.y * speedRatioY;
 
+		std::cout << "OVERLAP X: " << overlap.x << std::endl;
+		std::cout << "OVERLAP Y: " << overlap.y << std::endl;
 
 		// Moving out of the overlap in three cases: horizontally, vertically, or diagonally
 		bool overlappedLastFrameX = std::abs( collisionData.prevPosition1.x - collisionData.prevPosition2.x ) < this->_aabb.getHalfSizeX() + otherObject->getAABB().getHalfSizeX();
@@ -581,6 +588,7 @@ void DynamicObject::updatePhysicsResponse()
 
 		if ( ( !overlappedLastFrameX && overlappedLastFrameY ) || 
 			 ( !overlappedLastFrameX && overlappedLastFrameY && std::abs( overlap.x ) <= std::abs( overlap.y ) ) 
+			//( !overlappedLastFrameX && overlappedLastFrameY && std::abs( overlap.x / ( this->_aabb.getHalfSizeX() * 2 ) ) <= std::abs( overlap.y / ( this->_aabb.getHalfSizeY() * 2 ) ) )
 			)
 		{
 			this->_currPosition.x += offsetX;
@@ -598,7 +606,12 @@ void DynamicObject::updatePhysicsResponse()
 			}
 		}
 		else
+		//else if ( ( overlappedLastFrameX && !overlappedLastFrameY ) ||
+		//	( overlappedLastFrameX && !overlappedLastFrameY && std::abs( overlap.x ) >= std::abs( overlap.y ) )
+		//	)
 		{
+			std::cout << "X: " << overlappedLastFrameX << std::endl;
+			std::cout << "Y: " << overlappedLastFrameY << std::endl;
 			this->_currPosition.y += offsetY;
 			offsetSum.y += offsetY;
 
@@ -624,7 +637,7 @@ void DynamicObject::updatePhysicsResponse()
 
 
 
-void DynamicObject::updatePhysics( const World* world, float deltaTime )
+void DynamicObject::updateStaticPhysics( const World* world, float deltaTime )
 {
 	// Cache data of previous frame
 	this->_prevPosition = this->_currPosition;
@@ -717,7 +730,7 @@ void DynamicObject::updatePhysics( const World* world, float deltaTime )
 
 
 
-void DynamicObject::updatePhysicsPart2( const World* world, float deltaTime )
+void DynamicObject::updateDynamicPhysics( const World* world, float deltaTime )
 {
 	this->updatePhysicsResponse();
 

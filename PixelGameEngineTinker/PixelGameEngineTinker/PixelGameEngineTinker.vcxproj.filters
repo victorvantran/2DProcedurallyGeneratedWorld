@@ -46,6 +46,9 @@
     <Filter Include="Header Files\Physics\CollisionDetection">
       <UniqueIdentifier>{6773beb4-2ba7-406e-9704-8570a1f2f0e6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\NPCs">
+      <UniqueIdentifier>{c372c41f-e8c0-42c2-894b-7f0bd7a62abe}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Assets.h">
@@ -183,6 +186,9 @@
     <ClInclude Include="CollisionData.h">
       <Filter>Header Files\Physics\CollisionDetection</Filter>
     </ClInclude>
+    <ClInclude Include="Zombie.h">
+      <Filter>Header Files\NPCs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cell.cpp">
@@ -240,6 +246,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SpatialPartition.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Zombie.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

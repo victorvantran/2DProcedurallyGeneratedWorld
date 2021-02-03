@@ -48,7 +48,7 @@ protected:
 	World* _world;
 
 	// Collision Detection/Response
-	std::set<std::pair<std::int64_t,std::size_t>> _spaces;
+	std::vector<std::pair<std::int64_t,std::size_t>> _spaces;
 	std::vector<CollisionData> _allCollisions;
 	bool _isKinematic;
 
@@ -102,7 +102,7 @@ public:
 
 
 	// Collision Detection
-	std::set<std::pair<std::int64_t, std::size_t>>& getSpaces();
+	std::vector<std::pair<std::int64_t, std::size_t>>& getSpaces();
 	std::vector<CollisionData>& getAllCollisions();
 	bool hasCollisionDataFor( DynamicObject* otherObject ) const;
 
@@ -112,6 +112,8 @@ public:
 
 
 
-	void updatePhysics( const World* world, float deltaTime );
-	void updatePhysicsPart2( const World* world, float deltaTime );
+	void updateStaticPhysics( const World* world, float deltaTime );
+	void updateDynamicPhysics( const World* world, float deltaTime );
+
+	virtual void update( float deltaTime, bool* commands ) = 0;
 };

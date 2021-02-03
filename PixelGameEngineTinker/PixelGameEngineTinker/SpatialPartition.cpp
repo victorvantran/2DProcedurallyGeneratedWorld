@@ -61,15 +61,28 @@ void SpatialPartition::updateSpaces( DynamicObject* object )
 		this->_overlappingSpaces.insert( bottomRight.y * Settings::SpatialPartition::NUM_SPACE_COLS + bottomRight.x );
 	}
 
+
+
+	std::vector<std::pair<std::int64_t, std::size_t>>& spaces = object->getSpaces();
+	for ( std::size_t i = 0; i < spaces.size(); i++ )
+	{
+		if ( this->_overlappingSpaces.find( ( spaces[i] ).first ) == this->_overlappingSpaces.end() )
+		{
+			this->removeObjectFromSpace( spaces[i].first, spaces[i].second, object );
+			spaces.erase( spaces.begin() + i );
+			i--;
+		}
+	}
+	/*
 	std::set<std::pair<std::int64_t, std::size_t>>& spaces = object->getSpaces();
 	std::set<std::pair<std::int64_t, std::size_t>>::iterator spacesIter = spaces.begin();
 	while ( spacesIter != spaces.end() )
 	{
 		if ( this->_overlappingSpaces.find( ( *spacesIter ).first ) == this->_overlappingSpaces.end() )
 		{
-			this->removeObjectFromSpace( ( *spacesIter ).first, ( *spacesIter ).second, object );
+			this->removeObjectFromSpace( ( *spacesIter ).first, ( *spacesIter ).second, object, spacesIter );
 		}
-		if ( spaces.size() == 0 )
+		if ( spaces.size() == 0 || spacesIter == spaces.end() )
 		{
 			break;
 		}
@@ -78,17 +91,41 @@ void SpatialPartition::updateSpaces( DynamicObject* object )
 			spacesIter++;
 		}
 	}
+	*/
+
+	/*
+	// Loop through new areas to add any potentional overlapping spaces
+	for ( std::int64_t spaceIndex : this->_overlappingSpaces )
+	{
+		std::set<std::pair<std::int64_t, std::size_t>>::iterator spacesIt = std::find_if( spaces.begin(), spaces.end(), [&] ( const std::pair<std::int64_t, std::size_t>& p ) { return p.first == spaceIndex; } );
+		if ( spacesIt == spaces.end() )
+		{
+			std::cout << "Added: " << spaceIndex << std::endl;
+			this->addObjectToSpace( spaceIndex, object );
+			std::cout << this->_objectsInSpace[spaceIndex].size() << std::endl;
+		}
+	}
+	*/
 
 	// Loop through new areas to add any potentional overlapping spaces
 	for ( std::int64_t spaceIndex : this->_overlappingSpaces )
 	{
+		bool contains = false;
+		for ( std::size_t i = 0; i < spaces.size(); i++ )
+		{
+			if ( spaces[i].first == spaceIndex )
+			{
+				contains = true;
+			}
+		}
 
-		std::set<std::pair<std::int64_t, std::size_t>>::iterator spacesIt = std::find_if( spaces.begin(), spaces.end(), [&] ( const std::pair<std::int64_t, std::size_t>& p ) { return p.first == spaceIndex; } );
-		if ( spacesIt == spaces.end() )
+		if ( !contains )
 		{
 			this->addObjectToSpace( spaceIndex, object );
 		}
+
 	}
+
 
 	this->_overlappingSpaces.clear();
 
@@ -105,7 +142,7 @@ void SpatialPartition::checkCollisions()
 	{
 		for ( std::size_t col = 0; col < Settings::SpatialPartition::NUM_SPACE_COLS; col++ )
 		{
-			std::vector<DynamicObject*>& objectsInSpace = this->getObjectsInSpace()[row * Settings::SpatialPartition::NUM_SPACE_COLS + col];			
+			std::vector<DynamicObject*>& objectsInSpace = this->getObjectsInSpace()[row * Settings::SpatialPartition::NUM_SPACE_COLS + col];	
 			for ( std::int64_t i = 0; i < ( std::int64_t )objectsInSpace.size() - 1; i++ )
 			{
 				DynamicObject* object1 = objectsInSpace[i];

@@ -8,6 +8,7 @@
 #include "TileRender.h"
 #include "Camera.h"
 #include "Player.h"
+#include "Zombie.h"
 
 #include <cmath> // std::floorf
 
@@ -347,7 +348,19 @@ public:
 
 		// Update
 		this->player->update( fElapsedTime, *this );
-		this->enemy->updatePhysics( this->world, fElapsedTime );
+
+
+
+
+		bool zombieCommands[( std::size_t )ZombieCommand::count];
+
+		zombieCommands[( std::size_t )Command::GoRight] = false;
+		zombieCommands[( std::size_t )Command::GoLeft] = false;
+		zombieCommands[( std::size_t )Command::Jump] = false;
+		zombieCommands[( std::size_t )Command::Drop] = false;
+
+		this->enemy->update( fElapsedTime, zombieCommands );
+		//this->enemy->updateStaticPhysics( this->world, fElapsedTime );
 		// std::cout << this->enemy->getAABB().getCenter().x << ", " << this->enemy->getAABB().getCenter().y << std::endl;
 
 
@@ -365,8 +378,8 @@ public:
 		this->world->getSpatialPartition().checkCollisions();
 
 
-		this->player->getCharacter().updatePhysicsPart2( this->world, fElapsedTime );
-		this->enemy->updatePhysicsPart2( this->world, fElapsedTime );
+		this->player->getCharacter().updateDynamicPhysics( this->world, fElapsedTime );
+		this->enemy->updateDynamicPhysics( this->world, fElapsedTime );
 
 		// Camera
 		//camera->setPosition( this->player->getCharacter().getAABB().getCenter().x - 32/2, this->player->getCharacter().getAABB().getCenter().y - 32/2 );
@@ -502,12 +515,16 @@ public:
 
 	void createEnemy()
 	{
-		this->enemy = new DynamicObject(
+		this->enemy = new Zombie(
 			olc::v2d_generic<long double>{ Settings::Player::Character::DEFAULT_CENTER_X, Settings::Player::Character::DEFAULT_CENTER_Y },
 			olc::vf2d{ Settings::Player::Character::DEFAULT_HALF_SIZE_X, Settings::Player::Character::DEFAULT_HALF_SIZE_Y },
 			olc::vf2d{ Settings::Player::Character::DEFAULT_SCALE_X, Settings::Player::Character::DEFAULT_SCALE_Y },
+			ZombieState::Stand,
+			10.0f,
+			25.0f,
 			this->world
 		);
+
 		return;
 	}
 
