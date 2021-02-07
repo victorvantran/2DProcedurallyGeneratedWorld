@@ -26,6 +26,9 @@ private:
 	Tile _tiles[WorldChunk::_size * WorldChunk::_size];
 	QuadTree<TileRender> _tileRenders[WorldChunk::_numTileRenders];
 
+	//BackgroundTile _tiles[WorldChunk::_size * WorldChunk::_size];
+	//QuadTree<TileRender> _tileRenders[WorldChunk::_numTileRenders];
+
 	Light _lights[WorldChunk::_size * WorldChunk::_size];
 	QuadTree<LightRender> _lightRenders[WorldChunk::_numTileRenders];
 

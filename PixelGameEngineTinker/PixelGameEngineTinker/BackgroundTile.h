@@ -2,108 +2,33 @@
 #include <cstdint>
 #include <map>
 
-#include "TileBorder.h"
 
 
+enum class BackgroundTileBorder
+{
+	NorthWest = 0,
+	North = 1,
+	NorthEast = 2,
+	East = 3,
+	SouthEast = 4,
+	South = 5,
+	SouthWest = 6,
+	West = 7
+};
 
-
-enum class TileIdentity // uint64_t MAX
+enum class BackgroundTileIdentity // uint64_t MAX
 {
 
 	Void = 0,
-	Water = 1,
-	Stone = 2,
-	Dirt = 3,
-	Sand = 4,
-
-	ElmBark = 5,
-	ElmLeaves = 6,
-	MapleBark = 7,
-	MapleLeaves = 8,
-
-	Torch = 9,
-
-	MossDirt = 10,
-	MossStone = 11,
-	Mull = 12,
-	Mor = 13,
-	LightClay = 14,
-	DarkClay = 15,
-	Gravel = 16,
-	Charcoal = 17,
-	Snow = 18,
-	Permafrost = 19,
-	Podzol = 20,
-	BleachedSand = 21,
-	Shale = 22,
-	IronOxide = 23,
-	AluminiumOxide = 24,
-	Laterite = 25,
-	Aridsol = 26,
-	Entisol = 27,
-	Saltstone = 28,
-	Quartz = 29,
-
-	Alfisol = 30,
-	YellowClay = 31,
-	RedClay = 32,
-
-	Cambisol = 33,
-	Silt = 34,
-
-	IronOre = 35,
-	AluminiumOre = 36,
-
-
-	/*
-	Oak_Wood = 10,
-	Birch_Wood = 11,
-	Aspen_Wood = 12,
-	Redwood_Wood = 13,
-	Maple_Wood = 14,
-	Evergreen_Wood = 15,
-	*/
-
-	
-	count
-
-
-	/*
-	Void = 0,
-	Water = 1,
-	Stone = 2,
-	Dirt = 3,
-	Torch = 4,
-
-
-	RedTorch = 5,
-	GreenTorch = 6,
-	BlueTorth = 7,
-
-	Sand = 8,
-	Gravel = 9,
-	Clay = 10,
-
-
-
-
-	Oak_Wood,
-	Birch_Wood,
-	Aspen_Wood,
-	Redwood_Wood,
-	Maple_Wood,
-	Evergreen_Wood,
-
-
+	Wood = 1,
 
 	count
-	*/
 };
 
 
-enum class TileType
+enum class BackgroundTileType
 {
-	Empty = 0,
+	Static = 0,
 	Block = 1,
 	OneWay = 2,
 	count
@@ -112,18 +37,15 @@ enum class TileType
 	// Triangle
 };
 
-class Tile
+class BackgroundTile
 {
 private:
 	// const static std::map<std::uint8_t, std::uint8_t> _borderValueToDecalIndex;
 
-	TileIdentity _id;
-	TileType _type;
-	bool _opaque;
+	BackgroundTileIdentity _id;
+	BackgroundTileType _type;
 
 	std::uint8_t _borders;
-
-
 
 	static constexpr std::uint8_t _borderValueToDecalIndex[256] = {
 			46, 46, 45, 45, 46, 46, 45, 45, 43, 43, 44, 44, 43, 43, 42, 42,
@@ -143,43 +65,35 @@ private:
 			7 , 7 , 6 , 5 , 7 , 7 , 6 , 5 , 10, 10, 12, 11, 10, 10, 9 , 8 ,
 			7 , 7 , 6 , 5 , 7 , 7 , 6 , 5 , 2 , 2 , 4 , 3 , 2 , 2 , 1 , 0
 	};
-	
-public:
-	Tile();
-	~Tile();
 
-	Tile( TileIdentity id, TileType type, bool opaque );
+
+public:
+	BackgroundTile();
+	~BackgroundTile();
+
+	BackgroundTile( BackgroundTileIdentity id, BackgroundTileType type );
 
 	// Constructor that accounts for edges
 
-	void setId( TileIdentity id );
-	void setType( TileType type );
-	void setOpaque( bool opaque );
+	void setId( BackgroundTileIdentity id );
+	void setType( BackgroundTileType type );
 
 	void setBorders( std::uint8_t borders );
-	void setBorder( TileBorder border );
-	void unsetBorder( TileBorder border );
+	void setBorder( BackgroundTileBorder border );
+	void unsetBorder( BackgroundTileBorder border );
 
 
-	TileIdentity getId() const;
-	TileType getType() const;
-	bool getOpaque() const;
+	BackgroundTileIdentity getId() const;
+	BackgroundTileType getType() const;
 	std::uint8_t getBorders() const;
-	bool getBorder( TileBorder border ) const;
+	bool getBorder( BackgroundTileBorder border ) const;
 	std::uint8_t getBordersDecalIndex() const;
 
 	bool exists() const;
 
 	bool isVoid() const;
-
-	bool isEmpty() const;
-	bool isObstacle() const;
-	bool isGround() const;
-	bool isOneWayPlatform() const;
-
-
-	bool isLedge() const;
-
+	bool isStatic() const;
+	
 	void clear();
 };
 
