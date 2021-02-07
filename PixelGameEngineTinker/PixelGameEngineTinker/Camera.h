@@ -72,4 +72,5 @@ public:
 	long double getCenterY() const;
 	long double getZoomX() const;
 	long double getZoomY() const;
+
 };

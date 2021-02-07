@@ -690,6 +690,9 @@ void World::loadWorldGeography()
 		return;
 	}
 
+	std::lock_guard<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
+
+
 	for ( int i = 0; i < chunkRecalls.size(); i++ )
 	{
 		std::uint64_t index = std::get<0>( chunkRecalls[i] );
@@ -799,6 +802,7 @@ void World::loadWorldGeography()
 	worldChunkRecalls.clear();
 
 	// Allow the tileSprites to refresh
+	this->_condUpdateLighting.notify_one();
 	this->_condModifyAtlas.notify_one();
 	//////
 
@@ -1939,6 +1943,7 @@ void World::revealStatic( LightCastQuadrant<long double>& quadrant, const olc::v
 
 	long double rayDistance = std::hypot( castPosition.x - originPosition.x, castPosition.y - originPosition.y );
 	long double intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / ( long double )lightSource.getRadius() ) ) );
+	intensity = intensity * 2;
 
 	if ( originPosition.x >= 0 && originPosition.y >= 0 )
 	{
@@ -2067,7 +2072,7 @@ void World::emitStaticLightSource( const LightSource& lightSource, std::int64_t 
 	else if ( x >= 0 && y < 0 )
 	{
 		originX = ( std::int64_t )std::floor( originPosition.x );
-		originY = ( std::int64_t )std::ceil( originPosition.y - 1 );
+		originY = ( std::int64_t )std::ceil( originPosition.y );
 
 		rayDistance = std::hypot( ( ( ( long double )originX - x ) + 0.5 ), ( ( ( long double )originY - y ) - 0.5 ) );
 		intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / lightSource.getRadius() ) ) );
@@ -2075,11 +2080,13 @@ void World::emitStaticLightSource( const LightSource& lightSource, std::int64_t 
 	else // if ( dX < 0 && dY < 0 )
 	{
 		originX = ( std::int64_t )std::ceil( originPosition.x - 1 );
-		originY = ( std::int64_t )std::ceil( originPosition.y - 1 );
+		originY = ( std::int64_t )std::ceil( originPosition.y );
 
 		rayDistance = std::hypot( ( ( ( long double )originX - x ) - 0.5 ), ( ( ( long double )originY - y ) - 0.5 ) );
 		intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / lightSource.getRadius() ) ) );
 	}
+
+	intensity = intensity * 2;
 
 	this->addLight( originX, originY, lightSource, intensity );
 
@@ -2220,6 +2227,9 @@ void World::activateCursorLightSource( long double dX, long double dY, std::int6
 		intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / radius ) ) );
 	}
 
+	intensity = intensity * 2;
+
+
 	this->addLight( originX, originY, lightSource, intensity );
 
 	for ( int cardinality = 0; cardinality < 4; cardinality++ )
@@ -2253,8 +2263,8 @@ void World::updateLighting()
 	this->_condUpdateLighting.wait( lockUpdateLighting );
 
 
-	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
-	std::lock_guard<std::mutex> lockLoad( this->_mutexLoadWorldChunks );
+	//std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
+	//std::lock_guard<std::mutex> lockLoad( this->_mutexLoadWorldChunks );
 
 	this->resetLighting();
 	this->emitStaticLightSources();

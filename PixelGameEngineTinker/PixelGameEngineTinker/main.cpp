@@ -28,7 +28,7 @@ public:
 public:
 	World* world = nullptr;
 	Player* player = nullptr;
-	DynamicObject* enemy = nullptr;
+	DynamicObject* enemy1 = nullptr;
 	DynamicObject* enemy2 = nullptr;
 	DynamicObject* enemy3 = nullptr;
 	Camera* camera = nullptr;
@@ -292,9 +292,11 @@ public:
 
 		if ( GetKey( olc::Key::B ).bPressed || GetKey( olc::Key::B ).bHeld )
 		{
-			std::cout << (int)world->getTile( tileIndex.x, tileIndex.y )->getBorder( TileBorder::North ) << std::endl;
+			//std::cout << (int)world->getTile( tileIndex.x, tileIndex.y )->getBorder( TileBorder::North ) << std::endl;
+			std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getId() << std::endl;
 			//world->insertLightTile( tileIndex.x, tileIndex.y, r, g, b, 255, 20 );
 		}
+
 
 
 		if ( GetKey( olc::Key::NP7 ).bPressed )
@@ -353,59 +355,68 @@ public:
 
 
 
+		/*
+		bool smartZombieCommands1[( std::size_t )ZombieCommand::count];
+		smartZombieCommands1[( std::size_t )Command::GoRight] = ( this->enemy1->getAABB().getCenter().x < this->player->getCharacter().getAABB().getCenter().x ) && ( this->player->getCharacter().getAABB().getCenter().x - this->enemy1->getAABB().getCenter().x > this->player->getCharacter().getAABB().getHalfSizeX() / 2 );
+		smartZombieCommands1[( std::size_t )Command::GoLeft] = ( this->enemy1->getAABB().getCenter().x > this->player->getCharacter().getAABB().getCenter().x ) && (  this->enemy1->getAABB().getCenter().x - this->player->getCharacter().getAABB().getCenter().x > this->player->getCharacter().getAABB().getHalfSizeX() / 2 );
+		smartZombieCommands1[( std::size_t )Command::Jump] = ( this->enemy1->getPushingLeft() || this->enemy1->getPushingRight() ) || ( ( this->enemy1->getAABB().getCenter().y + this->enemy1->getAABB().getHalfSizeY() ) > ( this->player->getCharacter().getAABB().getCenter().y + this->player->getCharacter().getAABB().getHalfSizeY() ) );
+		//smartZombieCommands1[( std::size_t )Command::Jump] = ( this->enemy1->getPushingLeft() || this->enemy1->getPushingRight() ) && ( this->enemy1->getAABB().getCenter().y > this->player->getCharacter().getAABB().getCenter().y );
+		//smartZombieCommands1[( std::size_t )Command::Jump] = ( this->enemy1->getAABB().getCenter().y > this->player->getCharacter().getAABB().getCenter().y );
+		smartZombieCommands1[( std::size_t )Command::Drop] = ( this->enemy1->getAABB().getCenter().y < this->player->getCharacter().getAABB().getCenter().y );
 
-		bool zombieCommands[( std::size_t )ZombieCommand::count];
 
-		zombieCommands[( std::size_t )Command::GoRight] = false;
-		zombieCommands[( std::size_t )Command::GoLeft] = false;
-		zombieCommands[( std::size_t )Command::Jump] = true;
-		zombieCommands[( std::size_t )Command::Drop] = false;
+		bool smartZombieCommands2[( std::size_t )ZombieCommand::count];
+		smartZombieCommands2[( std::size_t )Command::GoRight] = ( this->enemy2->getAABB().getCenter().x < this->player->getCharacter().getAABB().getCenter().x ) && ( this->player->getCharacter().getAABB().getCenter().x - this->enemy1->getAABB().getCenter().x > this->player->getCharacter().getAABB().getHalfSizeX() / 2 );
+		smartZombieCommands2[( std::size_t )Command::GoLeft] = ( this->enemy2->getAABB().getCenter().x > this->player->getCharacter().getAABB().getCenter().x ) && ( this->enemy2->getAABB().getCenter().x - this->player->getCharacter().getAABB().getCenter().x > this->player->getCharacter().getAABB().getHalfSizeX() / 2 );
+		smartZombieCommands2[( std::size_t )Command::Jump] = ( this->enemy2->getPushingLeft() || this->enemy2->getPushingRight() ) || ( ( this->enemy2->getAABB().getCenter().y + this->enemy2->getAABB().getHalfSizeY() ) > ( this->player->getCharacter().getAABB().getCenter().y + this->player->getCharacter().getAABB().getHalfSizeY() ) );
+		//smartZombieCommands2[( std::size_t )Command::Jump] = ( this->enemy2->getAABB().getCenter().y > this->player->getCharacter().getAABB().getCenter().y );
+		smartZombieCommands2[( std::size_t )Command::Drop] = ( this->enemy2->getAABB().getCenter().y < this->player->getCharacter().getAABB().getCenter().y );
 
-		this->enemy->update( fElapsedTime, zombieCommands );
-		this->enemy2->update( fElapsedTime, zombieCommands );
-		this->enemy3->update( fElapsedTime, zombieCommands );
 
-		//this->enemy->updateStaticPhysics( this->world, fElapsedTime );
-		// std::cout << this->enemy->getAABB().getCenter().x << ", " << this->enemy->getAABB().getCenter().y << std::endl;
+		bool smartZombieCommands3[( std::size_t )ZombieCommand::count];
+		smartZombieCommands3[( std::size_t )Command::GoRight] = ( this->enemy3->getAABB().getCenter().x < this->player->getCharacter().getAABB().getCenter().x ) && ( this->player->getCharacter().getAABB().getCenter().x - this->enemy1->getAABB().getCenter().x > this->player->getCharacter().getAABB().getHalfSizeX() / 2 );
+		smartZombieCommands3[( std::size_t )Command::GoLeft] = ( this->enemy3->getAABB().getCenter().x > this->player->getCharacter().getAABB().getCenter().x ) && ( this->enemy3->getAABB().getCenter().x - this->player->getCharacter().getAABB().getCenter().x > this->player->getCharacter().getAABB().getHalfSizeX() / 2 );
+		smartZombieCommands3[( std::size_t )Command::Jump] = ( this->enemy3->getPushingLeft() || this->enemy3->getPushingRight() ) || ( ( this->enemy3->getAABB().getCenter().y + this->enemy3->getAABB().getHalfSizeY() ) > ( this->player->getCharacter().getAABB().getCenter().y + this->player->getCharacter().getAABB().getHalfSizeY() ) );
+		//smartZombieCommands3[( std::size_t )Command::Jump] = ( this->enemy3->getAABB().getCenter().y > this->player->getCharacter().getAABB().getCenter().y );
+		smartZombieCommands3[( std::size_t )Command::Drop] = ( this->enemy3->getAABB().getCenter().y < this->player->getCharacter().getAABB().getCenter().y );
+
+		this->enemy1->update( fElapsedTime, smartZombieCommands1 );
+		this->enemy2->update( fElapsedTime, smartZombieCommands2 );
+		this->enemy3->update( fElapsedTime, smartZombieCommands3 );
+		*/
+
 
 
 
 
 		// Collision Detection
 		this->world->getSpatialPartition().updateSpaces( &this->player->getCharacter() );
-		this->world->getSpatialPartition().updateSpaces( this->enemy );
-		this->world->getSpatialPartition().updateSpaces( this->enemy2 );
-		this->world->getSpatialPartition().updateSpaces( this->enemy3 );
+		//this->world->getSpatialPartition().updateSpaces( this->enemy1 );
+		//this->world->getSpatialPartition().updateSpaces( this->enemy2 );
+		//this->world->getSpatialPartition().updateSpaces( this->enemy3 );
 
 
 		this->world->getSpatialPartition().checkCollisions();
 
 
 		this->player->getCharacter().updateDynamicPhysics( this->world, fElapsedTime );
-		this->enemy->updateDynamicPhysics( this->world, fElapsedTime );
-		this->enemy2->updateDynamicPhysics( this->world, fElapsedTime );
-		this->enemy3->updateDynamicPhysics( this->world, fElapsedTime );
+		//this->enemy1->updateDynamicPhysics( this->world, fElapsedTime );
+		//this->enemy2->updateDynamicPhysics( this->world, fElapsedTime );
+		//this->enemy3->updateDynamicPhysics( this->world, fElapsedTime );
 
 
 		// Camera
-		//camera->setPosition( this->player->getCharacter().getAABB().getCenter().x - 32/2, this->player->getCharacter().getAABB().getCenter().y - 32/2 );
+		camera->setPosition( this->player->getCharacter().getAABB().getCenter().x - 32/2, this->player->getCharacter().getAABB().getCenter().y - 32/2 );
 
 
 		// Render
 		this->camera->renderPlayer( *player );
-		this->camera->renderDynamicObject( *enemy );
-		this->camera->renderDynamicObject( *enemy2 );
-		this->camera->renderDynamicObject( *enemy3 );
+		//this->camera->renderDynamicObject( *enemy1 );
+		//this->camera->renderDynamicObject( *enemy2 );
+		//this->camera->renderDynamicObject( *enemy3 );
 
 		this->world->render();
 
-	
-		/*
-		if ( GetKey( olc::Key::Q ).bPressed || GetKey( olc::Key::Q ).bHeld )
-		{
-			camera->setPosition( this->player->getCharacter().getAABB().getCenter().x, this->player->getCharacter().getAABB().getCenter().y );
-		}
-		*/
 
 		// DEBUG
 		drawTileIndexString( tileIndex );
@@ -427,17 +438,17 @@ public:
 
 	void createWorld()
 	{
-		std::int64_t seed = 4364566254;
+		std::int64_t seed = 35346236;
 
 		TerraneanHeightMap terraneanHeightMap(
 			seed, 501125321,
-			7, 1024 * 2
+			7, 1024 * 3
 		);
 
 
 		SubterraneanHeightMap subterraneanHeightMap(
 			seed, 7765867141,
-			7, 1024 * 2 // 9, 1024*2
+			7, 1024 * 3 // 9, 1024*2
 		);
 
 		TemperatureMap temperatureMap(
@@ -491,7 +502,7 @@ public:
 			this->world);
 			*/
 		this->camera = new Camera(
-			BoundingBox<long double>( 2624.0f, -448.0f, Settings::Camera::FOCAL_POINT_CELL_WIDTH, Settings::Camera::FOCAL_POINT_CELL_HEIGHT ),
+			BoundingBox<long double>( Settings::Player::Character::DEFAULT_CENTER_X, Settings::Player::Character::DEFAULT_CENTER_Y, Settings::Camera::FOCAL_POINT_CELL_WIDTH, Settings::Camera::FOCAL_POINT_CELL_HEIGHT ),
 			BoundingBox<long double>( 0.0f, 0.0f, Settings::Camera::VIEW_CELL_WIDTH, Settings::Camera::VIEW_CELL_HEIGHT ),
 			1.0f, 1.0f,
 			this->world );
@@ -524,23 +535,23 @@ public:
 
 	void createEnemy()
 	{
-		this->enemy = new Zombie(
+		this->enemy1 = new Zombie(
 			olc::v2d_generic<long double>{ Settings::Player::Character::DEFAULT_CENTER_X, Settings::Player::Character::DEFAULT_CENTER_Y },
-			olc::vf2d{ Settings::Player::Character::DEFAULT_HALF_SIZE_X, Settings::Player::Character::DEFAULT_HALF_SIZE_Y },
+			olc::vf2d{ Settings::Player::Character::DEFAULT_HALF_SIZE_X*1.5, Settings::Player::Character::DEFAULT_HALF_SIZE_Y*0.5 },
 			olc::vf2d{ Settings::Player::Character::DEFAULT_SCALE_X, Settings::Player::Character::DEFAULT_SCALE_Y },
 			ZombieState::Stand,
-			10.0f,
-			25.0f,
+			8.0f,
+			15.0f,
 			this->world
 		);
 
 		this->enemy2 = new Zombie(
 			olc::v2d_generic<long double>{ Settings::Player::Character::DEFAULT_CENTER_X - 1, Settings::Player::Character::DEFAULT_CENTER_Y },
-			olc::vf2d{ Settings::Player::Character::DEFAULT_HALF_SIZE_X, Settings::Player::Character::DEFAULT_HALF_SIZE_Y },
+			olc::vf2d{ Settings::Player::Character::DEFAULT_HALF_SIZE_X*0.5, Settings::Player::Character::DEFAULT_HALF_SIZE_Y*0.75 },
 			olc::vf2d{ Settings::Player::Character::DEFAULT_SCALE_X, Settings::Player::Character::DEFAULT_SCALE_Y },
 			ZombieState::Stand,
-			10.0f,
-			25.0f,
+			9.0f,
+			17.5f,
 			this->world
 		);
 
@@ -549,8 +560,8 @@ public:
 			olc::vf2d{ Settings::Player::Character::DEFAULT_HALF_SIZE_X, Settings::Player::Character::DEFAULT_HALF_SIZE_Y },
 			olc::vf2d{ Settings::Player::Character::DEFAULT_SCALE_X, Settings::Player::Character::DEFAULT_SCALE_Y },
 			ZombieState::Stand,
-			10.0f,
-			25.0f,
+			7.5f,
+			20.0f,
 			this->world
 		);
 

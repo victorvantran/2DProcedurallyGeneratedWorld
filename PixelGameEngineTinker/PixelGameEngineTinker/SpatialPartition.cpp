@@ -154,7 +154,6 @@ void SpatialPartition::checkCollisions()
 					// [!] Optimization is to use a dictionary instead of a vector for DynamicObject._allCollisions in order to search in O(1) time
 					if ( object1->getAABB().overlapsSigned( object2->getAABB(), overlap ) && !object1->hasCollisionDataFor( object2 ) )
 					{
-						std::cout << "OVERLAP DETECTED" << std::endl;
 						// If overlap is detected, need to add collision data to both objects
 						object1->getAllCollisions().push_back( CollisionData(
 							object2,

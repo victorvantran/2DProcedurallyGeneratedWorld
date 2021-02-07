@@ -189,6 +189,9 @@
     <ClInclude Include="Zombie.h">
       <Filter>Header Files\NPCs</Filter>
     </ClInclude>
+    <ClInclude Include="PathFinder.h">
+      <Filter>Header Files\Physics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cell.cpp">

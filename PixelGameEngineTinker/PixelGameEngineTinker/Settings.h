@@ -134,15 +134,15 @@ public:
 
 		struct Character
 		{
-			static constexpr long double DEFAULT_CENTER_X = 2624.0;// 0.0f;
-			static constexpr long double DEFAULT_CENTER_Y = -448.0; // 0.0f;
+			static constexpr long double DEFAULT_CENTER_X = 0.0;// 0.0f;
+			static constexpr long double DEFAULT_CENTER_Y = -1536.0; // 0.0f;
 			static constexpr float DEFAULT_HALF_SIZE_X = 0.75f;
 			static constexpr float DEFAULT_HALF_SIZE_Y = 1.5f;
 			static constexpr float DEFAULT_SCALE_X = 1.0f;
 			static constexpr float DEFAULT_SCALE_Y = 1.0f;
 
-			static constexpr float DEFAULT_RUN_SPEED = 10.0f;
-			static constexpr float DEFAULT_JUMP_SPEED = 25.0f;
+			static constexpr float DEFAULT_RUN_SPEED = 75.0f; //10.0f;
+			static constexpr float DEFAULT_JUMP_SPEED = 50.0f; // 25.0f;
 			static constexpr float DEFAULT_MIN_JUMP_RATIO = 0.5f;
 
 

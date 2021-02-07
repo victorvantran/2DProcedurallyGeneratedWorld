@@ -277,7 +277,7 @@ void WorldChunk::insertMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t
 void WorldChunk::insertTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
 	this->insertLightSourceTile( TileIdentity::Torch, TileType::Empty, false,
-		255, 255, 255, 255, 15,
+		255, 255, 255, 255, 20,
 		x, y, width, height );
 
 	/*

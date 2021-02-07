@@ -61,6 +61,9 @@ void Camera::worldToScreen( long double cellX, long double cellY, std::int64_t& 
 void Camera::renderWorld() const // [!] leave to rendering to world
 {
 	pge->Clear( olc::BLACK );
+	//pge->Clear( olc::Pixel( 68, 142, 228, 255 ) );
+	//pge->Clear( olc::Pixel( 255, 255 ,255, 255 ) );
+	//pge->Clear( olc::DARK_CYAN );
 
 	WorldChunk* worldChunks = this->_world->getWorldChunks();
 	int numWorldChunks = this->_world->getNumWorldChunks();
@@ -91,7 +94,7 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 	olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
 	olc::v2d_generic<std::int64_t> size = olc::v2d_generic<std::int64_t>{ ( int )( chunkSize * ( this->_zoomX * tileSize ) ), ( int )( chunkSize * ( this->_zoomY * tileSize ) ) };
 
-	
+	/*
 	pge->DrawRect(
 		startPos,
 		size,
@@ -103,7 +106,7 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 		std::to_string( worldChunk.getRelativeChunkIndex() ),
 		olc::GREEN
 	);
-	
+	*/
 	
 	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas, worldChunk.getLightRenders() );
 	this->renderLightRenders( worldChunk.getLightRenders()[0] );
@@ -159,10 +162,10 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas,
 
 			pge->DrawPartialDecal(
 				startPos,
-				olc::v2d_generic<long double>{ this->_zoomX * tileSize, this->_zoomY * tileSize } *scale,
+				olc::v2d_generic<long double>{ this->_zoomX * tileSize, this->_zoomY * tileSize } * scale,
 				tileDecal,
 				olc::vf2d{ 0, Settings::Camera::CONSOLIDATED_TILE_OFFSET },
-				olc::vf2d{ 1, 1 } *( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE * scale )
+				olc::vf2d{ 1, 1 } * ( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE * scale )
 			);
 		}
 
@@ -446,7 +449,7 @@ void Camera::renderPlayer( Player& player ) const
 			( long double )this->_zoomX * ( ( long double )aabb.getHalfSizeX() * 2 )* Settings::Screen::CELL_PIXEL_SIZE,
 			( long double )this->_zoomY * ( ( long double )aabb.getHalfSizeY() * 2 ) * Settings::Screen::CELL_PIXEL_SIZE
 		},
-		olc::DARK_CYAN
+		olc::Pixel( 255, 255, 51, 255 )
 	);
 
 	return;

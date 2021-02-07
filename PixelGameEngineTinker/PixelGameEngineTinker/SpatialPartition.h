@@ -64,7 +64,6 @@ public:
 		// Adds object to a particular paritioned space
 		std::vector<DynamicObject*>& space = this->_objectsInSpace[spaceIndex];
 		object->addToSpaces( spaceIndex, space.size() );
-		std::cout << "SPACE SIZE: " << space.size() << std::endl;
 		space.push_back( object );
 	}
 
@@ -192,23 +191,15 @@ public:
 		// Removes object to a particular paritioned space ( swapping with last object in vector )
 		std::vector<DynamicObject*>& objectsInSpace = this->_objectsInSpace[spaceIndex];
 		// Base Case 1
-		if ( objectsInSpace.size() == 0 )
-		{
-			return;
-		}
-
-		std::cout << "TWO GONE" << std::endl;
+		if ( objectsInSpace.size() == 0 ) return;
+		
 
 		// Swap with last object to remove
 		DynamicObject* lastObject = objectsInSpace[objectsInSpace.size() - 1];
-		// if ( lastObject == object ) return;
 		objectsInSpace[objectsInSpace.size() - 1] = object;
 		objectsInSpace[objectIndexInSpace] = lastObject;
 
 		// Update the swapped object's areas
-
-
-
 		std::vector<std::pair<std::int64_t, std::size_t>>& tempSpaces = lastObject->getSpaces();
 
 		for ( std::size_t i = 0; i < tempSpaces.size(); i++ )

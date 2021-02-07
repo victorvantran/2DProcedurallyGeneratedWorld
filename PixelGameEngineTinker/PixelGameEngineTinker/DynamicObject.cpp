@@ -176,6 +176,29 @@ void DynamicObject::addToSpaces( std::int64_t spaceIndex, std::size_t id )
 }
 
 
+bool DynamicObject::getPushingLeft() const
+{
+	return this->_pushingLeft;
+}
+
+
+bool DynamicObject::getPushingRight() const
+{
+	return this->_pushingRight;
+}
+
+
+bool DynamicObject::getPushingUp() const
+{
+	return this->_pushingUp;
+}
+
+
+bool DynamicObject::getPushingDown() const
+{
+	return this->_pushingDown;
+}
+
 
 // Methods
 bool DynamicObject::isCollidingDown( const World* world, long double& worldGroundY, bool& onOneWayPlatform )
@@ -579,9 +602,6 @@ void DynamicObject::updatePhysicsResponse()
 		float offsetX = overlap.x * speedRatioX;
 		float offsetY = overlap.y * speedRatioY;
 
-		std::cout << "OVERLAP X: " << overlap.x << std::endl;
-		std::cout << "OVERLAP Y: " << overlap.y << std::endl;
-
 		// Moving out of the overlap in three cases: horizontally, vertically, or diagonally
 		bool overlappedLastFrameX = std::abs( collisionData.prevPosition1.x - collisionData.prevPosition2.x ) < this->_aabb.getHalfSizeX() + otherObject->getAABB().getHalfSizeX();
 		bool overlappedLastFrameY = std::abs( collisionData.prevPosition1.y - collisionData.prevPosition2.y ) < this->_aabb.getHalfSizeY() + otherObject->getAABB().getHalfSizeY();
@@ -596,13 +616,13 @@ void DynamicObject::updatePhysicsResponse()
 
 			if ( overlap.x < 0.0 )
 			{
-				this->_pushingRightObject = true;
-				this->_currVelocity.x = std::min( this->_currVelocity.x, 0.0f );
+				//this->_pushingRightObject = true;
+				//this->_currVelocity.x = std::min( this->_currVelocity.x, 0.0f );
 			}
 			else
 			{
-				this->_pushingLeftObject = true;
-				this->_currVelocity.x = std::max( this->_currVelocity.x, 0.0f );
+				//this->_pushingLeftObject = true;
+				//this->_currVelocity.x = std::max( this->_currVelocity.x, 0.0f );
 			}
 		}
 		else
@@ -610,20 +630,18 @@ void DynamicObject::updatePhysicsResponse()
 		//	( overlappedLastFrameX && !overlappedLastFrameY && std::abs( overlap.x ) >= std::abs( overlap.y ) )
 		//	)
 		{
-			std::cout << "X: " << overlappedLastFrameX << std::endl;
-			std::cout << "Y: " << overlappedLastFrameY << std::endl;
-			//this->_currPosition.y += offsetY;
+			// this->_currPosition.y += offsetY;
 			offsetSum.y += offsetY;
 
 			if ( overlap.y < 0.0 )
 			{
-				this->_pushingBottomObject = true;
-				this->_currVelocity.y = std::max( this->_currVelocity.y, 0.0f );
+				//this->_pushingBottomObject = true;
+				//this->_currVelocity.y = std::max( this->_currVelocity.y, 0.0f );
 			}
 			else
 			{
-				this->_pushingTopObject = true;
-				this->_currVelocity.y = std::min( this->_currVelocity.y, 0.0f );
+				//this->_pushingTopObject = true;
+				//this->_currVelocity.y = std::min( this->_currVelocity.y, 0.0f );
 			}
 		}
 	}

@@ -83,6 +83,10 @@ public:
 	olc::v2d_generic<long double> getCurrPosition() const;
 	olc::vf2d getPrevVelocity() const;
 	olc::vf2d getCurrVelocity() const;
+	bool getPushingLeft() const;
+	bool getPushingRight() const;
+	bool getPushingUp() const;
+	bool getPushingDown() const;
 
 	// Setters
 	void setScale( const olc::vf2d& scale );
