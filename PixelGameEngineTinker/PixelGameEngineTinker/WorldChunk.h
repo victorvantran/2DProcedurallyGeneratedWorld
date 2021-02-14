@@ -62,14 +62,16 @@ public:
 	// Insertion
 	typedef void ( WorldChunk::* funcType )( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 
-	void insertTiles( TileIdentity tileId, TileType tileType, bool opaque,
+	void insertTiles( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t tileBlobMapIndex,
 		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertTileRenders( TileIdentity tileId, std::uint8_t bordersDecalIndex, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertTile( TileIdentity tileId, TileType tileType, bool opaque,
+	void insertTileRenders( const Tile& tile, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertTileRenders( TileIdentity tileId, bool consolidatable, std::uint8_t bordersDecalIndex, std::uint8_t tileBlobMapIndex,
+		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertTile( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t tileBlobMapIndex,
 		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertLightSources( TileIdentity tileId, std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a, std::int16_t radius,
 		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertLightSourceTile( TileIdentity tileId, TileType tileType, bool opaque,
+	void insertLightSourceTile( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t tileBlobMapIndex,
 		std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a, std::int16_t radius, 
 		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 

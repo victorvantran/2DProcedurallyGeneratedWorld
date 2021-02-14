@@ -27,10 +27,10 @@ void QuadTree<TileRender>::divide()
 	std::uint16_t subWidth = this->_quadTreeBounds.getWidth() / 2;
 	std::uint16_t subHeight = this->_quadTreeBounds.getHeight() / 2;
 
-	this->_cell[0] = TileRender( TileIdentity::Void, 0, BoundingBox<std::int64_t>( x, y, subWidth, subHeight ) );
-	this->_cell[1] = TileRender( TileIdentity::Void, 0, BoundingBox<std::int64_t>( x + subWidth, y, subWidth, subHeight ) );
-	this->_cell[2] = TileRender( TileIdentity::Void, 0, BoundingBox<std::int64_t>( x, y + subHeight, subWidth, subHeight ) );
-	this->_cell[3] = TileRender( TileIdentity::Void, 0, BoundingBox<std::int64_t>( x + subWidth, y + subHeight, subWidth, subHeight ) );
+	this->_cell[0] = TileRender( TileIdentity::Void, false, 0, 0, BoundingBox<std::int64_t>( x, y, subWidth, subHeight ) );
+	this->_cell[1] = TileRender( TileIdentity::Void, false, 0, 0, BoundingBox<std::int64_t>( x + subWidth, y, subWidth, subHeight ) );
+	this->_cell[2] = TileRender( TileIdentity::Void, false, 0, 0, BoundingBox<std::int64_t>( x, y + subHeight, subWidth, subHeight ) );
+	this->_cell[3] = TileRender( TileIdentity::Void, false, 0, 0, BoundingBox<std::int64_t>( x + subWidth, y + subHeight, subWidth, subHeight ) );
 
 	this->_divided = true;
 
@@ -87,6 +87,7 @@ void QuadTree<TileRender>::consolidate( int level )
 	// Height check not necessary if our bounding box is a square, but for formality
 
 	if ( _cell[0].getId() != TileIdentity::Void &&
+		_cell[0].getConsolidatable() &&
 		_cell[0].exists() &&
 		_cell[0].getWidth() == ( ( 2 << ( this->_level ) ) / 2 ) &&
 		_cell[0].getHeight() == ( ( 2 << ( this->_level ) ) / 2 ) &&
@@ -102,10 +103,12 @@ void QuadTree<TileRender>::consolidate( int level )
 		int width = _cell[0].getWidth() * 2;
 		int height = _cell[0].getHeight() * 2;
 		TileIdentity id = _cell[0].getId();
+		bool consolidatable = _cell[0].getConsolidatable();
 		std::uint8_t bordersDecalIndex = _cell[0].getBordersDecalIndex();
+		std::uint8_t tileBlobMapIndex = _cell[0].getTileBlobMapIndex();
 		bool exist = _cell[0].exists();
 
-		TileRender renderCell = TileRender( id, bordersDecalIndex, BoundingBox<std::int64_t>( posX, posY, width, height ) );
+		TileRender renderCell = TileRender( id, consolidatable, bordersDecalIndex, tileBlobMapIndex, BoundingBox<std::int64_t>( posX, posY, width, height ) );
 
 		this->_consolidated = true;
 		this->_referenceNodes[this->_parentIndex].insert( renderCell );
@@ -177,7 +180,8 @@ void QuadTree<TileRender>::insert( const TileRender& aRenderCell )
 			return;
 		}
 
-		this->insert( TileRender( aRenderCell.getId(), aRenderCell.getBordersDecalIndex(), BoundingBox<std::int64_t>( trimX, trimY, trimWidth, trimHeight ) ) );
+		this->insert( TileRender( aRenderCell.getId(), aRenderCell.getConsolidatable(), aRenderCell.getBordersDecalIndex(), aRenderCell.getTileBlobMapIndex(),
+			BoundingBox<std::int64_t>( trimX, trimY, trimWidth, trimHeight ) ) );
 		return;
 	}
 
@@ -187,7 +191,9 @@ void QuadTree<TileRender>::insert( const TileRender& aRenderCell )
 		int x = aBoundingBox.getX();
 		int y = aBoundingBox.getY();
 		TileIdentity id = aRenderCell.getId();
+		bool consolidatable = aRenderCell.getConsolidatable();
 		std::uint8_t bordersDecalIndex = aRenderCell.getBordersDecalIndex();
+		std::uint8_t tileBlobMapIndex = aRenderCell.getTileBlobMapIndex();
 		bool exist = aRenderCell.exists();
 
 		int subWidth1 = aBoundingBox.getWidth() / 2;
@@ -195,10 +201,10 @@ void QuadTree<TileRender>::insert( const TileRender& aRenderCell )
 		int subWidth2 = aBoundingBox.getWidth() - subWidth1;
 		int subHeight2 = aBoundingBox.getHeight() - subHeight1;
 
-		const TileRender aSubRenderCell0 = TileRender( id, bordersDecalIndex, BoundingBox<std::int64_t>( x, y, subWidth1, subHeight1 ) );
-		const TileRender aSubRenderCell1 = TileRender( id, bordersDecalIndex, BoundingBox<std::int64_t>( x + subWidth1, y, subWidth2, subHeight1 ) );
-		const TileRender aSubRenderCell2 = TileRender( id, bordersDecalIndex, BoundingBox<std::int64_t>( x, y + subHeight1, subWidth1, subHeight2 ) );
-		const TileRender aSubRenderCell3 = TileRender( id, bordersDecalIndex, BoundingBox<std::int64_t>( x + subWidth1, y + subHeight1, subWidth2, subHeight2 ) );
+		const TileRender aSubRenderCell0 = TileRender( id, consolidatable, bordersDecalIndex, tileBlobMapIndex, BoundingBox<std::int64_t>( x, y, subWidth1, subHeight1 ) );
+		const TileRender aSubRenderCell1 = TileRender( id, consolidatable, bordersDecalIndex, tileBlobMapIndex, BoundingBox<std::int64_t>( x + subWidth1, y, subWidth2, subHeight1 ) );
+		const TileRender aSubRenderCell2 = TileRender( id, consolidatable, bordersDecalIndex, tileBlobMapIndex, BoundingBox<std::int64_t>( x, y + subHeight1, subWidth1, subHeight2 ) );
+		const TileRender aSubRenderCell3 = TileRender( id, consolidatable, bordersDecalIndex, tileBlobMapIndex, BoundingBox<std::int64_t>( x + subWidth1, y + subHeight1, subWidth2, subHeight2 ) );
 
 		this->insert( aSubRenderCell0 );
 		this->insert( aSubRenderCell1 );
@@ -227,7 +233,9 @@ void QuadTree<TileRender>::insert( const TileRender& aRenderCell )
 				int localCellIndexY = this->_cell[i].getBounds().getY() - this->_referenceNodes[0].getBounds().getY();
 
 				this->_cell[i].setId( aRenderCell.getId() );
-				this->_cell[i].setBordersDecalIndex( aRenderCell.getBordersDecalIndex() );
+				this->_cell[i].setConsolidatable( aRenderCell.getConsolidatable() );
+				this->_cell[i].setTileBlobMapIndex( aRenderCell.getTileBlobMapIndex() );
+				this->_cell[i].setBorders( aRenderCell.getBorders() );
 				this->_cellCount += 1;
 			}
 		}
@@ -242,7 +250,9 @@ void QuadTree<TileRender>::insert( const TileRender& aRenderCell )
 			if ( !this->_cell[quadrant].exists() )
 			{
 				this->_cell[quadrant].setId( aRenderCell.getId() );
-				this->_cell[quadrant].setBordersDecalIndex( aRenderCell.getBordersDecalIndex() );
+				this->_cell[quadrant].setConsolidatable( aRenderCell.getConsolidatable() );
+				this->_cell[quadrant].setTileBlobMapIndex( aRenderCell.getTileBlobMapIndex() );
+				this->_cell[quadrant].setBorders( aRenderCell.getBorders() );
 				this->_cellCount += 1;
 			}
 		}
@@ -331,7 +341,9 @@ void QuadTree<TileRender>::remove( const TileRender& rRenderCell )
 		int x = rBoundingBox.getX();
 		int y = rBoundingBox.getY();
 		TileIdentity id = rRenderCell.getId();
+		bool consolidatable = rRenderCell.getConsolidatable();
 		std::uint8_t bordersDecalIndex = rRenderCell.getBordersDecalIndex();
+		std::uint8_t tileBlobMapIndex = rRenderCell.getTileBlobMapIndex();
 		bool exist = rRenderCell.exists();
 
 		int subWidth1 = rBoundingBox.getWidth() / 2;
@@ -340,10 +352,10 @@ void QuadTree<TileRender>::remove( const TileRender& rRenderCell )
 		int subWidth2 = rBoundingBox.getWidth() - subWidth1;
 		int subHeight2 = rBoundingBox.getHeight() - subHeight1;
 
-		const TileRender rSubRenderCell0 = TileRender( id, bordersDecalIndex, BoundingBox<std::int64_t>( x, y, subWidth1, subHeight1 ) );
-		const TileRender rSubRenderCell1 = TileRender( id, bordersDecalIndex, BoundingBox<std::int64_t>( x + subWidth1, y, subWidth2, subHeight1 ) );
-		const TileRender rSubRenderCell2 = TileRender( id, bordersDecalIndex, BoundingBox<std::int64_t>( x, y + subHeight1, subWidth1, subHeight2 ) );
-		const TileRender rSubRenderCell3 = TileRender( id, bordersDecalIndex, BoundingBox<std::int64_t>( x + subWidth1, y + subHeight1, subWidth2, subHeight2 ) );
+		const TileRender rSubRenderCell0 = TileRender( id, consolidatable, bordersDecalIndex, tileBlobMapIndex, BoundingBox<std::int64_t>( x, y, subWidth1, subHeight1 ) );
+		const TileRender rSubRenderCell1 = TileRender( id, consolidatable, bordersDecalIndex, tileBlobMapIndex, BoundingBox<std::int64_t>( x + subWidth1, y, subWidth2, subHeight1 ) );
+		const TileRender rSubRenderCell2 = TileRender( id, consolidatable, bordersDecalIndex, tileBlobMapIndex, BoundingBox<std::int64_t>( x, y + subHeight1, subWidth1, subHeight2 ) );
+		const TileRender rSubRenderCell3 = TileRender( id, consolidatable, bordersDecalIndex, tileBlobMapIndex, BoundingBox<std::int64_t>( x + subWidth1, y + subHeight1, subWidth2, subHeight2 ) );
 
 		this->remove( rSubRenderCell0 );
 		this->remove( rSubRenderCell1 );

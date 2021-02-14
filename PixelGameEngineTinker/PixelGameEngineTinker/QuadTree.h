@@ -262,6 +262,7 @@ void QuadTree<TRender>::consolidate( int level )
 	// Height check not necessary if our bounding box is a square, but for formality
 
 	if (_cell[0].getId() != /*TileIdentity::Void*/ 0 &&
+		_cell[0].getConsolidatable() &&
 		_cell[0].exists() &&
 		_cell[0].getWidth() == ( ( 2 << ( this->_level ) ) / 2 ) &&
 		_cell[0].getHeight() == ( ( 2 << ( this->_level ) ) / 2 ) &&

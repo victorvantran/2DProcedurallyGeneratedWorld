@@ -42,6 +42,15 @@ public:
 
 
 	TileIdentity tileId = TileIdentity::Stone;
+
+
+
+	//
+	olc::v2d_generic<std::int64_t> topLeftScan;
+	olc::v2d_generic<std::int64_t> bottomRightScan;
+
+
+
 private:
 
 
@@ -193,11 +202,11 @@ public:
 		}
 		else if ( GetKey( olc::Key::K9 ).bPressed )
 		{
-			tileId = TileIdentity::Saltstone;
+			tileId = TileIdentity::MapleLeaves;
 		}
 		else if ( GetKey( olc::Key::K0 ).bPressed )
 		{
-			tileId = TileIdentity::Quartz;
+			tileId = TileIdentity::MapleBark;
 		}
 
 		/*
@@ -260,9 +269,10 @@ public:
 		}
 
 
-		if ( GetKey( olc::Key::O ).bPressed )
+		if ( GetKey( olc::Key::O ).bPressed || GetKey( olc::Key::O ).bHeld )
 		{
-			world->remove( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 5, 5 );
+			world->remove( ( this->world->getTile( tilePositionX, tilePositionY )->getId() ), tileIndex.x, tileIndex.y, 5, 5 );
+			//world->remove( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 5, 5 );
 		}
 
 		if ( GetKey( olc::Key::L ).bPressed )
@@ -271,7 +281,7 @@ public:
 			//const Tile* tile = this->world->getTile( tileIndex.x, tileIndex.y );
 			//std::cout << (int)tile->getType() << std::endl;
 			const Tile* tile = this->world->getTile( tilePositionX, tilePositionY );
-			std::cout << (int)tile->getType() << std::endl;
+			std::cout << (int)tile->getTileBlobMapIndex() << std::endl;
 
 			//std::cout << tileIndex.x << ", " << tileIndex.y << std::endl;
 			//world->insertTorch( tileIndex.x, tileIndex.y, tileId );
@@ -292,9 +302,50 @@ public:
 
 		if ( GetKey( olc::Key::B ).bPressed || GetKey( olc::Key::B ).bHeld )
 		{
+			std::cout << (int)world->getTile( tileIndex.x, tileIndex.y )->getBorders() << std::endl;
 			//std::cout << (int)world->getTile( tileIndex.x, tileIndex.y )->getBorder( TileBorder::North ) << std::endl;
-			std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getId() << std::endl;
+			//std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getId() << std::endl;
 			//world->insertLightTile( tileIndex.x, tileIndex.y, r, g, b, 255, 20 );
+		}
+
+
+		if ( GetKey( olc::Key::N ).bPressed )
+		{
+			this->topLeftScan = olc::v2d_generic<std::int64_t>{ tileIndex.x, tileIndex.y };
+			std::cout << "( " << this->topLeftScan.x << ", " << this->topLeftScan.y << " )" << std::endl;
+		}
+
+		if ( GetKey( olc::Key::M ).bPressed )
+		{
+			this->bottomRightScan = olc::v2d_generic<std::int64_t>{ tileIndex.x, tileIndex.y };
+			std::cout << "( " << this->bottomRightScan.x << ", " << this->bottomRightScan.y << " )" << std::endl;
+		}
+
+
+		if ( GetKey( olc::Key::B ).bPressed )
+		{
+			// std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getBorders() << std::endl;
+
+			/*
+			for ( int row = 0; row < 32; row++ )
+			{
+				for ( int col = 0; col < 32; col++ )
+				{
+					std::cout << "[" << ( int )world->getTile( tileIndex.x + col, tileIndex.y + row )->getId() << "]" << ", ";
+				}
+				std::cout << std::endl;
+			}
+			*/
+
+			for ( std::int64_t y = this->topLeftScan.y; y <= bottomRightScan.y; y++ )
+			{
+				for ( std::int64_t x = this->topLeftScan.x; x <= bottomRightScan.x; x++ )
+				{
+					std::cout << "[" << ( int )world->getTile( x, y )->getId() << "]" << ", ";
+				}
+				std::cout << std::endl;
+			}
+
 		}
 
 
@@ -430,7 +481,7 @@ public:
 		);
 		*/
 
-		if ( GetKey( olc::Key::M ).bPressed ) world->DEBUG_PRINT_TILE_SPRITES();
+		if ( GetKey( olc::Key::PERIOD ).bPressed ) world->DEBUG_PRINT_TILE_SPRITES();
 		
 		return true;
 	}
@@ -442,7 +493,7 @@ public:
 
 		TerraneanHeightMap terraneanHeightMap(
 			seed, 501125321,
-			7, 1024 * 3
+			12, 1024 * 3
 		);
 
 

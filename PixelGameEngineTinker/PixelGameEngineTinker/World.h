@@ -236,6 +236,7 @@ public:
 	// Geography
 	const Tile* getTile( long double dX, long double dY ) const;
 	const Tile* getTile( std::int64_t x, std::int64_t y ) const;
+
 	void calculateTileRenders();
 	void updateGeographyTask();
 	void updateGeography();
@@ -247,6 +248,16 @@ public:
 	void addLight( std::int64_t x, std::int64_t y, const LightSource& lightSource, long double intensity );
 	void resetLighting();
 	void calculateLightRenders();
+
+
+
+
+	void calculateLightRenders0();
+	void calculateLightRenders1();
+
+
+
+
 
 
 
