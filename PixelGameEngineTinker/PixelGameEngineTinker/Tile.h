@@ -6,8 +6,8 @@
 
 
 
-
-enum class TileIdentity // uint64_t MAX
+/*
+enum class TileIdentity
 {
 
 	Void = 0,
@@ -55,49 +55,81 @@ enum class TileIdentity // uint64_t MAX
 	AluminiumOre = 36,
 
 
-	/*
-	Oak_Wood = 10,
-	Birch_Wood = 11,
-	Aspen_Wood = 12,
-	Redwood_Wood = 13,
-	Maple_Wood = 14,
-	Evergreen_Wood = 15,
-	*/
+	MapleLog = 37,
+	CrimsonMapleLeaves = 38,
+	PumpkinMapleLeaves = 39,
+	RajahMapleLeaves = 40,
+
+	
+	//Oak_Wood = 10,
+	//Birch_Wood = 11,
+	//Aspen_Wood = 12,
+	//Redwood_Wood = 13,
+	//Maple_Wood = 14,
+	//Evergreen_Wood = 15,
+	
 
 	
 	count
 
-
-	/*
-	Void = 0,
-	Water = 1,
-	Stone = 2,
-	Dirt = 3,
-	Torch = 4,
-
-
-	RedTorch = 5,
-	GreenTorch = 6,
-	BlueTorth = 7,
-
-	Sand = 8,
-	Gravel = 9,
-	Clay = 10,
+};
+*/
 
 
 
 
-	Oak_Wood,
-	Birch_Wood,
-	Aspen_Wood,
-	Redwood_Wood,
-	Maple_Wood,
-	Evergreen_Wood,
+enum class TileIdentity // uint64_t MAX
+{
+
+	Void,
+	Water,
+	Stone,
+	Dirt,
+	Sand,
+
+	Torch,
+
+	MossDirt,
+	MossStone ,
+	Mull,
+	Mor,
+	LightClay,
+	DarkClay,
+	Gravel,
+	Charcoal,
+	Snow,
+	Permafrost,
+	Podzol,
+	BleachedSand,
+	Shale,
+	IronOxide,
+	AluminiumOxide,
+	Laterite,
+	Aridsol,
+	Entisol,
+	Saltstone,
+	Quartz,
+
+	Alfisol,
+	YellowClay,
+	RedClay,
+
+	Cambisol,
+	Silt,
+
+	IronOre,
+	AluminiumOre,
+
+
+	MapleLog,
+	CrimsonMapleLeaves,
+	PumpkinMapleLeaves,
+	GambogeMapleLeaves,
 
 
 
 	count
-	*/
+
 };
 
 

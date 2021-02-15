@@ -91,7 +91,16 @@ World::World( std::int64_t seed,
 	const BiomeSubstanceMap& biomeSubstanceMap,
 
 	const CaveMap& upperCaveMap,
-	const CaveMap& lowerCaveMap )
+	const CaveMap& lowerCaveMap,
+	const BorealForest& borealForest,
+	const SubtropicalDesert& subtropicalDesert,
+	const TemperateGrassland& temperateGrassland,
+	const TemperateRainforest& temperateRainforest,
+	const TemperateSeasonalForest& temperateSeasonalForest,
+	const TropicalRainforest& tropicalRainforest,
+	const TropicalSeasonalForest& tropicalSeasonalForest,
+	const Tundra& tundra,
+	const Woodland& woodland )
 	: _numChunkWidth( 1 + this->_chunkRadius * 2 ), _numChunkHeight( 1 + this->_chunkRadius * 2 ), _numWorldChunks( this->_numChunkWidth* this->_numChunkHeight ),
 	_focalChunkIndexX( 0 ), _focalChunkIndexY( 0 ),
 	_worldChunks( new WorldChunk[Settings::World::NUM_WORLD_CHUNKS] ),
@@ -107,7 +116,17 @@ World::World( std::int64_t seed,
 	_biomeSubstanceMap( biomeSubstanceMap ),
 
 	_upperCaveMap( upperCaveMap ),
-	_lowerCaveMap( lowerCaveMap )
+	_lowerCaveMap( lowerCaveMap ),
+
+	_borealForest( borealForest ),
+	_subtropicalDesert( subtropicalDesert ),
+	_temperateGrassland( temperateGrassland ),
+	_temperateRainforest( temperateRainforest ),
+	_temperateSeasonalForest( temperateSeasonalForest ),
+	_tropicalRainforest( tropicalRainforest ),
+	_tropicalSeasonalForest( tropicalSeasonalForest ),
+	_tundra( tundra ),
+	_woodland( woodland )
 {
 
 }
@@ -1150,9 +1169,18 @@ const BiomeSubstanceMap& World::getBiomeSubstanceMap() const { return this->_bio
 const CaveMap& World::getUpperCaveMap() const { return this->_upperCaveMap; }
 const CaveMap& World::getLowerCaveMap() const { return this->_lowerCaveMap; }
 
+const BorealForest& World::getBorealForest() const { return this->_borealForest; }
+const SubtropicalDesert& World::getSubtropicalDesert() const { return this->_subtropicalDesert; }
+const TemperateGrassland& World::getTemperateGrassland() const { return this->_temperateGrassland; }
+const TemperateRainforest& World::getTemperateRainforest() const { return this->_temperateRainforest; }
+const TemperateSeasonalForest& World::getTemperateSeasonalForest() const { return this->_temperateSeasonalForest; }
+const TropicalRainforest& World::getTropicalRainforest() const { return this->_tropicalRainforest; }
+const TropicalSeasonalForest& World::getTropicalSeasonalForest() const { return this->_tropicalSeasonalForest; }
+const Tundra& World::getTundra() const { return this->_tundra; }
+const Woodland& World::getWoodland() const { return this->_woodland; }
 
 
-Biome World::getBiome( std::int64_t tileX, std::int64_t tileY ) const
+BiomeIdentity World::getBiomeIdentity( std::int64_t tileX, std::int64_t tileY ) const
 {
 	long double temperaturePerlinValue = this->getTemperatureMap().getPerlinValue( tileX, tileY );
 	long double normTemperaturePerlinValue = this->normalizeHistogram( temperaturePerlinValue );
@@ -1169,7 +1197,7 @@ Biome World::getBiome( std::int64_t tileX, std::int64_t tileY ) const
 
 	if ( normPrecipitationPerlinValue >= line1Val ) {
 		// Tundra
-		return Biome::Tundra;
+		return BiomeIdentity::Tundra;
 	}
 	else if (
 		normPrecipitationPerlinValue <= line1Val &&
@@ -1177,7 +1205,7 @@ Biome World::getBiome( std::int64_t tileX, std::int64_t tileY ) const
 		normPrecipitationPerlinValue >= line3Val )
 	{
 		// Temperate GrassLand / Cold Desert
-		return Biome::TemperateGrassland;
+		return BiomeIdentity::TemperateGrassland;
 	}
 	else if (
 		normPrecipitationPerlinValue <= line1Val &&
@@ -1186,7 +1214,7 @@ Biome World::getBiome( std::int64_t tileX, std::int64_t tileY ) const
 		normPrecipitationPerlinValue >= line3Val )
 	{
 		// Woodland / Shrubland
-		return Biome::Woodland;
+		return BiomeIdentity::Woodland;
 	}
 	else if (
 		normPrecipitationPerlinValue <= line1Val &&
@@ -1194,7 +1222,7 @@ Biome World::getBiome( std::int64_t tileX, std::int64_t tileY ) const
 		normPrecipitationPerlinValue >= line5Val )
 	{
 		// Boreal Forest
-		return Biome::BorealForest;
+		return BiomeIdentity::BorealForest;
 	}
 	else if (
 		normPrecipitationPerlinValue <= line2Val &&
@@ -1203,7 +1231,7 @@ Biome World::getBiome( std::int64_t tileX, std::int64_t tileY ) const
 		normPrecipitationPerlinValue <= line6Val )
 	{
 		// Temperate Seasonal Forest
-		return Biome::TemperateSeasonalForest;
+		return BiomeIdentity::TemperateSeasonalForest;
 	}
 	else if (
 		normPrecipitationPerlinValue <= line2Val &&
@@ -1211,14 +1239,14 @@ Biome World::getBiome( std::int64_t tileX, std::int64_t tileY ) const
 		normPrecipitationPerlinValue >= line6Val )
 	{
 		// Temperate Rain Forest
-		return Biome::TemperateRainforest;
+		return BiomeIdentity::TemperateRainforest;
 	}
 	else if (
 		normPrecipitationPerlinValue <= line3Val &&
 		normPrecipitationPerlinValue <= line4Val )
 	{
 		// Subtropical Desert
-		return Biome::SubtropicalDesert;
+		return BiomeIdentity::SubtropicalDesert;
 	}
 	else if (
 		normPrecipitationPerlinValue <= line3Val &&
@@ -1226,17 +1254,17 @@ Biome World::getBiome( std::int64_t tileX, std::int64_t tileY ) const
 		normPrecipitationPerlinValue <= line6Val )
 	{
 		// Savanna
-		return Biome::TropicalSeasonalForest;
+		return BiomeIdentity::TropicalSeasonalForest;
 	}
 	else if (
 		normPrecipitationPerlinValue <= line3Val &&
 		normPrecipitationPerlinValue >= line6Val )
 	{
-		return Biome::TropicalRainforest;
+		return BiomeIdentity::TropicalRainforest;
 	}
 	else
 	{
-		return Biome::Unknown;
+		return BiomeIdentity::Unknown;
 	}
 }
 
@@ -1246,7 +1274,7 @@ TileIdentity World::getTerraneanSubstance( std::int64_t tileX, std::int64_t tile
 {
 	static const std::int64_t OVERWORLD_HEIGHT = 1536;
 
-	Biome biome = this->getBiome( tileX, tileY );
+	BiomeIdentity biome = this->getBiomeIdentity( tileX, tileY );
 
 	long double terraneanHeightPerlinVal = this->getTerraneanHeightMap().getPerlinValue( tileX );
 	std::int64_t yTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT ) + ( std::int64_t )OVERWORLD_HEIGHT;
@@ -1257,39 +1285,39 @@ TileIdentity World::getTerraneanSubstance( std::int64_t tileX, std::int64_t tile
 	long double biomeSubstanceNormVal = this->normalizeHistogram( biomeSubstancePerlinVal );
 	long double biomeHeightPercentage = ( ySubterranean != yTerranean ) ? ( long double )( ySubterranean - tileY ) / ( long double )( ySubterranean - yTerranean ) : 1.0;
 
-	if ( biome == Biome::TemperateSeasonalForest )
+	if ( biome == BiomeIdentity::TemperateSeasonalForest )
 	{
 		return TemperateSeasonalForest::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
 	}
-	else if ( biome == Biome::TropicalSeasonalForest )
+	else if ( biome == BiomeIdentity::TropicalSeasonalForest )
 	{
 		return TropicalSeasonalForest::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
 	}
-	else if ( biome == Biome::TropicalRainforest )
+	else if ( biome == BiomeIdentity::TropicalRainforest )
 	{
 		return TropicalRainforest::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
 	}
-	else if ( biome == Biome::Woodland )
+	else if ( biome == BiomeIdentity::Woodland )
 	{
 		return Woodland::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
 	}
-	else if ( biome == Biome::TemperateGrassland )
+	else if ( biome == BiomeIdentity::TemperateGrassland )
 	{
 		return TemperateGrassland::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
 	}
-	else if ( biome == Biome::SubtropicalDesert )
+	else if ( biome == BiomeIdentity::SubtropicalDesert )
 	{
 		return SubtropicalDesert::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
 	}
-	else if ( biome == Biome::BorealForest )
+	else if ( biome == BiomeIdentity::BorealForest )
 	{
 		return BorealForest::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
 	}
-	else if ( biome == Biome::TemperateRainforest )
+	else if ( biome == BiomeIdentity::TemperateRainforest )
 	{
 		return TemperateRainforest::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
 	}
-	else if ( biome == Biome::Tundra )
+	else if ( biome == BiomeIdentity::Tundra )
 	{
 		return Tundra::getSubstance( biomeHeightPercentage, biomeSubstanceNormVal );
 	}
@@ -1300,6 +1328,40 @@ TileIdentity World::getTerraneanSubstance( std::int64_t tileX, std::int64_t tile
 }
 
 
+FoliageIdentity World::getFoliage( std::int64_t tileX, BiomeIdentity biomeId, long double temperatureNormalizedValue, long double precipitationNormalizedValue )
+{
+	//long double terraneanHeightPerlinVal = this->getTerraneanHeightMap().getPerlinValue( tileX );
+	//std::int64_t yTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )this->_height ) + ( std::int64_t )this->_height;
+
+	switch ( biomeId )
+	{
+	case BiomeIdentity::BorealForest:
+		return this->_borealForest.getFoliage( tileX );
+	case BiomeIdentity::SubtropicalDesert:
+		return this->_subtropicalDesert.getFoliage( tileX );
+	case BiomeIdentity::TemperateGrassland:
+		return this->_temperateGrassland.getFoliage( tileX );
+	case BiomeIdentity::TemperateRainforest:
+		return this->_temperateRainforest.getFoliage( tileX );
+	case BiomeIdentity::TemperateSeasonalForest:
+		return this->_temperateSeasonalForest.getFoliage( tileX, temperatureNormalizedValue, precipitationNormalizedValue );
+	case BiomeIdentity::TropicalRainforest:
+		return this->_tropicalRainforest.getFoliage( tileX );
+	case BiomeIdentity::TropicalSeasonalForest:
+		return this->_tropicalSeasonalForest.getFoliage( tileX );
+	case BiomeIdentity::Tundra:
+		return this->_tundra.getFoliage( tileX );
+	case BiomeIdentity::Woodland:
+		return this->_woodland.getFoliage( tileX );
+	default:
+		return FoliageIdentity::Void;
+	}
+}
+
+
+
+
+/*
 TileIdentity* World::getProceduralChunk( std::int64_t chunkIndexX, std::int64_t chunkIndexY )
 {
 	// Get topleft coordinates of a chunk and procedurally generate
@@ -1308,16 +1370,6 @@ TileIdentity* World::getProceduralChunk( std::int64_t chunkIndexX, std::int64_t 
 	std::int64_t originX = chunkIndexX * 32;
 	std::int64_t originY = chunkIndexY * 32;
 
-	/*
-	TileIdentity chunk[32 * 32]; // [!] should be bedrock or unbreakable type
-	for ( std::int32_t row = 0; row < 32; row++ )
-	{
-		for ( std::int32_t col = 0; col < 32; col++ )
-		{
-			chunk[row * 32 + col] = TileIdentity::Stone;
-		}
-	}
-	*/
 	TileIdentity* chunk = new TileIdentity[32 * 32]{ TileIdentity::Stone };
 
 	for ( std::int64_t tileY = originY + OVERWORLD_HEIGHT; tileY < originY + OVERWORLD_HEIGHT + 32; tileY++ )
@@ -1331,7 +1383,7 @@ TileIdentity* World::getProceduralChunk( std::int64_t chunkIndexX, std::int64_t 
 			long double subterraneanHeightPerlinVal = this->getSubterraneanHeightMap().getPerlinValue( tileX );
 			std::int64_t ySubterranean = ( std::int64_t )( subterraneanHeightPerlinVal * ( OVERWORLD_HEIGHT - yTerranean ) * 0.5 ) + yTerranean;
 
-			Biome biome = this->getBiome( tileX, yTerranean );
+			BiomeIdentity biome = this->getBiomeIdentity( tileX, yTerranean );
 			// std::cout << yTerranean << ", " << ySubterranean << std::endl;
 			// std::cout << tileX << ", " << tileY << std::endl;
 
@@ -1434,8 +1486,402 @@ TileIdentity* World::getProceduralChunk( std::int64_t chunkIndexX, std::int64_t 
 
 	return chunk;
 }
+*/
 
 
+
+void World::addFoliage( TileIdentity* chunk,
+	std::int64_t originX, std::int64_t originY, std::int64_t chunkOffsetX, std::int64_t chunkOffsetY, std::int64_t tileX, std::int64_t tileY,
+	const TileIdentity* tiles, std::uint_fast8_t upBuffer, std::uint_fast8_t downBuffer, std::uint_fast8_t leftBuffer, std::uint_fast8_t rightBuffer )
+{
+	static const std::int64_t OVERWORLD_HEIGHT = 1536;
+	std::int64_t seedY = tileY - ( originY + OVERWORLD_HEIGHT );
+	std::int64_t seedX = tileX - originX;
+
+
+	std::int8_t left = std::max( ( std::int8_t )( seedX - leftBuffer ), ( std::int8_t )0 );
+	std::int8_t right = std::min( ( std::int8_t )( seedX + rightBuffer ), ( std::int8_t )31 );
+	std::int8_t up = std::max( ( std::int8_t )( seedY - upBuffer ), ( std::int8_t )0 );
+	std::int8_t down = std::min( ( std::int8_t )( seedY + downBuffer ), ( std::int8_t )31 );
+
+	std::int8_t foliageOffsetX = std::max( leftBuffer - seedX, ( std::int64_t )0 );
+	std::int8_t foliageOffsetY = std::max( upBuffer - seedY, ( std::int64_t )0 );
+
+	for ( std::int8_t x = left; x <= right; x++ )
+	{
+		for ( std::int8_t y = up; y <= down; y++ )
+		{
+			if ( chunk[y * 32 + x] == TileIdentity::Void )
+			{
+				TileIdentity tileId = tiles[( foliageOffsetY + ( y - up ) ) * ( leftBuffer + 1 + rightBuffer ) + ( foliageOffsetX + ( x - left ) )];
+				if ( tileId != TileIdentity::Void )
+				{
+					chunk[y * 32 + x] = tileId;
+				}
+			}
+		}
+	}
+
+	return;
+}
+
+
+TileIdentity* World::getProceduralChunk( std::int64_t chunkIndexX, std::int64_t chunkIndexY )
+{
+	// Get topleft coordinates of a chunk and procedurally generate
+	static const std::int64_t OVERWORLD_HEIGHT = 1536;
+
+	std::int64_t originX = chunkIndexX * 32;
+	std::int64_t originY = chunkIndexY * 32;
+
+	TileIdentity* chunk = new TileIdentity[32 * 32];
+
+	for ( std::int64_t tileY = originY + OVERWORLD_HEIGHT; tileY < originY + OVERWORLD_HEIGHT + 32; tileY++ )
+	{
+		for ( std::int64_t tileX = originX; tileX < originX + 32; tileX++ )
+		{
+			// std::cout << tileX << ", " << tileY << std::endl;
+			long double terraneanHeightPerlinVal = this->getTerraneanHeightMap().getPerlinValue( tileX );
+			std::int64_t yTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT ) + OVERWORLD_HEIGHT;
+
+			long double subterraneanHeightPerlinVal = this->getSubterraneanHeightMap().getPerlinValue( tileX );
+			std::int64_t ySubterranean = ( std::int64_t )( subterraneanHeightPerlinVal * ( OVERWORLD_HEIGHT - yTerranean ) * 0.5 ) + yTerranean;
+
+			BiomeIdentity biome = this->getBiomeIdentity( tileX, yTerranean );
+			// std::cout << yTerranean << ", " << ySubterranean << std::endl;
+			// std::cout << tileX << ", " << tileY << std::endl;
+
+
+			// Over Terranean Generation
+			if ( tileY < 0 )
+			{
+				chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void; // Clouds
+			}
+			// On Top Of Terranean Generation
+			else if ( tileY < yTerranean )
+			{
+				chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void; // Features ( Trees, Bushes, Flowers )
+			}
+			// Terranean Generation
+			else if ( tileY >= yTerranean && tileY < ySubterranean )
+			{
+				// Height Map
+				long double temperaturePerlinValue = this->getTemperatureMap().getPerlinValue( tileX, tileY );
+
+
+				// Draw BioSubstance
+				TileIdentity bioSubstance = this->getTerraneanSubstance( tileX, tileY );
+				chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = bioSubstance;
+
+
+				// Bleed out tunnel voids
+				long double upperCavePerlinValue = this->getUpperCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D
+				int64_t tunnel = ( int64_t )( upperCavePerlinValue * 256 );
+
+				if ( ( terraneanHeightPerlinVal < subterraneanHeightPerlinVal * subterraneanHeightPerlinVal ) ||
+					( tunnel >= 183 && tunnel < 186 ) ||
+					( tunnel >= 62 && tunnel < 64 ) ||
+					( tunnel >= 125 && tunnel < 128 )
+
+					)
+				{
+					// Draw Bleeding Tunnel Map
+					if ( ( tunnel >= 183 && tunnel < 186 ) ||
+						( tunnel >= 62 && tunnel < 64 ) ||
+						( tunnel >= 125 && tunnel < 128 )
+						)
+					{
+						chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void;
+					}
+				}
+			}
+			// Subterranean Generation
+			else if ( tileY >= ySubterranean && tileY <= OVERWORLD_HEIGHT )
+			{
+				chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Stone;
+
+				// Draw Connecting Bleeding Tunnel Map
+				long double upperCavePerlinValue = this->getUpperCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D
+				int64_t tunnel = ( int64_t )( upperCavePerlinValue * 256 );
+				if (
+					(
+						( tunnel >= 137 && tunnel < 141 ) ||
+						( tunnel >= 183 && tunnel < 186 ) ||
+
+						( tunnel >= 14 && tunnel < 16 ) ||
+						( tunnel >= 62 && tunnel < 64 ) ||
+
+						( tunnel >= 125 && tunnel < 128 )
+
+						)
+					)
+				{
+					chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void;
+				}
+
+				// Draw Subterranean Tunnel Map
+				long double lowerCavePerlinValue = this->getLowerCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D // [!] Need another tunnel map instance
+				tunnel = ( int64_t )( lowerCavePerlinValue * 256 );
+				if (
+					(
+						( tunnel >= 41 && tunnel < 46 ) ||
+						( tunnel >= 97 && tunnel < 103 ) ||
+
+						( tunnel >= 157 && tunnel < 160 ) ||
+
+						( tunnel >= 234 && tunnel < 240 )
+						)
+					)
+				{
+					chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void;
+				}
+			}
+			else
+			{
+				// Generate Underworld
+				if ( tileY > OVERWORLD_HEIGHT )
+				{
+					chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Stone;
+				}
+			}
+
+		}
+
+
+
+
+
+
+
+
+
+		// Foliage
+		std::int64_t chunkOffsetsX[] = { -2, -1, 0, 1, 2 };
+		std::int64_t chunkOffsetsY[] = { -2, -1, 0, 1, 2 };
+
+		for ( std::int64_t chunkOffsetX : chunkOffsetsX )
+		{
+			for ( std::int64_t tileX = ( originX + chunkOffsetX * 32 ); tileX < ( originX + chunkOffsetX * 32 ) + 32; tileX++ )
+			{
+				long double terraneanHeightPerlinVal = this->getTerraneanHeightMap().getPerlinValue( tileX );
+				std::int64_t yTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT ) + OVERWORLD_HEIGHT;
+				std::int64_t tileY = yTerranean - 1;
+
+
+				long double fNormalizedTunnelNoise = this->getUpperCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D
+				int64_t tunnel = ( int64_t )( fNormalizedTunnelNoise * 256 );
+				bool foliage = !( ( tunnel >= 183 && tunnel < 186 ) || ( tunnel >= 62 && tunnel < 64 ) || ( tunnel >= 125 && tunnel < 128 ) );
+				if ( !foliage ) continue;
+
+
+				for ( std::int64_t chunkOffsetY : chunkOffsetsY )
+				{
+					if ( ( ( originY + chunkOffsetY * 32 ) + OVERWORLD_HEIGHT ) <= yTerranean && yTerranean < ( ( originY + chunkOffsetY * 32 ) + OVERWORLD_HEIGHT ) + 32 )
+					{
+						//std::cout << ( tileX - originX ) << ", " << ( tileY - ( originY + OVERWORLD_HEIGHT ) ) << std::endl;
+						//std::cout << "Foliage" << std::endl;
+
+						BiomeIdentity biomeId = this->getBiomeIdentity( tileX, tileY );
+
+						long double temperaturePerlinValue = this->getTemperatureMap().getPerlinValue( tileX, tileY );
+						long double normTemperaturePerlinValue = this->normalizeHistogram( temperaturePerlinValue );
+
+						long double precipitationPerlinValue = this->getPrecipitationMap().getPerlinValue( tileX, tileY ); // Can calculate this prior
+						long double normPrecipitationValue = this->normalizeHistogram( precipitationPerlinValue );
+
+						FoliageIdentity foliageId = this->getFoliage( tileX, biomeId, normTemperaturePerlinValue, normPrecipitationValue );
+
+
+
+						switch ( foliageId )
+						{
+						case FoliageIdentity::MapleTree_0_0_0:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_0_0::tiles, Foliage::MapleTree_0_0_0::upBuffer, Foliage::MapleTree_0_0_0::downBuffer, Foliage::MapleTree_0_0_0::leftBuffer, Foliage::MapleTree_0_0_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_0_1:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_0_1::tiles, Foliage::MapleTree_0_0_1::upBuffer, Foliage::MapleTree_0_0_1::downBuffer, Foliage::MapleTree_0_0_1::leftBuffer, Foliage::MapleTree_0_0_1::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_0_2:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_0_2::tiles, Foliage::MapleTree_0_0_2::upBuffer, Foliage::MapleTree_0_0_2::downBuffer, Foliage::MapleTree_0_0_2::leftBuffer, Foliage::MapleTree_0_0_2::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_0_3:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_0_3::tiles, Foliage::MapleTree_0_0_3::upBuffer, Foliage::MapleTree_0_0_3::downBuffer, Foliage::MapleTree_0_0_3::leftBuffer, Foliage::MapleTree_0_0_3::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_0_4:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_0_4::tiles, Foliage::MapleTree_0_0_4::upBuffer, Foliage::MapleTree_0_0_4::downBuffer, Foliage::MapleTree_0_0_4::leftBuffer, Foliage::MapleTree_0_0_4::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_0_0:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_0_0::tiles, Foliage::MapleTree_1_0_0::upBuffer, Foliage::MapleTree_1_0_0::downBuffer, Foliage::MapleTree_1_0_0::leftBuffer, Foliage::MapleTree_1_0_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_0_1:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_0_1::tiles, Foliage::MapleTree_1_0_1::upBuffer, Foliage::MapleTree_1_0_1::downBuffer, Foliage::MapleTree_1_0_1::leftBuffer, Foliage::MapleTree_1_0_1::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_0_2:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_0_2::tiles, Foliage::MapleTree_1_0_2::upBuffer, Foliage::MapleTree_1_0_2::downBuffer, Foliage::MapleTree_1_0_2::leftBuffer, Foliage::MapleTree_1_0_2::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_0_3:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_0_3::tiles, Foliage::MapleTree_1_0_3::upBuffer, Foliage::MapleTree_1_0_3::downBuffer, Foliage::MapleTree_1_0_3::leftBuffer, Foliage::MapleTree_1_0_3::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_2_0_0:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_2_0_0::tiles, Foliage::MapleTree_2_0_0::upBuffer, Foliage::MapleTree_2_0_0::downBuffer, Foliage::MapleTree_2_0_0::leftBuffer, Foliage::MapleTree_2_0_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_2_0_1:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_2_0_1::tiles, Foliage::MapleTree_2_0_1::upBuffer, Foliage::MapleTree_2_0_1::downBuffer, Foliage::MapleTree_2_0_1::leftBuffer, Foliage::MapleTree_2_0_1::rightBuffer
+							);
+							break;
+
+
+						case FoliageIdentity::MapleTree_0_1_0:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_1_0::tiles, Foliage::MapleTree_0_1_0::upBuffer, Foliage::MapleTree_0_1_0::downBuffer, Foliage::MapleTree_0_1_0::leftBuffer, Foliage::MapleTree_0_1_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_1_1:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_1_1::tiles, Foliage::MapleTree_0_1_1::upBuffer, Foliage::MapleTree_0_1_1::downBuffer, Foliage::MapleTree_0_1_1::leftBuffer, Foliage::MapleTree_0_1_1::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_1_2:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_1_2::tiles, Foliage::MapleTree_0_1_2::upBuffer, Foliage::MapleTree_0_1_2::downBuffer, Foliage::MapleTree_0_1_2::leftBuffer, Foliage::MapleTree_0_1_2::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_1_3:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_1_3::tiles, Foliage::MapleTree_0_1_3::upBuffer, Foliage::MapleTree_0_1_3::downBuffer, Foliage::MapleTree_0_1_3::leftBuffer, Foliage::MapleTree_0_1_3::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_1_4:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_1_4::tiles, Foliage::MapleTree_0_1_4::upBuffer, Foliage::MapleTree_0_1_4::downBuffer, Foliage::MapleTree_0_1_4::leftBuffer, Foliage::MapleTree_0_1_4::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_1_0:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_1_0::tiles, Foliage::MapleTree_1_1_0::upBuffer, Foliage::MapleTree_1_1_0::downBuffer, Foliage::MapleTree_1_1_0::leftBuffer, Foliage::MapleTree_1_1_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_1_1:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_1_1::tiles, Foliage::MapleTree_1_1_1::upBuffer, Foliage::MapleTree_1_1_1::downBuffer, Foliage::MapleTree_1_1_1::leftBuffer, Foliage::MapleTree_1_1_1::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_1_2:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_1_2::tiles, Foliage::MapleTree_1_1_2::upBuffer, Foliage::MapleTree_1_1_2::downBuffer, Foliage::MapleTree_1_1_2::leftBuffer, Foliage::MapleTree_1_1_2::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_1_3:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_1_3::tiles, Foliage::MapleTree_1_1_3::upBuffer, Foliage::MapleTree_1_1_3::downBuffer, Foliage::MapleTree_1_1_3::leftBuffer, Foliage::MapleTree_1_1_3::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_2_1_0:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_2_1_0::tiles, Foliage::MapleTree_2_1_0::upBuffer, Foliage::MapleTree_2_1_0::downBuffer, Foliage::MapleTree_2_1_0::leftBuffer, Foliage::MapleTree_2_1_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_2_1_1:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_2_1_1::tiles, Foliage::MapleTree_2_1_1::upBuffer, Foliage::MapleTree_2_1_1::downBuffer, Foliage::MapleTree_2_1_1::leftBuffer, Foliage::MapleTree_2_1_1::rightBuffer
+							);
+							break;
+
+
+
+						case FoliageIdentity::MapleTree_0_2_0:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_2_0::tiles, Foliage::MapleTree_0_2_0::upBuffer, Foliage::MapleTree_0_2_0::downBuffer, Foliage::MapleTree_0_2_0::leftBuffer, Foliage::MapleTree_0_2_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_2_1:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_2_1::tiles, Foliage::MapleTree_0_2_1::upBuffer, Foliage::MapleTree_0_2_1::downBuffer, Foliage::MapleTree_0_2_1::leftBuffer, Foliage::MapleTree_0_2_1::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_2_2:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_2_2::tiles, Foliage::MapleTree_0_2_2::upBuffer, Foliage::MapleTree_0_2_2::downBuffer, Foliage::MapleTree_0_2_2::leftBuffer, Foliage::MapleTree_0_2_2::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_2_3:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_2_3::tiles, Foliage::MapleTree_0_2_3::upBuffer, Foliage::MapleTree_0_2_3::downBuffer, Foliage::MapleTree_0_2_3::leftBuffer, Foliage::MapleTree_0_2_3::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_2_4:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_2_4::tiles, Foliage::MapleTree_0_2_4::upBuffer, Foliage::MapleTree_0_2_4::downBuffer, Foliage::MapleTree_0_2_4::leftBuffer, Foliage::MapleTree_0_2_4::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_2_0:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_2_0::tiles, Foliage::MapleTree_1_2_0::upBuffer, Foliage::MapleTree_1_2_0::downBuffer, Foliage::MapleTree_1_2_0::leftBuffer, Foliage::MapleTree_1_2_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_2_1:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_2_1::tiles, Foliage::MapleTree_1_2_1::upBuffer, Foliage::MapleTree_1_2_1::downBuffer, Foliage::MapleTree_1_2_1::leftBuffer, Foliage::MapleTree_1_2_1::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_2_2:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_2_2::tiles, Foliage::MapleTree_1_2_2::upBuffer, Foliage::MapleTree_1_2_2::downBuffer, Foliage::MapleTree_1_2_2::leftBuffer, Foliage::MapleTree_1_2_2::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_2_3:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_2_3::tiles, Foliage::MapleTree_1_2_3::upBuffer, Foliage::MapleTree_1_2_3::downBuffer, Foliage::MapleTree_1_2_3::leftBuffer, Foliage::MapleTree_1_2_3::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_2_2_0:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_2_2_0::tiles, Foliage::MapleTree_2_2_0::upBuffer, Foliage::MapleTree_2_2_0::downBuffer, Foliage::MapleTree_2_2_0::leftBuffer, Foliage::MapleTree_2_2_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_2_2_1:
+							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_2_2_1::tiles, Foliage::MapleTree_2_2_1::upBuffer, Foliage::MapleTree_2_2_1::downBuffer, Foliage::MapleTree_2_2_1::leftBuffer, Foliage::MapleTree_2_2_1::rightBuffer
+							);
+							break;
+
+
+						default:
+							break;
+						}
+
+					}
+				}
+			}
+		}
+
+
+
+	}
+
+	return chunk;
+}
 
 
 void World::procedurallyGenerate( WorldChunk& worldChunk )

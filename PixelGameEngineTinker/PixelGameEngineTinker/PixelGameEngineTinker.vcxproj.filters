@@ -195,6 +195,12 @@
     <ClInclude Include="BackgroundTile.h">
       <Filter>Header Files\World</Filter>
     </ClInclude>
+    <ClInclude Include="Foliage.h">
+      <Filter>Header Files\World</Filter>
+    </ClInclude>
+    <ClInclude Include="FoliageMap.h">
+      <Filter>Header Files\World\Maps</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cell.cpp">

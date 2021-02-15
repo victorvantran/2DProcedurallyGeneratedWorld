@@ -35,7 +35,15 @@
 #include "CaveMap.h"
 
 #include "Biome.h"
-
+#include "BorealForest.h"
+#include "SubtropicalDesert.h"
+#include "TemperateGrassland.h"
+#include "TemperateRainforest.h"
+#include "TemperateSeasonalForest.h"
+#include "TropicalRainforest.h"
+#include "TropicalSeasonalForest.h"
+#include "Tundra.h"
+#include "Woodland.h"
 
 
 // Forward Declarations
@@ -118,6 +126,17 @@ private:
 	CaveMap _lowerCaveMap;
 
 
+	BorealForest _borealForest;
+	SubtropicalDesert _subtropicalDesert;
+	TemperateGrassland _temperateGrassland;
+	TemperateRainforest _temperateRainforest;
+	TemperateSeasonalForest _temperateSeasonalForest;
+	TropicalRainforest _tropicalRainforest;
+	TropicalSeasonalForest _tropicalSeasonalForest;
+	Tundra _tundra;
+	Woodland _woodland;
+
+
 private:
 	static unsigned char copyBits( unsigned char& destination, unsigned char copy, unsigned startIndex, unsigned char endIndex );
 	static unsigned char copyBits( unsigned char& destination, unsigned dStartIndex, unsigned char dEndIndex, unsigned char copy, unsigned cStartIndex, unsigned char cEndIndex );
@@ -133,7 +152,16 @@ public:
 		const BiomeSubstanceMap& biomeSubstanceMap,
 
 		const CaveMap& upperCaveMap,
-		const CaveMap& lowerCaveMap );
+		const CaveMap& lowerCaveMap,
+		const BorealForest& borealForest,
+		const SubtropicalDesert& subtropicalDesert,
+		const TemperateGrassland& temperateGrassland,
+		const TemperateRainforest& temperateRainforest,
+		const TemperateSeasonalForest& temperateSeasonalForest,
+		const TropicalRainforest& tropicalRainforest,
+		const TropicalSeasonalForest& tropicalSeasonalForest,
+		const Tundra& tundra,
+		const Woodland& woodland );
 
 	~World();
 
@@ -198,8 +226,22 @@ public:
 	const BiomeSubstanceMap& getBiomeSubstanceMap() const;
 	const CaveMap& getUpperCaveMap() const;
 	const CaveMap& getLowerCaveMap() const;
-	Biome getBiome( std::int64_t tileX, std::int64_t tileY ) const;
+	const BorealForest& getBorealForest() const;
+	const SubtropicalDesert& getSubtropicalDesert() const;
+	const TemperateGrassland& getTemperateGrassland() const;
+	const TemperateRainforest& getTemperateRainforest() const;
+	const TemperateSeasonalForest& getTemperateSeasonalForest() const;
+	const TropicalRainforest& getTropicalRainforest() const;
+	const TropicalSeasonalForest& getTropicalSeasonalForest() const;
+	const Tundra& getTundra() const;
+	const Woodland& getWoodland() const;
+	BiomeIdentity getBiomeIdentity( std::int64_t tileX, std::int64_t tileY ) const;
 	TileIdentity getTerraneanSubstance( std::int64_t tileX, std::int64_t tileY ) const;
+	FoliageIdentity getFoliage( std::int64_t tileX, BiomeIdentity biomeId, long double temperatureNormalizedValue, long double precipitationNormalizedValue );
+	
+	void addFoliage( TileIdentity* chunk,
+		std::int64_t originX, std::int64_t originY, std::int64_t chunkOffsetX, std::int64_t chunkOffsetY, std::int64_t tileX, std::int64_t tileY,
+		const TileIdentity* tiles, std::uint_fast8_t upBuffer, std::uint_fast8_t downBuffer, std::uint_fast8_t leftBuffer, std::uint_fast8_t rightBuffer );
 	TileIdentity* getProceduralChunk( std::int64_t chunkIndexX, std::int64_t chunkIndexY );
 	void procedurallyGenerate( WorldChunk& worldChunk );
 

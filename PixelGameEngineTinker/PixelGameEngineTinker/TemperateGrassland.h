@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Biome.h"
 #include "Tile.h"
 
 // https://ucmp.berkeley.edu/exhibits/biomes/grasslands.php
@@ -24,11 +25,17 @@
 
 // [!] salt
 
-class TemperateGrassland
+class TemperateGrassland : public Biome
 {
 private:
 
 public:
+	TemperateGrassland() {}
+	TemperateGrassland( const FoliageMap& foliageMap, const std::pair<long double, long double>& temperatureRange, const std::pair<long double, long double>& precipitationRange ) :
+		Biome( foliageMap, temperatureRange, precipitationRange ) {}
+	~TemperateGrassland() {}
+
+
 	static TileIdentity getSubstance( long double heightPercentage, long double substanceNormVal )
 	{
 		if ( 0.98 <= heightPercentage && heightPercentage <= 1.00 )

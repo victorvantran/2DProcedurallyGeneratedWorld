@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Biome.h"
 #include "Tile.h"
 
 // https://ucmp.berkeley.edu/exhibits/biomes/deserts.php
@@ -20,11 +21,17 @@
 
 
 
-class SubtropicalDesert
+class SubtropicalDesert : public Biome
 {
 private:
 
 public:
+	SubtropicalDesert() {}
+	SubtropicalDesert( const FoliageMap& foliageMap, const std::pair<long double, long double>& temperatureRange, const std::pair<long double, long double>& precipitationRange ) :
+		Biome( foliageMap, temperatureRange, precipitationRange ) {}
+	~SubtropicalDesert() {}
+
+
 	static TileIdentity getSubstance( long double heightPercentage, long double substanceNormVal )
 	{
 		if ( 0.9875 <= heightPercentage && heightPercentage <= 1.00 )

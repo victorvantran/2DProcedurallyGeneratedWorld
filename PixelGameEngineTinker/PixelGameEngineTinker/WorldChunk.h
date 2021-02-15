@@ -81,10 +81,6 @@ public:
 	void insertStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertDirt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertSand( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertElmBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertElmLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertMapleBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertMossDirt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertMossStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
@@ -113,6 +109,10 @@ public:
 	void insertSilt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertIronOre( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertAluminiumOre( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertMapleLog( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertCrimsonMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertPumpkinMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertGambogeMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 
 
 	static const funcType insertMethods[( unsigned long long )TileIdentity::count];
@@ -134,10 +134,6 @@ public:
 	void removeStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeDirt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeSand( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void removeElmBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void removeElmLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void removeMapleBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void removeMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeMossDirt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeMossStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
@@ -166,6 +162,11 @@ public:
 	void removeSilt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeIronOre( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeAluminiumOre( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeMapleLog( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeCrimsonMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removePumpkinMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void removeGambogeMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
 
 
 	static const funcType removeMethods[( unsigned long long )TileIdentity::count];

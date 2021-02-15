@@ -49,6 +49,8 @@
     <ClInclude Include="Character.h" />
     <ClInclude Include="CollisionData.h" />
     <ClInclude Include="DynamicObject.h" />
+    <ClInclude Include="Foliage.h" />
+    <ClInclude Include="FoliageMap.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="LightCastQuadrant.h" />
     <ClInclude Include="LightCastRow.h" />

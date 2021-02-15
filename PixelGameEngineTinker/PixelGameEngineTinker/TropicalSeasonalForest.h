@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Biome.h"
 #include "Tile.h"
 
 // https://8kmdbsavannastropicalgrasslands.weebly.com/soil.html
@@ -21,11 +22,17 @@
 
 
 
-class TropicalSeasonalForest
+class TropicalSeasonalForest : public Biome
 {
 private:
 
 public:
+	TropicalSeasonalForest() {}
+	TropicalSeasonalForest( const FoliageMap& foliageMap, const std::pair<long double, long double>& temperatureRange, const std::pair<long double, long double>& precipitationRange ) :
+		Biome( foliageMap, temperatureRange, precipitationRange ) {}
+	~TropicalSeasonalForest() {}
+
+
 	static TileIdentity getSubstance( long double heightPercentage, long double substanceNormVal )
 	{
 

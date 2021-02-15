@@ -260,36 +260,6 @@ void WorldChunk::insertSand( std::int64_t x, std::int64_t y, std::int64_t width,
 	return;
 }
 
-void WorldChunk::insertElmBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
-{
-	this->insertTile( TileIdentity::ElmBark, TileType::Block, true, true, true, 0,
-		x, y, width, height );
-	return;
-}
-
-void WorldChunk::insertElmLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
-{
-	this->insertTile( TileIdentity::ElmLeaves, TileType::Block, true, false, true, 0,
-		x, y, width, height );
-	return;
-}
-
-
-void WorldChunk::insertMapleBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
-{
-	this->insertTile( TileIdentity::MapleBark, TileType::OneWay, false, false, false, 1,
-		x, y, width, height );
-	return;
-}
-
-void WorldChunk::insertMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
-{
-	this->insertTile( TileIdentity::MapleLeaves, TileType::OneWay, true, false, true, 0,
-		x, y, width, height );
-	return;
-}
-
-
 
 void WorldChunk::insertTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
@@ -522,16 +492,44 @@ void WorldChunk::insertAluminiumOre( std::int64_t x, std::int64_t y, std::int64_
 }
 
 
+void WorldChunk::insertMapleLog( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::MapleLog, TileType::OneWay, true, false, false, 1,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertCrimsonMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::CrimsonMapleLeaves, TileType::OneWay, true, false, true, 0,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertPumpkinMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::PumpkinMapleLeaves, TileType::OneWay, true, false, true, 0,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertGambogeMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->insertTile( TileIdentity::GambogeMapleLeaves, TileType::OneWay, true, false, true, 0,
+		x, y, width, height );
+	return;
+}
+
+
 const WorldChunk::funcType WorldChunk::insertMethods[( unsigned long long )TileIdentity::count]{
 	&WorldChunk::insertVoid,
 	&WorldChunk::insertWater, 
 	&WorldChunk::insertStone,
 	&WorldChunk::insertDirt,
 	&WorldChunk::insertSand,
-	&WorldChunk::insertElmBark,
-	&WorldChunk::insertElmLeaves,
-	&WorldChunk::insertMapleBark,
-	&WorldChunk::insertMapleLeaves,
 	&WorldChunk::insertTorch,
 	&WorldChunk::insertMossDirt,
 	&WorldChunk::insertMossStone,
@@ -559,7 +557,11 @@ const WorldChunk::funcType WorldChunk::insertMethods[( unsigned long long )TileI
 	&WorldChunk::insertCambisol,
 	&WorldChunk::insertSilt,
 	&WorldChunk::insertIronOre,
-	&WorldChunk::insertAluminiumOre
+	&WorldChunk::insertAluminiumOre,
+	& WorldChunk::insertMapleLog,
+	& WorldChunk::insertCrimsonMapleLeaves,
+	& WorldChunk::insertPumpkinMapleLeaves,
+	& WorldChunk::insertGambogeMapleLeaves
 };
 
 
@@ -747,38 +749,6 @@ void WorldChunk::removeDirt( std::int64_t x, std::int64_t y, std::int64_t width,
 void WorldChunk::removeSand( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
 	this->removeTile( TileIdentity::Sand,
-		x, y, width, height );
-	return;
-}
-
-
-void WorldChunk::removeElmBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
-{
-	this->removeTile( TileIdentity::ElmBark,
-		x, y, width, height );
-	return;
-}
-
-
-void WorldChunk::removeElmLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
-{
-	this->removeTile( TileIdentity::ElmLeaves,
-		x, y, width, height );
-	return;
-}
-
-
-void WorldChunk::removeMapleBark( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
-{
-	this->removeTile( TileIdentity::MapleBark, 
-		x, y, width, height );
-	return;
-}
-
-
-void WorldChunk::removeMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
-{
-	this->removeTile( TileIdentity::MapleLeaves,
 		x, y, width, height );
 	return;
 }
@@ -1010,7 +980,36 @@ void WorldChunk::removeAluminiumOre( std::int64_t x, std::int64_t y, std::int64_
 }
 
 
+void WorldChunk::removeMapleLog( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::MapleLog,
+		x, y, width, height );
+	return;
+}
 
+
+void WorldChunk::removeCrimsonMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::CrimsonMapleLeaves,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removePumpkinMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::PumpkinMapleLeaves,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::removeGambogeMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+{
+	this->removeTile( TileIdentity::GambogeMapleLeaves,
+		x, y, width, height );
+	return;
+}
 
 
 const WorldChunk::funcType WorldChunk::removeMethods[( unsigned long long )TileIdentity::count]{
@@ -1020,10 +1019,7 @@ const WorldChunk::funcType WorldChunk::removeMethods[( unsigned long long )TileI
 	&WorldChunk::removeDirt,
 
 	&WorldChunk::removeSand,
-	&WorldChunk::removeElmBark,
-	&WorldChunk::removeElmLeaves,
-	&WorldChunk::removeMapleBark,
-	&WorldChunk::removeMapleLeaves,
+
 
 
 	&WorldChunk::removeTorch,
@@ -1054,7 +1050,12 @@ const WorldChunk::funcType WorldChunk::removeMethods[( unsigned long long )TileI
 	&WorldChunk::removeCambisol,
 	&WorldChunk::removeSilt,
 	&WorldChunk::removeIronOre,
-	&WorldChunk::removeAluminiumOre
+	&WorldChunk::removeAluminiumOre,
+
+	& WorldChunk::removeMapleLog,
+	& WorldChunk::removeCrimsonMapleLeaves,
+	& WorldChunk::removePumpkinMapleLeaves,
+	& WorldChunk::removeGambogeMapleLeaves
 
 };
 
@@ -1273,8 +1274,8 @@ void WorldChunk::blackenLights()
 	//std::cout << "blacken" << std::endl;
 	for ( std::uint16_t i = 0; i < this->_size * this->_size; i++ )
 	{
-		this->_lights[i].blacken();
-		//this->_lights[i].whiten();
+		//this->_lights[i].blacken();
+		this->_lights[i].whiten();
 
 	}
 	return;

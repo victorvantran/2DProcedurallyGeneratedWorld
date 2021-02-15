@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Biome.h"
 #include "Tile.h"
 
 // https://4temperateshrublandschaparral.weebly.com/soil.html#:~:text=The%20soils'%20composition%20contains%20sand,arid%20regions%20of%20the%20biome.
@@ -13,11 +14,17 @@
 // Fertile soil, Tall grass
 // 0.425
 
-class Woodland
+class Woodland : public Biome
 {
 private:
 
 public:
+	Woodland() {}
+	Woodland( const FoliageMap& foliageMap, const std::pair<long double, long double>& temperatureRange, const std::pair<long double, long double>& precipitationRange ) :
+		Biome( foliageMap, temperatureRange, precipitationRange ) {}
+	~Woodland() {}
+
+
 	static TileIdentity getSubstance( long double heightPercentage, long double substanceNormVal )
 	{
 		if ( 0.99 <= heightPercentage && heightPercentage <= 1.00 )

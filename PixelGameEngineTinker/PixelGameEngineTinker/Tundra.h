@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Biome.h"
 #include "Tile.h"
 
 
@@ -14,11 +15,17 @@
 
 
 
-class Tundra
+class Tundra : public Biome
 {
 private:
 
 public:
+	Tundra() {}
+	Tundra( const FoliageMap& foliageMap, const std::pair<long double, long double>& temperatureRange, const std::pair<long double, long double>& precipitationRange ) :
+		Biome( foliageMap, temperatureRange, precipitationRange ) {}
+	~Tundra() {}
+
+
 	static TileIdentity getSubstance( long double heightPercentage, long double substanceNormVal )
 	{
 		if ( 0.98 <= heightPercentage && heightPercentage <= 1.00 )

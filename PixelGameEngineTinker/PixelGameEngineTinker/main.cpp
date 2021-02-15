@@ -10,6 +10,7 @@
 #include "Player.h"
 #include "Zombie.h"
 
+
 #include <cmath> // std::floorf
 
 #include <thread>
@@ -202,11 +203,11 @@ public:
 		}
 		else if ( GetKey( olc::Key::K9 ).bPressed )
 		{
-			tileId = TileIdentity::MapleLeaves;
+			tileId = TileIdentity::CrimsonMapleLeaves;
 		}
 		else if ( GetKey( olc::Key::K0 ).bPressed )
 		{
-			tileId = TileIdentity::MapleBark;
+			tileId = TileIdentity::MapleLog;
 		}
 
 		/*
@@ -306,6 +307,13 @@ public:
 			//std::cout << (int)world->getTile( tileIndex.x, tileIndex.y )->getBorder( TileBorder::North ) << std::endl;
 			//std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getId() << std::endl;
 			//world->insertLightTile( tileIndex.x, tileIndex.y, r, g, b, 255, 20 );
+		}
+
+
+
+		if ( GetKey( olc::Key::V ).bPressed )
+		{
+			std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getBorders() << std::endl;
 		}
 
 
@@ -439,8 +447,8 @@ public:
 
 
 
-
-		// Collision Detection
+		/*
+		// Collision Detection [!] Need to put this on another thread with conditional variable
 		this->world->getSpatialPartition().updateSpaces( &this->player->getCharacter() );
 		//this->world->getSpatialPartition().updateSpaces( this->enemy1 );
 		//this->world->getSpatialPartition().updateSpaces( this->enemy2 );
@@ -454,6 +462,7 @@ public:
 		//this->enemy1->updateDynamicPhysics( this->world, fElapsedTime );
 		//this->enemy2->updateDynamicPhysics( this->world, fElapsedTime );
 		//this->enemy3->updateDynamicPhysics( this->world, fElapsedTime );
+		*/
 
 
 		// Camera
@@ -483,6 +492,7 @@ public:
 
 		if ( GetKey( olc::Key::PERIOD ).bPressed ) world->DEBUG_PRINT_TILE_SPRITES();
 		
+
 		return true;
 	}
 
@@ -511,7 +521,7 @@ public:
 
 		PrecipitationMap precipitationMap(
 			seed, 7765867141, 4334744837,
-			//6, 1024 * 3, 1536
+			//6, 1024 * 3, 1536x
 			11, 1024 * 3, 1536
 		);
 
@@ -533,6 +543,81 @@ public:
 		);
 
 
+		
+		// Biome construction
+		FoliageMap borealForestFoliageMap(
+			seed, 8573475611,
+			12, 1024 * 3
+		);
+		std::pair<long double, long double> borealForestTemperatureRange{ 0.0701, 0.4194 }; // range based on biome graph line intersections
+		std::pair<long double, long double> borealForestPrecipitationRange{ 0.0701, 1.0 };
+		BorealForest borealForest( borealForestFoliageMap, borealForestTemperatureRange, borealForestPrecipitationRange );
+
+		FoliageMap subtropicalDesertFoliageMap(
+			seed, 327249029,
+			12, 1024 * 3
+		);
+		std::pair<long double, long double> subtropicalDesertTemperatureRange{ 0.5216, 1.0 };
+		std::pair<long double, long double> subtropicalDesertPrecipitationRange{ 0.0, 0.188 };
+		SubtropicalDesert subtropicalDesert( subtropicalDesertFoliageMap, subtropicalDesertTemperatureRange, subtropicalDesertPrecipitationRange );
+
+		FoliageMap temperateGrasslandFoliageMap(
+			seed, 677136037,
+			12, 1024 * 3
+		);
+		std::pair<long double, long double> temperateGrasslandTemperatureRange{ 0.044, 0.574 };
+		std::pair<long double, long double> temperateGrasslandPrecipitationRange{ 0.0, 0.1612 };
+		TemperateGrassland temperateGrassland( temperateGrasslandFoliageMap, subtropicalDesertTemperatureRange, subtropicalDesertPrecipitationRange );
+
+		FoliageMap temperateRainforestFoliageMap(
+			seed, 1645273573,
+			12, 1024 * 3
+		);
+		std::pair<long double, long double> temperateRainforestTemperatureRange{ 0.3634, 0.8495 };
+		std::pair<long double, long double> temperateRainforestPrecipitationRange{ 0.7135, 1.0 };
+		TemperateRainforest temperateRainforest( temperateRainforestFoliageMap, temperateRainforestTemperatureRange, temperateRainforestPrecipitationRange );
+
+		FoliageMap temperateSeasonalForestFoliageMap(
+			seed, 4583686091,
+			5, 1024 * 3
+		);
+		std::pair<long double, long double> temperateSeasonalForestTemperatureRange{ 0.2199, 0.7556 };
+		std::pair<long double, long double> temperateSeasonalForestPrecipitationRange{ 0.2917, 0.801 };
+		TemperateSeasonalForest temperateSeasonalForest( temperateSeasonalForestFoliageMap, temperateSeasonalForestTemperatureRange, temperateSeasonalForestPrecipitationRange );
+
+		FoliageMap tropicalRainforestFoliageMap(
+			seed, 64583266801,
+			12, 1024 * 3
+		);
+		std::pair<long double, long double> tropicalRainforestTemperatureRange{ 0.7556, 1.0 };
+		std::pair<long double, long double> tropicalRainforestPrecipitationRange{ 0.659, 1.0 };
+		TropicalRainforest tropicalRainforest( tropicalRainforestFoliageMap, tropicalRainforestTemperatureRange, tropicalRainforestPrecipitationRange );
+
+		FoliageMap tropicalSeasonalForestFoliageMap(
+			seed, 28457237801,
+			12, 1024 * 3
+		);
+		std::pair<long double, long double> tropicalSeasonalForestTemperatureRange{ 0.5745, 1.0 };
+		std::pair<long double, long double> tropicalSeasonalForestPrecipitationRange{ 0.1612, 0.7135 };
+		TropicalSeasonalForest tropicalSeasonalForest( tropicalSeasonalForestFoliageMap, tropicalSeasonalForestTemperatureRange, tropicalSeasonalForestPrecipitationRange );
+
+		FoliageMap tundraFoliageMap(
+			seed, 9693061229,
+			12, 1024 * 3
+		);
+		std::pair<long double, long double>  tundraTemperatureRange{ 0.0, 0.138 };
+		std::pair<long double, long double>  tundraPrecipitationRange{ 0.0, 1.0 };
+		Tundra tundra( tundraFoliageMap, tundraTemperatureRange, tundraPrecipitationRange );
+
+		FoliageMap woodlandFoliageMap(
+			seed, 7452826273,
+			12, 1024 * 3
+		);
+		std::pair<long double, long double> woodlandTemperatureRange{ 0.0561, 0.6299 };
+		std::pair<long double, long double> woodlandPrecipitationRange{ 0.1285, 0.2776 };
+		Woodland woodland( woodlandFoliageMap, woodlandTemperatureRange, woodlandPrecipitationRange );
+
+
 		this->world = new World(
 			seed,
 			terraneanHeightMap,
@@ -541,8 +626,16 @@ public:
 			precipitationMap,
 			biomeSubstanceMap,
 			upperCaveMap,
-			lowerCaveMap
-		
+			lowerCaveMap,
+			borealForest,
+			subtropicalDesert,
+			temperateGrassland,
+			temperateRainforest,
+			temperateSeasonalForest,
+			tropicalRainforest,
+			tropicalSeasonalForest,
+			tundra,
+			woodland
 		);
 
 		/*
