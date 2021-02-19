@@ -1303,6 +1303,7 @@ void WorldChunk::resetLights()
 }
 
 
+/*
 void WorldChunk::blackenLights()
 {
 	//std::cout << "blacken" << std::endl;
@@ -1312,6 +1313,36 @@ void WorldChunk::blackenLights()
 		//this->_lights[i].whiten();
 
 	}
+	return;
+}
+*/
+
+void WorldChunk::blackenLights()
+{
+	//std::cout << "blacken" << std::endl;
+	static const std::int64_t OVERWORLD_HEIGHT = 1536;
+	static const std::int64_t SUNRAY_POWER = 3;
+
+	for ( std::uint16_t x = 0; x < this->_size; x++ )
+	{
+		std::int64_t worldX = this->_chunkIndexX * this->_size + x;
+		long double terraneanHeightPerlinVal = this->_world->getTerraneanHeightMap().getPerlinValue( worldX );
+		std::int64_t worldYTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT );
+
+		for ( std::uint16_t y = 0; y < this->_size; y++ )
+		{
+			std::int64_t worldY = this->_chunkIndexY * this->_size + y;
+			if ( worldY < worldYTerranean + SUNRAY_POWER )
+			{
+				this->_lights[y * this->_size + x].whiten();
+			}
+			else
+			{
+				this->_lights[y * this->_size + x].blacken();
+			}
+		}
+	}
+
 	return;
 }
 

@@ -359,8 +359,6 @@ void World::insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::in
 {
 	// Insert a tile ( or tiles ) to proper worldChunk
 	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
-	///std::unique_lock<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
-
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
@@ -378,8 +376,6 @@ void World::remove( TileIdentity id, std::int64_t x, std::int64_t y, std::int64_
 {
 	// Remove a tile ( or tiles ) from the proper world chunk.
 	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
-	///std::unique_lock<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
-
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
@@ -561,7 +557,6 @@ void World::startWorldMemorySystem()
 	this->_saveWorldGeographyThread = std::thread( &World::saveWorldGeographyTask, this );
 	this->_loadWorldGeographyThread = std::thread( &World::loadWorldGeographyTask, this );
 	// this->_loadSpriteTilesThread = std::thread( &World::loadSpriteTilesTask, this );
-	this->_updateGeographyThread = std::thread( &World::updateGeographyTask, this );
 	this->_updateLightingThread = std::thread( &World::updateLightingTask, this );
 	return;
 }
@@ -569,30 +564,21 @@ void World::startWorldMemorySystem()
 
 void World::stopWorldMemorySystem()
 {
-	this->_runningSaveWorldGeography = false;
-	this->_saveWorldGeographyThread.join();
+	this->_runningUpdateLighting = false;
+	this->_updateLightingThread.join();
+	this->_condUpdateLighting.notify_all();
 
 	this->_runningLoadWorldGeography = false;
+	this->_condLoad.notify_all();
 	this->_loadWorldGeographyThread.join();
+
+	this->_runningSaveWorldGeography = false;
+	this->_saveWorldGeographyThread.join();
 
 
 	this->_condModifyAtlas.notify_all();
 	this->_runningLoadSpriteTiles = false;
-	// this->_loadSpriteTilesThread.join();
-
-
-
-	this->_condRenderWorld.notify_all();
-	this->_condUpdateGeography.notify_all();
-	this->_condUpdateLighting.notify_all();
-
-	this->_runningUpdateGeography = false;
-	//this->_condRenderWorld.notify_one();
-	this->_updateGeographyThread.join();
-
-	this->_runningUpdateLighting = false;
-	///this->_condRenderWorld.notify_one();
-	this->_updateLightingThread.join();
+	
 	return;
 }
 
@@ -654,7 +640,7 @@ void World::saveWorldGeography()
 	// Save all blobs/palettes in one go
 	for ( int i = 0; i < this->_saveWorldChunks.size(); i++ )
 	{
-		// std::cout << "(" << this->_saveWorldChunks[i]->getChunkIndexX() << "," << this->_saveWorldChunks[i]->getChunkIndexY() << ")" << std::endl; // [~!]
+		std::cout << "(" << this->_saveWorldChunks[i]->getChunkIndexX() << "," << this->_saveWorldChunks[i]->getChunkIndexY() << ")" << std::endl; // [~!]
 		// save
 
 		WorldChunkMemory* worldChunkMemory = this->_saveWorldChunks[i];
@@ -839,7 +825,8 @@ void World::loadWorldGeography()
 	}
 
 
-	std::unique_lock<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting ); // [~!]
+	std::unique_lock<std::mutex> lockModify( this->_modifyWorldChunksMutex ); // [~!]
+	//std::unique_lock<std::mutex> lockUpdateLightingBuffer( this->_mutexUpdateLighting ); // [~!]
 
 	for ( int i = 0; i < chunkRecalls.size(); i++ )
 	{
@@ -854,10 +841,12 @@ void World::loadWorldGeography()
 	this->_focalChunkIndexX = focalIndexX;
 	this->_focalChunkIndexY = focalIndexY;
 
-	lockUpdateLighting.unlock(); // [~!]
 
 	this->updateWorldChunkRelativeIndicies();
 	this->updateWorldChunkPointers();
+
+	lockModify.unlock(); // [~!]
+	//lockUpdateLightingBuffer.unlock(); // [~!]
 
 	std::vector<WorldChunkRecall> worldChunkRecalls;
 
@@ -899,7 +888,7 @@ void World::loadWorldGeography()
 			rc = sqlite3_step( statement );
 			rc = sqlite3_finalize( statement );
 
-			// std::cout << "Chunk does has not existed beforehand. Procedural generation" << std::endl; [~!]
+			std::cout << "Chunk does has not existed beforehand. Procedural generation" << std::endl; // [~!]
 			// std::cout << this->_worldChunks[index].getRelativeChunkIndex() << std::endl;
 			//proceduralGenerateCache.push_back( index );
 			this->procedurallyGenerate( this->_worldChunks[index] );
@@ -1048,21 +1037,12 @@ void World::loadWorldGeography()
 
 void World::updateWorldChunkRelativity( const BoundingBox<long double>& focalPoint )
 {
-	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
-	std::lock_guard<std::mutex> lockLoad( this->_mutexLoadWorldChunks );
-
-	//std::lock_guard<std::mutex> lockUpdateGeography( this->_mutexUpdateGeography );
-	//std::lock_guard<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
-
-	//std::unique_lock<std::mutex> lockUpdateGeography( this->_mutexUpdateGeography );
-	//this->_condRenderWorld.wait( lockUpdateGeography );
-	//std::lock_guard<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
-
+	std::unique_lock<std::mutex> lockLoad( this->_mutexLoadWorldChunks );
+	this->_condLoad.wait( lockLoad );
 
 	this->updateFocalChunk( focalPoint );
 	this->loadWorldGeography();
 
-	//this->_condUpdateWorld.notify_one();
 	return;
 }
 
@@ -1070,9 +1050,8 @@ void World::updateWorldChunkRelativity( const BoundingBox<long double>& focalPoi
 void World::updateFocalChunk( const BoundingBox<long double>& focalPoint )
 {
 	// Update the focalChunk of the world relative to a camera's focal point.
-	// Inhibit changing the focalChunk while loading for any nasty race conditions.
-	// std::lock_guard<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting ); //[!~]
-
+	// Inhibit changing the focalChunk while loading for any nasty race conditions. (perhaps using a lock or atomic)
+	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
 	this->_focalChunk = focalPoint;
 	return;
 }
@@ -2075,7 +2054,359 @@ TileIdentity* World::getProceduralChunk( std::int64_t chunkIndexX, std::int64_t 
 
 void World::procedurallyGenerate( WorldChunk& worldChunk )
 {
+	// Get topleft coordinates of a chunk and procedurally generate
+	static const std::int64_t OVERWORLD_HEIGHT = 1536;
 
+	std::int64_t originWorldX = worldChunk.getChunkIndexX() * 32;
+	std::int64_t originWorldY = worldChunk.getChunkIndexY() * 32;
+
+	TileIdentity chunk[32 * 32];
+
+
+	for ( std::int64_t tileY = originWorldY + OVERWORLD_HEIGHT; tileY < originWorldY + OVERWORLD_HEIGHT + 32; tileY++ )
+	{
+		for ( std::int64_t tileX = originWorldX; tileX < originWorldX + 32; tileX++ )
+		{
+			long double terraneanHeightPerlinVal = this->getTerraneanHeightMap().getPerlinValue( tileX );
+			std::int64_t yTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT ) + OVERWORLD_HEIGHT;
+
+			long double subterraneanHeightPerlinVal = this->getSubterraneanHeightMap().getPerlinValue( tileX );
+			std::int64_t ySubterranean = ( std::int64_t )( subterraneanHeightPerlinVal * ( OVERWORLD_HEIGHT - yTerranean ) * 0.5 ) + yTerranean;
+
+			BiomeIdentity biome = this->getBiomeIdentity( tileX, yTerranean );
+
+			// Over Terranean Generation
+			if ( tileY < 0 )
+			{
+				chunk[( tileY - ( originWorldY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originWorldX )] = TileIdentity::Void; // Clouds
+			}
+			// On Top Of Terranean Generation
+			else if ( tileY < yTerranean )
+			{
+				chunk[( tileY - ( originWorldY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originWorldX )] = TileIdentity::Void; // Features ( Trees, Bushes, Flowers )
+			}
+			// Terranean Generation
+			else if ( tileY >= yTerranean && tileY < ySubterranean )
+			{
+				// Height Map
+				long double temperaturePerlinValue = this->getTemperatureMap().getPerlinValue( tileX, tileY );
+
+
+				// Draw BioSubstance
+				TileIdentity bioSubstance = this->getTerraneanSubstance( tileX, tileY );
+				chunk[( tileY - ( originWorldY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originWorldX )] = bioSubstance;
+
+
+				// Bleed out tunnel voids
+				long double upperCavePerlinValue = this->getUpperCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D
+				int64_t tunnel = ( int64_t )( upperCavePerlinValue * 256 );
+
+				if ( ( terraneanHeightPerlinVal < subterraneanHeightPerlinVal * subterraneanHeightPerlinVal ) ||
+					( tunnel >= 183 && tunnel < 186 ) ||
+					( tunnel >= 62 && tunnel < 64 ) ||
+					( tunnel >= 125 && tunnel < 128 )
+
+					)
+				{
+					// Draw Bleeding Tunnel Map
+					if ( ( tunnel >= 183 && tunnel < 186 ) ||
+						( tunnel >= 62 && tunnel < 64 ) ||
+						( tunnel >= 125 && tunnel < 128 )
+						)
+					{
+						chunk[( tileY - ( originWorldY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originWorldX )] = TileIdentity::Void;
+					}
+				}
+			}
+			// Subterranean Generation
+			else if ( tileY >= ySubterranean && tileY <= OVERWORLD_HEIGHT )
+			{
+				chunk[( tileY - ( originWorldY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originWorldX )] = TileIdentity::Stone;
+
+				// Draw Connecting Bleeding Tunnel Map
+				long double upperCavePerlinValue = this->getUpperCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D
+				int64_t tunnel = ( int64_t )( upperCavePerlinValue * 256 );
+				if (
+					(
+						( tunnel >= 137 && tunnel < 141 ) ||
+						( tunnel >= 183 && tunnel < 186 ) ||
+
+						( tunnel >= 14 && tunnel < 16 ) ||
+						( tunnel >= 62 && tunnel < 64 ) ||
+
+						( tunnel >= 125 && tunnel < 128 )
+
+						)
+					)
+				{
+					chunk[( tileY - ( originWorldY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originWorldX )] = TileIdentity::Void;
+				}
+
+				// Draw Subterranean Tunnel Map
+				long double lowerCavePerlinValue = this->getLowerCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D // [!] Need another tunnel map instance
+				tunnel = ( int64_t )( lowerCavePerlinValue * 256 );
+				if (
+					(
+						( tunnel >= 41 && tunnel < 46 ) ||
+						( tunnel >= 97 && tunnel < 103 ) ||
+
+						( tunnel >= 157 && tunnel < 160 ) ||
+
+						( tunnel >= 234 && tunnel < 240 )
+						)
+					)
+				{
+					chunk[( tileY - ( originWorldY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originWorldX )] = TileIdentity::Void;
+				}
+			}
+			else
+			{
+				// Generate Underworld
+				if ( tileY > OVERWORLD_HEIGHT )
+				{
+					chunk[( tileY - ( originWorldY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originWorldX )] = TileIdentity::Stone;
+				}
+			}
+
+		}
+
+
+		// Foliage
+		std::int64_t chunkOffsetsX[] = { -2, -1, 0, 1, 2 };
+		std::int64_t chunkOffsetsY[] = { -2, -1, 0, 1, 2 };
+
+		for ( std::int64_t chunkOffsetX : chunkOffsetsX )
+		{
+			for ( std::int64_t tileX = ( originWorldX + chunkOffsetX * 32 ); tileX < ( originWorldX + chunkOffsetX * 32 ) + 32; tileX++ )
+			{
+				long double terraneanHeightPerlinVal = this->getTerraneanHeightMap().getPerlinValue( tileX );
+				std::int64_t yTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT ) + OVERWORLD_HEIGHT;
+				std::int64_t tileY = yTerranean - 1;
+
+
+				long double fNormalizedTunnelNoise = this->getUpperCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D
+				int64_t tunnel = ( int64_t )( fNormalizedTunnelNoise * 256 );
+				bool foliage = !( ( tunnel >= 183 && tunnel < 186 ) || ( tunnel >= 62 && tunnel < 64 ) || ( tunnel >= 125 && tunnel < 128 ) );
+				if ( !foliage ) continue;
+
+
+				for ( std::int64_t chunkOffsetY : chunkOffsetsY )
+				{
+					if ( ( ( originWorldY + chunkOffsetY * 32 ) + OVERWORLD_HEIGHT ) <= yTerranean && yTerranean < ( ( originWorldY + chunkOffsetY * 32 ) + OVERWORLD_HEIGHT ) + 32 )
+					{
+
+						BiomeIdentity biomeId = this->getBiomeIdentity( tileX, tileY );
+
+						long double temperaturePerlinValue = this->getTemperatureMap().getPerlinValue( tileX, tileY );
+						long double normTemperaturePerlinValue = this->normalizeHistogram( temperaturePerlinValue );
+
+						long double precipitationPerlinValue = this->getPrecipitationMap().getPerlinValue( tileX, tileY ); // Can calculate this prior
+						long double normPrecipitationValue = this->normalizeHistogram( precipitationPerlinValue );
+
+						FoliageIdentity foliageId = this->getFoliage( tileX, biomeId, normTemperaturePerlinValue, normPrecipitationValue );
+
+
+
+						switch ( foliageId )
+						{
+						case FoliageIdentity::MapleTree_0_0_0:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_0_0::tiles, Foliage::MapleTree_0_0_0::upBuffer, Foliage::MapleTree_0_0_0::downBuffer, Foliage::MapleTree_0_0_0::leftBuffer, Foliage::MapleTree_0_0_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_0_1:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_0_1::tiles, Foliage::MapleTree_0_0_1::upBuffer, Foliage::MapleTree_0_0_1::downBuffer, Foliage::MapleTree_0_0_1::leftBuffer, Foliage::MapleTree_0_0_1::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_0_2:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_0_2::tiles, Foliage::MapleTree_0_0_2::upBuffer, Foliage::MapleTree_0_0_2::downBuffer, Foliage::MapleTree_0_0_2::leftBuffer, Foliage::MapleTree_0_0_2::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_0_3:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_0_3::tiles, Foliage::MapleTree_0_0_3::upBuffer, Foliage::MapleTree_0_0_3::downBuffer, Foliage::MapleTree_0_0_3::leftBuffer, Foliage::MapleTree_0_0_3::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_0_4:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_0_4::tiles, Foliage::MapleTree_0_0_4::upBuffer, Foliage::MapleTree_0_0_4::downBuffer, Foliage::MapleTree_0_0_4::leftBuffer, Foliage::MapleTree_0_0_4::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_0_0:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_0_0::tiles, Foliage::MapleTree_1_0_0::upBuffer, Foliage::MapleTree_1_0_0::downBuffer, Foliage::MapleTree_1_0_0::leftBuffer, Foliage::MapleTree_1_0_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_0_1:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_0_1::tiles, Foliage::MapleTree_1_0_1::upBuffer, Foliage::MapleTree_1_0_1::downBuffer, Foliage::MapleTree_1_0_1::leftBuffer, Foliage::MapleTree_1_0_1::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_0_2:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_0_2::tiles, Foliage::MapleTree_1_0_2::upBuffer, Foliage::MapleTree_1_0_2::downBuffer, Foliage::MapleTree_1_0_2::leftBuffer, Foliage::MapleTree_1_0_2::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_0_3:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_0_3::tiles, Foliage::MapleTree_1_0_3::upBuffer, Foliage::MapleTree_1_0_3::downBuffer, Foliage::MapleTree_1_0_3::leftBuffer, Foliage::MapleTree_1_0_3::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_2_0_0:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_2_0_0::tiles, Foliage::MapleTree_2_0_0::upBuffer, Foliage::MapleTree_2_0_0::downBuffer, Foliage::MapleTree_2_0_0::leftBuffer, Foliage::MapleTree_2_0_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_2_0_1:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_2_0_1::tiles, Foliage::MapleTree_2_0_1::upBuffer, Foliage::MapleTree_2_0_1::downBuffer, Foliage::MapleTree_2_0_1::leftBuffer, Foliage::MapleTree_2_0_1::rightBuffer
+							);
+							break;
+
+
+						case FoliageIdentity::MapleTree_0_1_0:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_1_0::tiles, Foliage::MapleTree_0_1_0::upBuffer, Foliage::MapleTree_0_1_0::downBuffer, Foliage::MapleTree_0_1_0::leftBuffer, Foliage::MapleTree_0_1_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_1_1:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_1_1::tiles, Foliage::MapleTree_0_1_1::upBuffer, Foliage::MapleTree_0_1_1::downBuffer, Foliage::MapleTree_0_1_1::leftBuffer, Foliage::MapleTree_0_1_1::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_1_2:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_1_2::tiles, Foliage::MapleTree_0_1_2::upBuffer, Foliage::MapleTree_0_1_2::downBuffer, Foliage::MapleTree_0_1_2::leftBuffer, Foliage::MapleTree_0_1_2::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_1_3:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_1_3::tiles, Foliage::MapleTree_0_1_3::upBuffer, Foliage::MapleTree_0_1_3::downBuffer, Foliage::MapleTree_0_1_3::leftBuffer, Foliage::MapleTree_0_1_3::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_1_4:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_1_4::tiles, Foliage::MapleTree_0_1_4::upBuffer, Foliage::MapleTree_0_1_4::downBuffer, Foliage::MapleTree_0_1_4::leftBuffer, Foliage::MapleTree_0_1_4::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_1_0:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_1_0::tiles, Foliage::MapleTree_1_1_0::upBuffer, Foliage::MapleTree_1_1_0::downBuffer, Foliage::MapleTree_1_1_0::leftBuffer, Foliage::MapleTree_1_1_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_1_1:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_1_1::tiles, Foliage::MapleTree_1_1_1::upBuffer, Foliage::MapleTree_1_1_1::downBuffer, Foliage::MapleTree_1_1_1::leftBuffer, Foliage::MapleTree_1_1_1::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_1_2:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_1_2::tiles, Foliage::MapleTree_1_1_2::upBuffer, Foliage::MapleTree_1_1_2::downBuffer, Foliage::MapleTree_1_1_2::leftBuffer, Foliage::MapleTree_1_1_2::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_1_3:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_1_3::tiles, Foliage::MapleTree_1_1_3::upBuffer, Foliage::MapleTree_1_1_3::downBuffer, Foliage::MapleTree_1_1_3::leftBuffer, Foliage::MapleTree_1_1_3::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_2_1_0:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_2_1_0::tiles, Foliage::MapleTree_2_1_0::upBuffer, Foliage::MapleTree_2_1_0::downBuffer, Foliage::MapleTree_2_1_0::leftBuffer, Foliage::MapleTree_2_1_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_2_1_1:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_2_1_1::tiles, Foliage::MapleTree_2_1_1::upBuffer, Foliage::MapleTree_2_1_1::downBuffer, Foliage::MapleTree_2_1_1::leftBuffer, Foliage::MapleTree_2_1_1::rightBuffer
+							);
+							break;
+
+
+
+						case FoliageIdentity::MapleTree_0_2_0:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_2_0::tiles, Foliage::MapleTree_0_2_0::upBuffer, Foliage::MapleTree_0_2_0::downBuffer, Foliage::MapleTree_0_2_0::leftBuffer, Foliage::MapleTree_0_2_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_2_1:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_2_1::tiles, Foliage::MapleTree_0_2_1::upBuffer, Foliage::MapleTree_0_2_1::downBuffer, Foliage::MapleTree_0_2_1::leftBuffer, Foliage::MapleTree_0_2_1::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_2_2:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_2_2::tiles, Foliage::MapleTree_0_2_2::upBuffer, Foliage::MapleTree_0_2_2::downBuffer, Foliage::MapleTree_0_2_2::leftBuffer, Foliage::MapleTree_0_2_2::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_2_3:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_2_3::tiles, Foliage::MapleTree_0_2_3::upBuffer, Foliage::MapleTree_0_2_3::downBuffer, Foliage::MapleTree_0_2_3::leftBuffer, Foliage::MapleTree_0_2_3::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_0_2_4:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_0_2_4::tiles, Foliage::MapleTree_0_2_4::upBuffer, Foliage::MapleTree_0_2_4::downBuffer, Foliage::MapleTree_0_2_4::leftBuffer, Foliage::MapleTree_0_2_4::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_2_0:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_2_0::tiles, Foliage::MapleTree_1_2_0::upBuffer, Foliage::MapleTree_1_2_0::downBuffer, Foliage::MapleTree_1_2_0::leftBuffer, Foliage::MapleTree_1_2_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_2_1:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_2_1::tiles, Foliage::MapleTree_1_2_1::upBuffer, Foliage::MapleTree_1_2_1::downBuffer, Foliage::MapleTree_1_2_1::leftBuffer, Foliage::MapleTree_1_2_1::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_2_2:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_2_2::tiles, Foliage::MapleTree_1_2_2::upBuffer, Foliage::MapleTree_1_2_2::downBuffer, Foliage::MapleTree_1_2_2::leftBuffer, Foliage::MapleTree_1_2_2::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_1_2_3:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_1_2_3::tiles, Foliage::MapleTree_1_2_3::upBuffer, Foliage::MapleTree_1_2_3::downBuffer, Foliage::MapleTree_1_2_3::leftBuffer, Foliage::MapleTree_1_2_3::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_2_2_0:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_2_2_0::tiles, Foliage::MapleTree_2_2_0::upBuffer, Foliage::MapleTree_2_2_0::downBuffer, Foliage::MapleTree_2_2_0::leftBuffer, Foliage::MapleTree_2_2_0::rightBuffer
+							);
+							break;
+						case FoliageIdentity::MapleTree_2_2_1:
+							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
+								Foliage::MapleTree_2_2_1::tiles, Foliage::MapleTree_2_2_1::upBuffer, Foliage::MapleTree_2_2_1::downBuffer, Foliage::MapleTree_2_2_1::leftBuffer, Foliage::MapleTree_2_2_1::rightBuffer
+							);
+							break;
+
+
+						default:
+							break;
+						}
+
+					}
+				}
+			}
+		}
+
+	}
+
+	for ( int row = 0; row < 32; row++ )
+	{
+		for ( int col = 0; col < 32; col++ )
+		{
+			//  std::cout << ( int )proceduralChunk[row * 32 + col] << std::endl;
+			worldChunk.insert( chunk[row * 32 + col], 0, worldChunk.getChunkIndexX() * 32 + col, worldChunk.getChunkIndexY() * 32 + row, 1, 1 );
+		}
+	}
+
+	return;
+
+
+
+
+	/*
 	static const std::int64_t OVERWORLD_HEIGHT = 1536; // [!] put in settings
 	TileIdentity* proceduralChunk = this->getProceduralChunk( worldChunk.getChunkIndexX(), worldChunk.getChunkIndexY() );
 	for ( int row = 0; row < 32; row++ )
@@ -2090,7 +2421,7 @@ void World::procedurallyGenerate( WorldChunk& worldChunk )
 	delete[] proceduralChunk;
 
 	return;
-
+	*/
 
 
 	/*
@@ -2246,15 +2577,26 @@ void World::DEBUG_PRINT_TILE_SPRITES()
 std::int16_t World::getRelativeChunkIndex( std::int64_t worldX, std::int64_t worldY ) const
 {
 	// Get chunk index relative to the focal chunk
+	if ( !( worldX >= this->_worldChunkPointers[0]->getChunkIndexX() * Settings::WorldChunk::SIZE &&
+		worldY >= this->_worldChunkPointers[0]->getChunkIndexY() * Settings::WorldChunk::SIZE &&
+		worldX < this->_worldChunkPointers[0]->getChunkIndexX() * Settings::WorldChunk::SIZE + ( Settings::World::CHUNK_RADIUS * 2 + 1 ) * Settings::WorldChunk::SIZE &&
+		worldY < this->_worldChunkPointers[0]->getChunkIndexY() * Settings::WorldChunk::SIZE + ( Settings::World::CHUNK_RADIUS * 2 + 1 ) * Settings::WorldChunk::SIZE )
+		)
+	{
+		return - 1;
+	}
+
+
 	std::int16_t numChunksWidth = 1 + World::_chunkRadius * 2;
 
 	std::int64_t chunkX = ( worldX >= 0 ) ? ( std::int64_t )( worldX / World::_chunkCellSize ) : ( std::int64_t )( ( ( worldX + 1 ) - World::_chunkCellSize ) / World::_chunkCellSize );
 	std::int64_t chunkY = ( worldY >= 0 ) ? ( std::int64_t )( worldY / World::_chunkCellSize ) : ( std::int64_t )( ( ( worldY + 1 ) - World::_chunkCellSize ) / World::_chunkCellSize );
 
+
 	std::int64_t relativeChunkX = chunkX - this->_focalChunkIndexX + World::_chunkRadius;
 	std::int64_t relativeChunkY = chunkY - this->_focalChunkIndexY + World::_chunkRadius;
 
-	std::int16_t relativeChunkIndex = ( relativeChunkX >= 0 && relativeChunkX < numChunksWidth&& relativeChunkY >= 0 && relativeChunkY < numChunksWidth ) ? ( relativeChunkY * numChunksWidth + relativeChunkX ) : -1;
+	std::int16_t relativeChunkIndex = ( relativeChunkX >= 0 && relativeChunkX < numChunksWidth && relativeChunkY >= 0 && relativeChunkY < numChunksWidth ) ? ( relativeChunkY * numChunksWidth + relativeChunkX ) : -1;
 
 	return relativeChunkIndex;
 }
@@ -2289,6 +2631,9 @@ Tile* World::getTile( long double dX, long double dY ) const
 
 	std::uint16_t relativeTileIndex = World::getRelativeTileIndex( x, y );
 
+	if ( relativeTileIndex < 0 || relativeTileIndex >= Settings::WorldChunk::SIZE * Settings::WorldChunk::SIZE ) return nullptr;
+
+
 	return &this->_worldChunkPointers[relativeChunkIndex]->getTiles()[relativeTileIndex];
 }
 
@@ -2306,12 +2651,15 @@ Tile* World::getTile( std::int64_t x, std::int64_t y ) const
 
 	std::uint16_t relativeTileIndex = World::getRelativeTileIndex( x, y );
 
+	if ( relativeTileIndex < 0 || relativeTileIndex >= Settings::WorldChunk::SIZE * Settings::WorldChunk::SIZE ) return nullptr;
+
+
 	return &this->_worldChunkPointers[relativeChunkIndex]->getTiles()[relativeTileIndex];
 }
 
 
 // Lighting
-const Light* World::getLight( std::int64_t x, std::int64_t y ) const
+Light* World::getLight( std::int64_t x, std::int64_t y ) const
 {
 	// Given worldPosition, return the reference of Light as a pointer
 	// The reason for conditionals is to account for negative quadrant offsets
@@ -2322,6 +2670,9 @@ const Light* World::getLight( std::int64_t x, std::int64_t y ) const
 	if ( relativeChunkIndex < 0 || relativeChunkIndex >= this->_numWorldChunks ) return nullptr;
 
 	std::uint16_t relativeTileIndex = World::getRelativeTileIndex( x, y );
+
+	if ( relativeTileIndex < 0 || relativeTileIndex >= Settings::WorldChunk::SIZE * Settings::WorldChunk::SIZE ) return nullptr;
+
 
 	return &this->_worldChunkPointers[relativeChunkIndex]->getLights()[relativeTileIndex];
 }
@@ -2339,27 +2690,34 @@ const LightSource* World::getLightSource( std::int64_t x, std::int64_t y ) const
 
 	std::uint16_t relativeTileIndex = World::getRelativeTileIndex( x, y );
 
+	if ( relativeTileIndex < 0 || relativeTileIndex >= Settings::WorldChunk::SIZE * Settings::WorldChunk::SIZE ) return nullptr;
+
 	return &this->_worldChunkPointers[relativeChunkIndex]->getLightSources().at( relativeTileIndex );
 }
 
 
-void World::addLight( std::int64_t x, std::int64_t y, const LightSource& lightSource, long double intensity )
+void World::addLight( std::int64_t worldX, std::int64_t worldY, const LightSource& lightSource, long double intensity )
 {
 	// Given worldPosition, return the reference of Light as a pointer
 	// The reason for conditionals is to account for negative quadrant offsets
 
-	std::int16_t relativeChunkIndex = this->getRelativeChunkIndex( x, y );
+	std::int16_t relativeChunkIndex = this->getRelativeChunkIndex( worldX, worldY );
 
 	// Out of bounds
 	if ( relativeChunkIndex < 0 || relativeChunkIndex >= this->_numWorldChunks ) return;
 
-	std::uint16_t relativeTileIndex = World::getRelativeTileIndex( x, y );
+	std::uint16_t relativeTileIndex = World::getRelativeTileIndex( worldX, worldY );
+
+	if ( relativeTileIndex < 0 || relativeTileIndex >= Settings::WorldChunk::SIZE * Settings::WorldChunk::SIZE ) return;
+
+
 	Light& light = this->_worldChunkPointers[relativeChunkIndex]->getLights()[relativeTileIndex];
+	
 	light.addRed( lightSource.getRed() * intensity );
 	light.addGreen( lightSource.getGreen() * intensity );
 	light.addBlue( lightSource.getBlue() * intensity );
 	light.addAlpha( lightSource.getAlpha() );
-
+	
 	return;
 }
 
@@ -2375,10 +2733,11 @@ void World::resetLighting()
 		const BoundingBox<std::int64_t> chunkBounds = BoundingBox<std::int64_t>( _worldChunks[i].getChunkIndexX() * chunkSize, _worldChunks[i].getChunkIndexY() * chunkSize, chunkSize, chunkSize );
 		// [!] add a method to retreive chunkBounds
 		// No need to render if camera cannot see it
-		if ( cameraView.intersects( chunkBounds ) )
-		{
+		
+		//if ( cameraView.intersects( chunkBounds ) )
+		//{
 			this->_worldChunks[i].resetLights();
-		}
+		//}
 	}
 
 	return;
@@ -2531,32 +2890,6 @@ void World::calculateTileRenders()
 }
 
 
-void World::updateGeographyTask()
-{
-	/*
-	this->_runningUpdateGeography = true;
-
-	while ( this->_runningUpdateGeography )
-	{
-		this->updateGeography();
-	}
-	*/
-	return;
-}
-
-void World::updateGeography()
-{
-	//std::unique_lock<std::mutex> lockUpdateGeography( this->_mutexUpdateGeography );
-	//this->_condRenderWorld.wait( lockUpdateGeography );
-	//this->_condUpdateGeography.wait( lockUpdateGeography ); [~!]
-
-	// this->calculateTileRenders(); [~!]
-
-	//std::thread calculateTileRenders0 = std::thread( &World::calculateTileRenders0, this );
-	//calculateTileRenders0.join();
-	return;
-}
-
 
 
 void World::calculateLightRenders()
@@ -2581,114 +2914,114 @@ void World::calculateLightRenders()
 		const BoundingBox<std::int64_t> chunkBounds = _worldChunks[i].getBounds();
 		WorldChunk& currWorldChunk = this->_worldChunks[i];
 		currWorldChunk.wipeLightRender();
-		// No need to render if camera cannot see it
-		//if ( cameraView.intersects( chunkBounds ) )
-		if ( true )
+
+		Light* lights = currWorldChunk.getLights();
+
+		for ( std::int16_t i = 0; i < numCellsPerChunk; i++ )
 		{
-			WorldChunk& currWorldChunk = this->_worldChunks[i];
-			Light* lights = currWorldChunk.getLights();
+			int x = i % chunkSize;
+			int y = i / chunkSize;
 
-			for ( std::int16_t i = 0; i < numCellsPerChunk; i++ )
+			std::int64_t worldX = x + currWorldChunk.getChunkIndexX() * chunkSize;
+			std::int64_t worldY = y + currWorldChunk.getChunkIndexY() * chunkSize;
+
+
+			// Only render lights within camera frame AND within world
+			if ( worldX >= topLeftX && worldX <= bottomRightX && worldY >= topLeftY && worldY <= bottomRightY )
+			//if ( true )
 			{
-				int x = i % chunkSize;
-				int y = i / chunkSize;
+				int ne = ( y - 1 ) * chunkSize + ( x + 1 ); // Northerneastern neighbor
+				int n = ( y - 1 ) * chunkSize + x; // Northern neighbor
+				int nw = ( y - 1 ) * chunkSize + ( x - 1 ); // // Northwestern
 
-				std::int64_t worldX = x + currWorldChunk.getChunkIndexX() * chunkSize;
-				std::int64_t worldY = y + currWorldChunk.getChunkIndexY() * chunkSize;
+				int e = y * chunkSize + ( x + 1 ); // Eastern neighbor
+				int c = y * chunkSize + x; // Current tile
+				int w = y * chunkSize + ( x - 1 ); // Western neighbor
+
+				int se = ( y + 1 ) * chunkSize + ( x + 1 ); // Southeastern neighbor
+				int s = ( y + 1 ) * chunkSize + x; // Southern neighbor
+				int sw = ( y + 1 ) * chunkSize + ( x - 1 ); // Southwestern neighbor
 
 
-				// Only render lights within camera frame AND within world
-				//if ( worldX >= topLeftX && worldX <= bottomRightX && worldY >= topLeftY && worldY <= bottomRightY )
-				if ( true )
+				// Quadrant edge merge
+				
+				Light* neLight = ( x >= chunkSize - 1 || y <= 0 ) ? this->getLight( worldX + 1, worldY - 1 ) : &lights[ne];
+				Light* nLight = ( y <= 0 ) ? this->getLight( worldX, worldY - 1 ) : &lights[n];
+				Light* nwLight = ( x <= 0 || y <= 0 ) ? this->getLight( worldX - 1, worldY - 1 ) : &lights[nw];
+				Light* eLight = ( x >= chunkSize - 1 ) ? this->getLight( worldX + 1, worldY ) : &lights[e];
+				Light* cLight = &lights[i];
+				Light* wLight = ( x <= 0 ) ? this->getLight( worldX - 1, worldY ) : &lights[w];
+				Light* seLight = ( x >= chunkSize - 1 || y >= chunkSize - 1 ) ? this->getLight( worldX + 1, worldY + 1 ) : &lights[se];
+				Light* sLight = ( y >= chunkSize - 1 ) ? this->getLight( worldX, worldY + 1 ) : &lights[s];
+				Light* swLight = ( x <= 0 || y >= chunkSize - 1 ) ? this->getLight( worldX - 1, worldY + 1 ) : &lights[sw];
+				 
+
+				/*
+				Light* neLight =  this->getLight( worldX + 1, worldY - 1 ) ;
+				Light* nLight = this->getLight( worldX, worldY - 1 ) ;
+				Light* nwLight = this->getLight( worldX - 1, worldY - 1 ) ;
+				Light* eLight =  this->getLight( worldX + 1, worldY ) ;
+				Light* cLight = &lights[i];
+				Light* wLight =  this->getLight( worldX - 1, worldY );
+				Light* seLight = this->getLight( worldX + 1, worldY + 1 ) ;
+				Light* sLight =  this->getLight( worldX, worldY + 1 );
+				Light* swLight =  this->getLight( worldX - 1, worldY + 1 ) ;
+				*/
+
+				// Out of bounds check
+				if ( neLight == nullptr || nLight == nullptr || nwLight == nullptr ||
+					eLight == nullptr || wLight == nullptr ||
+					seLight == nullptr || sLight == nullptr || swLight == nullptr
+					)
 				{
-					int ne = ( y - 1 ) * chunkSize + ( x + 1 ); // Northerneastern neighbor
-					int n = ( y - 1 ) * chunkSize + x; // Northern neighbor
-					int nw = ( y - 1 ) * chunkSize + ( x - 1 ); // // Northwestern
-
-					int e = y * chunkSize + ( x + 1 ); // Eastern neighbor
-					int c = y * chunkSize + x; // Current tile
-					int w = y * chunkSize + ( x - 1 ); // Western neighbor
-
-					int se = ( y + 1 ) * chunkSize + ( x + 1 ); // Southeastern neighbor
-					int s = ( y + 1 ) * chunkSize + x; // Southern neighbor
-					int sw = ( y + 1 ) * chunkSize + ( x - 1 ); // Southwestern neighbor
-
-
-					// Quadrant edge merge
-					const Light* neLight = ( x >= chunkSize - 1 || y <= 0 ) ? this->getLight( worldX + 1, worldY - 1 ) : &lights[ne];
-					const Light* nLight = ( y <= 0 ) ? this->getLight( worldX, worldY - 1 ) : &lights[n];
-					const Light* nwLight = ( x <= 0 || y <= 0 ) ? this->getLight( worldX - 1, worldY - 1 ) : &lights[nw];
-					const Light* eLight = ( x >= chunkSize - 1 ) ? this->getLight( worldX + 1, worldY ) : &lights[e];
-					const Light* cLight = &lights[i];
-					const Light* wLight = ( x <= 0 ) ? this->getLight( worldX - 1, worldY ) : &lights[w];
-					const Light* seLight = ( x >= chunkSize - 1 || y >= chunkSize - 1 ) ? this->getLight( worldX + 1, worldY + 1 ) : &lights[se];
-					const Light* sLight = ( y >= chunkSize - 1 ) ? this->getLight( worldX, worldY + 1 ) : &lights[s];
-					const Light* swLight = ( x <= 0 || y >= chunkSize - 1 ) ? this->getLight( worldX - 1, worldY + 1 ) : &lights[sw];
-
-
-					// Out of bounds check
-					if ( neLight == nullptr || nLight == nullptr || nwLight == nullptr ||
-						eLight == nullptr || wLight == nullptr ||
-						seLight == nullptr || sLight == nullptr || swLight == nullptr
-						)
-					{
-						continue;
-						//return;
-					}
-
-					std::uint8_t corner0R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + nwLight->getRed() + nLight->getRed() + wLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner0G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + nwLight->getGreen() + nLight->getGreen() + wLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner0B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + nwLight->getBlue() + nLight->getBlue() + wLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner0A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + nwLight->getAlpha() + nLight->getAlpha() + wLight->getAlpha() ) / 4 ), 255 ) );
-
-					std::uint8_t corner1R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + swLight->getRed() + sLight->getRed() + wLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner1G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + swLight->getGreen() + sLight->getGreen() + wLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner1B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + swLight->getBlue() + sLight->getBlue() + wLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner1A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + swLight->getAlpha() + sLight->getAlpha() + wLight->getAlpha() ) / 4 ), 255 ) );
-
-					std::uint8_t corner2R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + seLight->getRed() + sLight->getRed() + eLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner2G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + seLight->getGreen() + sLight->getGreen() + eLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner2B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + seLight->getBlue() + sLight->getBlue() + eLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner2A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + seLight->getAlpha() + sLight->getAlpha() + eLight->getAlpha() ) / 4 ), 255 ) );
-
-					std::uint8_t corner3R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + neLight->getRed() + nLight->getRed() + eLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner3G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + neLight->getGreen() + nLight->getGreen() + eLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner3B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + neLight->getBlue() + nLight->getBlue() + eLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner3A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + neLight->getAlpha() + nLight->getAlpha() + eLight->getAlpha() ) / 4 ), 255 ) );
-
-					std::uint32_t corner0 = ( corner0R << 24 ) + ( corner0G << 16 ) + ( corner0B << 8 ) + ( corner0A );
-					std::uint32_t corner1 = ( corner1R << 24 ) + ( corner1G << 16 ) + ( corner1B << 8 ) + ( corner1A );
-					std::uint32_t corner2 = ( corner2R << 24 ) + ( corner2G << 16 ) + ( corner2B << 8 ) + ( corner2A );
-					std::uint32_t corner3 = ( corner3R << 24 ) + ( corner3G << 16 ) + ( corner3B << 8 ) + ( corner3A );
-
-					currWorldChunk.insertLightRenders( corner0, corner1, corner2, corner3, true, worldX, worldY, 1, 1 );
-
+					continue;
 				}
-			}
 
+				std::uint8_t corner0R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + nwLight->getRed() + nLight->getRed() + wLight->getRed() ) / 4 ), 255 ) );
+				std::uint8_t corner0G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + nwLight->getGreen() + nLight->getGreen() + wLight->getGreen() ) / 4 ), 255 ) );
+				std::uint8_t corner0B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + nwLight->getBlue() + nLight->getBlue() + wLight->getBlue() ) / 4 ), 255 ) );
+				std::uint8_t corner0A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + nwLight->getAlpha() + nLight->getAlpha() + wLight->getAlpha() ) / 4 ), 255 ) );
+
+				std::uint8_t corner1R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + swLight->getRed() + sLight->getRed() + wLight->getRed() ) / 4 ), 255 ) );
+				std::uint8_t corner1G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + swLight->getGreen() + sLight->getGreen() + wLight->getGreen() ) / 4 ), 255 ) );
+				std::uint8_t corner1B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + swLight->getBlue() + sLight->getBlue() + wLight->getBlue() ) / 4 ), 255 ) );
+				std::uint8_t corner1A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + swLight->getAlpha() + sLight->getAlpha() + wLight->getAlpha() ) / 4 ), 255 ) );
+
+				std::uint8_t corner2R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + seLight->getRed() + sLight->getRed() + eLight->getRed() ) / 4 ), 255 ) );
+				std::uint8_t corner2G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + seLight->getGreen() + sLight->getGreen() + eLight->getGreen() ) / 4 ), 255 ) );
+				std::uint8_t corner2B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + seLight->getBlue() + sLight->getBlue() + eLight->getBlue() ) / 4 ), 255 ) );
+				std::uint8_t corner2A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + seLight->getAlpha() + sLight->getAlpha() + eLight->getAlpha() ) / 4 ), 255 ) );
+
+				std::uint8_t corner3R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + neLight->getRed() + nLight->getRed() + eLight->getRed() ) / 4 ), 255 ) );
+				std::uint8_t corner3G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + neLight->getGreen() + nLight->getGreen() + eLight->getGreen() ) / 4 ), 255 ) );
+				std::uint8_t corner3B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + neLight->getBlue() + nLight->getBlue() + eLight->getBlue() ) / 4 ), 255 ) );
+				std::uint8_t corner3A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + neLight->getAlpha() + nLight->getAlpha() + eLight->getAlpha() ) / 4 ), 255 ) );
+
+				std::uint32_t corner0 = ( corner0R << 24 ) + ( corner0G << 16 ) + ( corner0B << 8 ) + ( corner0A );
+				std::uint32_t corner1 = ( corner1R << 24 ) + ( corner1G << 16 ) + ( corner1B << 8 ) + ( corner1A );
+				std::uint32_t corner2 = ( corner2R << 24 ) + ( corner2G << 16 ) + ( corner2B << 8 ) + ( corner2A );
+				std::uint32_t corner3 = ( corner3R << 24 ) + ( corner3G << 16 ) + ( corner3B << 8 ) + ( corner3A );
+
+
+				currWorldChunk.insertLightRenders( corner0, corner1, corner2, corner3, true, worldX, worldY, 1, 1 );
+
+			}
 		}
 	}
 
 
-
-	std::lock_guard<std::mutex> lockUpdateGeography( this->_mutexUpdateGeography );
+	std::lock_guard<std::mutex> lockUpdateLightingBuffer( this->_mutexUpdateLighting );
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
 		const BoundingBox<long double>& cameraView = this->_camera->getView();
-
 		const BoundingBox<std::int64_t> chunkBounds = _worldChunks[i].getBounds();
-
-		// No need to render if camera cannot see it
-		//if ( cameraView.intersects( chunkBounds ) )
-		if ( true )
-		{
-			WorldChunk& currWorldChunk = this->_worldChunks[i];
-			currWorldChunk.swapLightRenders();
-
-		}
+		WorldChunk& currWorldChunk = this->_worldChunks[i];
+		currWorldChunk.swapLightRenders();
 	}
 
+
+	this->_condLoad.notify_one();
 
 	return;
 }
@@ -3094,7 +3427,6 @@ void World::updateLightingTask()
 		this->updateLighting();
 	}
 
-
 	return;
 }
 
@@ -3102,16 +3434,10 @@ void World::updateLightingTask()
 
 void World::updateLighting()
 {
-	///std::unique_lock<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
-	///this->_condUpdateLighting.wait( lockUpdateLighting );
-
-
 	this->resetLighting();
 	this->emitStaticLightSources();
 	this->emitPlayerLightSource(); // [~!]
 	this->calculateLightRenders();
-
-	// swap
 
 	return;
 }
@@ -3131,16 +3457,15 @@ void World::setPlayer( Player* player )
 
 void World::render()
 {
-	std::lock_guard<std::mutex> lockUpdateGeography( this->_mutexUpdateGeography );
+	std::unique_lock<std::mutex> lockUpdateLightingBuffer( this->_mutexUpdateLighting );
 
 
 	this->_camera->renderWorld();
 
-
-
-
-
 	this->updateDecals(); // [!] only need to be called once after in render thread after sprites have been added in another thread ( or make sprite add thread in render thread and call update decals right after, guaranteed synchronous )
+
+
+	this->_condUpdateLighting.notify_one();
 
 	return;
 }

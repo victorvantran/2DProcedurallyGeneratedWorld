@@ -52,6 +52,12 @@ public:
 
 
 
+
+
+	olc::Sprite* backgroundSprite;
+	olc::Decal* backgroundDecal;
+
+
 private:
 
 
@@ -75,6 +81,10 @@ public:
 		createWorld();
 		createPlayer();
 		createEnemy();
+
+
+		backgroundSprite = new olc::Sprite("./background.png");
+		backgroundDecal = new olc::Decal( backgroundSprite );
 		return true;
 	}
 
@@ -446,6 +456,10 @@ public:
 		//this->camera->renderDynamicObject( *enemy2 );
 		//this->camera->renderDynamicObject( *enemy3 );
 
+
+
+		Clear( olc::BLACK );
+		//DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0} );
 		this->world->render();
 
 

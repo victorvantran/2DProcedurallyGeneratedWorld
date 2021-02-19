@@ -72,14 +72,6 @@ private:
 	std::int64_t _focalChunkIndexX;
 	std::int64_t _focalChunkIndexY;
 
-	std::condition_variable _condRenderWorld;
-
-	// Geography
-	std::atomic<bool> _runningUpdateGeography;
-	std::thread _updateGeographyThread;
-	std::mutex _mutexUpdateGeography;
-	std::condition_variable _condUpdateGeography;
-
 	// Lighting
 	std::atomic<bool> _runningUpdateLighting;
 	std::thread _updateLightingThread;
@@ -98,6 +90,8 @@ private:
 	std::atomic<bool> _runningLoadWorldGeography;
 	std::thread _loadWorldGeographyThread;
 	std::mutex _mutexLoadWorldChunks;
+	std::condition_variable _condLoad;
+
 
 	Atlas _atlas;
 
@@ -286,13 +280,11 @@ public:
 	// Geography
 	Tile* getTile( long double dX, long double dY ) const;
 	Tile* getTile( std::int64_t x, std::int64_t y ) const;
-
 	void calculateTileRenders();
-	void updateGeographyTask();
-	void updateGeography();
+
 
 	// Lighting
-	const Light* getLight( std::int64_t x, std::int64_t y ) const;
+	Light* getLight( std::int64_t x, std::int64_t y ) const;
 	const LightSource* getLightSource( std::int64_t x, std::int64_t y ) const;
 	//void addLight( std::int64_t x, std::int64_t y, std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a );
 	void addLight( std::int64_t x, std::int64_t y, const LightSource& lightSource, long double intensity );

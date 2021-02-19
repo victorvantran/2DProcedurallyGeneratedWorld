@@ -60,7 +60,7 @@ void Camera::worldToScreen( long double cellX, long double cellY, std::int64_t& 
 
 void Camera::renderWorld() const // [!] leave to rendering to world
 {
-	pge->Clear( olc::BLACK );
+	////pge->Clear( olc::BLACK );
 	//pge->Clear( olc::Pixel( 68, 142, 228, 255 ) );
 	//pge->Clear( olc::Pixel( 255, 255 ,255, 255 ) );
 	//pge->Clear( olc::DARK_CYAN );
