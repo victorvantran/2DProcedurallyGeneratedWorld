@@ -344,7 +344,7 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 					pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
 					//pge->SetDecalMode( olc::DecalMode::ADDITIVE );
 					pge->DrawExplicitDecal(
-						lightDecal,
+						nullptr,
 						verticiesB,
 						textureCoordinates,
 						colors

@@ -58,6 +58,8 @@ public:
 	olc::Decal* backgroundDecal;
 
 
+	olc::Sprite* caveBackgroundSprite;
+	olc::Decal*	caveBackgroundDecal;
 private:
 
 
@@ -85,6 +87,10 @@ public:
 
 		backgroundSprite = new olc::Sprite("./background.png");
 		backgroundDecal = new olc::Decal( backgroundSprite );
+
+
+		caveBackgroundSprite = new olc::Sprite( "./cave_background.png" );
+		caveBackgroundDecal = new olc::Decal( caveBackgroundSprite );
 		return true;
 	}
 
@@ -450,8 +456,8 @@ public:
 		camera->setPosition( this->player->getCharacter().getAABB().getCenter().x - 32/2, this->player->getCharacter().getAABB().getCenter().y - 32/2 ); //[~!]
 
 
-		// Render
-		this->camera->renderPlayer( *player ); //[~!]
+		// Render Enemies
+		//this->camera->renderPlayer( *player ); 
 		//this->camera->renderDynamicObject( *enemy1 );
 		//this->camera->renderDynamicObject( *enemy2 );
 		//this->camera->renderDynamicObject( *enemy3 );
@@ -459,7 +465,49 @@ public:
 
 
 		Clear( olc::BLACK );
+
+
 		//DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0} );
+		DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0} );
+
+
+
+		static const std::int64_t OVERWORLD_HEIGHT = 1536;
+
+		long double playerX = this->player->getCharacter().getCurrPosition().x;
+		long double playerY = this->player->getCharacter().getCurrPosition().y;
+
+		long double terraneanHeightPerlinVal = this->world->getTerraneanHeightMap().getPerlinValue( playerX );
+		std::int64_t worldYTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT );
+
+		//std::cout << playerY << ": " << worldYTerranean << std::endl;
+		//std::cout << ( -playerY ) / ( -worldYTerranean ) << std::endl;
+
+
+		long double attenuate = std::min( ( long double )1, std::max( ( long double )0, ( ( -worldYTerranean + playerY ) / ( -worldYTerranean / 4 ) ) ) );
+
+
+		/*
+		FillRectDecal(
+			olc::vf2d{ 0, 0 },
+			olc::vf2d{ Example::screenWidth, Example::screenHeight },
+			olc::Pixel( 0, 0, 0, attenuate * 255 )
+		);
+		*/
+		std::cout << attenuate << std::endl;
+
+
+		/*
+		if ( attenuate > 0 )
+		{
+			DrawDecal( olc::vf2d{ 0, 0 }, this->caveBackgroundDecal, olc::vf2d{1.0, 1.0}, olc::Pixel( 0, 0, 0, attenuate * 255 ) );
+		}
+		*/
+
+		DrawDecal( olc::vf2d{ 0, 0 }, this->caveBackgroundDecal, olc::vf2d{1.0, 1.0}, olc::Pixel( 255, 255, 255, attenuate * 255 ) );
+
+
+		this->camera->renderPlayer( *player ); //[~!]
 		this->world->render();
 
 
