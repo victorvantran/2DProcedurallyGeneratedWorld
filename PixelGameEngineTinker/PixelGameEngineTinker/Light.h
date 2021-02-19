@@ -12,8 +12,9 @@ private:
 
 public:
 	// Constructors
-	Light() : _r( 0 ), _g( 0 ), _b( 0 ), _a( 0 ) {}
-	Light( std::int32_t r_, std::int32_t g_, std::int32_t b_ ) : _r( r_ ), _g( g_ ), _b( b_ ), _a( 0 ) {}
+	//Light() : _r( 255 ), _g( 255 ), _b( 255 ), _a( 255 ) {}
+	Light() : _r( 0 ), _g( 0 ), _b( 0 ), _a( 255 ) {}
+	Light( std::int32_t r_, std::int32_t g_, std::int32_t b_ ) : _r( r_ ), _g( g_ ), _b( b_ ), _a( 255 ) {}
 	Light( std::int32_t r_, std::int32_t g_, std::int32_t b_, std::int32_t a_ ) : _r( r_ ), _g( g_ ), _b( b_ ), _a( a_ ) {}
 
 

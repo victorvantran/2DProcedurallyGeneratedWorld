@@ -7,6 +7,7 @@
 
 
 
+
 unsigned char World::copyBits( unsigned char& destination, unsigned char copy, unsigned startIndex, unsigned char endIndex )
 {
 	// Copy a subset of bits from one byte to another using the same positions within each byte
@@ -92,6 +93,7 @@ World::World( std::int64_t seed,
 
 	const CaveMap& upperCaveMap,
 	const CaveMap& lowerCaveMap,
+
 	const BorealForest& borealForest,
 	const SubtropicalDesert& subtropicalDesert,
 	const TemperateGrassland& temperateGrassland,
@@ -128,7 +130,10 @@ World::World( std::int64_t seed,
 	_tundra( tundra ),
 	_woodland( woodland )
 {
-
+	for ( std::size_t i = 0; i < Settings::World::NUM_WORLD_CHUNKS; i++ )
+	{
+		this->_worldChunks[i].setWorld( this );
+	}
 }
 
 
@@ -279,6 +284,7 @@ void World::initializeWorldChunks()
 
 			std::cout << "Chunk does has not existed beforehand. Procedural generation" << std::endl;
 			this->procedurallyGenerate( this->_worldChunks[index] );
+			//this->_worldChunks[index].resetLights();
 			// [!] procedural generation here
 
 			continue;
@@ -314,6 +320,8 @@ void World::initializeWorldChunks()
 
 		delete[] tilesData;
 		delete[] paletteData;
+
+		//this->_worldChunks[i].resetLights();
 	}
 
 	sqlite3_close( database );
@@ -351,12 +359,14 @@ void World::insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::in
 {
 	// Insert a tile ( or tiles ) to proper worldChunk
 	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
+	///std::unique_lock<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
+
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
 		if ( BoundingBox<std::int64_t>( x, y, width, height ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
 		{
-			this->_worldChunks[i].insert( tileId, x, y, width, height );
+			this->_worldChunks[i].insert( tileId, 0, x, y, width, height ); // [~!]
 		}
 	}
 	return;
@@ -368,6 +378,8 @@ void World::remove( TileIdentity id, std::int64_t x, std::int64_t y, std::int64_
 {
 	// Remove a tile ( or tiles ) from the proper world chunk.
 	std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
+	///std::unique_lock<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
+
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
@@ -378,6 +390,123 @@ void World::remove( TileIdentity id, std::int64_t x, std::int64_t y, std::int64_
 	}
 	return;
 }
+
+
+
+void World::updateTileBorders( std::int64_t worldX, std::int64_t worldY )
+{
+	// Out of bounds check
+	if ( !( worldX >= this->_worldChunkPointers[0]->getChunkIndexX() * Settings::WorldChunk::SIZE &&
+		worldY >= this->_worldChunkPointers[0]->getChunkIndexY() * Settings::WorldChunk::SIZE &&
+		worldX < this->_worldChunkPointers[0]->getChunkIndexX() * Settings::WorldChunk::SIZE + ( Settings::World::CHUNK_RADIUS * 2 + 1 ) * Settings::WorldChunk::SIZE &&
+		worldY < this->_worldChunkPointers[0]->getChunkIndexY() * Settings::WorldChunk::SIZE + ( Settings::World::CHUNK_RADIUS * 2 + 1 ) * Settings::WorldChunk::SIZE )
+		)
+	{
+		return;
+	}
+
+	// Quadrant edge merge
+	Tile* cTile = this->getTile( worldX, worldY );
+	if ( cTile == nullptr ) return;
+
+	const Tile* neTile = this->getTile( worldX + 1, worldY - 1 );
+	const Tile* nTile = this->getTile( worldX, worldY - 1 );
+	const Tile* nwTile = this->getTile( worldX - 1, worldY - 1 );
+	const Tile* eTile = this->getTile( worldX + 1, worldY );
+
+	const Tile* wTile = this->getTile( worldX - 1, worldY );
+	const Tile* seTile = this->getTile( worldX + 1, worldY + 1 );
+	const Tile* sTile = this->getTile( worldX, worldY + 1 );
+	const Tile* swTile = this->getTile( worldX - 1, worldY + 1 );
+
+	std::uint8_t borders = 0;
+
+	if ( cTile->getComplementary() )
+	{
+		borders = (
+			( ( nwTile == nullptr || nwTile->getId() == TileIdentity::Void || !nwTile->getComplementary() ) ? 0 : 1 ) |
+			( ( nTile == nullptr || nTile->getId() == TileIdentity::Void || !nTile->getComplementary() ) ? 0 : 1 ) << 1 |
+			( ( neTile == nullptr || neTile->getId() == TileIdentity::Void || !neTile->getComplementary() ) ? 0 : 1 ) << 2 |
+			( ( eTile == nullptr || eTile->getId() == TileIdentity::Void || !eTile->getComplementary() ) ? 0 : 1 ) << 3 |
+			( ( seTile == nullptr || seTile->getId() == TileIdentity::Void || !seTile->getComplementary() ) ? 0 : 1 ) << 4 |
+			( ( sTile == nullptr || sTile->getId() == TileIdentity::Void || !sTile->getComplementary() ) ? 0 : 1 ) << 5 |
+			( ( swTile == nullptr || swTile->getId() == TileIdentity::Void || !swTile->getComplementary() ) ? 0 : 1 ) << 6 |
+			( ( wTile == nullptr || wTile->getId() == TileIdentity::Void || !wTile->getComplementary() ) ? 0 : 1 << 7 )
+			);
+	}
+	else
+	{
+		TileIdentity complementaryId = cTile->getId();
+		borders = (
+			( ( nwTile == nullptr || nwTile->getId() != complementaryId ) ? 0 : 1 ) |
+			( ( nTile == nullptr || nTile->getId() != complementaryId ) ? 0 : 1 ) << 1 |
+			( ( neTile == nullptr || neTile->getId() != complementaryId ) ? 0 : 1 ) << 2 |
+			( ( eTile == nullptr || eTile->getId() != complementaryId ) ? 0 : 1 ) << 3 |
+			( ( seTile == nullptr || seTile->getId() != complementaryId ) ? 0 : 1 ) << 4 |
+			( ( sTile == nullptr || sTile->getId() != complementaryId ) ? 0 : 1 ) << 5 |
+			( ( swTile == nullptr || swTile->getId() != complementaryId ) ? 0 : 1 ) << 6 |
+			( ( wTile == nullptr || wTile->getId() != complementaryId ) ? 0 : 1 << 7 )
+			);
+	}
+
+
+	/*
+	if ( neTile == nullptr || nTile == nullptr || nwTile == nullptr || eTile == nullptr || wTile == nullptr || seTile == nullptr || sTile == nullptr || swTile == nullptr )
+	{
+		std::cout << "NULL FOUND" << std::endl;
+	}
+	*/
+	/*
+	if ( wTile == nullptr )
+	{
+		std::cout << "NULL: " << worldX - 1 << std::endl;
+	}
+	*/
+
+	if ( worldX == 1040448 && worldY == -559 )
+	{
+		std::int64_t wWorldX = worldX - 1;
+
+
+		std::int16_t numChunksWidth = 1 + World::_chunkRadius * 2;
+
+		std::int64_t chunkIndexX = ( wWorldX >= 0 ) ? ( std::int64_t )( wWorldX / World::_chunkCellSize ) : ( std::int64_t )( ( ( wWorldX + 1 ) - World::_chunkCellSize ) / World::_chunkCellSize );
+		std::int64_t chunkIndexY = ( worldY >= 0 ) ? ( std::int64_t )( worldY / World::_chunkCellSize ) : ( std::int64_t )( ( ( worldY + 1 ) - World::_chunkCellSize ) / World::_chunkCellSize );
+		//std::int16_t relativeChunkIndex = ( ( chunkIndexY - this->_focalChunkIndexY ) + World::_chunkRadius ) * numChunksWidth + ( ( chunkIndexX - this->_focalChunkIndexX ) + World::_chunkRadius );
+
+		//std::cout << chunkIndexX << std::endl;
+
+		std::cout << ( ( chunkIndexX - this->_focalChunkIndexX ) + World::_chunkRadius ) << std::endl;
+
+		//std::cout << int(this->getTile( worldX - 1, worldY ) == nullptr) << std::endl;
+	}
+
+
+
+	cTile->setBorders( borders );
+	this->refreshTileRender( cTile, worldX, worldY );
+
+	return;
+}
+
+
+
+void World::refreshTileRender( Tile* tile, std::int64_t worldX, std::int64_t worldY )
+{
+	// 
+
+	for ( int i = 0; i < this->_numWorldChunks; i++ )
+	{
+		if ( BoundingBox<std::int64_t>( worldX, worldY, 1, 1 ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
+		{
+			this->_worldChunks[i].removeTileRenders( tile->getId(), worldX, worldY, 1, 1 );
+			this->_worldChunks[i].insertTileRenders( *tile, worldX, worldY, 1, 1 );
+			return;
+		}
+	}
+	return;
+}
+
 
 
 WorldChunk* World::getWorldChunks()
@@ -462,7 +591,7 @@ void World::stopWorldMemorySystem()
 	this->_updateGeographyThread.join();
 
 	this->_runningUpdateLighting = false;
-	//this->_condRenderWorld.notify_one();
+	///this->_condRenderWorld.notify_one();
 	this->_updateLightingThread.join();
 	return;
 }
@@ -525,7 +654,7 @@ void World::saveWorldGeography()
 	// Save all blobs/palettes in one go
 	for ( int i = 0; i < this->_saveWorldChunks.size(); i++ )
 	{
-		std::cout << "(" << this->_saveWorldChunks[i]->getChunkIndexX() << "," << this->_saveWorldChunks[i]->getChunkIndexY() << ")" << std::endl;
+		// std::cout << "(" << this->_saveWorldChunks[i]->getChunkIndexX() << "," << this->_saveWorldChunks[i]->getChunkIndexY() << ")" << std::endl; // [~!]
 		// save
 
 		WorldChunkMemory* worldChunkMemory = this->_saveWorldChunks[i];
@@ -709,8 +838,8 @@ void World::loadWorldGeography()
 		return;
 	}
 
-	std::lock_guard<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
 
+	std::unique_lock<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting ); // [~!]
 
 	for ( int i = 0; i < chunkRecalls.size(); i++ )
 	{
@@ -724,6 +853,8 @@ void World::loadWorldGeography()
 
 	this->_focalChunkIndexX = focalIndexX;
 	this->_focalChunkIndexY = focalIndexY;
+
+	lockUpdateLighting.unlock(); // [~!]
 
 	this->updateWorldChunkRelativeIndicies();
 	this->updateWorldChunkPointers();
@@ -740,6 +871,8 @@ void World::loadWorldGeography()
 	const char* command = NULL;
 	char* errorMessage = NULL;
 	int rc;
+
+	//std::vector<std::int64_t> proceduralGenerateCache;
 
 	sqlite3_open( "./world.db", &database );
 
@@ -766,9 +899,13 @@ void World::loadWorldGeography()
 			rc = sqlite3_step( statement );
 			rc = sqlite3_finalize( statement );
 
-			std::cout << "Chunk does has not existed beforehand. Procedural generation" << std::endl;
+			// std::cout << "Chunk does has not existed beforehand. Procedural generation" << std::endl; [~!]
+			// std::cout << this->_worldChunks[index].getRelativeChunkIndex() << std::endl;
+			//proceduralGenerateCache.push_back( index );
 			this->procedurallyGenerate( this->_worldChunks[index] );
+			//this->_worldChunks[index].resetLights();
 
+			//if ( this->_worldChunks[index].getRelativeChunkIndex() == 21 ) proceduralGenerateCache.push_back( index );
 			continue;
 		}
 		rc = sqlite3_step( statement ); // Extra step for null
@@ -815,13 +952,23 @@ void World::loadWorldGeography()
 		WorldChunk& worldChunk = this->_worldChunks[index];
 		this->loadTiles( worldChunk, tilesData, numBytesTiles, paletteData, numBytesPalette );
 
+		//worldChunk.resetLights();
+
+
 		delete[] tilesData;
 		delete[] paletteData;
 	}
 	worldChunkRecalls.clear();
 
+
+	//for ( std::int64_t worldChunkIndex : proceduralGenerateCache )
+	//{
+	//	this->procedurallyGenerate( this->_worldChunks[worldChunkIndex] );
+	//}
+
+
 	// Allow the tileSprites to refresh
-	this->_condUpdateLighting.notify_one();
+	//this->_condUpdateLighting.notify_one();
 	this->_condModifyAtlas.notify_one();
 	//////
 
@@ -924,7 +1071,7 @@ void World::updateFocalChunk( const BoundingBox<long double>& focalPoint )
 {
 	// Update the focalChunk of the world relative to a camera's focal point.
 	// Inhibit changing the focalChunk while loading for any nasty race conditions.
-	std::lock_guard<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
+	// std::lock_guard<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting ); //[!~]
 
 	this->_focalChunk = focalPoint;
 	return;
@@ -1026,6 +1173,13 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 	uint16_t byteOffset = numBytesTiles - 1;
 	std::uint8_t remainingSegmentBits = numBitsPerSegment;
 	std::string keyDisplacements;
+
+
+	std::int16_t chunkSize = worldChunk.getSize();
+
+	//worldChunk.wipeRender();
+
+
 	for ( int i = numTiles - 1; i >= 0; i-- )
 	{
 		key = 0;
@@ -1042,11 +1196,11 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 
 			// Insert tiles to the Tile[] and the tileSprites map
 			std::uint64_t tileId = paletteData[key];
-			if ( historyTileIds.find( static_cast<TileIdentity>( tileId ) ) == historyTileIds.end() ) // [!] Make sure that render quad tree jsut continues if it can't find the sprite because it may try to render before the tileId is added
+			if ( historyTileIds.find( static_cast< TileIdentity >( tileId ) ) == historyTileIds.end() ) // [!] Make sure that render quad tree jsut continues if it can't find the sprite because it may try to render before the tileId is added
 			{
 				//std::thread addSpriteTileThread( &World::addSpriteTile, this, static_cast< TileIdentity >( tileId ) );
 				//addSpriteTileThread.join();
-				historyTileIds.insert( static_cast<TileIdentity>( tileId ) );
+				historyTileIds.insert( static_cast< TileIdentity >( tileId ) );
 			}
 			//worldChunk.insertTile( worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1, tileId );
 
@@ -1055,7 +1209,13 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 
 			if ( static_cast< TileIdentity >( tileId ) != TileIdentity::Void )
 			{
-				worldChunk.insert( static_cast< TileIdentity >( tileId ), worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1 );
+
+
+				worldChunk.insert( static_cast< TileIdentity >( tileId ), 0, worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1 );
+
+
+
+
 			}
 
 			remainingSegmentBits -= numBitsPerKey;
@@ -1100,11 +1260,11 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 
 			// Insert tiles to the Tile[] and the tileSprites map
 			std::uint64_t tileId = paletteData[key];
-			if ( historyTileIds.find( static_cast<TileIdentity>( tileId ) ) == historyTileIds.end() ) // [!] Make sure that render quad tree jsut continues if it can't find the sprite because it may try to render before the tileId is added
+			if ( historyTileIds.find( static_cast< TileIdentity >( tileId ) ) == historyTileIds.end() ) // [!] Make sure that render quad tree jsut continues if it can't find the sprite because it may try to render before the tileId is added
 			{
 				//std::thread addSpriteTileThread( &World::addSpriteTile, this, static_cast< TileIdentity >( tileId ) );
 				//addSpriteTileThread.join();
-				historyTileIds.insert( static_cast<TileIdentity>( tileId ) );
+				historyTileIds.insert( static_cast< TileIdentity >( tileId ) );
 			}
 			//worldChunk.insertTile( worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1, tileId );
 			//std::cout << "2: " << ( unsigned long long )tileId << std::endl;
@@ -1112,7 +1272,10 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 
 			if ( static_cast< TileIdentity >( tileId ) != TileIdentity::Void )
 			{
-				worldChunk.insert( static_cast< TileIdentity >( tileId ), worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1 );
+				//worldChunk.insert( static_cast< TileIdentity >( tileId ), worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1 );
+
+				worldChunk.insert( static_cast< TileIdentity >( tileId ), 0, worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1 );
+
 			}
 
 		}
@@ -1536,6 +1699,33 @@ TileIdentity* World::getProceduralChunk( std::int64_t chunkIndexX, std::int64_t 
 
 	TileIdentity* chunk = new TileIdentity[32 * 32];
 
+
+	/*
+	for ( int row = 0; row < 32; row++ )
+	{
+		for ( int col = 0; col < 32; col++ )
+		{
+			if ( row == 0 )
+			{
+				chunk[row * 32 + col] = TileIdentity::Stone;
+
+			}
+			else if ( col != 5 )
+			{
+				chunk[row * 32 + col] = TileIdentity::Water;
+
+			}
+			else
+			{
+				chunk[row * 32 + col] = TileIdentity::Void;
+
+			}
+		}
+	}
+
+	return chunk;
+	*/
+
 	for ( std::int64_t tileY = originY + OVERWORLD_HEIGHT; tileY < originY + OVERWORLD_HEIGHT + 32; tileY++ )
 	{
 		for ( std::int64_t tileX = originX; tileX < originX + 32; tileX++ )
@@ -1876,9 +2066,8 @@ TileIdentity* World::getProceduralChunk( std::int64_t chunkIndexX, std::int64_t 
 			}
 		}
 
-
-
 	}
+
 
 	return chunk;
 }
@@ -1886,6 +2075,7 @@ TileIdentity* World::getProceduralChunk( std::int64_t chunkIndexX, std::int64_t 
 
 void World::procedurallyGenerate( WorldChunk& worldChunk )
 {
+
 	static const std::int64_t OVERWORLD_HEIGHT = 1536; // [!] put in settings
 	TileIdentity* proceduralChunk = this->getProceduralChunk( worldChunk.getChunkIndexX(), worldChunk.getChunkIndexY() );
 	for ( int row = 0; row < 32; row++ )
@@ -1893,13 +2083,61 @@ void World::procedurallyGenerate( WorldChunk& worldChunk )
 		for ( int col = 0; col < 32; col++ )
 		{
 			//  std::cout << ( int )proceduralChunk[row * 32 + col] << std::endl;
-			worldChunk.insert( proceduralChunk[row * 32 + col], worldChunk.getChunkIndexX() * 32 + col, worldChunk.getChunkIndexY() * 32 + row, 1, 1 );
+			worldChunk.insert( proceduralChunk[row * 32 + col], 0, worldChunk.getChunkIndexX() * 32 + col, worldChunk.getChunkIndexY() * 32 + row, 1, 1 );
 		}
 	}
 
 	delete[] proceduralChunk;
 
 	return;
+
+
+
+	/*
+	static const std::int64_t OVERWORLD_HEIGHT = 1536;
+
+	std::int64_t originX = worldChunk.getChunkIndexX() * 32;
+	std::int64_t originY = worldChunk.getChunkIndexY() * 32;
+
+	TileIdentity* chunk = new TileIdentity[32 * 32];
+
+
+
+	for ( int row = 0; row < 32; row++ )
+	{
+		for ( int col = 0; col < 32; col++ )
+		{
+
+			if ( row == 0 )
+			{
+				worldChunk.insert( TileIdentity::Stone, originX + col, originY + row, 1, 1 );
+				//chunk[row * 32 + col] = TileIdentity::Stone;
+
+			}
+			else if ( col != 5 )
+			{
+				worldChunk.insert( TileIdentity::Water, originX + col, originY + row, 1, 1 );
+
+				//chunk[row * 32 + col] = TileIdentity::Water;
+
+			}
+			else
+			{
+				worldChunk.insert( TileIdentity::Void, originX + col, originY + row, 1, 1 );
+
+				//chunk[row * 32 + col] = TileIdentity::Void;
+
+			}
+
+			worldChunk.insert( TileIdentity::Torch, originX + col, originY + row, 1, 1 );
+
+		}
+	}
+
+
+	return;
+	*/
+
 }
 
 
@@ -1933,7 +2171,7 @@ void World::initializeSprites()
 	{
 		for ( std::uint16_t j = 0; j < Settings::World::NUM_CELLS_PER_CHUNK; j++ )
 		{
-			tileIds.insert( static_cast<TileIdentity>( tileId ) );
+			tileIds.insert( static_cast< TileIdentity >( tileId ) );
 		}
 	}
 
@@ -1950,7 +2188,7 @@ void World::loadSpriteTiles()
 	std::unique_lock<std::mutex> lockModifyTileSprites( this->_mutexModifyAtlas ); // [!] change to mutexmodifyspritetilesmap
 	std::chrono::system_clock::time_point secondsPassed = std::chrono::system_clock::now() + std::chrono::seconds( ( long long )Settings::World::SPRITE_TILE_REFRESH_RATE );
 	this->_condModifyAtlas.wait_until( lockModifyTileSprites, secondsPassed );
-	
+
 	std::set<TileIdentity> tileIds;
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
@@ -2005,15 +2243,18 @@ void World::DEBUG_PRINT_TILE_SPRITES()
 
 
 
-std::int16_t World::getRelativeChunkIndex( std::int64_t x, std::int64_t y ) const
+std::int16_t World::getRelativeChunkIndex( std::int64_t worldX, std::int64_t worldY ) const
 {
 	// Get chunk index relative to the focal chunk
 	std::int16_t numChunksWidth = 1 + World::_chunkRadius * 2;
 
-	std::int64_t chunkIndexX = ( x >= 0 ) ? ( std::int64_t )( x / World::_chunkCellSize ) : ( std::int64_t )( ( ( x + 1 ) - World::_chunkCellSize ) / World::_chunkCellSize );
-	std::int64_t chunkIndexY = ( y >= 0 ) ? ( std::int64_t )( y / World::_chunkCellSize ) : ( std::int64_t )( ( ( y + 1 ) - World::_chunkCellSize ) / World::_chunkCellSize );
+	std::int64_t chunkX = ( worldX >= 0 ) ? ( std::int64_t )( worldX / World::_chunkCellSize ) : ( std::int64_t )( ( ( worldX + 1 ) - World::_chunkCellSize ) / World::_chunkCellSize );
+	std::int64_t chunkY = ( worldY >= 0 ) ? ( std::int64_t )( worldY / World::_chunkCellSize ) : ( std::int64_t )( ( ( worldY + 1 ) - World::_chunkCellSize ) / World::_chunkCellSize );
 
-	std::int16_t relativeChunkIndex = ( ( chunkIndexY - this->_focalChunkIndexY ) + World::_chunkRadius ) * numChunksWidth + ( ( chunkIndexX - this->_focalChunkIndexX ) + World::_chunkRadius );
+	std::int64_t relativeChunkX = chunkX - this->_focalChunkIndexX + World::_chunkRadius;
+	std::int64_t relativeChunkY = chunkY - this->_focalChunkIndexY + World::_chunkRadius;
+
+	std::int16_t relativeChunkIndex = ( relativeChunkX >= 0 && relativeChunkX < numChunksWidth&& relativeChunkY >= 0 && relativeChunkY < numChunksWidth ) ? ( relativeChunkY * numChunksWidth + relativeChunkX ) : -1;
 
 	return relativeChunkIndex;
 }
@@ -2022,16 +2263,18 @@ std::int16_t World::getRelativeChunkIndex( std::int64_t x, std::int64_t y ) cons
 std::uint16_t World::getRelativeTileIndex( std::int64_t x, std::int64_t y )
 {
 	// Get tile index relative to the chunk
-	std::int16_t relativeX = ( x >= 0 ) ? ( x % World::_chunkCellSize ) : ( ( x + 1 ) % World::_chunkCellSize ) + World::_chunkCellSize - 1;
-	std::int16_t relativeY = ( y >= 0 ) ? ( y % World::_chunkCellSize ) : ( ( y + 1 ) % World::_chunkCellSize ) + World::_chunkCellSize - 1;
-	std::uint16_t relativeTileIndex = relativeY * World::_chunkCellSize + relativeX;
+	std::int16_t relativeX = ( x >= 0 ) ? ( x % Settings::WorldChunk::SIZE ) : ( ( x + 1 ) % Settings::WorldChunk::SIZE ) + Settings::WorldChunk::SIZE - 1;
+	std::int16_t relativeY = ( y >= 0 ) ? ( y % Settings::WorldChunk::SIZE ) : ( ( y + 1 ) % Settings::WorldChunk::SIZE ) + Settings::WorldChunk::SIZE - 1;
+
+	//std::uint16_t relativeTileIndex = relativeY * World::_chunkCellSize + relativeX;
+	std::uint16_t relativeTileIndex = ( relativeX >= 0 && relativeX < Settings::WorldChunk::SIZE&& relativeY >= 0 && relativeY < Settings::WorldChunk::SIZE ) ? relativeY * World::_chunkCellSize + relativeX : -1;
 
 	return relativeTileIndex;
 }
 
 
 // Geography
-const Tile* World::getTile( long double dX, long double dY ) const
+Tile* World::getTile( long double dX, long double dY ) const
 {
 	// Given worldPosition, return the reference of Tile as a pointer
 	// The reason for conditionals is to account for negative quadrant offsets
@@ -2051,7 +2294,7 @@ const Tile* World::getTile( long double dX, long double dY ) const
 
 
 
-const Tile* World::getTile( std::int64_t x, std::int64_t y ) const
+Tile* World::getTile( std::int64_t x, std::int64_t y ) const
 {
 	// Given worldPosition, return the reference of Tile as a pointer
 	// The reason for conditionals is to account for negative quadrant offsets
@@ -2127,7 +2370,6 @@ void World::resetLighting()
 	const BoundingBox<long double>& cameraView = this->_camera->getView();
 	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 	std::uint16_t chunkSize = Settings::WorldChunk::SIZE;
-
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
 		const BoundingBox<std::int64_t> chunkBounds = BoundingBox<std::int64_t>( _worldChunks[i].getChunkIndexX() * chunkSize, _worldChunks[i].getChunkIndexY() * chunkSize, chunkSize, chunkSize );
@@ -2153,11 +2395,13 @@ void World::calculateTileRenders()
 	std::uint16_t chunkSize = Settings::WorldChunk::SIZE;
 	std::uint16_t numCellsPerChunk = Settings::World::NUM_CELLS_PER_CHUNK;
 
-	std::int64_t topLeftX = ( std::int64_t )std::floor( cameraView.getX() );
-	std::int64_t topLeftY = ( std::int64_t )std::floor( cameraView.getY() );
 
-	std::int64_t bottomRightX = ( std::int64_t )std::ceil( cameraView.getX() + cameraView.getWidth() );
-	std::int64_t bottomRightY = ( std::int64_t )std::ceil( cameraView.getY() + cameraView.getHeight() );
+	std::int8_t buffer = 32; 
+	std::int64_t topLeftX = ( std::int64_t )std::floor( cameraView.getX() ) - buffer;
+	std::int64_t topLeftY = ( std::int64_t )std::floor( cameraView.getY() ) - buffer;
+
+	std::int64_t bottomRightX = ( std::int64_t )std::ceil( cameraView.getX() + cameraView.getWidth() ) + buffer;
+	std::int64_t bottomRightY = ( std::int64_t )std::ceil( cameraView.getY() + cameraView.getHeight() ) + buffer;
 
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
@@ -2170,18 +2414,18 @@ void World::calculateTileRenders()
 			WorldChunk& currWorldChunk = this->_worldChunks[i];
 			Tile* tiles = currWorldChunk.getTiles();
 
-			currWorldChunk.wipeRender();
+			//currWorldChunk.wipeRender();
 
 			for ( std::int16_t i = 0; i < numCellsPerChunk; i++ )
 			{
 				int x = i % chunkSize;
 				int y = i / chunkSize;
 
-				std::int64_t worldPosX = x + currWorldChunk.getChunkIndexX() * chunkSize;
-				std::int64_t worldPosY = y + currWorldChunk.getChunkIndexY() * chunkSize;
+				std::int64_t worldX = x + currWorldChunk.getChunkIndexX() * chunkSize;
+				std::int64_t worldY = y + currWorldChunk.getChunkIndexY() * chunkSize;
 
 				// Only render lights within camera frame AND within world
-				if ( worldPosX >= topLeftX && worldPosX <= bottomRightX && worldPosY >= topLeftY && worldPosY <= bottomRightY )
+				if ( worldX >= topLeftX && worldX <= bottomRightX && worldY >= topLeftY && worldY <= bottomRightY )
 				{
 					int ne = ( y - 1 ) * chunkSize + ( x + 1 ); // Northerneastern neighbor
 					int n = ( y - 1 ) * chunkSize + x; // Northern neighbor
@@ -2196,15 +2440,15 @@ void World::calculateTileRenders()
 					int sw = ( y + 1 ) * chunkSize + ( x - 1 ); // Southwestern neighbor
 
 					// Quadrant edge merge
-					const Tile* neTile = ( x >= chunkSize - 1 || y <= 0 ) ? this->getTile( worldPosX + 1, worldPosY - 1 ) : &tiles[ne];
-					const Tile* nTile = ( y <= 0 ) ? this->getTile( worldPosX, worldPosY - 1 ) : &tiles[n];
-					const Tile* nwTile = ( x <= 0 || y <= 0 ) ? this->getTile( worldPosX - 1, worldPosY - 1 ) : &tiles[nw];
-					const Tile* eTile = ( x >= chunkSize - 1 ) ? this->getTile( worldPosX + 1, worldPosY ) : &tiles[e];
+					const Tile* neTile = ( x >= chunkSize - 1 || y <= 0 ) ? this->getTile( worldX + 1, worldY - 1 ) : &tiles[ne];
+					const Tile* nTile = ( y <= 0 ) ? this->getTile( worldX, worldY - 1 ) : &tiles[n];
+					const Tile* nwTile = ( x <= 0 || y <= 0 ) ? this->getTile( worldX - 1, worldY - 1 ) : &tiles[nw];
+					const Tile* eTile = ( x >= chunkSize - 1 ) ? this->getTile( worldX + 1, worldY ) : &tiles[e];
 					Tile* cTile = &tiles[i];
-					const Tile* wTile = ( x <= 0 ) ? this->getTile( worldPosX - 1, worldPosY ) : &tiles[w];
-					const Tile* seTile = ( x >= chunkSize - 1 || y >= chunkSize - 1 ) ? this->getTile( worldPosX + 1, worldPosY + 1 ) : &tiles[se];
-					const Tile* sTile = ( y >= chunkSize - 1 ) ? this->getTile( worldPosX, worldPosY + 1 ) : &tiles[s];
-					const Tile* swTile = ( x <= 0 || y >= chunkSize - 1 ) ? this->getTile( worldPosX - 1, worldPosY + 1 ) : &tiles[sw];
+					const Tile* wTile = ( x <= 0 ) ? this->getTile( worldX - 1, worldY ) : &tiles[w];
+					const Tile* seTile = ( x >= chunkSize - 1 || y >= chunkSize - 1 ) ? this->getTile( worldX + 1, worldY + 1 ) : &tiles[se];
+					const Tile* sTile = ( y >= chunkSize - 1 ) ? this->getTile( worldX, worldY + 1 ) : &tiles[s];
+					const Tile* swTile = ( x <= 0 || y >= chunkSize - 1 ) ? this->getTile( worldX - 1, worldY + 1 ) : &tiles[sw];
 
 					// Out of bounds check
 					if ( neTile == nullptr || nTile == nullptr || nwTile == nullptr ||
@@ -2230,10 +2474,10 @@ void World::calculateTileRenders()
 					*/
 
 					std::uint8_t borders;
-					
+
 					if ( cTile->getComplementary() )
 					{
-						
+
 						borders = (
 							( ( nwTile == nullptr || nwTile->getId() == TileIdentity::Void || !nwTile->getComplementary() ) ? 0 : 1 ) |
 							( ( nTile == nullptr || nTile->getId() == TileIdentity::Void || !nTile->getComplementary() ) ? 0 : 1 ) << 1 |
@@ -2244,7 +2488,7 @@ void World::calculateTileRenders()
 							( ( swTile == nullptr || swTile->getId() == TileIdentity::Void || !swTile->getComplementary() ) ? 0 : 1 ) << 6 |
 							( ( wTile == nullptr || wTile->getId() == TileIdentity::Void || !wTile->getComplementary() ) ? 0 : 1 << 7 )
 							);
-						
+
 						/*
 						borders = (
 							( ( nwTile == nullptr || nwTile->getId() == TileIdentity::Void ) ? 0 : 1 ) |
@@ -2276,7 +2520,7 @@ void World::calculateTileRenders()
 					cTile->setBorders( borders );
 
 					currWorldChunk.insertTileRenders( *cTile,
-						worldPosX, worldPosY, 1, 1 );
+						worldX, worldY, 1, 1 );
 
 
 				}
@@ -2289,243 +2533,29 @@ void World::calculateTileRenders()
 
 void World::updateGeographyTask()
 {
+	/*
 	this->_runningUpdateGeography = true;
 
 	while ( this->_runningUpdateGeography )
 	{
 		this->updateGeography();
 	}
-
+	*/
 	return;
 }
 
 void World::updateGeography()
 {
-	std::unique_lock<std::mutex> lockUpdateGeography( this->_mutexUpdateGeography );
+	//std::unique_lock<std::mutex> lockUpdateGeography( this->_mutexUpdateGeography );
 	//this->_condRenderWorld.wait( lockUpdateGeography );
-	this->_condUpdateGeography.wait( lockUpdateGeography );
+	//this->_condUpdateGeography.wait( lockUpdateGeography ); [~!]
 
-	this->calculateTileRenders();
+	// this->calculateTileRenders(); [~!]
 
 	//std::thread calculateTileRenders0 = std::thread( &World::calculateTileRenders0, this );
 	//calculateTileRenders0.join();
 	return;
 }
-
-
-
-
-void World::calculateLightRenders0()
-{
-	const BoundingBox<long double>& cameraView = this->_camera->getView();
-	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
-	std::uint16_t chunkSize = Settings::WorldChunk::SIZE;
-	std::uint16_t numCellsPerChunk = Settings::World::NUM_CELLS_PER_CHUNK;
-
-	std::int64_t topLeftX = ( std::int64_t )std::floor( cameraView.getX() );
-	std::int64_t topLeftY = ( std::int64_t )std::floor( cameraView.getY() );
-
-	std::int64_t bottomRightX = ( std::int64_t )std::ceil( cameraView.getX() + cameraView.getWidth() );
-	std::int64_t bottomRightY = ( std::int64_t )std::ceil( cameraView.getY() + cameraView.getHeight() );
-
-	for ( int i = 0; i < this->_numWorldChunks / 2; i++ )
-	{
-		const BoundingBox<std::int64_t> chunkBounds = _worldChunks[i].getBounds();
-
-		// No need to render if camera cannot see it
-		if ( cameraView.intersects( chunkBounds ) )
-		{
-			WorldChunk& currWorldChunk = this->_worldChunks[i];
-			Light* lights = currWorldChunk.getLights();
-
-			for ( std::int16_t i = 0; i < numCellsPerChunk; i++ )
-			{
-				int x = i % chunkSize;
-				int y = i / chunkSize;
-
-				std::int64_t worldPosX = x + currWorldChunk.getChunkIndexX() * chunkSize;
-				std::int64_t worldPosY = y + currWorldChunk.getChunkIndexY() * chunkSize;
-
-
-				// Only render lights within camera frame AND within world
-				if ( worldPosX >= topLeftX && worldPosX <= bottomRightX && worldPosY >= topLeftY && worldPosY <= bottomRightY )
-				{
-					int ne = ( y - 1 ) * chunkSize + ( x + 1 ); // Northerneastern neighbor
-					int n = ( y - 1 ) * chunkSize + x; // Northern neighbor
-					int nw = ( y - 1 ) * chunkSize + ( x - 1 ); // // Northwestern
-
-					int e = y * chunkSize + ( x + 1 ); // Eastern neighbor
-					int c = y * chunkSize + x; // Current tile
-					int w = y * chunkSize + ( x - 1 ); // Western neighbor
-
-					int se = ( y + 1 ) * chunkSize + ( x + 1 ); // Southeastern neighbor
-					int s = ( y + 1 ) * chunkSize + x; // Southern neighbor
-					int sw = ( y + 1 ) * chunkSize + ( x - 1 ); // Southwestern neighbor
-
-
-					// Quadrant edge merge
-					const Light* neLight = ( x >= chunkSize - 1 || y <= 0 ) ? this->getLight( worldPosX + 1, worldPosY - 1 ) : &lights[ne];
-					const Light* nLight = ( y <= 0 ) ? this->getLight( worldPosX, worldPosY - 1 ) : &lights[n];
-					const Light* nwLight = ( x <= 0 || y <= 0 ) ? this->getLight( worldPosX - 1, worldPosY - 1 ) : &lights[nw];
-					const Light* eLight = ( x >= chunkSize - 1 ) ? this->getLight( worldPosX + 1, worldPosY ) : &lights[e];
-					const Light* cLight = &lights[i];
-					const Light* wLight = ( x <= 0 ) ? this->getLight( worldPosX - 1, worldPosY ) : &lights[w];
-					const Light* seLight = ( x >= chunkSize - 1 || y >= chunkSize - 1 ) ? this->getLight( worldPosX + 1, worldPosY + 1 ) : &lights[se];
-					const Light* sLight = ( y >= chunkSize - 1 ) ? this->getLight( worldPosX, worldPosY + 1 ) : &lights[s];
-					const Light* swLight = ( x <= 0 || y >= chunkSize - 1 ) ? this->getLight( worldPosX - 1, worldPosY + 1 ) : &lights[sw];
-
-
-					// Out of bounds check
-					if ( neLight == nullptr || nLight == nullptr || nwLight == nullptr ||
-						eLight == nullptr || wLight == nullptr ||
-						seLight == nullptr || sLight == nullptr || swLight == nullptr
-						)
-					{
-						continue;
-						//return;
-					}
-
-					std::uint8_t corner0R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + nwLight->getRed() + nLight->getRed() + wLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner0G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + nwLight->getGreen() + nLight->getGreen() + wLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner0B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + nwLight->getBlue() + nLight->getBlue() + wLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner0A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + nwLight->getAlpha() + nLight->getAlpha() + wLight->getAlpha() ) / 4 ), 255 ) );
-
-					std::uint8_t corner1R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + swLight->getRed() + sLight->getRed() + wLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner1G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + swLight->getGreen() + sLight->getGreen() + wLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner1B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + swLight->getBlue() + sLight->getBlue() + wLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner1A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + swLight->getAlpha() + sLight->getAlpha() + wLight->getAlpha() ) / 4 ), 255 ) );
-
-					std::uint8_t corner2R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + seLight->getRed() + sLight->getRed() + eLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner2G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + seLight->getGreen() + sLight->getGreen() + eLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner2B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + seLight->getBlue() + sLight->getBlue() + eLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner2A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + seLight->getAlpha() + sLight->getAlpha() + eLight->getAlpha() ) / 4 ), 255 ) );
-
-					std::uint8_t corner3R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + neLight->getRed() + nLight->getRed() + eLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner3G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + neLight->getGreen() + nLight->getGreen() + eLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner3B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + neLight->getBlue() + nLight->getBlue() + eLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner3A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + neLight->getAlpha() + nLight->getAlpha() + eLight->getAlpha() ) / 4 ), 255 ) );
-
-					std::uint32_t corner0 = ( corner0R << 24 ) + ( corner0G << 16 ) + ( corner0B << 8 ) + ( corner0A );
-					std::uint32_t corner1 = ( corner1R << 24 ) + ( corner1G << 16 ) + ( corner1B << 8 ) + ( corner1A );
-					std::uint32_t corner2 = ( corner2R << 24 ) + ( corner2G << 16 ) + ( corner2B << 8 ) + ( corner2A );
-					std::uint32_t corner3 = ( corner3R << 24 ) + ( corner3G << 16 ) + ( corner3B << 8 ) + ( corner3A );
-
-					currWorldChunk.insertLightRenders( corner0, corner1, corner2, corner3, true, worldPosX, worldPosY, 1, 1 );
-				}
-			}
-		}
-	}
-
-	return;
-}
-
-
-
-
-void World::calculateLightRenders1()
-{
-	const BoundingBox<long double>& cameraView = this->_camera->getView();
-	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
-	std::uint16_t chunkSize = Settings::WorldChunk::SIZE;
-	std::uint16_t numCellsPerChunk = Settings::World::NUM_CELLS_PER_CHUNK;
-
-	std::int64_t topLeftX = ( std::int64_t )std::floor( cameraView.getX() );
-	std::int64_t topLeftY = ( std::int64_t )std::floor( cameraView.getY() );
-
-	std::int64_t bottomRightX = ( std::int64_t )std::ceil( cameraView.getX() + cameraView.getWidth() );
-	std::int64_t bottomRightY = ( std::int64_t )std::ceil( cameraView.getY() + cameraView.getHeight() );
-
-	for ( int i = this->_numWorldChunks / 2; i < this->_numWorldChunks; i++ )
-	{
-		const BoundingBox<std::int64_t> chunkBounds = _worldChunks[i].getBounds();
-
-		// No need to render if camera cannot see it
-		if ( cameraView.intersects( chunkBounds ) )
-		{
-			WorldChunk& currWorldChunk = this->_worldChunks[i];
-			Light* lights = currWorldChunk.getLights();
-
-			for ( std::int16_t i = 0; i < numCellsPerChunk; i++ )
-			{
-				int x = i % chunkSize;
-				int y = i / chunkSize;
-
-				std::int64_t worldPosX = x + currWorldChunk.getChunkIndexX() * chunkSize;
-				std::int64_t worldPosY = y + currWorldChunk.getChunkIndexY() * chunkSize;
-
-
-				// Only render lights within camera frame AND within world
-				if ( worldPosX >= topLeftX && worldPosX <= bottomRightX && worldPosY >= topLeftY && worldPosY <= bottomRightY )
-				{
-					int ne = ( y - 1 ) * chunkSize + ( x + 1 ); // Northerneastern neighbor
-					int n = ( y - 1 ) * chunkSize + x; // Northern neighbor
-					int nw = ( y - 1 ) * chunkSize + ( x - 1 ); // // Northwestern
-
-					int e = y * chunkSize + ( x + 1 ); // Eastern neighbor
-					int c = y * chunkSize + x; // Current tile
-					int w = y * chunkSize + ( x - 1 ); // Western neighbor
-
-					int se = ( y + 1 ) * chunkSize + ( x + 1 ); // Southeastern neighbor
-					int s = ( y + 1 ) * chunkSize + x; // Southern neighbor
-					int sw = ( y + 1 ) * chunkSize + ( x - 1 ); // Southwestern neighbor
-
-
-					// Quadrant edge merge
-					const Light* neLight = ( x >= chunkSize - 1 || y <= 0 ) ? this->getLight( worldPosX + 1, worldPosY - 1 ) : &lights[ne];
-					const Light* nLight = ( y <= 0 ) ? this->getLight( worldPosX, worldPosY - 1 ) : &lights[n];
-					const Light* nwLight = ( x <= 0 || y <= 0 ) ? this->getLight( worldPosX - 1, worldPosY - 1 ) : &lights[nw];
-					const Light* eLight = ( x >= chunkSize - 1 ) ? this->getLight( worldPosX + 1, worldPosY ) : &lights[e];
-					const Light* cLight = &lights[i];
-					const Light* wLight = ( x <= 0 ) ? this->getLight( worldPosX - 1, worldPosY ) : &lights[w];
-					const Light* seLight = ( x >= chunkSize - 1 || y >= chunkSize - 1 ) ? this->getLight( worldPosX + 1, worldPosY + 1 ) : &lights[se];
-					const Light* sLight = ( y >= chunkSize - 1 ) ? this->getLight( worldPosX, worldPosY + 1 ) : &lights[s];
-					const Light* swLight = ( x <= 0 || y >= chunkSize - 1 ) ? this->getLight( worldPosX - 1, worldPosY + 1 ) : &lights[sw];
-
-
-					// Out of bounds check
-					if ( neLight == nullptr || nLight == nullptr || nwLight == nullptr ||
-						eLight == nullptr || wLight == nullptr ||
-						seLight == nullptr || sLight == nullptr || swLight == nullptr
-						)
-					{
-						continue;
-						//return;
-					}
-
-					std::uint8_t corner0R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + nwLight->getRed() + nLight->getRed() + wLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner0G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + nwLight->getGreen() + nLight->getGreen() + wLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner0B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + nwLight->getBlue() + nLight->getBlue() + wLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner0A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + nwLight->getAlpha() + nLight->getAlpha() + wLight->getAlpha() ) / 4 ), 255 ) );
-
-					std::uint8_t corner1R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + swLight->getRed() + sLight->getRed() + wLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner1G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + swLight->getGreen() + sLight->getGreen() + wLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner1B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + swLight->getBlue() + sLight->getBlue() + wLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner1A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + swLight->getAlpha() + sLight->getAlpha() + wLight->getAlpha() ) / 4 ), 255 ) );
-
-					std::uint8_t corner2R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + seLight->getRed() + sLight->getRed() + eLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner2G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + seLight->getGreen() + sLight->getGreen() + eLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner2B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + seLight->getBlue() + sLight->getBlue() + eLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner2A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + seLight->getAlpha() + sLight->getAlpha() + eLight->getAlpha() ) / 4 ), 255 ) );
-
-					std::uint8_t corner3R = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getRed() + neLight->getRed() + nLight->getRed() + eLight->getRed() ) / 4 ), 255 ) );
-					std::uint8_t corner3G = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getGreen() + neLight->getGreen() + nLight->getGreen() + eLight->getGreen() ) / 4 ), 255 ) );
-					std::uint8_t corner3B = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getBlue() + neLight->getBlue() + nLight->getBlue() + eLight->getBlue() ) / 4 ), 255 ) );
-					std::uint8_t corner3A = ( std::uint8_t )std::max<std::int32_t>( 0, std::min<std::int32_t>( ( ( cLight->getAlpha() + neLight->getAlpha() + nLight->getAlpha() + eLight->getAlpha() ) / 4 ), 255 ) );
-
-					std::uint32_t corner0 = ( corner0R << 24 ) + ( corner0G << 16 ) + ( corner0B << 8 ) + ( corner0A );
-					std::uint32_t corner1 = ( corner1R << 24 ) + ( corner1G << 16 ) + ( corner1B << 8 ) + ( corner1A );
-					std::uint32_t corner2 = ( corner2R << 24 ) + ( corner2G << 16 ) + ( corner2B << 8 ) + ( corner2A );
-					std::uint32_t corner3 = ( corner3R << 24 ) + ( corner3G << 16 ) + ( corner3B << 8 ) + ( corner3A );
-
-					currWorldChunk.insertLightRenders( corner0, corner1, corner2, corner3, true, worldPosX, worldPosY, 1, 1 );
-				}
-			}
-		}
-	}
-
-	return;
-}
-
 
 
 
@@ -2536,18 +2566,24 @@ void World::calculateLightRenders()
 	std::uint16_t chunkSize = Settings::WorldChunk::SIZE;
 	std::uint16_t numCellsPerChunk = Settings::World::NUM_CELLS_PER_CHUNK;
 
-	std::int64_t topLeftX = ( std::int64_t )std::floor( cameraView.getX() );
-	std::int64_t topLeftY = ( std::int64_t )std::floor( cameraView.getY() );
 
-	std::int64_t bottomRightX = ( std::int64_t )std::ceil( cameraView.getX() + cameraView.getWidth() );
-	std::int64_t bottomRightY = ( std::int64_t )std::ceil( cameraView.getY() + cameraView.getHeight() );
+	std::int8_t buffer = 32;
+
+	std::int64_t topLeftX = ( std::int64_t )std::floor( cameraView.getX() ) - buffer;
+	std::int64_t topLeftY = ( std::int64_t )std::floor( cameraView.getY() ) - buffer;
+
+	std::int64_t bottomRightX = ( std::int64_t )std::ceil( cameraView.getX() + cameraView.getWidth() ) + buffer;
+	std::int64_t bottomRightY = ( std::int64_t )std::ceil( cameraView.getY() + cameraView.getHeight() ) + buffer;
+
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
 		const BoundingBox<std::int64_t> chunkBounds = _worldChunks[i].getBounds();
-
+		WorldChunk& currWorldChunk = this->_worldChunks[i];
+		currWorldChunk.wipeLightRender();
 		// No need to render if camera cannot see it
-		if ( cameraView.intersects( chunkBounds ) )
+		//if ( cameraView.intersects( chunkBounds ) )
+		if ( true )
 		{
 			WorldChunk& currWorldChunk = this->_worldChunks[i];
 			Light* lights = currWorldChunk.getLights();
@@ -2557,12 +2593,13 @@ void World::calculateLightRenders()
 				int x = i % chunkSize;
 				int y = i / chunkSize;
 
-				std::int64_t worldPosX = x + currWorldChunk.getChunkIndexX() * chunkSize;
-				std::int64_t worldPosY = y + currWorldChunk.getChunkIndexY() * chunkSize;
+				std::int64_t worldX = x + currWorldChunk.getChunkIndexX() * chunkSize;
+				std::int64_t worldY = y + currWorldChunk.getChunkIndexY() * chunkSize;
 
 
 				// Only render lights within camera frame AND within world
-				if ( worldPosX >= topLeftX && worldPosX <= bottomRightX && worldPosY >= topLeftY && worldPosY <= bottomRightY )
+				//if ( worldX >= topLeftX && worldX <= bottomRightX && worldY >= topLeftY && worldY <= bottomRightY )
+				if ( true )
 				{
 					int ne = ( y - 1 ) * chunkSize + ( x + 1 ); // Northerneastern neighbor
 					int n = ( y - 1 ) * chunkSize + x; // Northern neighbor
@@ -2578,15 +2615,15 @@ void World::calculateLightRenders()
 
 
 					// Quadrant edge merge
-					const Light* neLight = ( x >= chunkSize - 1 || y <= 0 ) ? this->getLight( worldPosX + 1, worldPosY - 1 ) : &lights[ne];
-					const Light* nLight = ( y <= 0 ) ? this->getLight( worldPosX, worldPosY - 1 ) : &lights[n];
-					const Light* nwLight = ( x <= 0 || y <= 0 ) ? this->getLight( worldPosX - 1, worldPosY - 1 ) : &lights[nw];
-					const Light* eLight = ( x >= chunkSize - 1 ) ? this->getLight( worldPosX + 1, worldPosY ) : &lights[e];
+					const Light* neLight = ( x >= chunkSize - 1 || y <= 0 ) ? this->getLight( worldX + 1, worldY - 1 ) : &lights[ne];
+					const Light* nLight = ( y <= 0 ) ? this->getLight( worldX, worldY - 1 ) : &lights[n];
+					const Light* nwLight = ( x <= 0 || y <= 0 ) ? this->getLight( worldX - 1, worldY - 1 ) : &lights[nw];
+					const Light* eLight = ( x >= chunkSize - 1 ) ? this->getLight( worldX + 1, worldY ) : &lights[e];
 					const Light* cLight = &lights[i];
-					const Light* wLight = ( x <= 0 ) ? this->getLight( worldPosX - 1, worldPosY ) : &lights[w];
-					const Light* seLight = ( x >= chunkSize - 1 || y >= chunkSize - 1 ) ? this->getLight( worldPosX + 1, worldPosY + 1 ) : &lights[se];
-					const Light* sLight = ( y >= chunkSize - 1 ) ? this->getLight( worldPosX, worldPosY + 1 ) : &lights[s];
-					const Light* swLight = ( x <= 0 || y >= chunkSize - 1 ) ? this->getLight( worldPosX - 1, worldPosY + 1 ) : &lights[sw];
+					const Light* wLight = ( x <= 0 ) ? this->getLight( worldX - 1, worldY ) : &lights[w];
+					const Light* seLight = ( x >= chunkSize - 1 || y >= chunkSize - 1 ) ? this->getLight( worldX + 1, worldY + 1 ) : &lights[se];
+					const Light* sLight = ( y >= chunkSize - 1 ) ? this->getLight( worldX, worldY + 1 ) : &lights[s];
+					const Light* swLight = ( x <= 0 || y >= chunkSize - 1 ) ? this->getLight( worldX - 1, worldY + 1 ) : &lights[sw];
 
 
 					// Out of bounds check
@@ -2624,11 +2661,34 @@ void World::calculateLightRenders()
 					std::uint32_t corner2 = ( corner2R << 24 ) + ( corner2G << 16 ) + ( corner2B << 8 ) + ( corner2A );
 					std::uint32_t corner3 = ( corner3R << 24 ) + ( corner3G << 16 ) + ( corner3B << 8 ) + ( corner3A );
 
-					currWorldChunk.insertLightRenders( corner0, corner1, corner2, corner3, true, worldPosX, worldPosY, 1, 1 );
+					currWorldChunk.insertLightRenders( corner0, corner1, corner2, corner3, true, worldX, worldY, 1, 1 );
+
 				}
 			}
+
 		}
 	}
+
+
+
+	std::lock_guard<std::mutex> lockUpdateGeography( this->_mutexUpdateGeography );
+
+	for ( int i = 0; i < this->_numWorldChunks; i++ )
+	{
+		const BoundingBox<long double>& cameraView = this->_camera->getView();
+
+		const BoundingBox<std::int64_t> chunkBounds = _worldChunks[i].getBounds();
+
+		// No need to render if camera cannot see it
+		//if ( cameraView.intersects( chunkBounds ) )
+		if ( true )
+		{
+			WorldChunk& currWorldChunk = this->_worldChunks[i];
+			currWorldChunk.swapLightRenders();
+
+		}
+	}
+
 
 	return;
 }
@@ -2838,16 +2898,16 @@ void World::emitStaticLightSources()
 			std::uint16_t localY = it->first / currWorldChunk.getSize();
 
 			const LightSource& lightSource = it->second;
-			
+
 			std::int64_t lightSourcePosX = chunkBounds.getX() + localX;
 			std::int64_t lightSourcePosY = chunkBounds.getY() + localY;
 			std::int16_t lightSourceRadius = lightSource.getRadius();
 
 			// If light is in view of the camera, light it up
 			if (
-				( lightSourcePosX >= topLeftViewX && lightSourcePosY >= topLeftViewY  &&
+				( lightSourcePosX >= topLeftViewX && lightSourcePosY >= topLeftViewY &&
 					lightSourcePosX <= bottomRightViewX && lightSourcePosY <= bottomRightViewY
-				) ||
+					) ||
 				(
 					( ( lightSourcePosX )+lightSourceRadius >= topLeftViewX &&
 						( lightSourcePosY )+lightSourceRadius >= topLeftViewY ) &&
@@ -2879,8 +2939,77 @@ void World::emitStaticLightSources()
 		}
 		//}
 	}
+
 	return;
 }
+
+
+
+
+void World::emitDynamicLightSource( const LightSource& lightSource, long double x, long double y )
+{
+	olc::v2d_generic<long double> originPosition = olc::v2d_generic<long double>{ ( long double )x, ( long double )y };
+	std::int64_t originX;
+	std::int64_t originY;
+
+	long double rayDistance;
+	long double intensity;
+
+	if ( x >= 0 && y >= 0 )
+	{
+		originX = ( std::int64_t )std::floor( originPosition.x );
+		originY = ( std::int64_t )std::floor( originPosition.y );
+
+		rayDistance = std::hypot( ( ( ( long double )originX - x ) + 0.5 ), ( ( ( long double )originY - y ) + 0.5 ) );
+		intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / lightSource.getRadius() ) ) );
+	}
+	else if ( x < 0 && y >= 0 )
+	{
+		originX = ( std::int64_t )std::ceil( originPosition.x );
+		originY = ( std::int64_t )std::floor( originPosition.y );
+
+		rayDistance = std::hypot( ( ( ( long double )originX - x ) - 0.5 ), ( ( ( long double )originY - y ) + 0.5 ) );
+		intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / lightSource.getRadius() ) ) );
+	}
+	else if ( x >= 0 && y < 0 )
+	{
+		originX = ( std::int64_t )std::floor( originPosition.x );
+		originY = ( std::int64_t )std::ceil( originPosition.y );
+
+		rayDistance = std::hypot( ( ( ( long double )originX - x ) + 0.5 ), ( ( ( long double )originY - y ) - 0.5 ) );
+		intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / lightSource.getRadius() ) ) );
+	}
+	else // if ( dX < 0 && dY < 0 )
+	{
+		originX = ( std::int64_t )std::ceil( originPosition.x );
+		originY = ( std::int64_t )std::ceil( originPosition.y );
+
+		rayDistance = std::hypot( ( ( ( long double )originX - x ) - 0.5 ), ( ( ( long double )originY - y ) - 0.5 ) );
+		intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / lightSource.getRadius() ) ) );
+	}
+
+	intensity = intensity * 2;
+
+	this->addLight( originX, originY, lightSource, intensity );
+
+	for ( int cardinality = 0; cardinality < 4; cardinality++ )
+	{
+		LightCastQuadrant<long double> quadrant( cardinality, originX, originY );
+		LightCastRow initialRow = LightCastRow( 1.0f, -1.0f, 1.0f );
+		this->scanStatic( quadrant, initialRow, originPosition, lightSource );
+	}
+
+	return;
+}
+
+
+void World::emitPlayerLightSource()
+{
+	const LightSource& playerLight = LightSource( TileIdentity::Void, 255, 255, 255, 255, 15 );
+	this->emitDynamicLightSource( playerLight, this->_player->getCharacter().getCurrPosition().x, this->_player->getCharacter().getCurrPosition().y );
+	return;
+}
+
 
 
 
@@ -2959,10 +3088,12 @@ void World::updateLightingTask()
 {
 	this->_runningUpdateLighting = true;
 
+
 	while ( this->_runningUpdateLighting )
 	{
 		this->updateLighting();
 	}
+
 
 	return;
 }
@@ -2971,52 +3102,45 @@ void World::updateLightingTask()
 
 void World::updateLighting()
 {
-	std::unique_lock<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
-	this->_condUpdateLighting.wait( lockUpdateLighting );
+	///std::unique_lock<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
+	///this->_condUpdateLighting.wait( lockUpdateLighting );
 
-
-	//std::lock_guard<std::mutex> lockModify( this->_modifyWorldChunksMutex );
-	//std::lock_guard<std::mutex> lockLoad( this->_mutexLoadWorldChunks );
 
 	this->resetLighting();
 	this->emitStaticLightSources();
-
-
-
+	this->emitPlayerLightSource(); // [~!]
 	this->calculateLightRenders();
 
-
-
-	//std::thread calculateLightRenders0 = std::thread( &World::calculateLightRenders0, this );
-	//std::thread calculateLightRenders1 = std::thread( &World::calculateLightRenders1, this );
-	//calculateLightRenders0.join();
-	//calculateLightRenders1.join();
-	
-	/*
-	this->_quadTreeCollision = new QuadTreeCollision( 0, 0, this );
-	this->_quadTreeCollision->updateAreas();
-	delete this->_quadTreeCollision;
-	this->_quadTreeCollision = nullptr;
-	//this->_quadTreeCollision->updateAreas( 0 );
-	*/
-
-
-	//this->_condUpdateWorld.notify_one();
+	// swap
 
 	return;
 }
 
 
 
+
+
+void World::setPlayer( Player* player )
+{
+	this->_player = player;
+	return;
+}
+
+
+
+
 void World::render()
 {
 	std::lock_guard<std::mutex> lockUpdateGeography( this->_mutexUpdateGeography );
-	std::lock_guard<std::mutex> lockUpdateLighting( this->_mutexUpdateLighting );
+
 
 	this->_camera->renderWorld();
-	this->updateDecals();
 
-	this->_condUpdateGeography.notify_one();
-	this->_condUpdateLighting.notify_one();
+
+
+
+
+	this->updateDecals(); // [!] only need to be called once after in render thread after sprites have been added in another thread ( or make sprite add thread in render thread and call update decals right after, guaranteed synchronous )
+
 	return;
 }

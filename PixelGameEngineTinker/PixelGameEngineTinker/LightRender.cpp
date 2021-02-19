@@ -36,9 +36,9 @@ bool LightRender::isSolid() const
 void LightRender::clear()
 {
 	this->corner0 = 0;
-	this->corner0 = 1;
-	this->corner0 = 2;
-	this->corner0 = 3;
+	this->corner1 = 0;
+	this->corner2 = 0;
+	this->corner3 = 0;
 	this->exist = false;
 	return;
 }

@@ -201,6 +201,9 @@
     <ClInclude Include="FoliageMap.h">
       <Filter>Header Files\World\Maps</Filter>
     </ClInclude>
+    <ClInclude Include="ProceduralGenerationThread.h">
+      <Filter>Header Files\World</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cell.cpp">

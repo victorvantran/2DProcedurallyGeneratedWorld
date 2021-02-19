@@ -11,7 +11,12 @@
 #include "LightRender.h"
 #include "LightSource.h"
 
-class WorldChunkMemory; // Forward Declaration
+
+
+// Forward Declaration
+class World;
+class WorldChunkMemory;
+
 
 class WorldChunk
 {
@@ -30,18 +35,27 @@ private:
 	//QuadTree<TileRender> _tileRenders[WorldChunk::_numTileRenders];
 
 	Light _lights[WorldChunk::_size * WorldChunk::_size];
-	QuadTree<LightRender> _lightRenders[WorldChunk::_numTileRenders];
+	//QuadTree<LightRender> _lightRenders[WorldChunk::_numTileRenders];
+
+	QuadTree<LightRender> _lightRendersA[WorldChunk::_numTileRenders];
+	QuadTree<LightRender> _lightRendersB[WorldChunk::_numTileRenders];
+	QuadTree<LightRender>* _lightRenders = this->_lightRendersA;
+	QuadTree<LightRender>* _prevLightRenders = this->_lightRendersB;
+
 
 
 	//LightSource _lightSources[WorldChunk::_size * WorldChunk::_size];
 	std::map<std::uint16_t, LightSource> _lightSources;
 
+	World* _world;
+
 public:
 	// Constructors
 	WorldChunk();
-	WorldChunk( std::uint16_t relChunkIndex, std::int64_t indexX, std::int64_t indexY );
+	WorldChunk( std::uint16_t relChunkIndex, std::int64_t indexX, std::int64_t indexY, World* world );
 	~WorldChunk();
 
+	void setWorld( World* world );
 	void construct();
 
 	// Getters
@@ -56,69 +70,73 @@ public:
 	std::int64_t getPositionX() const;
 	std::int64_t getPositionY() const;
 	BoundingBox<std::int64_t> getBounds() const;
-	
+
 
 
 	// Insertion
-	typedef void ( WorldChunk::* funcType )( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	typedef void ( WorldChunk::* insertFuncType )( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	typedef void ( WorldChunk::* removeFuncType )( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 
-	void insertTiles( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t tileBlobMapIndex,
+
+
+	void insertTiles( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t borders, std::uint8_t tileBlobMapIndex,
 		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertTileRenders( const Tile& tile, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertTileRenders( TileIdentity tileId, bool consolidatable, std::uint8_t bordersDecalIndex, std::uint8_t tileBlobMapIndex,
 		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertTile( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t tileBlobMapIndex,
+	void insertTile( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t borders, std::uint8_t tileBlobMapIndex,
+		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insertLightSourceTile( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t borders, std::uint8_t tileBlobMapIndex,
+		std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a, std::int16_t radius,
 		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertLightSources( TileIdentity tileId, std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a, std::int16_t radius,
 		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertLightSourceTile( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t tileBlobMapIndex,
-		std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a, std::int16_t radius, 
-		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 
 
-	void insertVoid( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertWater( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertDirt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertSand( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertMossDirt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertMossStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertMull( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertMor( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertLightClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertDarkClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertGravel( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertCharcoal( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertSnow( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertPermafrost( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertPodzol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertBleachedSand( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertShale( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertIronOxide( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertAluminiumOxide( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertLaterite( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertAridsol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertEntisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertSaltstone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertQuartz( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertAlfisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertYellowClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertRedClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertCambisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertSilt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertIronOre( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertAluminiumOre( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertMapleLog( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertCrimsonMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertPumpkinMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-	void insertGambogeMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+
+	void insertVoid( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertWater( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertStone( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertDirt( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertSand( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertTorch( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertMossDirt( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertMossStone( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertMull( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertMor( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertLightClay( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertDarkClay( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertGravel( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertCharcoal( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertSnow( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertPermafrost( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertPodzol( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertBleachedSand( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertShale( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertIronOxide( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertAluminiumOxide( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertLaterite( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertAridsol( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertEntisol( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertSaltstone( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertQuartz( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertAlfisol( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertYellowClay( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertRedClay( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertCambisol( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertSilt( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertIronOre( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertAluminiumOre( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertMapleLog( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertCrimsonMapleLeaves( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertPumpkinMapleLeaves( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
+	void insertGambogeMapleLeaves( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
 
 
-	static const funcType insertMethods[( unsigned long long )TileIdentity::count];
+	static const insertFuncType insertMethods[( std::size_t )TileIdentity::count];
 
 
-	void insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void insert( TileIdentity tileId, std::uint8_t borders, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 
 
 	// Removal
@@ -169,11 +187,8 @@ public:
 
 
 
-	static const funcType removeMethods[( unsigned long long )TileIdentity::count];
+	static const removeFuncType removeMethods[( unsigned long long )TileIdentity::count];
 	void remove( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-
-
-
 
 
 	// Geography
@@ -189,13 +204,16 @@ public:
 	Light* getLight( std::int64_t x, std::int64_t y );
 	std::map<std::uint16_t, LightSource>& getLightSources();
 	QuadTree<LightRender>* getLightRenders();
+	QuadTree<LightRender>* getPrevLightRenders();
 	void resetLights();
 	void wipeLightRender();
+	void wipeLightRenders();
+
 	void blackenLights();
 	void clearLightSources();
 	void insertLightRender( std::uint32_t corner0, std::uint32_t corner1, std::uint32_t corner2, std::uint32_t corner3, bool exist, std::int64_t x, std::int64_t y ); // [!] overhaul and model after insert
 	void insertLightRenders( std::uint32_t corner0, std::uint32_t corner1, std::uint32_t corner2, std::uint32_t corner3, bool exist, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-
+	void swapLightRenders();
 
 
 	// Memory Management

@@ -1,9 +1,10 @@
 #include "WorldChunk.h"
+#include "World.h"
 #include "WorldChunkMemory.h"
 
 
 WorldChunk::WorldChunk()
-	: _relativeChunkIndex( 0 ), _chunkIndexX( 0 ), _chunkIndexY( 0 )
+	: _relativeChunkIndex( 0 ), _chunkIndexX( 0 ), _chunkIndexY( 0 ), _world( nullptr )
 {
 
 }
@@ -15,17 +16,25 @@ WorldChunk::~WorldChunk()
 }
 
 
-WorldChunk::WorldChunk( std::uint16_t relChunkIndex, std::int64_t indexX, std::int64_t indexY )
-	: _relativeChunkIndex( relChunkIndex ), _chunkIndexX( indexX ), _chunkIndexY( indexY )
+WorldChunk::WorldChunk( std::uint16_t relChunkIndex, std::int64_t indexX, std::int64_t indexY, World* world )
+	: _relativeChunkIndex( relChunkIndex ), _chunkIndexX( indexX ), _chunkIndexY( indexY ), _world( world )
 {
 
+}
+
+
+void WorldChunk::setWorld( World* world )
+{
+	this->_world = world;
+	return;
 }
 
 
 void WorldChunk::construct()
 {
 	this->wipeRender();
-	this->wipeLightRender();
+	//this->wipeLightRender();
+	this->wipeLightRenders();
 	this->blackenLights();
 	return;
 }
@@ -64,6 +73,10 @@ void WorldChunk::wipeRender()
 
 
 
+
+
+
+
 std::uint16_t WorldChunk::getRelativeChunkIndex() const
 {
 	return this->_relativeChunkIndex;
@@ -85,7 +98,7 @@ void WorldChunk::setRelativeChunkIndex( std::uint16_t relChunkIndex )
 
 // Modification
 
-void WorldChunk::insertTiles( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t tileBlobMapIndex, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertTiles( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t borders, std::uint8_t tileBlobMapIndex, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
 	// insert to Tiles[] (game logic)
 	std::int64_t localCellStartIndexX = x - this->_chunkIndexX * this->_size;
@@ -113,6 +126,17 @@ void WorldChunk::insertTiles( TileIdentity tileId, TileType tileType, bool conso
 					selectedTile->setBorders( 0 ); // [!] dummy border (updated later)
 					selectedTile->setTileBlobMapIndex( tileBlobMapIndex );
 				}
+
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX, this->_chunkIndexY * this->_size + localCellIndexY );
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX - 1, this->_chunkIndexY * this->_size + localCellIndexY - 1 );
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX + 0, this->_chunkIndexY * this->_size + localCellIndexY - 1 );
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX + 1, this->_chunkIndexY * this->_size + localCellIndexY - 1 );
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX + 1, this->_chunkIndexY * this->_size + localCellIndexY + 0 );
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX - 1, this->_chunkIndexY * this->_size + localCellIndexY + 1 );
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX + 0, this->_chunkIndexY * this->_size + localCellIndexY + 1 );
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX + 1, this->_chunkIndexY * this->_size + localCellIndexY + 1 );
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX - 1, this->_chunkIndexY * this->_size + localCellIndexY + 0 );
+
 			}
 		}
 	}
@@ -123,10 +147,10 @@ void WorldChunk::insertTiles( TileIdentity tileId, TileType tileType, bool conso
 
 
 
-void WorldChunk::insertTileRenders( TileIdentity tileId, bool consolidatable, std::uint8_t bordersDecalIndex, std::uint8_t tileBlobMapIndex,
+void WorldChunk::insertTileRenders( TileIdentity tileId, bool consolidatable, std::uint8_t borders, std::uint8_t tileBlobMapIndex,
 	std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
-	this->_tileRenders[0].insert( TileRender( tileId, consolidatable, bordersDecalIndex, tileBlobMapIndex, BoundingBox<std::int64_t>( x, y, width, height ) ) );
+	this->_tileRenders[0].insert( TileRender( tileId, consolidatable, borders, tileBlobMapIndex, BoundingBox<std::int64_t>( x, y, width, height ) ) );
 	return;
 }
 
@@ -139,11 +163,11 @@ void WorldChunk::insertTileRenders( const Tile& tile, std::int64_t x, std::int64
 }
 
 
-void WorldChunk::insertTile( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t tileBlobMapIndex, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertTile( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t borders, std::uint8_t tileBlobMapIndex, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
 	// Adds the tile to the world and worldRender
-	this->insertTiles( tileId, tileType, consolidatable, opaque, complementary, tileBlobMapIndex, x, y, width, height );
-	this->insertTileRenders( tileId, consolidatable, 0, tileBlobMapIndex, x, y, width, height ); // [!] dummy border
+	this->insertTiles( tileId, tileType, consolidatable, opaque, complementary, borders, tileBlobMapIndex, x, y, width, height );
+	//this->insertTileRenders( tileId, consolidatable, borders, tileBlobMapIndex, x, y, width, height ); // [!] dummy border
 	return;
 }
 
@@ -179,7 +203,7 @@ void WorldChunk::insertLightSources( TileIdentity tileId, std::int16_t r, std::i
 
 
 
-void WorldChunk::insertLightSourceTile( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t tileBlobMapIndex,
+void WorldChunk::insertLightSourceTile( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t borders, std::uint8_t tileBlobMapIndex,
 	std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a, std::int16_t radius,
 	std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
@@ -217,53 +241,56 @@ void WorldChunk::insertLightSourceTile( TileIdentity tileId, TileType tileType, 
 		}
 	}
 
-	this->insertTileRenders( tileId, 0, consolidatable, 0, x, y, width, height ); // [!] dummy border, consolidatable, and mapblobindex
+	this->insertTileRenders( tileId, consolidatable, borders, 0, x, y, width, height ); // [!] dummy border, consolidatable, and mapblobindex
 	return;
 }
 
 
-void WorldChunk::insertVoid( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+
+
+
+void WorldChunk::insertVoid( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
 	return;
 }
 
 
-void WorldChunk::insertWater( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertWater( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Water, TileType::Empty, true, false, true, 0,
+	this->insertTile( TileIdentity::Water, TileType::Empty, true, false, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
-void WorldChunk::insertStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertStone( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Stone, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Stone, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
-void WorldChunk::insertDirt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertDirt( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Dirt, TileType::Block, true, true, true, 0,
-		x, y, width, height );
-	return;
-}
-
-
-
-
-
-void WorldChunk::insertSand( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
-{
-	this->insertTile( TileIdentity::Sand, TileType::OneWay, true, false, true, 0,
+	this->insertTile( TileIdentity::Dirt, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertTorch( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+
+
+
+void WorldChunk::insertSand( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertLightSourceTile( TileIdentity::Torch, TileType::Empty, false, false, false, 0,
+	this->insertTile( TileIdentity::Sand, TileType::OneWay, true, false, true, borders, 0,
+		x, y, width, height );
+	return;
+}
+
+
+void WorldChunk::insertTorch( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
+{
+	this->insertLightSourceTile( TileIdentity::Torch, TileType::Empty, false, false, false, borders, 0,
 		255, 255, 255, 255, 20,
 		x, y, width, height );
 
@@ -276,257 +303,257 @@ void WorldChunk::insertTorch( std::int64_t x, std::int64_t y, std::int64_t width
 }
 
 
-void WorldChunk::insertMossDirt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertMossDirt( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::MossDirt, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::MossDirt, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertMossStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertMossStone( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::MossStone, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::MossStone, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertMull( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertMull( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Mull, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Mull, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertMor( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertMor( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Mor, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Mor, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertLightClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertLightClay( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::LightClay, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::LightClay, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertDarkClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertDarkClay( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::DarkClay, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::DarkClay, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertGravel( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertGravel( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Gravel, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Gravel, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertCharcoal( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertCharcoal( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Charcoal, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Charcoal, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertSnow( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertSnow( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Snow, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Snow, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertPermafrost( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertPermafrost( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Permafrost, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Permafrost, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertPodzol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertPodzol( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Podzol, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Podzol, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertBleachedSand( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertBleachedSand( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::BleachedSand, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::BleachedSand, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertShale( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertShale( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Shale, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Shale, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertIronOxide( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertIronOxide( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::IronOxide, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::IronOxide, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertAluminiumOxide( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertAluminiumOxide( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::AluminiumOxide, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::AluminiumOxide, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertLaterite( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertLaterite( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Laterite, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Laterite, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertAridsol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertAridsol( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Aridsol, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Aridsol, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertEntisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertEntisol( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Entisol, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Entisol, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertSaltstone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertSaltstone( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Saltstone, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Saltstone, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertQuartz( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertQuartz( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Quartz, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Quartz, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertAlfisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertAlfisol( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Alfisol, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Alfisol, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertYellowClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertYellowClay( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::YellowClay, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::YellowClay, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertRedClay( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertRedClay( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::RedClay, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::RedClay, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertCambisol( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertCambisol( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Cambisol, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Cambisol, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertSilt( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertSilt( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::Silt, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::Silt, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertIronOre( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertIronOre( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::IronOre, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::IronOre, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertAluminiumOre( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertAluminiumOre( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::AluminiumOre, TileType::Block, true, true, true, 0,
+	this->insertTile( TileIdentity::AluminiumOre, TileType::Block, true, true, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertMapleLog( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertMapleLog( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::MapleLog, TileType::OneWay, true, false, false, 1,
+	this->insertTile( TileIdentity::MapleLog, TileType::OneWay, true, false, false, borders, 1,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertCrimsonMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertCrimsonMapleLeaves( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::CrimsonMapleLeaves, TileType::OneWay, true, false, true, 0,
+	this->insertTile( TileIdentity::CrimsonMapleLeaves, TileType::OneWay, true, false, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertPumpkinMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertPumpkinMapleLeaves( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::PumpkinMapleLeaves, TileType::OneWay, true, false, true, 0,
+	this->insertTile( TileIdentity::PumpkinMapleLeaves, TileType::OneWay, true, false, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-void WorldChunk::insertGambogeMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insertGambogeMapleLeaves( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	this->insertTile( TileIdentity::GambogeMapleLeaves, TileType::OneWay, true, false, true, 0,
+	this->insertTile( TileIdentity::GambogeMapleLeaves, TileType::OneWay, true, false, true, borders, 0,
 		x, y, width, height );
 	return;
 }
 
 
-const WorldChunk::funcType WorldChunk::insertMethods[( unsigned long long )TileIdentity::count]{
+const WorldChunk::insertFuncType WorldChunk::insertMethods[( std::size_t )TileIdentity::count]{
 	&WorldChunk::insertVoid,
-	&WorldChunk::insertWater, 
+	&WorldChunk::insertWater,
 	&WorldChunk::insertStone,
 	&WorldChunk::insertDirt,
 	&WorldChunk::insertSand,
@@ -558,20 +585,20 @@ const WorldChunk::funcType WorldChunk::insertMethods[( unsigned long long )TileI
 	&WorldChunk::insertSilt,
 	&WorldChunk::insertIronOre,
 	&WorldChunk::insertAluminiumOre,
-	& WorldChunk::insertMapleLog,
-	& WorldChunk::insertCrimsonMapleLeaves,
-	& WorldChunk::insertPumpkinMapleLeaves,
-	& WorldChunk::insertGambogeMapleLeaves
+	&WorldChunk::insertMapleLog,
+	&WorldChunk::insertCrimsonMapleLeaves,
+	&WorldChunk::insertPumpkinMapleLeaves,
+	&WorldChunk::insertGambogeMapleLeaves
 };
 
 
-void WorldChunk::insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
+void WorldChunk::insert( TileIdentity tileId, std::uint8_t borders, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
 	// Pointer to a method is slightly different than a pointer to a function
 	//World::funcType method = World::insertMethods[0];
 	//( this->*method )( tileId, x, y, width, height );
 	//std::cout << ( unsigned long long )tileId << std::endl;
-	( this->*WorldChunk::insertMethods[( unsigned long long )tileId] )( x, y, width, height ); // [!] error need thread mutex
+	( this->*WorldChunk::insertMethods[( std::size_t )tileId] )( x, y, borders, width, height ); // [!] error need thread mutex
 	return;
 }
 
@@ -623,6 +650,16 @@ void WorldChunk::removeTiles( TileIdentity id, std::int64_t x, std::int64_t y, s
 					selectedTile->setBorders( 0 );
 					selectedTile->setTileBlobMapIndex( 0 );
 				}
+
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX, this->_chunkIndexY * this->_size + localCellIndexY );
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX - 1, this->_chunkIndexY * this->_size + localCellIndexY - 1 );
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX + 0, this->_chunkIndexY * this->_size + localCellIndexY - 1 );
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX + 1, this->_chunkIndexY * this->_size + localCellIndexY - 1 );
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX + 1, this->_chunkIndexY * this->_size + localCellIndexY + 0 );
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX - 1, this->_chunkIndexY * this->_size + localCellIndexY + 1 );
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX + 0, this->_chunkIndexY * this->_size + localCellIndexY + 1 );
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX + 1, this->_chunkIndexY * this->_size + localCellIndexY + 1 );
+				this->_world->updateTileBorders( this->_chunkIndexX * this->_size + localCellIndexX - 1, this->_chunkIndexY * this->_size + localCellIndexY + 0 );
 			}
 		}
 	}
@@ -1012,18 +1049,13 @@ void WorldChunk::removeGambogeMapleLeaves( std::int64_t x, std::int64_t y, std::
 }
 
 
-const WorldChunk::funcType WorldChunk::removeMethods[( unsigned long long )TileIdentity::count]{
+const WorldChunk::removeFuncType WorldChunk::removeMethods[( std::size_t )TileIdentity::count]{
 	&WorldChunk::removeVoid,
 	&WorldChunk::removeWater,
-	&WorldChunk::removeStone, 
+	&WorldChunk::removeStone,
 	&WorldChunk::removeDirt,
-
 	&WorldChunk::removeSand,
-
-
-
 	&WorldChunk::removeTorch,
-
 	&WorldChunk::removeMossDirt,
 	&WorldChunk::removeMossStone,
 	&WorldChunk::removeMull,
@@ -1052,10 +1084,10 @@ const WorldChunk::funcType WorldChunk::removeMethods[( unsigned long long )TileI
 	&WorldChunk::removeIronOre,
 	&WorldChunk::removeAluminiumOre,
 
-	& WorldChunk::removeMapleLog,
-	& WorldChunk::removeCrimsonMapleLeaves,
-	& WorldChunk::removePumpkinMapleLeaves,
-	& WorldChunk::removeGambogeMapleLeaves
+	&WorldChunk::removeMapleLog,
+	&WorldChunk::removeCrimsonMapleLeaves,
+	&WorldChunk::removePumpkinMapleLeaves,
+	&WorldChunk::removeGambogeMapleLeaves
 
 };
 
@@ -1063,13 +1095,9 @@ const WorldChunk::funcType WorldChunk::removeMethods[( unsigned long long )TileI
 
 void WorldChunk::remove( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
-	( this->*WorldChunk::removeMethods[( unsigned long long )tileId] )( x, y, width, height );
+	( this->*WorldChunk::removeMethods[( std::size_t )tileId] )( x, y, width, height );
 	return;
 }
-
-
-
-
 
 
 
@@ -1257,7 +1285,13 @@ std::map<std::uint16_t, LightSource>& WorldChunk::getLightSources()
 
 QuadTree<LightRender>* WorldChunk::getLightRenders()
 {
-	return this->_lightRenders;
+	return ( this->_lightRenders );
+}
+
+
+QuadTree<LightRender>* WorldChunk::getPrevLightRenders()
+{
+	return ( this->_prevLightRenders );
 }
 
 
@@ -1274,8 +1308,8 @@ void WorldChunk::blackenLights()
 	//std::cout << "blacken" << std::endl;
 	for ( std::uint16_t i = 0; i < this->_size * this->_size; i++ )
 	{
-		//this->_lights[i].blacken();
-		this->_lights[i].whiten();
+		this->_lights[i].blacken();
+		//this->_lights[i].whiten();
 
 	}
 	return;
@@ -1296,7 +1330,7 @@ void WorldChunk::wipeLightRender()
 	std::int64_t rootQuadTreePositionY = this->_chunkIndexY * this->_size;
 
 	// Intialize quadTrees
-	this->_lightRenders[0].constructQuadTree(
+	( this->_lightRenders )[0].constructQuadTree(
 		0,
 		-1,
 		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
@@ -1309,21 +1343,78 @@ void WorldChunk::wipeLightRender()
 	);
 
 	// The difference between construct and reconstruct is quick reassignment, unless of course, shallow copy does this for us. Then just use construct
-	for ( int i = 0; i < sizeof( this->_lightRenders ) / sizeof( this->_lightRenders[0] ); i++ )
+	//for ( int i = 0; i < sizeof( this->_lightRenders ) / sizeof( this->_lightRenders[0] ); i++ )
+	for ( int i = 0; i < ( WorldChunk::_numTileRenders * sizeof( QuadTree<LightRender> ) ) / sizeof( this->_lightRenders[0] ); i++ )
 	{
-		this->_lightRenders[i].divide();
+		( this->_lightRenders )[i].divide();
 	}
 
+
+	//std::cout << WorldChunk::_numTileRenders * sizeof( QuadTree<LightRender> ) << std::endl;
+	return;
+}
+
+
+void WorldChunk::wipeLightRenders()
+{
+	// Need to update chunkIndex of lighting when updating index of worldChunk [!]
+	std::int64_t rootQuadTreePositionX = this->_chunkIndexX * this->_size;
+	std::int64_t rootQuadTreePositionY = this->_chunkIndexY * this->_size;
+
+	// Intialize quadTrees
+	( this->_lightRenders )[0].constructQuadTree(
+		0,
+		-1,
+		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
+		0,
+		BoundingBox<std::int64_t>( rootQuadTreePositionX, rootQuadTreePositionY, this->_size, this->_size ),
+		this->_lightRenders,
+		Settings::WorldChunk::TILE_RENDER_MIN_LEVEL,
+		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
+		Settings::WorldChunk::TILE_RENDER_MIN_CELL_SIZE
+	);
+
+	// The difference between construct and reconstruct is quick reassignment, unless of course, shallow copy does this for us. Then just use construct
+	//for ( int i = 0; i < sizeof( this->_lightRenders ) / sizeof( this->_lightRenders[0] ); i++ )
+	for ( int i = 0; i < ( WorldChunk::_numTileRenders * sizeof( QuadTree<LightRender> ) ) / sizeof( this->_lightRenders[0] ); i++ )
+	{
+		( this->_lightRenders )[i].divide();
+	}
+
+
+
+
+
+	( this->_prevLightRenders )[0].constructQuadTree(
+		0,
+		-1,
+		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
+		0,
+		BoundingBox<std::int64_t>( rootQuadTreePositionX, rootQuadTreePositionY, this->_size, this->_size ),
+		this->_prevLightRenders,
+		Settings::WorldChunk::TILE_RENDER_MIN_LEVEL,
+		Settings::WorldChunk::TILE_RENDER_MAX_LEVEL,
+		Settings::WorldChunk::TILE_RENDER_MIN_CELL_SIZE
+	);
+
+	// The difference between construct and reconstruct is quick reassignment, unless of course, shallow copy does this for us. Then just use construct
+	//for ( int i = 0; i < sizeof( this->_lightRenders ) / sizeof( this->_lightRenders[0] ); i++ )
+	for ( int i = 0; i < ( WorldChunk::_numTileRenders * sizeof( QuadTree<LightRender> ) ) / sizeof( this->_prevLightRenders[0] ); i++ )
+	{
+		( this->_prevLightRenders )[i].divide();
+	}
+
+
+	//std::cout << WorldChunk::_numTileRenders * sizeof( QuadTree<LightRender> ) << std::endl;
 	return;
 }
 
 
 
 
-
 void WorldChunk::insertLightRender( std::uint32_t corner0, std::uint32_t corner1, std::uint32_t corner2, std::uint32_t corner3, bool exist, std::int64_t x, std::int64_t y )
 {
-	this->_lightRenders[0].insert( LightRender( corner0, corner1, corner2, corner3, exist,
+	( this->_lightRenders )[0].insert( LightRender( corner0, corner1, corner2, corner3, exist,
 		BoundingBox<std::int64_t>( x, y, 1, 1 ) ) );
 	return;
 }
@@ -1331,7 +1422,19 @@ void WorldChunk::insertLightRender( std::uint32_t corner0, std::uint32_t corner1
 
 void WorldChunk::insertLightRenders( std::uint32_t corner0, std::uint32_t corner1, std::uint32_t corner2, std::uint32_t corner3, bool exist, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
 {
-	this->_lightRenders[0].insert( LightRender( corner0, corner1, corner2, corner3, exist,
+	( this->_lightRenders )[0].insert( LightRender( corner0, corner1, corner2, corner3, exist,
 		BoundingBox<std::int64_t>( x, y, width, height ) ) );
+	return;
+}
+
+
+
+void  WorldChunk::swapLightRenders()
+{
+	QuadTree<LightRender>* temp = this->_lightRenders;
+	QuadTree<LightRender>* temp2 = this->_prevLightRenders;
+
+	this->_lightRenders = temp2;
+	this->_prevLightRenders = temp;
 	return;
 }

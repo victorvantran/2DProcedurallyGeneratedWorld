@@ -94,23 +94,27 @@ void Camera::renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const
 	olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
 	olc::v2d_generic<std::int64_t> size = olc::v2d_generic<std::int64_t>{ ( int )( chunkSize * ( this->_zoomX * tileSize ) ), ( int )( chunkSize * ( this->_zoomY * tileSize ) ) };
 
-	
+	/*
 	pge->DrawRect(
 		startPos,
 		size,
 		olc::GREEN
 	);
-	
+
 	pge->DrawStringDecal(
 		startPos,
 		std::to_string( worldChunk.getRelativeChunkIndex() ),
 		olc::GREEN
 	);
-	
-	
-	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas, worldChunk.getLightRenders() );
-	this->renderLightRenders( worldChunk.getLightRenders()[0] );
+	*/
 
+
+	this->renderTileRenders( worldChunk.getTileRendersRoot(), atlas, worldChunk.getLightRenders() );
+	//this->renderLightRenders( worldChunk.getLightRenders()[0] );
+	this->renderLightRenders( worldChunk.getPrevLightRenders()[0] );
+
+
+	//std::cout << worldChunk.getLightRenders()[0].getBounds().getX() << std::endl;
 	return;
 }
 
@@ -162,10 +166,10 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas,
 
 			pge->DrawPartialDecal(
 				startPos,
-				olc::v2d_generic<long double>{ this->_zoomX * tileSize, this->_zoomY * tileSize } * scale,
+				olc::v2d_generic<long double>{ this->_zoomX* tileSize, this->_zoomY* tileSize } *scale,
 				tileDecal,
 				olc::vf2d{ 0, Settings::Camera::CONSOLIDATED_TILE_OFFSET },
-				olc::vf2d{ 1, 1 } * ( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE * scale )
+				olc::vf2d{ 1, 1 } *( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE * scale )
 			);
 		}
 
@@ -201,12 +205,12 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas,
 
 					pge->DrawPartialDecal(
 						startPos,
-						olc::v2d_generic<long double>{ ( tileSize * this->_zoomX ), ( tileSize * this->_zoomY ) },
+						olc::v2d_generic<long double>{ ( tileSize* this->_zoomX ), ( tileSize* this->_zoomY ) },
 						tileDecal,
-						tileBlobPartition * ( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE ), // [!] 8 settings
+						tileBlobPartition* ( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE ), // [!] 8 settings
 						//olc::vf2d{ ( float )( bordersDecalIndex % 8 ), ( float )( bordersDecalIndex / 8 ) } * ( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE ), // [!] 8 settings
 						//olc::vf2d{ 0, 128 }, // [!] temp based on configuration
-						olc::vf2d{ 1, 1 } * ( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE )
+						olc::vf2d{ 1, 1 } *( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE )
 					);
 
 				}
@@ -269,12 +273,12 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 			std::uint8_t b = ( std::uint8_t )( ( corner0 & 0x0000ff00 ) >> 8 );
 			std::uint8_t alpha = ( std::uint8_t )( ( corner0 & 0x000000ff ) );
 			olc::Pixel color = olc::Pixel{ r, g, b, alpha };
-			
+
 			pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
 			//pge->SetDecalMode( olc::DecalMode::ADDITIVE );
 			pge->FillRectDecal(
 				startPos,
-				olc::vf2d{ (float)this->_zoomX * ( float )tileSize, ( float )this->_zoomY * ( float )tileSize } *( float )scale,
+				olc::vf2d{ ( float )this->_zoomX * ( float )tileSize, ( float )this->_zoomY * ( float )tileSize } *( float )scale,
 				color
 			);
 
@@ -293,19 +297,19 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 			{
 				if ( cells[i].exists() && this->_view.intersects( cells[i].getBounds() ) )
 				{
-					
+
 					std::uint32_t corner0 = cells[i].corner0;
 					std::uint32_t corner1 = cells[i].corner1;
 					std::uint32_t corner2 = cells[i].corner2;
 					std::uint32_t corner3 = cells[i].corner3;
 
-					
+
 					olc::Pixel colors[4];
 					colors[0] = olc::Pixel{ ( std::uint8_t )( ( corner0 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner0 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner0 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner0 & 0x000000ff ) ) };
 					colors[1] = olc::Pixel{ ( std::uint8_t )( ( corner1 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner1 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner1 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner1 & 0x000000ff ) ) };
 					colors[2] = olc::Pixel{ ( std::uint8_t )( ( corner2 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner2 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner2 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner2 & 0x000000ff ) ) };
 					colors[3] = olc::Pixel{ ( std::uint8_t )( ( corner3 & 0xff000000 ) >> 24 ), ( std::uint8_t )( ( corner3 & 0x00ff0000 ) >> 16 ), ( std::uint8_t )( ( corner3 & 0x0000ff00 ) >> 8 ), ( std::uint8_t )( ( corner3 & 0x000000ff ) ) };
-					
+
 
 					std::int64_t worldPositionX = cells[i].getBounds().getX();
 					std::int64_t worldPositionY = cells[i].getBounds().getY();
@@ -321,7 +325,7 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 					verticiesB[1] = olc::vf2d{ ( float )topLeftPixelX, ( float )bottomRightPixelY };
 					verticiesB[2] = olc::vf2d{ ( float )bottomRightPixelX, ( float )bottomRightPixelY };
 					verticiesB[3] = olc::vf2d{ ( float )bottomRightPixelX , ( float )topLeftPixelY };
-					
+
 
 					/*
 					verticiesB[0] = olc::vf2d{ ( float )topLeftPixelX, ( float )topLeftPixelY };
@@ -335,7 +339,7 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 					textureCoordinates[1] = olc::vf2d{ 0.0f, 1.0f };
 					textureCoordinates[2] = olc::vf2d{ 1.0f, 1.0f };
 					textureCoordinates[3] = olc::vf2d{ 1.0f, 0.0f };
-						
+
 					olc::Decal* lightDecal = this->_decalLight;
 					pge->SetDecalMode( olc::DecalMode::MULTIPLICATIVE );
 					//pge->SetDecalMode( olc::DecalMode::ADDITIVE );
@@ -345,7 +349,7 @@ void Camera::renderLightRenders( QuadTree<LightRender>& lightRenders ) const
 						textureCoordinates,
 						colors
 					);
-					pge->SetDecalMode( olc::DecalMode::NORMAL );					
+					pge->SetDecalMode( olc::DecalMode::NORMAL );
 				}
 			}
 
@@ -421,7 +425,7 @@ void Camera::renderDynamicObject( DynamicObject& object ) const
 			( long double )this->_zoomY* ( ( long double )aabb.getHalfSizeY() * 2 )* Settings::Screen::CELL_PIXEL_SIZE
 	},
 		olc::RED
-	);
+			);
 
 	return;
 }
@@ -447,12 +451,12 @@ void Camera::renderPlayer( Player& player ) const
 
 	pge->FillRectDecal(
 		startPos,
-		olc::v2d_generic<long double>{ 
-			( long double )this->_zoomX * ( ( long double )aabb.getHalfSizeX() * 2 )* Settings::Screen::CELL_PIXEL_SIZE,
-			( long double )this->_zoomY * ( ( long double )aabb.getHalfSizeY() * 2 ) * Settings::Screen::CELL_PIXEL_SIZE
-		},
+		olc::v2d_generic<long double>{
+		( long double )this->_zoomX* ( ( long double )aabb.getHalfSizeX() * 2 )* Settings::Screen::CELL_PIXEL_SIZE,
+			( long double )this->_zoomY* ( ( long double )aabb.getHalfSizeY() * 2 )* Settings::Screen::CELL_PIXEL_SIZE
+	},
 		olc::Pixel( 255, 255, 51, 255 )
-	);
+			);
 
 	return;
 }

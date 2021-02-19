@@ -27,6 +27,7 @@
 #include "LightCastQuadrant.h"
 
 
+#include "ProceduralGenerationThread.h"
 #include "TerraneanHeightMap.h"
 #include "SubterraneanHeightMap.h"
 #include "TemperatureMap.h"
@@ -105,6 +106,7 @@ private:
 	std::mutex _mutexModifyAtlas;
 	std::condition_variable _condModifyAtlas;
 
+
 	// Camera
 	Camera* _camera = nullptr;
 
@@ -135,6 +137,10 @@ private:
 	TropicalSeasonalForest _tropicalSeasonalForest;
 	Tundra _tundra;
 	Woodland _woodland;
+
+
+	// Player
+	Player* _player = nullptr;
 
 
 private:
@@ -174,6 +180,9 @@ public:
 	// Modify World
 	void insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void remove( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
+	void updateTileBorders( std::int64_t x, std::int64_t y );
+	void refreshTileRender( Tile* tile, std::int64_t worldX, std::int64_t worldY );
+
 
 	// World Chunks
 	WorldChunk* getWorldChunks();
@@ -207,9 +216,9 @@ public:
 	std::vector<std::tuple<std::uint64_t, std::int64_t, std::int64_t>> delimitWorldChunks( const BoundingBox<long double>& cameraView );
 	void delimitWorldChunk( WorldChunk& worldChunk, std::int64_t newIndexX, std::int64_t newIndexY );
 	void loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::uint16_t tilesNumBytes, std::uint64_t* paletteData, std::uint16_t numUniqueKeys );
-	
-	
-	
+
+
+
 	// World Generation
 	static long double normalizeHistogram( long double value );
 	static long double biomeLine1( long double x );
@@ -238,7 +247,7 @@ public:
 	BiomeIdentity getBiomeIdentity( std::int64_t tileX, std::int64_t tileY ) const;
 	TileIdentity getTerraneanSubstance( std::int64_t tileX, std::int64_t tileY ) const;
 	FoliageIdentity getFoliage( std::int64_t tileX, BiomeIdentity biomeId, long double temperatureNormalizedValue, long double precipitationNormalizedValue );
-	
+
 	void addFoliage( TileIdentity* chunk,
 		std::int64_t originX, std::int64_t originY, std::int64_t chunkOffsetX, std::int64_t chunkOffsetY, std::int64_t tileX, std::int64_t tileY,
 		const TileIdentity* tiles, std::uint_fast8_t upBuffer, std::uint_fast8_t downBuffer, std::uint_fast8_t leftBuffer, std::uint_fast8_t rightBuffer );
@@ -265,7 +274,6 @@ public:
 	void updateDecals();
 
 
-
 	// Debug
 	void DEBUG_PRINT_TILE_SPRITES();
 
@@ -276,8 +284,8 @@ public:
 	std::int16_t getRelativeChunkIndex( std::int64_t x, std::int64_t y ) const;
 	static std::uint16_t getRelativeTileIndex( std::int64_t x, std::int64_t y );
 	// Geography
-	const Tile* getTile( long double dX, long double dY ) const;
-	const Tile* getTile( std::int64_t x, std::int64_t y ) const;
+	Tile* getTile( long double dX, long double dY ) const;
+	Tile* getTile( std::int64_t x, std::int64_t y ) const;
 
 	void calculateTileRenders();
 	void updateGeographyTask();
@@ -290,16 +298,6 @@ public:
 	void addLight( std::int64_t x, std::int64_t y, const LightSource& lightSource, long double intensity );
 	void resetLighting();
 	void calculateLightRenders();
-
-
-
-
-	void calculateLightRenders0();
-	void calculateLightRenders1();
-
-
-
-
 
 
 
@@ -316,6 +314,10 @@ public:
 	void emitStaticLightSources();
 	void activateCursorLightSource( long double dX, long double dY, std::int64_t radius );
 
+	void emitDynamicLightSource( const LightSource& lightSource, long double x, long double y );
+	void emitPlayerLightSource();
+
+
 
 	void updateLightingTask();
 	void updateLighting();
@@ -323,6 +325,11 @@ public:
 
 
 
+	// Player
+	void setPlayer( Player* player );
+
+
+	// Render
 	void render();
 };
 

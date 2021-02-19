@@ -87,7 +87,7 @@ public:
 
 
 		//long double panSpeed = 20.0f;
-		long double panSpeed = 32.0f;
+		long double panSpeed = 20.0f;
 
 
 		if ( GetKey( olc::Key::UP ).bPressed || GetKey( olc::Key::UP ).bHeld )
@@ -272,7 +272,11 @@ public:
 
 		if ( GetKey( olc::Key::O ).bPressed || GetKey( olc::Key::O ).bHeld )
 		{
-			world->remove( ( this->world->getTile( tilePositionX, tilePositionY )->getId() ), tileIndex.x, tileIndex.y, 5, 5 );
+			Tile* rTile = this->world->getTile( tilePositionX, tilePositionY );
+			if ( rTile != nullptr )
+			{
+				world->remove( ( rTile->getId() ), tileIndex.x, tileIndex.y, 5, 5 );
+			}
 			//world->remove( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 5, 5 );
 		}
 
@@ -410,40 +414,7 @@ public:
 	
 
 		// Update
-		this->player->update( fElapsedTime, *this );
-
-
-
-		/*
-		bool smartZombieCommands1[( std::size_t )ZombieCommand::count];
-		smartZombieCommands1[( std::size_t )Command::GoRight] = ( this->enemy1->getAABB().getCenter().x < this->player->getCharacter().getAABB().getCenter().x ) && ( this->player->getCharacter().getAABB().getCenter().x - this->enemy1->getAABB().getCenter().x > this->player->getCharacter().getAABB().getHalfSizeX() / 2 );
-		smartZombieCommands1[( std::size_t )Command::GoLeft] = ( this->enemy1->getAABB().getCenter().x > this->player->getCharacter().getAABB().getCenter().x ) && (  this->enemy1->getAABB().getCenter().x - this->player->getCharacter().getAABB().getCenter().x > this->player->getCharacter().getAABB().getHalfSizeX() / 2 );
-		smartZombieCommands1[( std::size_t )Command::Jump] = ( this->enemy1->getPushingLeft() || this->enemy1->getPushingRight() ) || ( ( this->enemy1->getAABB().getCenter().y + this->enemy1->getAABB().getHalfSizeY() ) > ( this->player->getCharacter().getAABB().getCenter().y + this->player->getCharacter().getAABB().getHalfSizeY() ) );
-		//smartZombieCommands1[( std::size_t )Command::Jump] = ( this->enemy1->getPushingLeft() || this->enemy1->getPushingRight() ) && ( this->enemy1->getAABB().getCenter().y > this->player->getCharacter().getAABB().getCenter().y );
-		//smartZombieCommands1[( std::size_t )Command::Jump] = ( this->enemy1->getAABB().getCenter().y > this->player->getCharacter().getAABB().getCenter().y );
-		smartZombieCommands1[( std::size_t )Command::Drop] = ( this->enemy1->getAABB().getCenter().y < this->player->getCharacter().getAABB().getCenter().y );
-
-
-		bool smartZombieCommands2[( std::size_t )ZombieCommand::count];
-		smartZombieCommands2[( std::size_t )Command::GoRight] = ( this->enemy2->getAABB().getCenter().x < this->player->getCharacter().getAABB().getCenter().x ) && ( this->player->getCharacter().getAABB().getCenter().x - this->enemy1->getAABB().getCenter().x > this->player->getCharacter().getAABB().getHalfSizeX() / 2 );
-		smartZombieCommands2[( std::size_t )Command::GoLeft] = ( this->enemy2->getAABB().getCenter().x > this->player->getCharacter().getAABB().getCenter().x ) && ( this->enemy2->getAABB().getCenter().x - this->player->getCharacter().getAABB().getCenter().x > this->player->getCharacter().getAABB().getHalfSizeX() / 2 );
-		smartZombieCommands2[( std::size_t )Command::Jump] = ( this->enemy2->getPushingLeft() || this->enemy2->getPushingRight() ) || ( ( this->enemy2->getAABB().getCenter().y + this->enemy2->getAABB().getHalfSizeY() ) > ( this->player->getCharacter().getAABB().getCenter().y + this->player->getCharacter().getAABB().getHalfSizeY() ) );
-		//smartZombieCommands2[( std::size_t )Command::Jump] = ( this->enemy2->getAABB().getCenter().y > this->player->getCharacter().getAABB().getCenter().y );
-		smartZombieCommands2[( std::size_t )Command::Drop] = ( this->enemy2->getAABB().getCenter().y < this->player->getCharacter().getAABB().getCenter().y );
-
-
-		bool smartZombieCommands3[( std::size_t )ZombieCommand::count];
-		smartZombieCommands3[( std::size_t )Command::GoRight] = ( this->enemy3->getAABB().getCenter().x < this->player->getCharacter().getAABB().getCenter().x ) && ( this->player->getCharacter().getAABB().getCenter().x - this->enemy1->getAABB().getCenter().x > this->player->getCharacter().getAABB().getHalfSizeX() / 2 );
-		smartZombieCommands3[( std::size_t )Command::GoLeft] = ( this->enemy3->getAABB().getCenter().x > this->player->getCharacter().getAABB().getCenter().x ) && ( this->enemy3->getAABB().getCenter().x - this->player->getCharacter().getAABB().getCenter().x > this->player->getCharacter().getAABB().getHalfSizeX() / 2 );
-		smartZombieCommands3[( std::size_t )Command::Jump] = ( this->enemy3->getPushingLeft() || this->enemy3->getPushingRight() ) || ( ( this->enemy3->getAABB().getCenter().y + this->enemy3->getAABB().getHalfSizeY() ) > ( this->player->getCharacter().getAABB().getCenter().y + this->player->getCharacter().getAABB().getHalfSizeY() ) );
-		//smartZombieCommands3[( std::size_t )Command::Jump] = ( this->enemy3->getAABB().getCenter().y > this->player->getCharacter().getAABB().getCenter().y );
-		smartZombieCommands3[( std::size_t )Command::Drop] = ( this->enemy3->getAABB().getCenter().y < this->player->getCharacter().getAABB().getCenter().y );
-
-		this->enemy1->update( fElapsedTime, smartZombieCommands1 );
-		this->enemy2->update( fElapsedTime, smartZombieCommands2 );
-		this->enemy3->update( fElapsedTime, smartZombieCommands3 );
-		*/
-
+		this->player->update( fElapsedTime, *this ); // [~!]
 
 
 
@@ -466,11 +437,11 @@ public:
 
 
 		// Camera
-		camera->setPosition( this->player->getCharacter().getAABB().getCenter().x - 32/2, this->player->getCharacter().getAABB().getCenter().y - 32/2 );
+		camera->setPosition( this->player->getCharacter().getAABB().getCenter().x - 32/2, this->player->getCharacter().getAABB().getCenter().y - 32/2 ); //[~!]
 
 
 		// Render
-		this->camera->renderPlayer( *player );
+		this->camera->renderPlayer( *player ); //[~!]
 		//this->camera->renderDynamicObject( *enemy1 );
 		//this->camera->renderDynamicObject( *enemy2 );
 		//this->camera->renderDynamicObject( *enemy3 );
@@ -673,8 +644,11 @@ public:
 			Settings::Player::Character::DEFAULT_JUMP_SPEED,
 			this->world
 		);
+
+		this->world->setPlayer( this->player );
 		return;
 	}
+
 
 
 	void createEnemy()
@@ -765,7 +739,15 @@ int main()
 {
 	//ShowCursor( NULL );
 	Example demo;
+	/*
 	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize ) )
+		demo.Start();
+	*/
+	/*
+	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize, true, true, true ) )
+		demo.Start();
+		*/
+	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize, false, false, true ) )
 		demo.Start();
 	return 0;
 }

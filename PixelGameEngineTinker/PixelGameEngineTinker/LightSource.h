@@ -23,6 +23,7 @@ public:
 	LightSource( TileIdentity tileId, std::int16_t r_, std::int16_t g_, std::int16_t b_, std::int16_t a_, std::int16_t radius_ )
 		: _tileId( tileId ), _r( r_ ), _g( g_ ), _b( b_ ), _a( a_ ), _radius( radius_ ) {}
 
+	~LightSource() {}
 
 	// Getters
 	TileIdentity getTileId() const
