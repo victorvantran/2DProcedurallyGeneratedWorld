@@ -290,16 +290,17 @@ void WorldChunk::insertSand( std::int64_t x, std::int64_t y, std::uint8_t border
 
 void WorldChunk::insertTorch( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
+	/*
 	this->insertLightSourceTile( TileIdentity::Torch, TileType::Empty, false, false, false, borders, 0,
 		255, 255, 255, 255, 15,
 		//100, 100, 100, 255, 15,
 		x, y, width, height );
+	*/
 	
-	/*
 	this->insertLightSourceTile( TileIdentity::Torch, TileType::Empty, false, false, false, borders, 0,
 		std::rand() % 256, std::rand() % 256, std::rand() % 256, std::rand() % 256, 15,
 		x, y, width, height );
-	*/
+	
 	return;
 }
 
