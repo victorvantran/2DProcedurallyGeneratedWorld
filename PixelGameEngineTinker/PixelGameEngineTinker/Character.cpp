@@ -13,8 +13,8 @@ Character::Character() :
 
 
 Character::Character( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale, CharacterState characterState, float runSpeed, float jumpSpeed,
-	World* world ) :
-	DynamicObject( center, halfSize, scale, world ),
+	World* world, float time ) :
+	DynamicObject( center, halfSize, scale, world, time ),
 	_ledgeTile( olc::v2d_generic<std::int64_t>{ 0, 0 } ), _cannotGoLeftFrames( 0 ), _cannotGoRightFrames( 0 ),
 	_framesFromJumpStart( 0 ),
 	_currentState( characterState ), _runSpeed( runSpeed ), _jumpSpeed( jumpSpeed ), _prevCommands{ false }, _currCommands{ false },
@@ -75,7 +75,7 @@ void Character::updateState( float deltaTime )
 	{
 	case CharacterState::Stand:
 		this->_currVelocity = olc::v2d_generic<long double>{ 0.0, 0.0 };
-		// [!] animateStand
+		this->_animator.update( deltaTime, AlphaAnimator::GraphicState::Idle, this->_currVelocity.x ); // [!] animateStand
 
 		// Natural transition(s)
 		if ( !this->_pushingDown )
@@ -107,7 +107,7 @@ void Character::updateState( float deltaTime )
 		break;
 
 	case CharacterState::Run:
-		// [!] animateRun
+		this->_animator.update( deltaTime, AlphaAnimator::GraphicState::Run, this->_currVelocity.x ); // [!] animateRun
 
 		// Natural transition(s)
 
@@ -173,7 +173,7 @@ void Character::updateState( float deltaTime )
 
 
 	case CharacterState::Jump:
-		// [!] animateJump
+		this->_animator.update( deltaTime, AlphaAnimator::GraphicState::Jump, this->_currVelocity.x ); // [!] animateJump
 
 		//this->_framesFromJumpStart++;
 		//std::cout << this->_framesFromJumpStart << std::endl;
@@ -411,6 +411,7 @@ void Character::update( float deltaTime, bool* commands )
 		this->_framesFromJumpStart = 0;
 	}
 
-
 	this->updatePrevCommands();
+
+	this->_time += deltaTime;
 }

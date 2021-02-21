@@ -4,6 +4,7 @@
 
 #include "Settings.h"
 #include "DynamicObject.h"
+#include "AlphaAnimator.h"
 
 
 enum class Command
@@ -28,7 +29,6 @@ enum class CharacterState
 };
 
 
-
 class World;
 
 class Character : public DynamicObject
@@ -37,8 +37,6 @@ private:
 	CharacterState _currentState;
 	float _runSpeed;
 	float _jumpSpeed;
-
-
 
 	// LedgeWork
 	olc::v2d_generic<std::int64_t> _ledgeTile;
@@ -49,7 +47,7 @@ private:
 	std::int32_t _framesFromJumpStart;
 
 
-
+	// World Interation
 	World* _world;
 
 
@@ -58,6 +56,10 @@ private:
 		this->_currentState = characterState;
 		return;
 	}
+
+
+	// Animator
+	AlphaAnimator _animator;
 
 protected:
 	bool _prevCommands[( std::size_t )Command::count];
@@ -90,7 +92,7 @@ public:
 	// Constructors/Destructors
 	Character();
 	Character( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale, CharacterState characterState, float runSpeed, float jumpSpeed,
-		World* world );
+		World* world, float time );
 	~Character();
 
 	

@@ -18,7 +18,7 @@ DynamicObject::DynamicObject() :
 	_pushedBottomObject( false ), _pushingBottomObject( false ),
 	_pushedTopObject( false ), _pushingTopObject( false ),
 	_onOneWayPlatform( false ),
-	_world( nullptr ),
+	_world( nullptr ), _time( 0 ),
 	_spaces(),
 	_allCollisions(),
 	_isKinematic( false )
@@ -27,7 +27,7 @@ DynamicObject::DynamicObject() :
 }
 
 
-DynamicObject::DynamicObject( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale, World* world ) :
+DynamicObject::DynamicObject( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale, World* world, long double time ) :
 	_aabb( center, halfSize, olc::vf2d{ std::abs( scale.x ), std::abs( scale.y ) } ),
 	_aabbOffset( olc::vf2d{ 0.0f, 0.0f } ), _scale( scale ),
 	_prevPosition( olc::v2d_generic<long double>{ center.x, center.y } ), _currPosition( olc::v2d_generic<long double>{ center.x, center.y } ),
@@ -41,7 +41,7 @@ DynamicObject::DynamicObject( const olc::v2d_generic<long double>& center, const
 	_pushedBottomObject( false ), _pushingBottomObject( false ),
 	_pushedTopObject( false ), _pushingTopObject( false ),
 	_onOneWayPlatform( false ),
-	_world( world ),
+	_world( world ), _time( time ),
 	_spaces(),
 	_allCollisions(),
 	_isKinematic( false )

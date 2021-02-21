@@ -87,7 +87,7 @@ public:
 	// Constructors/Destructors
 	Zombie();
 	Zombie( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale, ZombieState characterState, float runSpeed, float jumpSpeed,
-		World* world );
+		World* world, long double time );
 	~Zombie();
 
 

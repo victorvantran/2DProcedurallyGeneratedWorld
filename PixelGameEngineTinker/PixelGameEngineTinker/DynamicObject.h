@@ -44,8 +44,9 @@ protected:
 	AABB _aabb;
 	olc::vf2d _aabbOffset;
 
-	// Miscellaneous
+	// World interation
 	World* _world;
+	long double _time;
 
 	// Collision Detection/Response
 	std::vector<std::pair<std::int64_t,std::size_t>> _spaces;
@@ -64,11 +65,10 @@ protected:
 	bool _pushedTopObject;
 	bool _pushingTopObject;
 
-
 public:
 	// Constructors/Destructors
 	DynamicObject();
-	DynamicObject( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale, World* world );
+	DynamicObject( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale, World* world, long double time );
 	~DynamicObject();
 
 	// Getters

@@ -321,7 +321,7 @@ public:
 		}
 
 
-		if ( GetKey( olc::Key::B ).bPressed || GetKey( olc::Key::B ).bHeld )
+		if ( GetKey( olc::Key::H ).bPressed || GetKey( olc::Key::B ).bHeld )
 		{
 			std::cout << (int)world->getTile( tileIndex.x, tileIndex.y )->getBorders() << std::endl;
 			//std::cout << (int)world->getTile( tileIndex.x, tileIndex.y )->getBorder( TileBorder::North ) << std::endl;
@@ -704,7 +704,7 @@ public:
 			CharacterState::Stand,
 			Settings::Player::Character::DEFAULT_RUN_SPEED,
 			Settings::Player::Character::DEFAULT_JUMP_SPEED,
-			this->world
+			this->world, 0.0
 		);
 
 		this->world->setPlayer( this->player );
@@ -722,7 +722,7 @@ public:
 			ZombieState::Stand,
 			8.0f,
 			15.0f,
-			this->world
+			this->world, 0.0
 		);
 
 		this->enemy2 = new Zombie(
@@ -732,7 +732,7 @@ public:
 			ZombieState::Stand,
 			9.0f,
 			17.5f,
-			this->world
+			this->world, 0.0
 		);
 
 		this->enemy3 = new Zombie(
@@ -742,7 +742,7 @@ public:
 			ZombieState::Stand,
 			7.5f,
 			20.0f,
-			this->world
+			this->world, 0.0
 		);
 
 		return;
@@ -809,7 +809,7 @@ int main()
 	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize, true, true, true ) )
 		demo.Start();
 		*/
-	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize, true, false, true ) )
+	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize, false, false, true ) )
 		demo.Start();
 	return 0;
 }
