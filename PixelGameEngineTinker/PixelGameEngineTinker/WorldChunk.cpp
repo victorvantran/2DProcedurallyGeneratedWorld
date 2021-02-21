@@ -1338,28 +1338,88 @@ void WorldChunk::blackenLights()
 			if ( worldY < worldYTerranean + SUNRAY_POWER )
 			{
 				//this->_lights[y * this->_size + x].whiten(); // [!] Add light based on day/night time for day/night system
-				
+				float second = this->_world->getSecond();
+
+				std::uint8_t red;
+				std::uint8_t green;
+				std::uint8_t blue;
+
+
+				if ( second >= 21600 && second < 28800 ) // Morning
+				{
+					float difference = second - 21600;
+					float absoluteDifference = 7200;
+
+					float p = difference / ( absoluteDifference - 1 );
+
+					red = ( std::uint8_t )( ( 1.0f - p ) * 1.0f + p * 255.0f + 0.5f );
+					green = ( std::uint8_t )( ( 1.0f - p ) * 1.0f + p * 255.0f + 0.5f );
+					blue = ( std::uint8_t )( ( 1.0f - p ) * 1.0f + p * 255.0f + 0.5f );
+				}
+				else if ( second >= 28800 && second < 57600 ) // Afternoon
+				{
+					//return olc::Pixel{ 255, 255, 255, 255 };
+					float difference = second - 28800;
+					float absoluteDifference = 28800;
+					float p = difference / ( absoluteDifference - 1 );
+
+					red = 255;
+					green = 255;
+					blue = 255;
+				}
+				else if ( second >= 57600 && second < 68400 ) // Afternoon to Evening
+				{
+					//return olc::Pixel{ 146, 50, 50, 255 };
+
+					float difference = second - 57600;
+					float absoluteDifference = 10800;
+
+					float p = difference / ( absoluteDifference - 1 );
+
+					red = ( std::uint8_t )( ( 1.0f - p ) * 255.0f + p * 146.0f + 0.5f );
+					green = ( std::uint8_t )( ( 1.0f - p ) * 255.0f + p * 50.0f + 0.5f );
+					blue = ( std::uint8_t )( ( 1.0f - p ) * 255.0f + p * 50.0f + 0.5f );
+				}
+
+				else if ( second >= 64800 && second < 79200 ) // Evening to Night
+				{
+					//return olc::Pixel{ 146, 50, 50, 255 };
+
+					float difference = second - 64800;
+					float absoluteDifference = 14400;
+
+					float p = difference / ( absoluteDifference - 1 );
+
+					red = ( std::uint8_t )( ( 1.0f - p ) * 146.0f + p * 4.0f + 0.5f );
+					green = ( std::uint8_t )( ( 1.0f - p ) * 50.0f + p * 4.0f + 0.5f );
+					blue = ( std::uint8_t )( ( 1.0f - p ) * 50.0f + p * 4.0f + 0.5f );
+
+				}
+				else if ( ( second >= 79200 && second < 86400 ) || ( second >= 0 && second < 21600 ) ) // Night
+				{
+					float unwrappedSecond = ( second >= 0 && second < 21600 ) ? second + 86400 : second;
+					float difference = unwrappedSecond - 79200;
+					float absoluteDifference = 28800;
+					float p = difference / ( absoluteDifference - 1 );
+
+					red = ( std::uint8_t )( ( 1.0f - p ) * 4.0f + p * 1.0f + 0.5f );
+					green = ( std::uint8_t )( ( 1.0f - p ) * 4.0f + p * 1.0f + 0.5f );
+					blue = ( std::uint8_t )( ( 1.0f - p ) * 4.0f + p * 1.0f + 0.5f );
+				}
+				else
+				{
+					red = ( std::uint8_t )( 0 );
+					green = ( std::uint8_t )( 0 );
+					blue = ( std::uint8_t )( 0 );
+				}
+
 				Light& light = this->_lights[y * this->_size + x];
 				light.blacken();
-				light.addRed( 255 );
-				light.addGreen( 255 );
-				light.addBlue( 255 );
-				/*
-				light.addRed( 255 );
-				light.addGreen( 160 );
-				light.addBlue( 122 );
-				*/
+				light.addRed( red );
+				light.addGreen( green );
+				light.addBlue( blue );
 
-				/*
-				light.addRed( 255 );
-				light.addGreen( 127 );
-				light.addBlue( 80 );
-				*/
 
-				/*light.addRed( 73 );
-				light.addGreen( 33 );
-				light.addBlue( 73 );
-				*/
 				light.setAlpha( 255 );
 				
 			}

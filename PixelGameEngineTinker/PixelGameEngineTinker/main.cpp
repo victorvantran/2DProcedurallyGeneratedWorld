@@ -950,7 +950,7 @@ int main()
 	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize, true, true, true ) )
 		demo.Start();
 		*/
-	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize, false, false, true ) )
+	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize, true, false, true ) )
 		demo.Start();
 	return 0;
 }

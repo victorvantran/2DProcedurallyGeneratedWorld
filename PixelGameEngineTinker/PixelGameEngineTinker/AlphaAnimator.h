@@ -46,8 +46,8 @@ private:
 	static constexpr std::uint64_t PIXEL_SIZE_X = 64;
 	static constexpr std::uint64_t PIXEL_SIZE_Y = 64;
 	static constexpr std::uint8_t MAX_GRAPHIC_COUNTER = 8; // number of columns in out sprite (greatest common multiple between 4 and 8 = 8)
-	static constexpr std::int8_t OFFSET_X = 15;
-	static constexpr std::int8_t OFFSET_Y = 20;
+	static constexpr std::int8_t OFFSET_X = 20;
+	static constexpr std::int8_t OFFSET_Y = 15;
 
 	GraphicState _graphicState;
 	Direction _direction;
