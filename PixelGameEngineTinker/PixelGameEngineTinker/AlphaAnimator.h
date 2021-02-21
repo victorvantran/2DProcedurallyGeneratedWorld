@@ -20,9 +20,9 @@ public:
 
 	enum class GraphicStateTransitions
 	{
-		Idle = 4,
+		Idle = 8,
 		Run = 8,
-		Jump = 8,
+		Jump = 1,
 		Hurt = 4,
 		Melee = 4,
 		Bow = 4,
@@ -131,8 +131,10 @@ public:
 			transitionIndex = this->_graphicCounter % ( std::uint8_t )( GraphicStateTransitions::Run );
 			break;
 		case GraphicState::Jump:
-			stateIndex = ( std::uint8_t )( GraphicState::Jump );
-			transitionIndex = this->_graphicCounter % ( std::uint8_t )( GraphicStateTransitions::Jump );
+			//stateIndex = ( std::uint8_t )( GraphicState::Jump );
+			//transitionIndex = this->_graphicCounter % ( std::uint8_t )( GraphicStateTransitions::Jump );
+			stateIndex = ( std::uint8_t )( GraphicState::Run );
+			transitionIndex = this->_graphicCounter % ( std::uint8_t )( GraphicStateTransitions::Run );
 			break;
 		case GraphicState::Hurt:
 			stateIndex = ( std::uint8_t )( GraphicState::Hurt );

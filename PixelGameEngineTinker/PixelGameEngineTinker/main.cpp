@@ -487,7 +487,7 @@ public:
 
 		//DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0} );
 		DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0} );
-
+		//DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0}, olc::DARK_RED );
 
 
 		static const std::int64_t OVERWORLD_HEIGHT = 1536;

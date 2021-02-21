@@ -290,17 +290,18 @@ void WorldChunk::insertSand( std::int64_t x, std::int64_t y, std::uint8_t border
 
 void WorldChunk::insertTorch( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height )
 {
-	/*
+	
 	this->insertLightSourceTile( TileIdentity::Torch, TileType::Empty, false, false, false, borders, 0,
 		255, 255, 255, 255, 15,
 		//100, 100, 100, 255, 15,
 		x, y, width, height );
-	*/
 	
+	/*
 	this->insertLightSourceTile( TileIdentity::Torch, TileType::Empty, false, false, false, borders, 0,
 		std::rand() % 256, std::rand() % 256, std::rand() % 256, std::rand() % 256, 15,
 		x, y, width, height );
-	
+	*/
+
 	return;
 }
 
@@ -1321,7 +1322,7 @@ void WorldChunk::blackenLights()
 
 void WorldChunk::blackenLights()
 {
-	//std::cout << "blacken" << std::endl;
+	// Natural sunlight
 	static const std::int64_t OVERWORLD_HEIGHT = 1536;
 	static const std::int64_t SUNRAY_POWER = 3;
 
@@ -1336,7 +1337,31 @@ void WorldChunk::blackenLights()
 			std::int64_t worldY = this->_chunkIndexY * this->_size + y;
 			if ( worldY < worldYTerranean + SUNRAY_POWER )
 			{
-				this->_lights[y * this->_size + x].whiten();
+				//this->_lights[y * this->_size + x].whiten(); // [!] Add light based on day/night time for day/night system
+				
+				Light& light = this->_lights[y * this->_size + x];
+				light.blacken();
+				light.addRed( 255 );
+				light.addGreen( 255 );
+				light.addBlue( 255 );
+				/*
+				light.addRed( 255 );
+				light.addGreen( 160 );
+				light.addBlue( 122 );
+				*/
+
+				/*
+				light.addRed( 255 );
+				light.addGreen( 127 );
+				light.addBlue( 80 );
+				*/
+
+				/*light.addRed( 73 );
+				light.addGreen( 33 );
+				light.addBlue( 73 );
+				*/
+				light.setAlpha( 255 );
+				
 			}
 			else
 			{
