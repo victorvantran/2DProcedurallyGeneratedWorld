@@ -486,8 +486,10 @@ public:
 
 
 		//DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0} );
-		DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0} );
+		//DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0} );
 		//DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0}, olc::DARK_RED );
+
+		DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0}, this->transitionColor( this->world->getSecond() ) );
 
 
 		static const std::int64_t OVERWORLD_HEIGHT = 1536;
@@ -527,25 +529,144 @@ public:
 
 		this->camera->renderPlayer( *player ); //[~!]
 		this->world->render();
+		this->world->tick( fElapsedTime );
 
 
 		// DEBUG
 		drawTileIndexString( tileIndex );
+		//this->world->printTime();
+		
 
-		/*
-		DrawStringDecal(
-			olc::vi2d( GetMouseX(), GetMouseY() ),
-			"O",
-			olc::WHITE,
-			olc::vf2d( 2.0f, 2.0f )
-		);
-		*/
 
 		if ( GetKey( olc::Key::PERIOD ).bPressed ) world->DEBUG_PRINT_TILE_SPRITES();
 		
 
 		return true;
 	}
+
+
+
+	olc::Pixel transitionColor( float second )
+	{
+		Settings::World::SECONDS_PER_DAY;
+
+		if ( second >= 21600 && second < 39600 ) // Morning
+		{
+			float difference = second - 21600;
+			float absoluteDifference = 18000;
+
+			std::cout << difference / absoluteDifference << std::endl;
+
+
+			float p = difference / ( absoluteDifference - 1 );
+
+			return olc::Pixel{
+				( std::uint8_t )( ( 1.0 - p ) * 4 + p * 255 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 4 + p * 255 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 9 + p * 255 + 0.5 ),
+				255
+			};
+
+			//return olc::Pixel{ 250, 250, 210 };
+		}
+		else if ( second >= 39600 && second < 61200 ) // Afternoon
+		{
+			//return olc::Pixel{ 255, 255, 255, 255 };
+			float difference = second - 39600;
+			float absoluteDifference = 21600;
+
+			std::cout << difference / absoluteDifference << std::endl;
+
+
+			float p = difference / ( absoluteDifference - 1 );
+
+			return olc::Pixel{
+				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 146 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 50 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 50 + 0.5 ),
+				255
+			};
+
+		}
+		else if ( second >= 61200 && second < 75600 ) // Evening
+		{
+			//return olc::Pixel{ 146, 50, 50, 255 };
+
+			float difference = second - 61200;
+			float absoluteDifference = 14400;
+
+			std::cout << difference / absoluteDifference << std::endl;
+
+
+			float p = difference / ( absoluteDifference - 1 );
+
+			return olc::Pixel{
+				( std::uint8_t )( ( 1.0 - p ) * 146 + p * 1 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 50 + p * 1 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 50 + p * 1 + 0.5 ),
+				255
+			};
+
+		}
+		/*
+		else if ( ( second >= 75600 && second < 86400 ) || ( second >= 0 && second < 21600 ) ) // Night
+		{
+			//return olc::Pixel{ 3, 3, 3, 255 };
+			//return olc::Pixel{ 12, 20, 69, 255 };
+			//olc::Pixel{ 56, 40, 92, 255 };
+			//olc::Pixel{ 72, 52, 117, 255 };
+			//olc::DARK_RED;
+			float unwrappedSecond = ( second >= 0 && second < 21600 ) ? second + 75600 : second;
+			float difference = unwrappedSecond - 75600;
+			float absoluteDifference = 32400;
+			//return olc::Pixel{ 3 + ( 250 - 3 ) * ( difference / absoluteDifference ), 3 + ( 250 - 3 ) * ( difference / absoluteDifference ), 3 + ( 210 - 3 ) * ( difference / absoluteDifference ), 255 };
+
+
+			std::cout << difference / absoluteDifference << std::endl;
+
+			return olc::Pixel{ 
+				( std::uint8_t )( 3 + ( 250 - 3 ) * ( difference / absoluteDifference ) ),
+				( std::uint8_t )( 3 + ( 250 - 3 ) * ( difference / absoluteDifference ) ),
+				( std::uint8_t )( 3 + ( 210 - 3 ) * ( difference / absoluteDifference ) ),
+				255 } ;
+		}
+		*/
+		else if ( ( second >= 75600 && second < 86400 ) || ( second >= 0 && second < 21600 ) ) // Night
+		{
+			float unwrappedSecond = ( second >= 0 && second < 21600 ) ? second + 86400 : second;
+			float difference = unwrappedSecond - 75600;
+			float absoluteDifference = 32400;
+
+
+			std::cout << difference / absoluteDifference << std::endl;
+
+			float p = difference / ( absoluteDifference - 1 );
+
+			return olc::Pixel{
+				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 4 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 4 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 9 + 0.5 ),
+				255 
+			};
+
+			/*
+			return olc::Pixel{
+				( std::uint8_t )( 3 + ( 250 - 3 ) * ( difference / absoluteDifference ) ),
+				( std::uint8_t )( 3 + ( 250 - 3 ) * ( difference / absoluteDifference ) ),
+				( std::uint8_t )( 3 + ( 210 - 3 ) * ( difference / absoluteDifference ) ),
+				255 };
+				*/
+		}
+		else
+		{
+			return olc::Pixel{ 0, 0, 0, 0 };
+		}
+	}
+
+
+
+
+
 
 
 	void createWorld()
@@ -686,7 +807,8 @@ public:
 			tropicalRainforest,
 			tropicalSeasonalForest,
 			tundra,
-			woodland
+			woodland,
+			75600.0f, 0, 0
 		);
 
 		/*

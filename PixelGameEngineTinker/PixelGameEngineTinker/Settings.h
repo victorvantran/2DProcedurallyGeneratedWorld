@@ -42,12 +42,12 @@ public:
 
 		static const std::uint16_t NUM_WORLD_CHUNKS = ( 1 + CHUNK_RADIUS * 2 ) * ( 1 + CHUNK_RADIUS * 2 );
 
-
-
-
 		static constexpr float GRAVITY = -98.0f;
 		static constexpr float TERMINAL_VELOCITY = -2000.0f;
 
+
+		static constexpr std::uint32_t SECONDS_PER_DAY = 86400;
+		static constexpr std::uint16_t DAYS_PER_YEAR = 365; // ignore leap years
 	};
 
 

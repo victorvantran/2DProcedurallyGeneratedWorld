@@ -133,6 +133,11 @@ private:
 	Woodland _woodland;
 
 
+	// Time
+	float _second;
+	std::uint16_t _day;
+	std::uint64_t _year;
+
 	// Player
 	Player* _player = nullptr;
 
@@ -161,7 +166,12 @@ public:
 		const TropicalRainforest& tropicalRainforest,
 		const TropicalSeasonalForest& tropicalSeasonalForest,
 		const Tundra& tundra,
-		const Woodland& woodland );
+		const Woodland& woodland,
+		
+		float _second,
+		std::uint16_t day,
+		std::uint64_t year
+	);
 
 	~World();
 
@@ -170,6 +180,7 @@ public:
 	void initializeDatabase();
 	void initializeDelimits( const BoundingBox<long double>& cameraView );
 	void initializeWorldChunks();
+
 
 	// Modify World
 	void insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
@@ -291,8 +302,6 @@ public:
 	void resetLighting();
 	void calculateLightRenders();
 
-
-
 	bool isOpaque( const olc::v2d_generic<long double>& originPosition, const olc::v2d_generic<long double>& castPosition );
 	bool isTransparent( const olc::v2d_generic<long double>& originPosition, const olc::v2d_generic<long double>& castPosition );
 
@@ -301,15 +310,12 @@ public:
 	void revealStatic( LightCastQuadrant<long double>& quadrant, const olc::v2d_generic<long double>& tile, const olc::v2d_generic<long double>& castPosition,
 		const olc::v2d_generic<long double>& originPosition, const LightSource& lightSource );
 
-
 	void emitStaticLightSource( const LightSource& lightSource, std::int64_t x, std::int64_t y );
 	void emitStaticLightSources();
 	void activateCursorLightSource( long double dX, long double dY, std::int64_t radius );
 
 	void emitDynamicLightSource( const LightSource& lightSource, long double x, long double y );
 	void emitPlayerLightSource();
-
-
 
 	void updateLightingTask();
 	void updateLighting();
@@ -321,8 +327,20 @@ public:
 	void setPlayer( Player* player );
 
 
+	// Natural Update
+	void tick( float deltaTime );
+	float getSecond() const;
+	std::uint16_t getDay() const;
+	std::uint64_t getYear() const;
+
+
 	// Render
 	void render();
+
+
+
+	// Debug
+	void printTime() const;
 };
 
 

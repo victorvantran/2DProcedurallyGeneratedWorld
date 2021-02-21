@@ -463,8 +463,11 @@ void Camera::renderPlayer( Player& player ) const
 
 
 
-	std::tuple<olc::Decal*, std::uint64_t, std::uint64_t> renderInformation = player.getCharacter().getAnimator().selectPartialRender();
-	olc::v2d_generic<std::int64_t> alphaStartPos = olc::v2d_generic<std::int64_t>{ startPos.x - ( std::int64_t )( 20 * this->_zoomX ), startPos.y - ( std::int64_t )( 15 * this->_zoomY )};
+	std::tuple<olc::Decal*, std::uint64_t, std::uint64_t, std::int8_t, std::int8_t> renderInformation = player.getCharacter().getAnimator().selectPartialRender();
+	olc::v2d_generic<std::int64_t> alphaStartPos = olc::v2d_generic<std::int64_t>{
+		startPos.x - ( std::int64_t )( std::get<3>( renderInformation ) * this->_zoomX ),
+		startPos.y - ( std::int64_t )( std::get<4>( renderInformation ) * this->_zoomY )
+	};
 
 	pge->DrawPartialDecal(
 		alphaStartPos,

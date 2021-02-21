@@ -77,7 +77,8 @@ World::World()
 	_atlas(),
 	_camera( nullptr ),
 	_spatialParition( this ),
-	_seed( 0 )
+	_seed( 0 ),
+	_second( 0.0f ), _day( 0 ), _year( 0 )
 {
 
 }
@@ -102,7 +103,11 @@ World::World( std::int64_t seed,
 	const TropicalRainforest& tropicalRainforest,
 	const TropicalSeasonalForest& tropicalSeasonalForest,
 	const Tundra& tundra,
-	const Woodland& woodland )
+	const Woodland& woodland,
+	float second,
+	std::uint16_t day,
+	std::uint64_t year
+)
 	: _numChunkWidth( 1 + this->_chunkRadius * 2 ), _numChunkHeight( 1 + this->_chunkRadius * 2 ), _numWorldChunks( this->_numChunkWidth* this->_numChunkHeight ),
 	_focalChunkIndexX( 0 ), _focalChunkIndexY( 0 ),
 	_worldChunks( new WorldChunk[Settings::World::NUM_WORLD_CHUNKS] ),
@@ -128,7 +133,9 @@ World::World( std::int64_t seed,
 	_tropicalRainforest( tropicalRainforest ),
 	_tropicalSeasonalForest( tropicalSeasonalForest ),
 	_tundra( tundra ),
-	_woodland( woodland )
+	_woodland( woodland ),
+	
+	_second( second ), _day( day ), _year( year )
 {
 	for ( std::size_t i = 0; i < Settings::World::NUM_WORLD_CHUNKS; i++ )
 	{
@@ -3458,18 +3465,70 @@ void World::setPlayer( Player* player )
 
 
 
+/// Natural Update
+
+void World::tick( float deltaTime )
+{
+	// Updates the absolute time
+	this->_second += deltaTime * 2000;
+	if ( this->_second >= Settings::World::SECONDS_PER_DAY )
+	{
+		// while this->_seconds >= Settings::World::SECONDS_PER_DAY ( but just use wrap around )
+		this->_second -= Settings::World::SECONDS_PER_DAY;
+
+		this->_day++;
+		if ( this->_day >= Settings::World::DAYS_PER_YEAR )
+		{
+			this->_day -= Settings::World::DAYS_PER_YEAR;
+			this->_year++;
+		}
+	}
+	return;
+}
+
+
+float World::getSecond() const
+{
+	return this->_second;
+}
+
+
+std::uint16_t World::getDay() const
+{
+	return this->_day;
+}
+
+
+std::uint64_t World::getYear() const
+{
+	return this->_year;
+}
+
+
+
+/// Render
 
 void World::render()
 {
 	std::unique_lock<std::mutex> lockUpdateLightingBuffer( this->_mutexUpdateLighting );
 
-
 	this->_camera->renderWorld();
-
 	this->updateDecals(); // [!] only need to be called once after in render thread after sprites have been added in another thread ( or make sprite add thread in render thread and call update decals right after, guaranteed synchronous )
 
-
 	this->_condUpdateLighting.notify_one();
+	return;
+}
 
+
+
+
+/// Debug
+
+void World::printTime() const
+{
+	std::cout << "Year: " << this->_year + 1 << std::endl;
+	std::cout << "Day: " << this->_day + 1 << std::endl;
+	std::cout << "Second: " << ( int )this->_second << std::endl;
+	std::cout << "___________________________________________________________________________" << std::endl;
 	return;
 }
