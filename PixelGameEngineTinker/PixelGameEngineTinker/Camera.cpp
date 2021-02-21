@@ -166,7 +166,7 @@ void Camera::renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas,
 
 			pge->DrawPartialDecal(
 				startPos,
-				olc::v2d_generic<long double>{ this->_zoomX* tileSize, this->_zoomY* tileSize } *scale,
+				olc::v2d_generic<long double>{ this->_zoomX * tileSize, this->_zoomY * tileSize } * scale,
 				tileDecal,
 				olc::vf2d{ 0, Settings::Camera::CONSOLIDATED_TILE_OFFSET },
 				olc::vf2d{ 1, 1 } *( Settings::Screen::CELL_PIXEL_SIZE * Settings::Screen::PIXEL_SIZE * scale )
@@ -449,6 +449,8 @@ void Camera::renderPlayer( Player& player ) const
 	worldToScreen( worldPositionX, worldPositionY, pixelX, pixelY );
 	olc::v2d_generic<std::int64_t> startPos = olc::v2d_generic<std::int64_t>{ pixelX, pixelY };
 
+	
+	/*
 	pge->FillRectDecal(
 		startPos,
 		olc::v2d_generic<long double>{
@@ -457,6 +459,23 @@ void Camera::renderPlayer( Player& player ) const
 	},
 		olc::Pixel( 255, 255, 51, 255 )
 			);
+	*/
+
+
+
+	std::tuple<olc::Decal*, std::uint64_t, std::uint64_t> renderInformation = player.getCharacter().getAnimator().selectPartialRender();
+	olc::v2d_generic<std::int64_t> alphaStartPos = olc::v2d_generic<std::int64_t>{ startPos.x - 20, startPos.y - 15 };
+
+	pge->DrawPartialDecal(
+		alphaStartPos,
+		olc::v2d_generic<long double>{
+			( long double )this->_zoomX * ( 4 ) * Settings::Screen::CELL_PIXEL_SIZE,
+			( long double )this->_zoomY * ( 4 ) * Settings::Screen::CELL_PIXEL_SIZE,
+		},
+		std::get<0>( renderInformation ),
+		olc::vf2d{ ( float )std::get<1>( renderInformation ), ( float )std::get<2>( renderInformation ) },
+		olc::vf2d{ 64.0f, 64.0f } // sourceSize
+	);
 
 	return;
 }

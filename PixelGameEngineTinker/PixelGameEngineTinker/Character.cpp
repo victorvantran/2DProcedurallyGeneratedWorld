@@ -8,17 +8,20 @@ Character::Character() :
 	_ledgeTile( olc::v2d_generic<std::int64_t>{ 0, 0 } ), _cannotGoLeftFrames( 0 ), _cannotGoRightFrames( 0 ),
 	_framesFromJumpStart( 0 ),
 	_currentState( CharacterState::Stand ), _runSpeed( 0 ), _jumpSpeed( 0 ), _prevCommands{ false }, _currCommands{ false },
-	_world( nullptr )
+	_world( nullptr ),
+	_animator()
 {}
 
 
 Character::Character( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale, CharacterState characterState, float runSpeed, float jumpSpeed,
-	World* world, float time ) :
+	World* world, float time,
+	olc::Sprite* sprite, olc::Decal* decal ) :
 	DynamicObject( center, halfSize, scale, world, time ),
 	_ledgeTile( olc::v2d_generic<std::int64_t>{ 0, 0 } ), _cannotGoLeftFrames( 0 ), _cannotGoRightFrames( 0 ),
 	_framesFromJumpStart( 0 ),
 	_currentState( characterState ), _runSpeed( runSpeed ), _jumpSpeed( jumpSpeed ), _prevCommands{ false }, _currCommands{ false },
-	_world( world )
+	_world( world ),
+	_animator( sprite, decal )
 {}
 
 
@@ -27,7 +30,10 @@ Character::~Character() {}
 
 
 // Getters
-
+const AlphaAnimator& Character::getAnimator() const
+{
+	return this->_animator;
+}
 
 
 // Setters

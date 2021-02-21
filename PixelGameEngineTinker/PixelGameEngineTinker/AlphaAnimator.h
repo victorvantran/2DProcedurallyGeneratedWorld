@@ -36,16 +36,17 @@ public:
 	};
 
 private:
-	static constexpr float FRAMES_PER_SECOND = 60.0f;
+	static constexpr float FRAMES_PER_SECOND = 12.0f;
 	static constexpr float REFRESH_RATE = ( 1.0f / FRAMES_PER_SECOND );
 	float _localTime;
 
 	// Sprite information
 	olc::Sprite* _sprite;
 	olc::Decal* _decal;
-	static constexpr std::uint8_t PIXEL_SIZE_X = 64;
-	static constexpr std::uint8_t PIXEL_SIZE_Y = 64;
+	static constexpr std::uint64_t PIXEL_SIZE_X = 64;
+	static constexpr std::uint64_t PIXEL_SIZE_Y = 64;
 	static constexpr std::uint8_t MAX_GRAPHIC_COUNTER = 8; // number of columns in out sprite (greatest common multiple between 4 and 8 = 8)
+	// Offsets
 
 	GraphicState _graphicState;
 	Direction _direction;
@@ -95,12 +96,11 @@ public:
 			this->_direction = Direction::Right;
 		}
 			
-		this->selectPartialRender();
 		return;
 	}
 
 
-	void selectPartialRender()
+	std::tuple<olc::Decal*, std::uint64_t, std::uint64_t> selectPartialRender() const
 	{
 		// Based on the graphic state, target the proper graphic cell of the spritesheet
 		std::uint8_t stateIndex;
@@ -156,9 +156,11 @@ public:
 			break;
 		}
 
-		std::cout << (int)stateIndex << ", " << (int)transitionIndex << std::endl;
+		//std::cout << this->_decal << std::endl;
+		//std::cout << (int)stateIndex << ", " << (int)transitionIndex << std::endl;
 
 		//( stateIndex + directionIndex ) * ( PIXEL_SIZE_Y ) , transitionIndex * ( PIXEL_SIZE_X )
-		return;
+		
+		return std::tuple<olc::Decal*, std::uint64_t, std::uint64_t>{ this->_decal, transitionIndex* ( PIXEL_SIZE_X ), ( stateIndex + directionIndex ) * ( PIXEL_SIZE_Y ) };
 	}
 };

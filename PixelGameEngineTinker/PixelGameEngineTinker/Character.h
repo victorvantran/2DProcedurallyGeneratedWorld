@@ -92,12 +92,13 @@ public:
 	// Constructors/Destructors
 	Character();
 	Character( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale, CharacterState characterState, float runSpeed, float jumpSpeed,
-		World* world, float time );
+		World* world, float time,
+		olc::Sprite* sprite, olc::Decal* decal );
 	~Character();
 
 	
 	// Getters
-
+	const AlphaAnimator& getAnimator() const;
 
 	// Setters
 

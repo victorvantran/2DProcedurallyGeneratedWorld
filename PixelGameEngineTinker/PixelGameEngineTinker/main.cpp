@@ -53,13 +53,17 @@ public:
 
 
 
-
+	// Temporary render system [!]
 	olc::Sprite* backgroundSprite;
 	olc::Decal* backgroundDecal;
 
 
 	olc::Sprite* caveBackgroundSprite;
 	olc::Decal*	caveBackgroundDecal;
+
+
+	olc::Sprite* alphaSprite;
+	olc::Decal* alphaDecal;
 private:
 
 
@@ -74,23 +78,37 @@ public:
 		delete world;
 		delete camera;
 		delete player;
+
+
+		// Delete temporary renders [!]
+		delete this->backgroundSprite;
+		delete this->backgroundDecal;
+
+		delete this->caveBackgroundSprite;
+		delete this->caveBackgroundDecal;
+
+		delete this->alphaSprite;
+		delete this->alphaDecal;
 	}
 
 public:
 	bool OnUserCreate() override
 	{
-		loadAssets();
-		createWorld();
-		createPlayer();
-		createEnemy();
-
-
-		backgroundSprite = new olc::Sprite("./background.png");
+		backgroundSprite = new olc::Sprite( "./background.png" );
 		backgroundDecal = new olc::Decal( backgroundSprite );
 
 
 		caveBackgroundSprite = new olc::Sprite( "./cave_background.png" );
 		caveBackgroundDecal = new olc::Decal( caveBackgroundSprite );
+
+
+		alphaSprite = new olc::Sprite( "./alpha_spritesheet.png" );
+		alphaDecal = new olc::Decal( alphaSprite );
+
+		loadAssets();
+		createWorld();
+		createPlayer();
+		createEnemy();
 		return true;
 	}
 
@@ -704,7 +722,8 @@ public:
 			CharacterState::Stand,
 			Settings::Player::Character::DEFAULT_RUN_SPEED,
 			Settings::Player::Character::DEFAULT_JUMP_SPEED,
-			this->world, 0.0
+			this->world, 0.0,
+			this->alphaSprite, this->alphaDecal
 		);
 
 		this->world->setPlayer( this->player );

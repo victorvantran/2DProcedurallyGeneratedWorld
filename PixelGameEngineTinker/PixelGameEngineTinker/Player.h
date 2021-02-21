@@ -68,16 +68,21 @@ public:
 	// Constructors/Destructors
 	Player() : _character(), _world( nullptr ), _prevInputs{ false }, _currInputs{ false } {}
 
+	/*
 	Player( olc::v2d_generic<long double> center, olc::vf2d halfSize, olc::vf2d scale, CharacterState characterState, float runSpeed, float jumpSpeed, World* world, float time ) :
 		_character( center, halfSize, scale, characterState, runSpeed, jumpSpeed, world, time ),
 		_world( world ),
 		_prevInputs{ false }, _currInputs{ false } {}
-	/*
-	Player( olc::v2d_generic<long double> center, olc::vf2d halfSize, CharacterState characterState, float runSpeed, float jumpSpeed ) :
-		_character( center, halfSize, CharacterState::Stand, Settings::Player::Character::RUN_SPEED, Settings::Player::Character::JUMP_SPEED ) {}
-		*/
+	*/
 
-	// _prevInputs{ false }, _currInputs{ false } {}
+	Player( olc::v2d_generic<long double> center, olc::vf2d halfSize, olc::vf2d scale, CharacterState characterState, float runSpeed, float jumpSpeed, World* world, float time,
+		olc::Sprite* characterSprite, olc::Decal* characterDecal ) :
+		_character( center, halfSize, scale, characterState, runSpeed, jumpSpeed, world, time,
+			characterSprite, characterDecal ),
+		_world( world ),
+		_prevInputs{ false }, _currInputs{ false } {}
+
+
 	~Player() {}
 
 
