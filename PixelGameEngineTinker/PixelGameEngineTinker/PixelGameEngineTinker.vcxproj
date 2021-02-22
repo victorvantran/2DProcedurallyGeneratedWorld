@@ -40,6 +40,7 @@
     <ClInclude Include="Animator.h" />
     <ClInclude Include="Assets.h" />
     <ClInclude Include="Atlas.h" />
+    <ClInclude Include="Background.h" />
     <ClInclude Include="BackgroundTile.h" />
     <ClInclude Include="Biome.h" />
     <ClInclude Include="BiomeSubstanceMap.h" />

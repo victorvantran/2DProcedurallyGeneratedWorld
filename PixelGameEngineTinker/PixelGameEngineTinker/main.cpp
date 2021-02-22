@@ -57,9 +57,14 @@ public:
 	olc::Sprite* backgroundSprite;
 	olc::Decal* backgroundDecal;
 
+	olc::Sprite* sunSprite;
+	olc::Decal* sunDecal;
+
+
 
 	olc::Sprite* caveBackgroundSprite;
 	olc::Decal*	caveBackgroundDecal;
+
 
 
 	olc::Sprite* alphaSprite;
@@ -84,6 +89,9 @@ public:
 		delete this->backgroundSprite;
 		delete this->backgroundDecal;
 
+		delete this->sunSprite;
+		delete this->sunDecal;
+
 		delete this->caveBackgroundSprite;
 		delete this->caveBackgroundDecal;
 
@@ -96,6 +104,9 @@ public:
 	{
 		backgroundSprite = new olc::Sprite( "./background.png" );
 		backgroundDecal = new olc::Decal( backgroundSprite );
+
+		sunSprite = new olc::Sprite( "./sun.png" );
+		sunDecal = new olc::Decal( sunSprite );
 
 
 		caveBackgroundSprite = new olc::Sprite( "./cave_background.png" );
@@ -484,14 +495,18 @@ public:
 
 		Clear( olc::BLACK );
 
-
+		// Draw background
 		//DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0} );
-		//DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0} );
-		//DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0}, olc::DARK_RED );
-
 		DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0}, this->transitionColor( this->world->getSecond() ) );
+		this->renderSun( this->world->getSecond() );
+
+		// Draw Sun
+		//DrawDecal( olc::vf2d{ 200, 200 }, this->sunDecal, olc::vf2d{1.0, 1.0} );
 
 
+
+
+		// Draw Cave background
 		static const std::int64_t OVERWORLD_HEIGHT = 1536;
 
 		long double playerX = this->player->getCharacter().getCurrPosition().x;
@@ -499,30 +514,8 @@ public:
 
 		long double terraneanHeightPerlinVal = this->world->getTerraneanHeightMap().getPerlinValue( playerX );
 		std::int64_t worldYTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT );
-
-		//std::cout << playerY << ": " << worldYTerranean << std::endl;
-		//std::cout << ( -playerY ) / ( -worldYTerranean ) << std::endl;
-
-
 		long double attenuate = std::min( ( long double )1, std::max( ( long double )0, ( ( -worldYTerranean + playerY ) / ( -worldYTerranean / 4 ) ) ) );
 
-
-		/*
-		FillRectDecal(
-			olc::vf2d{ 0, 0 },
-			olc::vf2d{ Example::screenWidth, Example::screenHeight },
-			olc::Pixel( 0, 0, 0, attenuate * 255 )
-		);
-		*/
-		// std::cout << attenuate << std::endl;
-
-
-		/*
-		if ( attenuate > 0 )
-		{
-			DrawDecal( olc::vf2d{ 0, 0 }, this->caveBackgroundDecal, olc::vf2d{1.0, 1.0}, olc::Pixel( 0, 0, 0, attenuate * 255 ) );
-		}
-		*/
 
 		DrawDecal( olc::vf2d{ 0, 0 }, this->caveBackgroundDecal, olc::vf2d{1.0, 1.0}, olc::Pixel( 255, 255, 255, attenuate * 255 ) );
 
@@ -545,6 +538,29 @@ public:
 	}
 
 
+	void renderSun( float second )
+	{
+		float difference = second - 10800;
+		float absoluteDifference = 75600;
+		float p = difference / ( absoluteDifference - 1 );
+
+
+		//float y = 0.000000795f * second * second - 0.0791f * second + 2039.2f;
+		//float y = 0.00000069539704f * second * second - 0.0600f * second + 1367.77f;
+		//float y = 0.0000007906569121 * second * second - 0.0683127572016466 * second + 1545.5555555555629326;
+		float y = 0.0000007430269776 * second * second - 0.0641975308641982 * second + 1456.6666666666742458;
+
+		DrawDecal(
+			olc::vf2d{
+				( ( 1.0f - p ) * 300.0f + p * 1680.0f + 0.5f ) ,
+				y
+			},
+			this->sunDecal, olc::vf2d{1.0, 1.0}
+		);
+
+		return;
+	}
+
 
 	olc::Pixel transitionColor( float second )
 	{
@@ -556,7 +572,6 @@ public:
 			float absoluteDifference = 18000;
 
 			std::cout << difference / absoluteDifference << std::endl;
-
 
 			float p = difference / ( absoluteDifference - 1 );
 
@@ -580,13 +595,13 @@ public:
 
 			float p = difference / ( absoluteDifference - 1 );
 
+
 			return olc::Pixel{
 				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 146 + 0.5 ),
 				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 50 + 0.5 ),
 				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 50 + 0.5 ),
 				255
 			};
-
 		}
 		else if ( second >= 61200 && second < 75600 ) // Evening
 		{
@@ -608,29 +623,6 @@ public:
 			};
 
 		}
-		/*
-		else if ( ( second >= 75600 && second < 86400 ) || ( second >= 0 && second < 21600 ) ) // Night
-		{
-			//return olc::Pixel{ 3, 3, 3, 255 };
-			//return olc::Pixel{ 12, 20, 69, 255 };
-			//olc::Pixel{ 56, 40, 92, 255 };
-			//olc::Pixel{ 72, 52, 117, 255 };
-			//olc::DARK_RED;
-			float unwrappedSecond = ( second >= 0 && second < 21600 ) ? second + 75600 : second;
-			float difference = unwrappedSecond - 75600;
-			float absoluteDifference = 32400;
-			//return olc::Pixel{ 3 + ( 250 - 3 ) * ( difference / absoluteDifference ), 3 + ( 250 - 3 ) * ( difference / absoluteDifference ), 3 + ( 210 - 3 ) * ( difference / absoluteDifference ), 255 };
-
-
-			std::cout << difference / absoluteDifference << std::endl;
-
-			return olc::Pixel{ 
-				( std::uint8_t )( 3 + ( 250 - 3 ) * ( difference / absoluteDifference ) ),
-				( std::uint8_t )( 3 + ( 250 - 3 ) * ( difference / absoluteDifference ) ),
-				( std::uint8_t )( 3 + ( 210 - 3 ) * ( difference / absoluteDifference ) ),
-				255 } ;
-		}
-		*/
 		else if ( ( second >= 75600 && second < 86400 ) || ( second >= 0 && second < 21600 ) ) // Night
 		{
 			float unwrappedSecond = ( second >= 0 && second < 21600 ) ? second + 86400 : second;
@@ -648,14 +640,6 @@ public:
 				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 9 + 0.5 ),
 				255 
 			};
-
-			/*
-			return olc::Pixel{
-				( std::uint8_t )( 3 + ( 250 - 3 ) * ( difference / absoluteDifference ) ),
-				( std::uint8_t )( 3 + ( 250 - 3 ) * ( difference / absoluteDifference ) ),
-				( std::uint8_t )( 3 + ( 210 - 3 ) * ( difference / absoluteDifference ) ),
-				255 };
-				*/
 		}
 		else
 		{
@@ -808,7 +792,7 @@ public:
 			tropicalSeasonalForest,
 			tundra,
 			woodland,
-			75600.0f, 0, 0
+			21600.0f, /*75600.0f,*/ 0, 0
 		);
 
 		/*
