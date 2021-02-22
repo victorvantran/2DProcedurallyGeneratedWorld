@@ -3470,7 +3470,7 @@ void World::setPlayer( Player* player )
 void World::tick( float deltaTime )
 {
 	// Updates the absolute time
-	this->_second += deltaTime * 2000;
+	this->_second += deltaTime * 20000;
 	if ( this->_second >= Settings::World::SECONDS_PER_DAY )
 	{
 		// while this->_seconds >= Settings::World::SECONDS_PER_DAY ( but just use wrap around )

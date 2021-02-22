@@ -57,6 +57,15 @@ public:
 	olc::Sprite* backgroundSprite;
 	olc::Decal* backgroundDecal;
 
+	olc::Sprite* backgroundSkySprite;
+	olc::Decal* backgroundSkyDecal;
+
+	olc::Sprite* backgroundNightSkySprite;
+	olc::Decal* backgroundNightSkyDecal;
+
+	olc::Sprite* backgroundTerrainSprite;
+	olc::Decal* backgroundTerrainDecal;
+
 	olc::Sprite* sunSprite;
 	olc::Decal* sunDecal;
 
@@ -89,6 +98,17 @@ public:
 		delete this->backgroundSprite;
 		delete this->backgroundDecal;
 
+		delete this->backgroundSkySprite;
+		delete this->backgroundSkyDecal;
+
+
+		delete this->backgroundNightSkySprite;
+		delete this->backgroundNightSkyDecal;
+
+
+		delete this->backgroundTerrainSprite;
+		delete this->backgroundTerrainDecal;
+
 		delete this->sunSprite;
 		delete this->sunDecal;
 
@@ -104,6 +124,17 @@ public:
 	{
 		backgroundSprite = new olc::Sprite( "./background.png" );
 		backgroundDecal = new olc::Decal( backgroundSprite );
+
+		backgroundSkySprite = new olc::Sprite( "./background_sky.png" );
+		backgroundSkyDecal = new olc::Decal( backgroundSkySprite );
+
+		backgroundNightSkySprite = new olc::Sprite( "./background_night_sky.png" );
+		backgroundNightSkyDecal = new olc::Decal( backgroundNightSkySprite );
+
+
+		backgroundTerrainSprite = new olc::Sprite( "./background_mountain.png" );
+		backgroundTerrainDecal = new olc::Decal( backgroundTerrainSprite );
+
 
 		sunSprite = new olc::Sprite( "./sun.png" );
 		sunDecal = new olc::Decal( sunSprite );
@@ -497,8 +528,33 @@ public:
 
 		// Draw background
 		//DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0} );
-		DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0}, this->transitionColor( this->world->getSecond() ) );
+		//DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0}, this->transitionColor( this->world->getSecond() ) );
+		
+
+
+
+		float worldSecond = this->world->getSecond();
+		olc::Pixel sunAmbienceLighting = this->transitionColor( worldSecond );
+
+		/*
+		if ( ( worldSecond >= 75600 && worldSecond < 86400 ) || ( worldSecond >= 0 && worldSecond < 21600 ) )
+		{
+			DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundNightSkyDecal, olc::vf2d{1.0, 1.0}, olc::Pixel( 255 - sunAmbienceLighting.r, 255 - sunAmbienceLighting.g, 255 - sunAmbienceLighting.b, 255 ) );
+		}
+		else
+		{
+			DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundSkyDecal, olc::vf2d{1.0, 1.0}, sunAmbienceLighting );
+
+		}
+		*/
+		DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundSkyDecal, olc::vf2d{1.0, 1.0}, sunAmbienceLighting );
+
+		DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundNightSkyDecal, olc::vf2d{1.0, 1.0}, olc::Pixel( 255 - sunAmbienceLighting.r, 255 - sunAmbienceLighting.g, 255 - sunAmbienceLighting.b, 255 - sunAmbienceLighting.b ) );
+
+		
+		
 		this->renderSun( this->world->getSecond() );
+		DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundTerrainDecal, olc::vf2d{1.0, 1.0}, sunAmbienceLighting );
 
 		// Draw Sun
 		//DrawDecal( olc::vf2d{ 200, 200 }, this->sunDecal, olc::vf2d{1.0, 1.0} );
@@ -552,7 +608,7 @@ public:
 
 		DrawDecal(
 			olc::vf2d{
-				( ( 1.0f - p ) * 300.0f + p * 1680.0f + 0.5f ) ,
+				( ( 1.0f - p ) * 0.0f + p * 1980.0f + 0.5f ) ,
 				y
 			},
 			this->sunDecal, olc::vf2d{1.0, 1.0}
@@ -564,7 +620,7 @@ public:
 
 	olc::Pixel transitionColor( float second )
 	{
-		Settings::World::SECONDS_PER_DAY;
+		// Ambience
 
 		if ( second >= 21600 && second < 39600 ) // Morning
 		{
@@ -616,9 +672,9 @@ public:
 			float p = difference / ( absoluteDifference - 1 );
 
 			return olc::Pixel{
-				( std::uint8_t )( ( 1.0 - p ) * 146 + p * 1 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 50 + p * 1 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 50 + p * 1 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 146 + p * 4 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 50 + p * 4 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 50 + p * 9 + 0.5 ),
 				255
 			};
 
@@ -635,9 +691,9 @@ public:
 			float p = difference / ( absoluteDifference - 1 );
 
 			return olc::Pixel{
-				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 4 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 4 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 9 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 4 + p * 1 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 4 + p * 1 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 9 + p * 1 + 0.5 ),
 				255 
 			};
 		}
