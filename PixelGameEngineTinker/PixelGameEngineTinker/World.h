@@ -46,6 +46,7 @@
 #include "Tundra.h"
 #include "Woodland.h"
 
+#include "Background.h"
 
 // Forward Declarations
 #include "WorldChunkMemory.h" // class WorldChunkMemory; 
@@ -104,7 +105,6 @@ private:
 	// Camera
 	Camera* _camera = nullptr;
 
-
 	//
 	SpatialPartition _spatialParition;
 
@@ -121,7 +121,6 @@ private:
 	CaveMap _upperCaveMap;
 	CaveMap _lowerCaveMap;
 
-
 	BorealForest _borealForest;
 	SubtropicalDesert _subtropicalDesert;
 	TemperateGrassland _temperateGrassland;
@@ -132,6 +131,7 @@ private:
 	Tundra _tundra;
 	Woodland _woodland;
 
+	Background _background;
 
 	// Time
 	float _second;
@@ -167,10 +167,16 @@ public:
 		const TropicalSeasonalForest& tropicalSeasonalForest,
 		const Tundra& tundra,
 		const Woodland& woodland,
-		
+
 		float _second,
 		std::uint16_t day,
-		std::uint64_t year
+		std::uint64_t year,
+
+		olc::Sprite* daySprite, olc::Decal* dayDecal, // Encapsulate in a struct
+		olc::Sprite* nightSprite, olc::Decal* nightDecal,
+		olc::Sprite* sunSprite, olc::Decal* sunDecal,
+		olc::Sprite* landscapeSprite, olc::Decal* landscapeDecal
+
 	);
 
 	~World();
@@ -203,12 +209,14 @@ public:
 	void startWorldMemorySystem();
 	void stopWorldMemorySystem();
 
+
 	// Save
 	void saveWorldGeographyTask();
 	void saveWorldGeography();
 	static unsigned char* createTilesBlob( const Tile* tiles, std::vector<TileIdentity>& palette );
 	static std::uint64_t* createPaletteBlob( std::vector<TileIdentity>& palette );
 	void addMemory( WorldChunkMemory* worldChunkMemory );
+
 
 	// Load
 	void loadWorldGeographyTask();
@@ -252,7 +260,6 @@ public:
 	BiomeIdentity getBiomeIdentity( std::int64_t tileX, std::int64_t tileY ) const;
 	TileIdentity getTerraneanSubstance( std::int64_t tileX, std::int64_t tileY ) const;
 	FoliageIdentity getFoliage( std::int64_t tileX, BiomeIdentity biomeId, long double temperatureNormalizedValue, long double precipitationNormalizedValue );
-
 	void addFoliage( TileIdentity* chunk,
 		std::int64_t originX, std::int64_t originY, std::int64_t chunkOffsetX, std::int64_t chunkOffsetY, std::int64_t tileX, std::int64_t tileY,
 		const TileIdentity* tiles, std::uint_fast8_t upBuffer, std::uint_fast8_t downBuffer, std::uint_fast8_t leftBuffer, std::uint_fast8_t rightBuffer );
@@ -332,10 +339,11 @@ public:
 	float getSecond() const;
 	std::uint16_t getDay() const;
 	std::uint64_t getYear() const;
+	const Background& getBackground() const;
 
 
 	// Render
-	void render();
+	void synchRender();
 
 
 

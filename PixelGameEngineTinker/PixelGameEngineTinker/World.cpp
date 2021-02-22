@@ -4,10 +4,6 @@
 #include "Player.h"
 
 
-
-
-
-
 unsigned char World::copyBits( unsigned char& destination, unsigned char copy, unsigned startIndex, unsigned char endIndex )
 {
 	// Copy a subset of bits from one byte to another using the same positions within each byte
@@ -78,6 +74,7 @@ World::World()
 	_camera( nullptr ),
 	_spatialParition( this ),
 	_seed( 0 ),
+	_background( nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, this->_second, this->_day, this->_year ),
 	_second( 0.0f ), _day( 0 ), _year( 0 )
 {
 
@@ -104,9 +101,15 @@ World::World( std::int64_t seed,
 	const TropicalSeasonalForest& tropicalSeasonalForest,
 	const Tundra& tundra,
 	const Woodland& woodland,
+
 	float second,
 	std::uint16_t day,
-	std::uint64_t year
+	std::uint64_t year,
+
+	olc::Sprite* daySprite, olc::Decal* dayDecal,
+	olc::Sprite* nightSprite, olc::Decal* nightDecal,
+	olc::Sprite* sunSprite, olc::Decal* sunDecal,
+	olc::Sprite* landscapeSprite, olc::Decal* landscapeDecal
 )
 	: _numChunkWidth( 1 + this->_chunkRadius * 2 ), _numChunkHeight( 1 + this->_chunkRadius * 2 ), _numWorldChunks( this->_numChunkWidth* this->_numChunkHeight ),
 	_focalChunkIndexX( 0 ), _focalChunkIndexY( 0 ),
@@ -134,6 +137,8 @@ World::World( std::int64_t seed,
 	_tropicalSeasonalForest( tropicalSeasonalForest ),
 	_tundra( tundra ),
 	_woodland( woodland ),
+
+	_background( daySprite, dayDecal, nightSprite, nightDecal, sunSprite, sunDecal, landscapeSprite, landscapeDecal, this->_second, this->_day, this->_year ),
 	
 	_second( second ), _day( day ), _year( year )
 {
@@ -358,7 +363,7 @@ void World::initializeWorldChunks()
 
 
 
-// Modification
+// World Modification
 
 
 
@@ -451,40 +456,6 @@ void World::updateTileBorders( std::int64_t worldX, std::int64_t worldY )
 			( ( wTile == nullptr || wTile->getId() != complementaryId ) ? 0 : 1 << 7 )
 			);
 	}
-
-
-	/*
-	if ( neTile == nullptr || nTile == nullptr || nwTile == nullptr || eTile == nullptr || wTile == nullptr || seTile == nullptr || sTile == nullptr || swTile == nullptr )
-	{
-		std::cout << "NULL FOUND" << std::endl;
-	}
-	*/
-	/*
-	if ( wTile == nullptr )
-	{
-		std::cout << "NULL: " << worldX - 1 << std::endl;
-	}
-	*/
-
-	if ( worldX == 1040448 && worldY == -559 )
-	{
-		std::int64_t wWorldX = worldX - 1;
-
-
-		std::int16_t numChunksWidth = 1 + World::_chunkRadius * 2;
-
-		std::int64_t chunkIndexX = ( wWorldX >= 0 ) ? ( std::int64_t )( wWorldX / World::_chunkCellSize ) : ( std::int64_t )( ( ( wWorldX + 1 ) - World::_chunkCellSize ) / World::_chunkCellSize );
-		std::int64_t chunkIndexY = ( worldY >= 0 ) ? ( std::int64_t )( worldY / World::_chunkCellSize ) : ( std::int64_t )( ( ( worldY + 1 ) - World::_chunkCellSize ) / World::_chunkCellSize );
-		//std::int16_t relativeChunkIndex = ( ( chunkIndexY - this->_focalChunkIndexY ) + World::_chunkRadius ) * numChunksWidth + ( ( chunkIndexX - this->_focalChunkIndexX ) + World::_chunkRadius );
-
-		//std::cout << chunkIndexX << std::endl;
-
-		std::cout << ( ( chunkIndexX - this->_focalChunkIndexX ) + World::_chunkRadius ) << std::endl;
-
-		//std::cout << int(this->getTile( worldX - 1, worldY ) == nullptr) << std::endl;
-	}
-
-
 
 	cTile->setBorders( borders );
 	this->refreshTileRender( cTile, worldX, worldY );
@@ -612,24 +583,6 @@ void World::saveWorldGeography()
 		return;
 	}
 
-	/*
-	long accumulator = 0;
-	long double* a = new long double[2048 * 2048];
-	for ( int i = 0; i < 2048 * 2048; i++)
-	{
-		a[i] = std::rand() / RAND_MAX;
-		if ( (int)(a[i] * 256) % 2 == 0 )
-		{
-			accumulator += a[i];
-		}
-	}
-
-
-	delete[] a;
-	std::cout << accumulator << std::endl;
-	*/
-
-	//std::lock_guard<std::mutex> lockDatabase( _worldDatabaseMutex );
 	std::unique_lock<std::mutex> lockDatabase( this->_worldDatabaseMutex );
 
 	sqlite3* database = NULL;
@@ -853,12 +806,10 @@ void World::loadWorldGeography()
 	this->updateWorldChunkPointers();
 
 	lockModify.unlock(); // [~!]
-	//lockUpdateLightingBuffer.unlock(); // [~!]
 
 	std::vector<WorldChunkRecall> worldChunkRecalls;
 
 	// Load
-	//std::lock_guard<std::mutex> lockDatabase( _worldDatabaseMutex ); // [!] unique lock just for reading
 	std::unique_lock<std::mutex> lockDatabase( _worldDatabaseMutex );
 
 
@@ -899,9 +850,6 @@ void World::loadWorldGeography()
 			// std::cout << this->_worldChunks[index].getRelativeChunkIndex() << std::endl;
 			//proceduralGenerateCache.push_back( index );
 			this->procedurallyGenerate( this->_worldChunks[index] );
-			//this->_worldChunks[index].resetLights();
-
-			//if ( this->_worldChunks[index].getRelativeChunkIndex() == 21 ) proceduralGenerateCache.push_back( index );
 			continue;
 		}
 		rc = sqlite3_step( statement ); // Extra step for null
@@ -967,77 +915,6 @@ void World::loadWorldGeography()
 	//this->_condUpdateLighting.notify_one();
 	this->_condModifyAtlas.notify_one();
 	//////
-
-	/*
-	long double accumulate = 0;
-	std::int64_t numcalculations = 0;
-	for ( int i = 0; i < 10; i++ )
-	{
-		long double acc = 0;
-		for ( int x = 0; x < 32; x++)
-		{
-			for ( int y = 0; y < 32; y++ )
-			{
-				for ( int i = 0; i < 20; i++ )
-				{
-					numcalculations++;
-
-					std::int64_t hash = 657576373737 ^ 24243263266877 ^ 6452774574444;
-					hash *= 0x27d4eb2f;
-					hash *= hash;
-					hash ^= hash << 19;
-					hash = hash* ( 1.0 / ( long double )std::numeric_limits<std::int64_t>::max() );
-
-					acc = std::rand();
-
-					float blend = std::rand() / RAND_MAX;
-					long double hashld = ( long double )hash;
-					hashld = ( hashld * blend ) + ( 1 - blend ) * acc;
-					accumulate += hashld;
-				}
-				for ( int i = 0; i < 20; i++ )
-				{
-					numcalculations++;
-
-					std::int64_t hash = 62456247277 ^ 345324672472 ^ 452345262;
-					hash *= 0x27d4eb2f;
-					hash *= hash;
-					hash ^= hash << 19;
-					hash = hash * ( 1.0 / ( long double )std::numeric_limits<std::int64_t>::max() );
-
-					acc = std::rand();
-
-					float blend = std::rand() / RAND_MAX;
-					long double hashld = ( long double )hash;
-					hashld = ( hashld * blend ) + ( 1 - blend ) * acc;
-					accumulate += hashld;
-				}
-				for ( int i = 0; i < 20; i++ )
-				{
-					numcalculations++;
-
-					std::int64_t hash = 64373457 ^ 46532466 ^ 34532377;
-					hash *= 0x27d4eb2f;
-					hash *= hash;
-					hash ^= hash << 19;
-					hash = hash * ( 1.0 / ( long double )std::numeric_limits<std::int64_t>::max() );
-
-					acc = std::rand();
-
-					float blend = std::rand() / RAND_MAX;
-					long double hashld = ( long double )hash;
-					hashld = ( hashld * blend ) + ( 1 - blend ) * acc;
-					accumulate += hashld;
-				}
-			}
-		}
-	}
-
-	std::cout << accumulate << std::endl;
-	std::cout << numcalculations << std::endl;
-	*/
-
-	///////
 	return;
 }
 
@@ -3144,7 +3021,6 @@ void World::scanStatic( LightCastQuadrant<long double>& quadrant, LightCastRow& 
 		prevTile = &tile;
 	}
 
-
 	if ( prevTile != nullptr && this->isTransparent( originPosition, quadrant.transform( *prevTile ) ) ) // [!] [!] [!] access violation!
 	{
 		LightCastRow nextRow = row.getNext();
@@ -3198,10 +3074,10 @@ void World::emitStaticLightSource( const LightSource& lightSource, std::int64_t 
 		intensity = std::max<long double>( 0, ( 1.0 - ( rayDistance / lightSource.getRadius() ) ) );
 	}
 
-	intensity = intensity * 2;
+	intensity = 1.5f;
+	//intensity = intensity * 2;
 	//intensity = std::sqrtl( std::sqrtl( std::sqrtl( std::sqrtl( intensity ) ) ) );
 	//intensity = intensity / 20;
-
 
 	this->addLight( originX, originY, lightSource, intensity );
 
@@ -3280,7 +3156,6 @@ void World::emitStaticLightSources()
 				this->emitStaticLightSource( lightSource, lightSourcePosX, lightSourcePosY );
 			}
 		}
-		//}
 	}
 
 	return;
@@ -3505,16 +3380,19 @@ std::uint64_t World::getYear() const
 }
 
 
+const Background& World::getBackground() const
+{
+	return this->_background;
+}
+
+
 
 /// Render
 
-void World::render()
+void World::synchRender()
 {
 	std::unique_lock<std::mutex> lockUpdateLightingBuffer( this->_mutexUpdateLighting );
-
-	this->_camera->renderWorld();
-	this->updateDecals(); // [!] only need to be called once after in render thread after sprites have been added in another thread ( or make sprite add thread in render thread and call update decals right after, guaranteed synchronous )
-
+	this->_camera->renderWorldForeground();
 	this->_condUpdateLighting.notify_one();
 	return;
 }

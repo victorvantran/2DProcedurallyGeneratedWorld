@@ -44,7 +44,8 @@ public:
 	void screenToWorld( std::int64_t pixelX, std::int64_t pixelY, long double& cellX, long double& cellY ) const; // int to float ( camera offest determines displacement )
 	void worldToScreen( long double cellX, long double cellY, std::int64_t& pixelX, std::int64_t& pixelY ) const; // float to int ( camera offset determines displacement )
 
-	void renderWorld() const;
+	void renderWorldBackground() const;
+	void renderWorldForeground() const;
 	void renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const;
 	void renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas, QuadTree<LightRender>* lightRenderEncapsulates ) const;
 	void renderLightRenders( QuadTree<LightRender>& lightRenders ) const;

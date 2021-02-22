@@ -54,20 +54,17 @@ public:
 
 
 	// Temporary render system [!]
-	olc::Sprite* backgroundSprite;
-	olc::Decal* backgroundDecal;
+	olc::Sprite* daySprite;
+	olc::Decal* dayDecal;
 
-	olc::Sprite* backgroundSkySprite;
-	olc::Decal* backgroundSkyDecal;
-
-	olc::Sprite* backgroundNightSkySprite;
-	olc::Decal* backgroundNightSkyDecal;
-
-	olc::Sprite* backgroundTerrainSprite;
-	olc::Decal* backgroundTerrainDecal;
+	olc::Sprite* nightSprite;
+	olc::Decal* nightDecal;
 
 	olc::Sprite* sunSprite;
 	olc::Decal* sunDecal;
+
+	olc::Sprite* landscapeSprite;
+	olc::Decal* landscapeDecal;
 
 
 
@@ -95,22 +92,20 @@ public:
 
 
 		// Delete temporary renders [!]
-		delete this->backgroundSprite;
-		delete this->backgroundDecal;
+		delete this->daySprite;
+		delete this->dayDecal;
 
-		delete this->backgroundSkySprite;
-		delete this->backgroundSkyDecal;
+		delete this->nightSprite;
+		delete this->nightDecal;
 
-
-		delete this->backgroundNightSkySprite;
-		delete this->backgroundNightSkyDecal;
-
-
-		delete this->backgroundTerrainSprite;
-		delete this->backgroundTerrainDecal;
 
 		delete this->sunSprite;
 		delete this->sunDecal;
+
+
+		delete this->landscapeSprite;
+		delete this->landscapeDecal;
+
 
 		delete this->caveBackgroundSprite;
 		delete this->caveBackgroundDecal;
@@ -122,30 +117,26 @@ public:
 public:
 	bool OnUserCreate() override
 	{
-		backgroundSprite = new olc::Sprite( "./background.png" );
-		backgroundDecal = new olc::Decal( backgroundSprite );
+		// Create Decal on the render thread with the openGL context. Can dynamically create decals on update PGE engine with a more current OpenGL version
+		this->daySprite = new olc::Sprite( "./background_sky.png" );
+		this->dayDecal = new olc::Decal( this->daySprite );
 
-		backgroundSkySprite = new olc::Sprite( "./background_sky.png" );
-		backgroundSkyDecal = new olc::Decal( backgroundSkySprite );
+		this->nightSprite = new olc::Sprite( "./background_night_sky.png" );
+		this->nightDecal = new olc::Decal( this->nightSprite );
 
-		backgroundNightSkySprite = new olc::Sprite( "./background_night_sky.png" );
-		backgroundNightSkyDecal = new olc::Decal( backgroundNightSkySprite );
+		this->landscapeSprite = new olc::Sprite( "./background_mountain.png" );
+		this->landscapeDecal = new olc::Decal( this->landscapeSprite );
 
-
-		backgroundTerrainSprite = new olc::Sprite( "./background_mountain.png" );
-		backgroundTerrainDecal = new olc::Decal( backgroundTerrainSprite );
-
-
-		sunSprite = new olc::Sprite( "./sun.png" );
-		sunDecal = new olc::Decal( sunSprite );
+		this->sunSprite = new olc::Sprite( "./sun.png" );
+		this->sunDecal = new olc::Decal( this->sunSprite );
 
 
-		caveBackgroundSprite = new olc::Sprite( "./cave_background.png" );
-		caveBackgroundDecal = new olc::Decal( caveBackgroundSprite );
+		this->caveBackgroundSprite = new olc::Sprite( "./cave_background.png" );
+		this->caveBackgroundDecal = new olc::Decal( this->caveBackgroundSprite );
 
 
-		alphaSprite = new olc::Sprite( "./alpha_spritesheet.png" );
-		alphaDecal = new olc::Decal( alphaSprite );
+		this->alphaSprite = new olc::Sprite( "./alpha_spritesheet.png" );
+		this->alphaDecal = new olc::Decal( this->alphaSprite );
 
 		loadAssets();
 		createWorld();
@@ -487,9 +478,11 @@ public:
 		}
 
 		
-	
+		// Update Assets
+		this->world->updateDecals();
 
-		// Update
+		// Update Game Logic
+		this->world->tick( fElapsedTime );
 		this->player->update( fElapsedTime, *this ); // [~!]
 
 
@@ -532,32 +525,14 @@ public:
 		
 
 
-
+		/*
 		float worldSecond = this->world->getSecond();
 		olc::Pixel sunAmbienceLighting = this->transitionColor( worldSecond );
-
-		/*
-		if ( ( worldSecond >= 75600 && worldSecond < 86400 ) || ( worldSecond >= 0 && worldSecond < 21600 ) )
-		{
-			DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundNightSkyDecal, olc::vf2d{1.0, 1.0}, olc::Pixel( 255 - sunAmbienceLighting.r, 255 - sunAmbienceLighting.g, 255 - sunAmbienceLighting.b, 255 ) );
-		}
-		else
-		{
-			DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundSkyDecal, olc::vf2d{1.0, 1.0}, sunAmbienceLighting );
-
-		}
-		*/
 		DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundSkyDecal, olc::vf2d{1.0, 1.0}, sunAmbienceLighting );
-
 		DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundNightSkyDecal, olc::vf2d{1.0, 1.0}, olc::Pixel( 255 - sunAmbienceLighting.r, 255 - sunAmbienceLighting.g, 255 - sunAmbienceLighting.b, 255 - sunAmbienceLighting.b ) );
-
-		
-		
 		this->renderSun( this->world->getSecond() );
 		DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundTerrainDecal, olc::vf2d{1.0, 1.0}, sunAmbienceLighting );
-
-		// Draw Sun
-		//DrawDecal( olc::vf2d{ 200, 200 }, this->sunDecal, olc::vf2d{1.0, 1.0} );
+		*/
 
 
 
@@ -575,10 +550,12 @@ public:
 
 		DrawDecal( olc::vf2d{ 0, 0 }, this->caveBackgroundDecal, olc::vf2d{1.0, 1.0}, olc::Pixel( 255, 255, 255, attenuate * 255 ) );
 
-
+		this->camera->renderWorldBackground();
 		this->camera->renderPlayer( *player ); //[~!]
-		this->world->render();
-		this->world->tick( fElapsedTime );
+		this->world->synchRender(); // renderWorldForeground
+
+
+
 
 
 		// DEBUG
@@ -848,7 +825,8 @@ public:
 			tropicalSeasonalForest,
 			tundra,
 			woodland,
-			21600.0f, /*75600.0f,*/ 0, 0
+			21600.0f, /*75600.0f,*/ 0, 0,
+			this->daySprite, this->dayDecal, this->nightSprite, this->nightDecal, this->sunSprite, this->sunDecal, this->landscapeSprite, this->landscapeDecal
 		);
 
 		/*
@@ -990,7 +968,7 @@ int main()
 	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize, true, true, true ) )
 		demo.Start();
 		*/
-	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize, true, false, true ) )
+	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize, false, false, true ) )
 		demo.Start();
 	return 0;
 }

@@ -58,7 +58,21 @@ void Camera::worldToScreen( long double cellX, long double cellY, std::int64_t& 
 }
 
 
-void Camera::renderWorld() const // [!] leave to rendering to world
+void Camera::renderWorldBackground() const
+{
+	// Render world background
+	const BackgroundRenderData& backgroundRenderData = this->_world->getBackground().getRenderData();
+
+	pge->DrawDecal( olc::vf2d{ 0, 0 }, backgroundRenderData.dayDecal, olc::vf2d{ 1.0, 1.0 }, backgroundRenderData.dayTint );
+	pge->DrawDecal( olc::vf2d{ 0, 0 }, backgroundRenderData.nightDecal, olc::vf2d{ 1.0, 1.0 }, backgroundRenderData.nightTint );
+	pge->DrawDecal( backgroundRenderData.sunPosition, backgroundRenderData.sunDecal, olc::vf2d{ 1.0, 1.0 } );
+	pge->DrawDecal( olc::vf2d{ 0, 0 }, backgroundRenderData.landscapeDecal, olc::vf2d{ 1.0, 1.0 }, backgroundRenderData.landscapeTint );
+
+	return;
+}
+
+
+void Camera::renderWorldForeground() const
 {
 	////pge->Clear( olc::BLACK );
 	//pge->Clear( olc::Pixel( 68, 142, 228, 255 ) );
