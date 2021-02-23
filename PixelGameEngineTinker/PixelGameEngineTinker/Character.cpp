@@ -28,7 +28,6 @@ Character::Character( const olc::v2d_generic<long double>& center, const olc::vf
 Character::~Character() {}
 
 
-
 // Getters
 const AlphaAnimator& Character::getAnimator() const
 {
@@ -39,10 +38,10 @@ const AlphaAnimator& Character::getAnimator() const
 // Setters
 
 
-
 // Methods
 void Character::resetCurrCommands()
 {
+	// Reset current commands in preparation for the next commands
 	std::size_t count = ( std::size_t )Command::count;
 
 	for ( std::size_t i = 0; i < ( std::size_t )Command::count; i++ )
@@ -53,6 +52,7 @@ void Character::resetCurrCommands()
 
 void Character::updateCurrCommands( bool* commands )
 {
+	// Update current commands
 	std::size_t count = ( std::size_t )Command::count;
 
 	for ( std::size_t i = 0; i < ( std::size_t )Command::count; i++ )
@@ -63,7 +63,7 @@ void Character::updateCurrCommands( bool* commands )
 
 void Character::updatePrevCommands()
 {
-	// Cache inputs from previous frame
+	// Cache commands from previous frame
 	std::size_t count = ( std::size_t )Command::count;
 
 	for ( std::size_t i = 0; i < ( std::size_t )Command::count; i++ )
@@ -77,6 +77,7 @@ void Character::updatePrevCommands()
 
 void Character::updateState( float deltaTime )
 {
+	// Update the state of the character
 	switch ( this->_currentState )
 	{
 	case CharacterState::Stand:
@@ -114,7 +115,6 @@ void Character::updateState( float deltaTime )
 
 	case CharacterState::Run:
 		this->_animator.update( deltaTime, AlphaAnimator::GraphicState::Run, this->_currVelocity.x ); // [!] animateRun
-
 		// Natural transition(s)
 
 		// Command transitions(s)
@@ -199,8 +199,6 @@ void Character::updateState( float deltaTime )
 			}
 		}
 
-
-
 		// Gravity
 		this->_currVelocity.y += Settings::World::GRAVITY * deltaTime;
 		this->_currVelocity.y = std::max( this->_currVelocity.y, Settings::World::TERMINAL_VELOCITY ); // Termial velocity cap
@@ -245,7 +243,6 @@ void Character::updateState( float deltaTime )
 			this->_currVelocity.y = std::min<float>( this->_currVelocity.y, this->_jumpSpeed * Settings::Player::Character::DEFAULT_MIN_JUMP_RATIO );
 		}
 
-
 		// Conditions of falling
 		if ( this->_pushingDown )
 		{
@@ -264,7 +261,6 @@ void Character::updateState( float deltaTime )
 
 			}
 		}
-
 
 		// Prevents immediate grab ledge for a few constant frames after letting go
 		// Falsifies GoLeft/GoRight command after letting go
@@ -385,13 +381,11 @@ void Character::updateState( float deltaTime )
 }
 
 
-
 void Character::update( float deltaTime, bool* commands )
 {
+	// Update character game logic
 	this->resetCurrCommands();
 	this->updateCurrCommands( commands );
-
-	// reset
 
 	this->updateState( deltaTime );
 
@@ -405,11 +399,7 @@ void Character::update( float deltaTime, bool* commands )
 		// Play contact audio [!]
 	}
 
-
-	//std::cout << (int)this->_currentState << std::endl;
-
 	this->updateStaticPhysics( this->_world, deltaTime );
-
 
 	// Every time we leave the ground, set frame start to 0. Incremented every time in the jump state
 	if ( this->_pushedDown && !this->_pushingDown )

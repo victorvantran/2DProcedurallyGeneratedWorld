@@ -130,10 +130,8 @@ public:
 		this->sunSprite = new olc::Sprite( "./sun.png" );
 		this->sunDecal = new olc::Decal( this->sunSprite );
 
-
 		this->caveBackgroundSprite = new olc::Sprite( "./cave_background.png" );
 		this->caveBackgroundDecal = new olc::Decal( this->caveBackgroundSprite );
-
 
 		this->alphaSprite = new olc::Sprite( "./alpha_spritesheet.png" );
 		this->alphaDecal = new olc::Decal( this->alphaSprite );
@@ -482,7 +480,7 @@ public:
 		this->world->updateDecals();
 
 		// Update Game Logic
-		this->world->tick( fElapsedTime );
+		this->world->tick( /*fElapsedTime * 72*/ fElapsedTime * 5000 );
 		this->player->update( fElapsedTime, *this ); // [~!]
 
 
@@ -516,51 +514,30 @@ public:
 		//this->camera->renderDynamicObject( *enemy3 );
 
 
-
 		Clear( olc::BLACK );
 
-		// Draw background
-		//DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0} );
-		//DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundDecal, olc::vf2d{1.0, 1.0}, this->transitionColor( this->world->getSecond() ) );
 		
 
-
-		/*
-		float worldSecond = this->world->getSecond();
-		olc::Pixel sunAmbienceLighting = this->transitionColor( worldSecond );
-		DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundSkyDecal, olc::vf2d{1.0, 1.0}, sunAmbienceLighting );
-		DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundNightSkyDecal, olc::vf2d{1.0, 1.0}, olc::Pixel( 255 - sunAmbienceLighting.r, 255 - sunAmbienceLighting.g, 255 - sunAmbienceLighting.b, 255 - sunAmbienceLighting.b ) );
-		this->renderSun( this->world->getSecond() );
-		DrawDecal( olc::vf2d{ 0, 0 }, this->backgroundTerrainDecal, olc::vf2d{1.0, 1.0}, sunAmbienceLighting );
-		*/
-
-
-
+		this->camera->renderWorldBackground();
 
 		// Draw Cave background
 		static const std::int64_t OVERWORLD_HEIGHT = 1536;
-
 		long double playerX = this->player->getCharacter().getCurrPosition().x;
 		long double playerY = this->player->getCharacter().getCurrPosition().y;
-
 		long double terraneanHeightPerlinVal = this->world->getTerraneanHeightMap().getPerlinValue( playerX );
 		std::int64_t worldYTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT );
 		long double attenuate = std::min( ( long double )1, std::max( ( long double )0, ( ( -worldYTerranean + playerY ) / ( -worldYTerranean / 4 ) ) ) );
-
-
 		DrawDecal( olc::vf2d{ 0, 0 }, this->caveBackgroundDecal, olc::vf2d{1.0, 1.0}, olc::Pixel( 255, 255, 255, attenuate * 255 ) );
 
-		this->camera->renderWorldBackground();
+
 		this->camera->renderPlayer( *player ); //[~!]
 		this->world->synchRender(); // renderWorldForeground
 
 
 
-
-
 		// DEBUG
 		drawTileIndexString( tileIndex );
-		//this->world->printTime();
+		this->world->printTime();
 		
 
 
@@ -825,7 +802,7 @@ public:
 			tropicalSeasonalForest,
 			tundra,
 			woodland,
-			21600.0f, /*75600.0f,*/ 0, 0,
+			55800.0f, /*21600.0f,*/ /*75600.0f,*/ 0, 0,
 			this->daySprite, this->dayDecal, this->nightSprite, this->nightDecal, this->sunSprite, this->sunDecal, this->landscapeSprite, this->landscapeDecal
 		);
 
@@ -970,5 +947,6 @@ int main()
 		*/
 	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize, false, false, true ) )
 		demo.Start();
+
 	return 0;
 }

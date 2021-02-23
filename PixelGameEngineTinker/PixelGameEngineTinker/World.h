@@ -231,7 +231,6 @@ public:
 	void loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::uint16_t tilesNumBytes, std::uint64_t* paletteData, std::uint16_t numUniqueKeys );
 
 
-
 	// World Generation
 	static long double normalizeHistogram( long double value );
 	static long double biomeLine1( long double x );
@@ -263,8 +262,7 @@ public:
 	void addFoliage( TileIdentity* chunk,
 		std::int64_t originX, std::int64_t originY, std::int64_t chunkOffsetX, std::int64_t chunkOffsetY, std::int64_t tileX, std::int64_t tileY,
 		const TileIdentity* tiles, std::uint_fast8_t upBuffer, std::uint_fast8_t downBuffer, std::uint_fast8_t leftBuffer, std::uint_fast8_t rightBuffer );
-	TileIdentity* getProceduralChunk( std::int64_t chunkIndexX, std::int64_t chunkIndexY );
-	void procedurallyGenerate( WorldChunk& worldChunk );
+	void procedurallyGenerateChunk( WorldChunk& worldChunk );
 
 
 	// Collision Detection

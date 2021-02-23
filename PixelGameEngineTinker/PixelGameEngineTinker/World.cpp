@@ -65,7 +65,6 @@ unsigned char World::copyBits( unsigned char& destination, unsigned dStartIndex,
 }
 
 
-
 World::World()
 	: _numChunkWidth( 1 + this->_chunkRadius * 2 ), _numChunkHeight( 1 + this->_chunkRadius * 2 ), _numWorldChunks( this->_numChunkWidth* this->_numChunkHeight ),
 	_focalChunkIndexX( 0 ), _focalChunkIndexY( 0 ),
@@ -151,7 +150,7 @@ World::World( std::int64_t seed,
 
 World::~World()
 {
-	// Stop the daemond threads
+	// Stop the "daemond" threads
 	this->stopWorldMemorySystem();
 
 	// Manual Save ( stop threads first )
@@ -295,7 +294,7 @@ void World::initializeWorldChunks()
 			rc = sqlite3_finalize( statement );
 
 			std::cout << "Chunk does has not existed beforehand. Procedural generation" << std::endl;
-			this->procedurallyGenerate( this->_worldChunks[index] );
+			this->procedurallyGenerateChunk( this->_worldChunks[index] );
 			//this->_worldChunks[index].resetLights();
 			// [!] procedural generation here
 
@@ -351,20 +350,7 @@ void World::initializeWorldChunks()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 // World Modification
-
 
 
 void World::insert( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height )
@@ -403,6 +389,8 @@ void World::remove( TileIdentity id, std::int64_t x, std::int64_t y, std::int64_
 
 void World::updateTileBorders( std::int64_t worldX, std::int64_t worldY )
 {
+	// Update the tile borders of the tiles placed and neighboring tiles
+
 	// Out of bounds check
 	if ( !( worldX >= this->_worldChunkPointers[0]->getChunkIndexX() * Settings::WorldChunk::SIZE &&
 		worldY >= this->_worldChunkPointers[0]->getChunkIndexY() * Settings::WorldChunk::SIZE &&
@@ -464,11 +452,9 @@ void World::updateTileBorders( std::int64_t worldX, std::int64_t worldY )
 }
 
 
-
 void World::refreshTileRender( Tile* tile, std::int64_t worldX, std::int64_t worldY )
 {
-	// 
-
+	// Reinsert tile render in case of a render change such as border value
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
 		if ( BoundingBox<std::int64_t>( worldX, worldY, 1, 1 ).intersects( this->_worldChunks[i].getTileRendersRoot().getBounds() ) )
@@ -478,9 +464,9 @@ void World::refreshTileRender( Tile* tile, std::int64_t worldX, std::int64_t wor
 			return;
 		}
 	}
+
 	return;
 }
-
 
 
 WorldChunk* World::getWorldChunks()
@@ -523,9 +509,6 @@ std::uint16_t World::getNumChunkHeight() const
 {
 	return this->_numChunkHeight;
 }
-
-
-
 
 
 // Memory System
@@ -739,6 +722,7 @@ std::uint64_t* World::createPaletteBlob( std::vector<TileIdentity>& palette )
 
 void World::addMemory( WorldChunkMemory* worldChunkMemory )
 {
+	// Add world chunk memory to the save memory queue
 	std::lock_guard<std::mutex> lockSave( this->_mutexSaveWorldChunks );
 
 	// Overloaded
@@ -772,21 +756,14 @@ void World::loadWorldGeography()
 	// Check to see if there is an update
 	std::int64_t focalIndexX = this->_focalChunk.getCenterX() >= 0 ? ( std::int64_t )( this->_focalChunk.getCenterX() / this->_chunkCellSize ) : ( std::int64_t )( ( this->_focalChunk.getCenterX() - this->_chunkCellSize ) / this->_chunkCellSize );
 	std::int64_t focalIndexY = this->_focalChunk.getCenterY() >= 0 ? ( std::int64_t )( this->_focalChunk.getCenterY() / this->_chunkCellSize ) : ( std::int64_t )( ( this->_focalChunk.getCenterY() - this->_chunkCellSize ) / this->_chunkCellSize );
-	if ( this->_focalChunkIndexX == focalIndexX && this->_focalChunkIndexY == focalIndexY )
-	{
-		return;
-	}
+	if ( this->_focalChunkIndexX == focalIndexX && this->_focalChunkIndexY == focalIndexY ) return;
 
 	// Delimit
 	std::vector<std::tuple<std::uint64_t, std::int64_t, std::int64_t>> chunkRecalls = this->delimitWorldChunks( this->_focalChunk );
-	if ( chunkRecalls.empty() )
-	{
-		return;
-	}
-
-
-	std::unique_lock<std::mutex> lockModify( this->_modifyWorldChunksMutex ); // [~!]
-	//std::unique_lock<std::mutex> lockUpdateLightingBuffer( this->_mutexUpdateLighting ); // [~!]
+	if ( chunkRecalls.empty() ) return;
+	
+	std::unique_lock<std::mutex> lockModify( this->_modifyWorldChunksMutex );
+	//std::unique_lock<std::mutex> lockUpdateLightingBuffer( this->_mutexUpdateLighting ); // No need to update lighting if the player cannot see it loaded chunk
 
 	for ( int i = 0; i < chunkRecalls.size(); i++ )
 	{
@@ -805,13 +782,12 @@ void World::loadWorldGeography()
 	this->updateWorldChunkRelativeIndicies();
 	this->updateWorldChunkPointers();
 
-	lockModify.unlock(); // [~!]
+	lockModify.unlock();
 
 	std::vector<WorldChunkRecall> worldChunkRecalls;
 
 	// Load
 	std::unique_lock<std::mutex> lockDatabase( _worldDatabaseMutex );
-
 
 	sqlite3* database = NULL;
 	sqlite3_stmt* statement = NULL;
@@ -849,7 +825,7 @@ void World::loadWorldGeography()
 			std::cout << "Chunk does has not existed beforehand. Procedural generation" << std::endl; // [~!]
 			// std::cout << this->_worldChunks[index].getRelativeChunkIndex() << std::endl;
 			//proceduralGenerateCache.push_back( index );
-			this->procedurallyGenerate( this->_worldChunks[index] );
+			this->procedurallyGenerateChunk( this->_worldChunks[index] );
 			continue;
 		}
 		rc = sqlite3_step( statement ); // Extra step for null
@@ -896,31 +872,27 @@ void World::loadWorldGeography()
 		WorldChunk& worldChunk = this->_worldChunks[index];
 		this->loadTiles( worldChunk, tilesData, numBytesTiles, paletteData, numBytesPalette );
 
-		//worldChunk.resetLights();
-
-
 		delete[] tilesData;
 		delete[] paletteData;
 	}
 	worldChunkRecalls.clear();
-
 
 	//for ( std::int64_t worldChunkIndex : proceduralGenerateCache )
 	//{
 	//	this->procedurallyGenerate( this->_worldChunks[worldChunkIndex] );
 	//}
 
+	// this->_condUpdateLighting.notify_one();
 
 	// Allow the tileSprites to refresh
-	//this->_condUpdateLighting.notify_one();
-	this->_condModifyAtlas.notify_one();
-	//////
+	this->_condModifyAtlas.notify_one(); 
 	return;
 }
 
 
 void World::updateWorldChunkRelativity( const BoundingBox<long double>& focalPoint )
 {
+	// Update the focal chunk, and load in the subsequent possible surrounding chunks
 	std::unique_lock<std::mutex> lockLoad( this->_mutexLoadWorldChunks );
 	this->_condLoad.wait( lockLoad );
 
@@ -943,6 +915,7 @@ void World::updateFocalChunk( const BoundingBox<long double>& focalPoint )
 
 void World::updateWorldChunkRelativeIndicies()
 {
+	// Have all the world chunks set their new relative chunk index
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
 		std::uint16_t relativeChunkIndex = ( this->_worldChunks[i].getChunkIndexY() - ( this->_focalChunkIndexY - Settings::World::CHUNK_RADIUS ) ) * this->_numChunkWidth
@@ -955,6 +928,7 @@ void World::updateWorldChunkRelativeIndicies()
 
 void World::updateWorldChunkPointers()
 {
+	// Update all chunk pointers to take advantage of swapping pointers instead of re-copying
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
 		std::uint16_t relativeChunkIndex = this->_worldChunks[i].getRelativeChunkIndex();
@@ -1032,18 +1006,14 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 	// Uncondense the keys, map it to the correct tileId using paletteData, and set the tile to the respective id.
 	uint16_t key = 0;
 	std::uint8_t accumulator = 0;
-	std::uint8_t numBitsPerKey = ( ceil( log2( numUniqueKeys ) ) ) > 0 ? ( ceil( log2( numUniqueKeys ) ) ) : 1; // [!] // max is 10 bits
+	std::uint8_t numBitsPerKey = ( ceil( log2( numUniqueKeys ) ) ) > 0 ? ( ceil( log2( numUniqueKeys ) ) ) : 1; // Max is 10 bits due to chunk dimension being 32 x 32
 	uint16_t byteOffset = numBytesTiles - 1;
 	std::uint8_t remainingSegmentBits = numBitsPerSegment;
 	std::string keyDisplacements;
 
-
 	std::int16_t chunkSize = worldChunk.getSize();
 
-	//worldChunk.wipeRender();
-
-
-	for ( int i = numTiles - 1; i >= 0; i-- )
+	for ( std::int64_t i = numTiles - 1; i >= 0; i-- )
 	{
 		key = 0;
 		accumulator = 0;
@@ -1065,20 +1035,10 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 				//addSpriteTileThread.join();
 				historyTileIds.insert( static_cast< TileIdentity >( tileId ) );
 			}
-			//worldChunk.insertTile( worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1, tileId );
-
-			//std::cout << "1: " << ( unsigned long long )tileId << std::endl; 
-			//if ( ( unsigned long long )tileId > 100 ) tileId = 0; // [!] crude corruption detection debug
 
 			if ( static_cast< TileIdentity >( tileId ) != TileIdentity::Void )
 			{
-
-
 				worldChunk.insert( static_cast< TileIdentity >( tileId ), 0, worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1 );
-
-
-
-
 			}
 
 			remainingSegmentBits -= numBitsPerKey;
@@ -1129,18 +1089,11 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 				//addSpriteTileThread.join();
 				historyTileIds.insert( static_cast< TileIdentity >( tileId ) );
 			}
-			//worldChunk.insertTile( worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1, tileId );
-			//std::cout << "2: " << ( unsigned long long )tileId << std::endl;
-			//if ( ( unsigned long long )tileId > 100 ) tileId = 0; // [!] crude corruption detection debug
 
 			if ( static_cast< TileIdentity >( tileId ) != TileIdentity::Void )
 			{
-				//worldChunk.insert( static_cast< TileIdentity >( tileId ), worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1 );
-
 				worldChunk.insert( static_cast< TileIdentity >( tileId ), 0, worldChunk.getChunkIndexX() * 32 + ( i % 32 ), worldChunk.getChunkIndexY() * 32 + ( i / 32 ), 1, 1 );
-
 			}
-
 		}
 
 		if ( remainingSegmentBits == 0 )
@@ -1161,6 +1114,7 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 
 long double World::normalizeHistogram( long double value )
 {
+	// Normalizes the distribution of perlin noise values
 	if ( value <= 0.324 )
 	{
 		return 6.15421 * ( value * value * value ) - 1.70354 * ( value * value ) + 0.215019f * ( value );
@@ -1175,7 +1129,6 @@ long double World::normalizeHistogram( long double value )
 	}
 }
 
-
 long double World::biomeLine1( long double x ) { return 10.64 * x - 0.468; }
 long double World::biomeLine2( long double x ) { return 3.55 * x - 0.489; }
 long double World::biomeLine3( long double x ) { return 3.05 * x - 1.591; }
@@ -1185,7 +1138,6 @@ long double World::biomeLine6( long double x ) { return -0.223 * x + 0.882; }
 
 
 std::int64_t World::getSeed() const { return this->_seed; }
-
 
 const TerraneanHeightMap& World::getTerraneanHeightMap() const { return this->_terraneanHeightMap; }
 const SubterraneanHeightMap& World::getSubterraneanHeightMap() const { return this->_subterraneanHeightMap; }
@@ -1208,6 +1160,7 @@ const Woodland& World::getWoodland() const { return this->_woodland; }
 
 BiomeIdentity World::getBiomeIdentity( std::int64_t tileX, std::int64_t tileY ) const
 {
+	// Get biome identity based on the x and y tile coordinate
 	long double temperaturePerlinValue = this->getTemperatureMap().getPerlinValue( tileX, tileY );
 	long double normTemperaturePerlinValue = this->normalizeHistogram( temperaturePerlinValue );
 
@@ -1298,6 +1251,7 @@ BiomeIdentity World::getBiomeIdentity( std::int64_t tileX, std::int64_t tileY ) 
 
 TileIdentity World::getTerraneanSubstance( std::int64_t tileX, std::int64_t tileY ) const
 {
+	// Get the terrain substance ( rocks, minerals, ground resources )
 	static const std::int64_t OVERWORLD_HEIGHT = 1536;
 
 	BiomeIdentity biome = this->getBiomeIdentity( tileX, tileY );
@@ -1356,9 +1310,7 @@ TileIdentity World::getTerraneanSubstance( std::int64_t tileX, std::int64_t tile
 
 FoliageIdentity World::getFoliage( std::int64_t tileX, BiomeIdentity biomeId, long double temperatureNormalizedValue, long double precipitationNormalizedValue )
 {
-	//long double terraneanHeightPerlinVal = this->getTerraneanHeightMap().getPerlinValue( tileX );
-	//std::int64_t yTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )this->_height ) + ( std::int64_t )this->_height;
-
+	// Get a foliage spawn/seed based on the x-coordinate
 	switch ( biomeId )
 	{
 	case BiomeIdentity::BorealForest:
@@ -1385,141 +1337,11 @@ FoliageIdentity World::getFoliage( std::int64_t tileX, BiomeIdentity biomeId, lo
 }
 
 
-
-
-/*
-TileIdentity* World::getProceduralChunk( std::int64_t chunkIndexX, std::int64_t chunkIndexY )
-{
-	// Get topleft coordinates of a chunk and procedurally generate
-	static const std::int64_t OVERWORLD_HEIGHT = 1536;
-
-	std::int64_t originX = chunkIndexX * 32;
-	std::int64_t originY = chunkIndexY * 32;
-
-	TileIdentity* chunk = new TileIdentity[32 * 32]{ TileIdentity::Stone };
-
-	for ( std::int64_t tileY = originY + OVERWORLD_HEIGHT; tileY < originY + OVERWORLD_HEIGHT + 32; tileY++ )
-	{
-		for ( std::int64_t tileX = originX; tileX < originX + 32; tileX++ )
-		{
-			// std::cout << tileX << ", " << tileY << std::endl;
-			long double terraneanHeightPerlinVal = this->getTerraneanHeightMap().getPerlinValue( tileX );
-			std::int64_t yTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT ) + OVERWORLD_HEIGHT;
-
-			long double subterraneanHeightPerlinVal = this->getSubterraneanHeightMap().getPerlinValue( tileX );
-			std::int64_t ySubterranean = ( std::int64_t )( subterraneanHeightPerlinVal * ( OVERWORLD_HEIGHT - yTerranean ) * 0.5 ) + yTerranean;
-
-			BiomeIdentity biome = this->getBiomeIdentity( tileX, yTerranean );
-			// std::cout << yTerranean << ", " << ySubterranean << std::endl;
-			// std::cout << tileX << ", " << tileY << std::endl;
-
-
-			// Over Terranean Generation
-			if ( tileY < 0 )
-			{
-				chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void; // Clouds
-			}
-			// On Top Of Terranean Generation
-			else if ( tileY < yTerranean )
-			{
-				chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void; // Features ( Trees, Bushes, Flowers )
-			}
-			// Terranean Generation
-			else if ( tileY >= yTerranean && tileY < ySubterranean )
-			{
-				// Height Map
-				long double temperaturePerlinValue = this->getTemperatureMap().getPerlinValue( tileX, tileY );
-
-
-				// Draw BioSubstance
-				TileIdentity bioSubstance = this->getTerraneanSubstance( tileX, tileY );
-				chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = bioSubstance;
-
-
-				// Bleed out tunnel voids
-				long double upperCavePerlinValue = this->getUpperCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D
-				int64_t tunnel = ( int64_t )( upperCavePerlinValue * 256 );
-
-				if ( ( terraneanHeightPerlinVal < subterraneanHeightPerlinVal * subterraneanHeightPerlinVal ) ||
-					( tunnel >= 183 && tunnel < 186 ) ||
-					( tunnel >= 62 && tunnel < 64 ) ||
-					( tunnel >= 125 && tunnel < 128 )
-
-					)
-				{
-					// Draw Bleeding Tunnel Map
-					if ( ( tunnel >= 183 && tunnel < 186 ) ||
-						( tunnel >= 62 && tunnel < 64 ) ||
-						( tunnel >= 125 && tunnel < 128 )
-						)
-					{
-						chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void;
-					}
-				}
-			}
-			// Subterranean Generation
-			else if ( tileY >= ySubterranean && tileY <= OVERWORLD_HEIGHT )
-			{
-				chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Stone;
-
-				// Draw Connecting Bleeding Tunnel Map
-				long double upperCavePerlinValue = this->getUpperCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D
-				int64_t tunnel = ( int64_t )( upperCavePerlinValue * 256 );
-				if (
-					(
-						( tunnel >= 137 && tunnel < 141 ) ||
-						( tunnel >= 183 && tunnel < 186 ) ||
-
-						( tunnel >= 14 && tunnel < 16 ) ||
-						( tunnel >= 62 && tunnel < 64 ) ||
-
-						( tunnel >= 125 && tunnel < 128 )
-
-						)
-					)
-				{
-					chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void;
-				}
-
-				// Draw Subterranean Tunnel Map
-				long double lowerCavePerlinValue = this->getLowerCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D // [!] Need another tunnel map instance
-				tunnel = ( int64_t )( lowerCavePerlinValue * 256 );
-				if (
-					(
-						( tunnel >= 41 && tunnel < 46 ) ||
-						( tunnel >= 97 && tunnel < 103 ) ||
-
-						( tunnel >= 157 && tunnel < 160 ) ||
-
-						( tunnel >= 234 && tunnel < 240 )
-						)
-					)
-				{
-					chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void;
-				}
-			}
-			else
-			{
-				// Generate Underworld
-				if ( tileY > OVERWORLD_HEIGHT )
-				{
-					chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Stone;
-				}
-			}
-
-		}
-	}
-
-	return chunk;
-}
-*/
-
-
-
 void World::addFoliage( TileIdentity* chunk,
 	std::int64_t originX, std::int64_t originY, std::int64_t chunkOffsetX, std::int64_t chunkOffsetY, std::int64_t tileX, std::int64_t tileY,
 	const TileIdentity* tiles, std::uint_fast8_t upBuffer, std::uint_fast8_t downBuffer, std::uint_fast8_t leftBuffer, std::uint_fast8_t rightBuffer )
 {
+	// Insert foliage or part of a foliage into the chunk
 	static const std::int64_t OVERWORLD_HEIGHT = 1536;
 	std::int64_t seedY = tileY - ( originY + OVERWORLD_HEIGHT );
 	std::int64_t seedX = tileX - originX;
@@ -1552,400 +1374,15 @@ void World::addFoliage( TileIdentity* chunk,
 }
 
 
-TileIdentity* World::getProceduralChunk( std::int64_t chunkIndexX, std::int64_t chunkIndexY )
+void World::procedurallyGenerateChunk( WorldChunk& worldChunk )
 {
-	// Get topleft coordinates of a chunk and procedurally generate
-	static const std::int64_t OVERWORLD_HEIGHT = 1536;
-
-	std::int64_t originX = chunkIndexX * 32;
-	std::int64_t originY = chunkIndexY * 32;
-
-	TileIdentity* chunk = new TileIdentity[32 * 32];
-
-
-	/*
-	for ( int row = 0; row < 32; row++ )
-	{
-		for ( int col = 0; col < 32; col++ )
-		{
-			if ( row == 0 )
-			{
-				chunk[row * 32 + col] = TileIdentity::Stone;
-
-			}
-			else if ( col != 5 )
-			{
-				chunk[row * 32 + col] = TileIdentity::Water;
-
-			}
-			else
-			{
-				chunk[row * 32 + col] = TileIdentity::Void;
-
-			}
-		}
-	}
-
-	return chunk;
-	*/
-
-	for ( std::int64_t tileY = originY + OVERWORLD_HEIGHT; tileY < originY + OVERWORLD_HEIGHT + 32; tileY++ )
-	{
-		for ( std::int64_t tileX = originX; tileX < originX + 32; tileX++ )
-		{
-			// std::cout << tileX << ", " << tileY << std::endl;
-			long double terraneanHeightPerlinVal = this->getTerraneanHeightMap().getPerlinValue( tileX );
-			std::int64_t yTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT ) + OVERWORLD_HEIGHT;
-
-			long double subterraneanHeightPerlinVal = this->getSubterraneanHeightMap().getPerlinValue( tileX );
-			std::int64_t ySubterranean = ( std::int64_t )( subterraneanHeightPerlinVal * ( OVERWORLD_HEIGHT - yTerranean ) * 0.5 ) + yTerranean;
-
-			BiomeIdentity biome = this->getBiomeIdentity( tileX, yTerranean );
-			// std::cout << yTerranean << ", " << ySubterranean << std::endl;
-			// std::cout << tileX << ", " << tileY << std::endl;
-
-
-			// Over Terranean Generation
-			if ( tileY < 0 )
-			{
-				chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void; // Clouds
-			}
-			// On Top Of Terranean Generation
-			else if ( tileY < yTerranean )
-			{
-				chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void; // Features ( Trees, Bushes, Flowers )
-			}
-			// Terranean Generation
-			else if ( tileY >= yTerranean && tileY < ySubterranean )
-			{
-				// Height Map
-				long double temperaturePerlinValue = this->getTemperatureMap().getPerlinValue( tileX, tileY );
-
-
-				// Draw BioSubstance
-				TileIdentity bioSubstance = this->getTerraneanSubstance( tileX, tileY );
-				chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = bioSubstance;
-
-
-				// Bleed out tunnel voids
-				long double upperCavePerlinValue = this->getUpperCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D
-				int64_t tunnel = ( int64_t )( upperCavePerlinValue * 256 );
-
-				if ( ( terraneanHeightPerlinVal < subterraneanHeightPerlinVal * subterraneanHeightPerlinVal ) ||
-					( tunnel >= 183 && tunnel < 186 ) ||
-					( tunnel >= 62 && tunnel < 64 ) ||
-					( tunnel >= 125 && tunnel < 128 )
-
-					)
-				{
-					// Draw Bleeding Tunnel Map
-					if ( ( tunnel >= 183 && tunnel < 186 ) ||
-						( tunnel >= 62 && tunnel < 64 ) ||
-						( tunnel >= 125 && tunnel < 128 )
-						)
-					{
-						chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void;
-					}
-				}
-			}
-			// Subterranean Generation
-			else if ( tileY >= ySubterranean && tileY <= OVERWORLD_HEIGHT )
-			{
-				chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Stone;
-
-				// Draw Connecting Bleeding Tunnel Map
-				long double upperCavePerlinValue = this->getUpperCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D
-				int64_t tunnel = ( int64_t )( upperCavePerlinValue * 256 );
-				if (
-					(
-						( tunnel >= 137 && tunnel < 141 ) ||
-						( tunnel >= 183 && tunnel < 186 ) ||
-
-						( tunnel >= 14 && tunnel < 16 ) ||
-						( tunnel >= 62 && tunnel < 64 ) ||
-
-						( tunnel >= 125 && tunnel < 128 )
-
-						)
-					)
-				{
-					chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void;
-				}
-
-				// Draw Subterranean Tunnel Map
-				long double lowerCavePerlinValue = this->getLowerCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D // [!] Need another tunnel map instance
-				tunnel = ( int64_t )( lowerCavePerlinValue * 256 );
-				if (
-					(
-						( tunnel >= 41 && tunnel < 46 ) ||
-						( tunnel >= 97 && tunnel < 103 ) ||
-
-						( tunnel >= 157 && tunnel < 160 ) ||
-
-						( tunnel >= 234 && tunnel < 240 )
-						)
-					)
-				{
-					chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Void;
-				}
-			}
-			else
-			{
-				// Generate Underworld
-				if ( tileY > OVERWORLD_HEIGHT )
-				{
-					chunk[( tileY - ( originY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originX )] = TileIdentity::Stone;
-				}
-			}
-
-		}
-
-
-
-
-
-
-
-
-
-		// Foliage
-		std::int64_t chunkOffsetsX[] = { -2, -1, 0, 1, 2 };
-		std::int64_t chunkOffsetsY[] = { -2, -1, 0, 1, 2 };
-
-		for ( std::int64_t chunkOffsetX : chunkOffsetsX )
-		{
-			for ( std::int64_t tileX = ( originX + chunkOffsetX * 32 ); tileX < ( originX + chunkOffsetX * 32 ) + 32; tileX++ )
-			{
-				long double terraneanHeightPerlinVal = this->getTerraneanHeightMap().getPerlinValue( tileX );
-				std::int64_t yTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT ) + OVERWORLD_HEIGHT;
-				std::int64_t tileY = yTerranean - 1;
-
-
-				long double fNormalizedTunnelNoise = this->getUpperCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D
-				int64_t tunnel = ( int64_t )( fNormalizedTunnelNoise * 256 );
-				bool foliage = !( ( tunnel >= 183 && tunnel < 186 ) || ( tunnel >= 62 && tunnel < 64 ) || ( tunnel >= 125 && tunnel < 128 ) );
-				if ( !foliage ) continue;
-
-
-				for ( std::int64_t chunkOffsetY : chunkOffsetsY )
-				{
-					if ( ( ( originY + chunkOffsetY * 32 ) + OVERWORLD_HEIGHT ) <= yTerranean && yTerranean < ( ( originY + chunkOffsetY * 32 ) + OVERWORLD_HEIGHT ) + 32 )
-					{
-						//std::cout << ( tileX - originX ) << ", " << ( tileY - ( originY + OVERWORLD_HEIGHT ) ) << std::endl;
-						//std::cout << "Foliage" << std::endl;
-
-						BiomeIdentity biomeId = this->getBiomeIdentity( tileX, tileY );
-
-						long double temperaturePerlinValue = this->getTemperatureMap().getPerlinValue( tileX, tileY );
-						long double normTemperaturePerlinValue = this->normalizeHistogram( temperaturePerlinValue );
-
-						long double precipitationPerlinValue = this->getPrecipitationMap().getPerlinValue( tileX, tileY ); // Can calculate this prior
-						long double normPrecipitationValue = this->normalizeHistogram( precipitationPerlinValue );
-
-						FoliageIdentity foliageId = this->getFoliage( tileX, biomeId, normTemperaturePerlinValue, normPrecipitationValue );
-
-
-
-						switch ( foliageId )
-						{
-						case FoliageIdentity::MapleTree_0_0_0:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_0_0_0::tiles, Foliage::MapleTree_0_0_0::upBuffer, Foliage::MapleTree_0_0_0::downBuffer, Foliage::MapleTree_0_0_0::leftBuffer, Foliage::MapleTree_0_0_0::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_0_0_1:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_0_0_1::tiles, Foliage::MapleTree_0_0_1::upBuffer, Foliage::MapleTree_0_0_1::downBuffer, Foliage::MapleTree_0_0_1::leftBuffer, Foliage::MapleTree_0_0_1::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_0_0_2:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_0_0_2::tiles, Foliage::MapleTree_0_0_2::upBuffer, Foliage::MapleTree_0_0_2::downBuffer, Foliage::MapleTree_0_0_2::leftBuffer, Foliage::MapleTree_0_0_2::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_0_0_3:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_0_0_3::tiles, Foliage::MapleTree_0_0_3::upBuffer, Foliage::MapleTree_0_0_3::downBuffer, Foliage::MapleTree_0_0_3::leftBuffer, Foliage::MapleTree_0_0_3::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_0_0_4:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_0_0_4::tiles, Foliage::MapleTree_0_0_4::upBuffer, Foliage::MapleTree_0_0_4::downBuffer, Foliage::MapleTree_0_0_4::leftBuffer, Foliage::MapleTree_0_0_4::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_1_0_0:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_1_0_0::tiles, Foliage::MapleTree_1_0_0::upBuffer, Foliage::MapleTree_1_0_0::downBuffer, Foliage::MapleTree_1_0_0::leftBuffer, Foliage::MapleTree_1_0_0::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_1_0_1:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_1_0_1::tiles, Foliage::MapleTree_1_0_1::upBuffer, Foliage::MapleTree_1_0_1::downBuffer, Foliage::MapleTree_1_0_1::leftBuffer, Foliage::MapleTree_1_0_1::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_1_0_2:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_1_0_2::tiles, Foliage::MapleTree_1_0_2::upBuffer, Foliage::MapleTree_1_0_2::downBuffer, Foliage::MapleTree_1_0_2::leftBuffer, Foliage::MapleTree_1_0_2::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_1_0_3:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_1_0_3::tiles, Foliage::MapleTree_1_0_3::upBuffer, Foliage::MapleTree_1_0_3::downBuffer, Foliage::MapleTree_1_0_3::leftBuffer, Foliage::MapleTree_1_0_3::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_2_0_0:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_2_0_0::tiles, Foliage::MapleTree_2_0_0::upBuffer, Foliage::MapleTree_2_0_0::downBuffer, Foliage::MapleTree_2_0_0::leftBuffer, Foliage::MapleTree_2_0_0::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_2_0_1:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_2_0_1::tiles, Foliage::MapleTree_2_0_1::upBuffer, Foliage::MapleTree_2_0_1::downBuffer, Foliage::MapleTree_2_0_1::leftBuffer, Foliage::MapleTree_2_0_1::rightBuffer
-							);
-							break;
-
-
-						case FoliageIdentity::MapleTree_0_1_0:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_0_1_0::tiles, Foliage::MapleTree_0_1_0::upBuffer, Foliage::MapleTree_0_1_0::downBuffer, Foliage::MapleTree_0_1_0::leftBuffer, Foliage::MapleTree_0_1_0::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_0_1_1:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_0_1_1::tiles, Foliage::MapleTree_0_1_1::upBuffer, Foliage::MapleTree_0_1_1::downBuffer, Foliage::MapleTree_0_1_1::leftBuffer, Foliage::MapleTree_0_1_1::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_0_1_2:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_0_1_2::tiles, Foliage::MapleTree_0_1_2::upBuffer, Foliage::MapleTree_0_1_2::downBuffer, Foliage::MapleTree_0_1_2::leftBuffer, Foliage::MapleTree_0_1_2::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_0_1_3:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_0_1_3::tiles, Foliage::MapleTree_0_1_3::upBuffer, Foliage::MapleTree_0_1_3::downBuffer, Foliage::MapleTree_0_1_3::leftBuffer, Foliage::MapleTree_0_1_3::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_0_1_4:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_0_1_4::tiles, Foliage::MapleTree_0_1_4::upBuffer, Foliage::MapleTree_0_1_4::downBuffer, Foliage::MapleTree_0_1_4::leftBuffer, Foliage::MapleTree_0_1_4::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_1_1_0:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_1_1_0::tiles, Foliage::MapleTree_1_1_0::upBuffer, Foliage::MapleTree_1_1_0::downBuffer, Foliage::MapleTree_1_1_0::leftBuffer, Foliage::MapleTree_1_1_0::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_1_1_1:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_1_1_1::tiles, Foliage::MapleTree_1_1_1::upBuffer, Foliage::MapleTree_1_1_1::downBuffer, Foliage::MapleTree_1_1_1::leftBuffer, Foliage::MapleTree_1_1_1::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_1_1_2:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_1_1_2::tiles, Foliage::MapleTree_1_1_2::upBuffer, Foliage::MapleTree_1_1_2::downBuffer, Foliage::MapleTree_1_1_2::leftBuffer, Foliage::MapleTree_1_1_2::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_1_1_3:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_1_1_3::tiles, Foliage::MapleTree_1_1_3::upBuffer, Foliage::MapleTree_1_1_3::downBuffer, Foliage::MapleTree_1_1_3::leftBuffer, Foliage::MapleTree_1_1_3::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_2_1_0:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_2_1_0::tiles, Foliage::MapleTree_2_1_0::upBuffer, Foliage::MapleTree_2_1_0::downBuffer, Foliage::MapleTree_2_1_0::leftBuffer, Foliage::MapleTree_2_1_0::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_2_1_1:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_2_1_1::tiles, Foliage::MapleTree_2_1_1::upBuffer, Foliage::MapleTree_2_1_1::downBuffer, Foliage::MapleTree_2_1_1::leftBuffer, Foliage::MapleTree_2_1_1::rightBuffer
-							);
-							break;
-
-
-
-						case FoliageIdentity::MapleTree_0_2_0:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_0_2_0::tiles, Foliage::MapleTree_0_2_0::upBuffer, Foliage::MapleTree_0_2_0::downBuffer, Foliage::MapleTree_0_2_0::leftBuffer, Foliage::MapleTree_0_2_0::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_0_2_1:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_0_2_1::tiles, Foliage::MapleTree_0_2_1::upBuffer, Foliage::MapleTree_0_2_1::downBuffer, Foliage::MapleTree_0_2_1::leftBuffer, Foliage::MapleTree_0_2_1::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_0_2_2:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_0_2_2::tiles, Foliage::MapleTree_0_2_2::upBuffer, Foliage::MapleTree_0_2_2::downBuffer, Foliage::MapleTree_0_2_2::leftBuffer, Foliage::MapleTree_0_2_2::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_0_2_3:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_0_2_3::tiles, Foliage::MapleTree_0_2_3::upBuffer, Foliage::MapleTree_0_2_3::downBuffer, Foliage::MapleTree_0_2_3::leftBuffer, Foliage::MapleTree_0_2_3::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_0_2_4:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_0_2_4::tiles, Foliage::MapleTree_0_2_4::upBuffer, Foliage::MapleTree_0_2_4::downBuffer, Foliage::MapleTree_0_2_4::leftBuffer, Foliage::MapleTree_0_2_4::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_1_2_0:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_1_2_0::tiles, Foliage::MapleTree_1_2_0::upBuffer, Foliage::MapleTree_1_2_0::downBuffer, Foliage::MapleTree_1_2_0::leftBuffer, Foliage::MapleTree_1_2_0::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_1_2_1:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_1_2_1::tiles, Foliage::MapleTree_1_2_1::upBuffer, Foliage::MapleTree_1_2_1::downBuffer, Foliage::MapleTree_1_2_1::leftBuffer, Foliage::MapleTree_1_2_1::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_1_2_2:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_1_2_2::tiles, Foliage::MapleTree_1_2_2::upBuffer, Foliage::MapleTree_1_2_2::downBuffer, Foliage::MapleTree_1_2_2::leftBuffer, Foliage::MapleTree_1_2_2::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_1_2_3:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_1_2_3::tiles, Foliage::MapleTree_1_2_3::upBuffer, Foliage::MapleTree_1_2_3::downBuffer, Foliage::MapleTree_1_2_3::leftBuffer, Foliage::MapleTree_1_2_3::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_2_2_0:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_2_2_0::tiles, Foliage::MapleTree_2_2_0::upBuffer, Foliage::MapleTree_2_2_0::downBuffer, Foliage::MapleTree_2_2_0::leftBuffer, Foliage::MapleTree_2_2_0::rightBuffer
-							);
-							break;
-						case FoliageIdentity::MapleTree_2_2_1:
-							this->addFoliage( chunk, originX, originY, chunkOffsetX, chunkOffsetY, tileX, tileY,
-								Foliage::MapleTree_2_2_1::tiles, Foliage::MapleTree_2_2_1::upBuffer, Foliage::MapleTree_2_2_1::downBuffer, Foliage::MapleTree_2_2_1::leftBuffer, Foliage::MapleTree_2_2_1::rightBuffer
-							);
-							break;
-
-
-						default:
-							break;
-						}
-
-					}
-				}
-			}
-		}
-
-	}
-
-
-	return chunk;
-}
-
-
-void World::procedurallyGenerate( WorldChunk& worldChunk )
-{
-	// Get topleft coordinates of a chunk and procedurally generate
+	// Procedurally generate a worldChunk that has not been explored or saved
 	static const std::int64_t OVERWORLD_HEIGHT = 1536;
 
 	std::int64_t originWorldX = worldChunk.getChunkIndexX() * 32;
 	std::int64_t originWorldY = worldChunk.getChunkIndexY() * 32;
 
 	TileIdentity chunk[32 * 32];
-
 
 	for ( std::int64_t tileY = originWorldY + OVERWORLD_HEIGHT; tileY < originWorldY + OVERWORLD_HEIGHT + 32; tileY++ )
 	{
@@ -2054,7 +1491,6 @@ void World::procedurallyGenerate( WorldChunk& worldChunk )
 
 		}
 
-
 		// Foliage
 		std::int64_t chunkOffsetsX[] = { -2, -1, 0, 1, 2 };
 		std::int64_t chunkOffsetsY[] = { -2, -1, 0, 1, 2 };
@@ -2067,18 +1503,15 @@ void World::procedurallyGenerate( WorldChunk& worldChunk )
 				std::int64_t yTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT ) + OVERWORLD_HEIGHT;
 				std::int64_t tileY = yTerranean - 1;
 
-
 				long double fNormalizedTunnelNoise = this->getUpperCaveMap().getPerlinValue( tileX, tileY ); // Same for all 2D
 				int64_t tunnel = ( int64_t )( fNormalizedTunnelNoise * 256 );
-				bool foliage = !( ( tunnel >= 183 && tunnel < 186 ) || ( tunnel >= 62 && tunnel < 64 ) || ( tunnel >= 125 && tunnel < 128 ) );
-				if ( !foliage ) continue;
-
+				bool foliagePossible = !( ( tunnel >= 183 && tunnel < 186 ) || ( tunnel >= 62 && tunnel < 64 ) || ( tunnel >= 125 && tunnel < 128 ) );
+				if ( !foliagePossible ) continue;
 
 				for ( std::int64_t chunkOffsetY : chunkOffsetsY )
 				{
 					if ( ( ( originWorldY + chunkOffsetY * 32 ) + OVERWORLD_HEIGHT ) <= yTerranean && yTerranean < ( ( originWorldY + chunkOffsetY * 32 ) + OVERWORLD_HEIGHT ) + 32 )
 					{
-
 						BiomeIdentity biomeId = this->getBiomeIdentity( tileX, tileY );
 
 						long double temperaturePerlinValue = this->getTemperatureMap().getPerlinValue( tileX, tileY );
@@ -2088,8 +1521,6 @@ void World::procedurallyGenerate( WorldChunk& worldChunk )
 						long double normPrecipitationValue = this->normalizeHistogram( precipitationPerlinValue );
 
 						FoliageIdentity foliageId = this->getFoliage( tileX, biomeId, normTemperaturePerlinValue, normPrecipitationValue );
-
-
 
 						switch ( foliageId )
 						{
@@ -2148,8 +1579,6 @@ void World::procedurallyGenerate( WorldChunk& worldChunk )
 								Foliage::MapleTree_2_0_1::tiles, Foliage::MapleTree_2_0_1::upBuffer, Foliage::MapleTree_2_0_1::downBuffer, Foliage::MapleTree_2_0_1::leftBuffer, Foliage::MapleTree_2_0_1::rightBuffer
 							);
 							break;
-
-
 						case FoliageIdentity::MapleTree_0_1_0:
 							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
 								Foliage::MapleTree_0_1_0::tiles, Foliage::MapleTree_0_1_0::upBuffer, Foliage::MapleTree_0_1_0::downBuffer, Foliage::MapleTree_0_1_0::leftBuffer, Foliage::MapleTree_0_1_0::rightBuffer
@@ -2205,9 +1634,6 @@ void World::procedurallyGenerate( WorldChunk& worldChunk )
 								Foliage::MapleTree_2_1_1::tiles, Foliage::MapleTree_2_1_1::upBuffer, Foliage::MapleTree_2_1_1::downBuffer, Foliage::MapleTree_2_1_1::leftBuffer, Foliage::MapleTree_2_1_1::rightBuffer
 							);
 							break;
-
-
-
 						case FoliageIdentity::MapleTree_0_2_0:
 							this->addFoliage( chunk, originWorldX, originWorldY, chunkOffsetX, chunkOffsetY, tileX, tileY,
 								Foliage::MapleTree_0_2_0::tiles, Foliage::MapleTree_0_2_0::upBuffer, Foliage::MapleTree_0_2_0::downBuffer, Foliage::MapleTree_0_2_0::leftBuffer, Foliage::MapleTree_0_2_0::rightBuffer
@@ -2263,8 +1689,6 @@ void World::procedurallyGenerate( WorldChunk& worldChunk )
 								Foliage::MapleTree_2_2_1::tiles, Foliage::MapleTree_2_2_1::upBuffer, Foliage::MapleTree_2_2_1::downBuffer, Foliage::MapleTree_2_2_1::leftBuffer, Foliage::MapleTree_2_2_1::rightBuffer
 							);
 							break;
-
-
 						default:
 							break;
 						}
@@ -2276,83 +1700,15 @@ void World::procedurallyGenerate( WorldChunk& worldChunk )
 
 	}
 
-	for ( int row = 0; row < 32; row++ )
+	for ( std::uint8_t row = 0; row < 32; row++ )
 	{
-		for ( int col = 0; col < 32; col++ )
+		for ( std::uint8_t  col = 0; col < 32; col++ )
 		{
-			//  std::cout << ( int )proceduralChunk[row * 32 + col] << std::endl;
 			worldChunk.insert( chunk[row * 32 + col], 0, worldChunk.getChunkIndexX() * 32 + col, worldChunk.getChunkIndexY() * 32 + row, 1, 1 );
 		}
 	}
 
 	return;
-
-
-
-
-	/*
-	static const std::int64_t OVERWORLD_HEIGHT = 1536; // [!] put in settings
-	TileIdentity* proceduralChunk = this->getProceduralChunk( worldChunk.getChunkIndexX(), worldChunk.getChunkIndexY() );
-	for ( int row = 0; row < 32; row++ )
-	{
-		for ( int col = 0; col < 32; col++ )
-		{
-			//  std::cout << ( int )proceduralChunk[row * 32 + col] << std::endl;
-			worldChunk.insert( proceduralChunk[row * 32 + col], 0, worldChunk.getChunkIndexX() * 32 + col, worldChunk.getChunkIndexY() * 32 + row, 1, 1 );
-		}
-	}
-
-	delete[] proceduralChunk;
-
-	return;
-	*/
-
-
-	/*
-	static const std::int64_t OVERWORLD_HEIGHT = 1536;
-
-	std::int64_t originX = worldChunk.getChunkIndexX() * 32;
-	std::int64_t originY = worldChunk.getChunkIndexY() * 32;
-
-	TileIdentity* chunk = new TileIdentity[32 * 32];
-
-
-
-	for ( int row = 0; row < 32; row++ )
-	{
-		for ( int col = 0; col < 32; col++ )
-		{
-
-			if ( row == 0 )
-			{
-				worldChunk.insert( TileIdentity::Stone, originX + col, originY + row, 1, 1 );
-				//chunk[row * 32 + col] = TileIdentity::Stone;
-
-			}
-			else if ( col != 5 )
-			{
-				worldChunk.insert( TileIdentity::Water, originX + col, originY + row, 1, 1 );
-
-				//chunk[row * 32 + col] = TileIdentity::Water;
-
-			}
-			else
-			{
-				worldChunk.insert( TileIdentity::Void, originX + col, originY + row, 1, 1 );
-
-				//chunk[row * 32 + col] = TileIdentity::Void;
-
-			}
-
-			worldChunk.insert( TileIdentity::Torch, originX + col, originY + row, 1, 1 );
-
-		}
-	}
-
-
-	return;
-	*/
-
 }
 
 
@@ -2365,8 +1721,6 @@ SpatialPartition& World::getSpatialPartition()
 }
 
 
-
-
 void World::loadSpriteTilesTask()
 {
 	this->_runningLoadSpriteTiles = true;
@@ -2376,7 +1730,6 @@ void World::loadSpriteTilesTask()
 	}
 	return;
 }
-
 
 
 void World::initializeSprites()
@@ -2396,11 +1749,10 @@ void World::initializeSprites()
 }
 
 
-
 void World::loadSpriteTiles()
 {
-	// refresh/clean up
-	std::unique_lock<std::mutex> lockModifyTileSprites( this->_mutexModifyAtlas ); // [!] change to mutexmodifyspritetilesmap
+	// Refresh what tile sprites are needed to be loaded
+	std::unique_lock<std::mutex> lockModifyTileSprites( this->_mutexModifyAtlas );
 	std::chrono::system_clock::time_point secondsPassed = std::chrono::system_clock::now() + std::chrono::seconds( ( long long )Settings::World::SPRITE_TILE_REFRESH_RATE );
 	this->_condModifyAtlas.wait_until( lockModifyTileSprites, secondsPassed );
 
@@ -2423,7 +1775,7 @@ void World::loadSpriteTiles()
 
 void World::addSpriteTile( TileIdentity tileId )
 {
-	// directly adds
+	// Adds sprite tile into the atlas in preparation of creating a decal
 	std::lock_guard<std::mutex> lockModifyTileSprites( this->_mutexModifyAtlas );
 	this->_atlas.insert( tileId );
 	return;
@@ -2432,7 +1784,7 @@ void World::addSpriteTile( TileIdentity tileId )
 
 void World::addSpriteTiles( std::set<TileIdentity> tileIds )
 {
-	// directly adds
+	// Adds sprite tiles into the atlas in preparation of creating decals
 	this->_atlas.insert( tileIds );
 	return;
 }
@@ -2446,6 +1798,7 @@ Atlas& World::getAtlas()
 
 void World::updateDecals()
 {
+	// Create decals that are needed, and remove decals that are not needed
 	this->_atlas.updateDecals();
 }
 
@@ -2470,12 +1823,10 @@ std::int16_t World::getRelativeChunkIndex( std::int64_t worldX, std::int64_t wor
 		return - 1;
 	}
 
-
 	std::int16_t numChunksWidth = 1 + World::_chunkRadius * 2;
 
 	std::int64_t chunkX = ( worldX >= 0 ) ? ( std::int64_t )( worldX / World::_chunkCellSize ) : ( std::int64_t )( ( ( worldX + 1 ) - World::_chunkCellSize ) / World::_chunkCellSize );
 	std::int64_t chunkY = ( worldY >= 0 ) ? ( std::int64_t )( worldY / World::_chunkCellSize ) : ( std::int64_t )( ( ( worldY + 1 ) - World::_chunkCellSize ) / World::_chunkCellSize );
-
 
 	std::int64_t relativeChunkX = chunkX - this->_focalChunkIndexX + World::_chunkRadius;
 	std::int64_t relativeChunkY = chunkY - this->_focalChunkIndexY + World::_chunkRadius;
@@ -2504,7 +1855,6 @@ Tile* World::getTile( long double dX, long double dY ) const
 {
 	// Given worldPosition, return the reference of Tile as a pointer
 	// The reason for conditionals is to account for negative quadrant offsets
-	// Used for edge meshing of tiles
 	std::int64_t x = ( std::int64_t )std::floor( dX );
 	std::int64_t y = ( std::int64_t )std::floor( dY );
 
@@ -2516,7 +1866,6 @@ Tile* World::getTile( long double dX, long double dY ) const
 	std::uint16_t relativeTileIndex = World::getRelativeTileIndex( x, y );
 
 	if ( relativeTileIndex < 0 || relativeTileIndex >= Settings::WorldChunk::SIZE * Settings::WorldChunk::SIZE ) return nullptr;
-
 
 	return &this->_worldChunkPointers[relativeChunkIndex]->getTiles()[relativeTileIndex];
 }
@@ -2537,7 +1886,6 @@ Tile* World::getTile( std::int64_t x, std::int64_t y ) const
 
 	if ( relativeTileIndex < 0 || relativeTileIndex >= Settings::WorldChunk::SIZE * Settings::WorldChunk::SIZE ) return nullptr;
 
-
 	return &this->_worldChunkPointers[relativeChunkIndex]->getTiles()[relativeTileIndex];
 }
 
@@ -2556,7 +1904,6 @@ Light* World::getLight( std::int64_t x, std::int64_t y ) const
 	std::uint16_t relativeTileIndex = World::getRelativeTileIndex( x, y );
 
 	if ( relativeTileIndex < 0 || relativeTileIndex >= Settings::WorldChunk::SIZE * Settings::WorldChunk::SIZE ) return nullptr;
-
 
 	return &this->_worldChunkPointers[relativeChunkIndex]->getLights()[relativeTileIndex];
 }
@@ -2584,7 +1931,6 @@ void World::addLight( std::int64_t worldX, std::int64_t worldY, const LightSourc
 {
 	// Given worldPosition, return the reference of Light as a pointer
 	// The reason for conditionals is to account for negative quadrant offsets
-
 	std::int16_t relativeChunkIndex = this->getRelativeChunkIndex( worldX, worldY );
 
 	// Out of bounds
@@ -2593,7 +1939,6 @@ void World::addLight( std::int64_t worldX, std::int64_t worldY, const LightSourc
 	std::uint16_t relativeTileIndex = World::getRelativeTileIndex( worldX, worldY );
 
 	if ( relativeTileIndex < 0 || relativeTileIndex >= Settings::WorldChunk::SIZE * Settings::WorldChunk::SIZE ) return;
-
 
 	Light& light = this->_worldChunkPointers[relativeChunkIndex]->getLights()[relativeTileIndex];
 	
@@ -2606,18 +1951,15 @@ void World::addLight( std::int64_t worldX, std::int64_t worldY, const LightSourc
 }
 
 
-
 void World::resetLighting()
 {
+	// Reset lighting of the world to just natural sun light
 	const BoundingBox<long double>& cameraView = this->_camera->getView();
 	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 	std::uint16_t chunkSize = Settings::WorldChunk::SIZE;
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
 		const BoundingBox<std::int64_t> chunkBounds = BoundingBox<std::int64_t>( _worldChunks[i].getChunkIndexX() * chunkSize, _worldChunks[i].getChunkIndexY() * chunkSize, chunkSize, chunkSize );
-		// [!] add a method to retreive chunkBounds
-		// No need to render if camera cannot see it
-		
 		//if ( cameraView.intersects( chunkBounds ) )
 		//{
 			this->_worldChunks[i].resetLights();
@@ -2628,16 +1970,13 @@ void World::resetLighting()
 }
 
 
-
-
-
 void World::calculateTileRenders()
 {
+	// Based on the tiles data of the world, calculate any neccessary render changes to a tile such as its borders
 	const BoundingBox<long double>& cameraView = this->_camera->getView();
 	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 	std::uint16_t chunkSize = Settings::WorldChunk::SIZE;
 	std::uint16_t numCellsPerChunk = Settings::World::NUM_CELLS_PER_CHUNK;
-
 
 	std::int8_t buffer = 32; 
 	std::int64_t topLeftX = ( std::int64_t )std::floor( cameraView.getX() ) - buffer;
@@ -2645,7 +1984,6 @@ void World::calculateTileRenders()
 
 	std::int64_t bottomRightX = ( std::int64_t )std::ceil( cameraView.getX() + cameraView.getWidth() ) + buffer;
 	std::int64_t bottomRightY = ( std::int64_t )std::ceil( cameraView.getY() + cameraView.getHeight() ) + buffer;
-
 
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
@@ -2658,7 +1996,6 @@ void World::calculateTileRenders()
 			Tile* tiles = currWorldChunk.getTiles();
 
 			//currWorldChunk.wipeRender();
-
 			for ( std::int16_t i = 0; i < numCellsPerChunk; i++ )
 			{
 				int x = i % chunkSize;
@@ -2670,17 +2007,17 @@ void World::calculateTileRenders()
 				// Only render lights within camera frame AND within world
 				if ( worldX >= topLeftX && worldX <= bottomRightX && worldY >= topLeftY && worldY <= bottomRightY )
 				{
-					int ne = ( y - 1 ) * chunkSize + ( x + 1 ); // Northerneastern neighbor
-					int n = ( y - 1 ) * chunkSize + x; // Northern neighbor
-					int nw = ( y - 1 ) * chunkSize + ( x - 1 ); // // Northwestern
+					int ne = ( y - 1 ) * chunkSize + ( x + 1 );
+					int n = ( y - 1 ) * chunkSize + x;
+					int nw = ( y - 1 ) * chunkSize + ( x - 1 );
 
-					int e = y * chunkSize + ( x + 1 ); // Eastern neighbor
-					int c = y * chunkSize + x; // Current tile
-					int w = y * chunkSize + ( x - 1 ); // Western neighbor
+					int e = y * chunkSize + ( x + 1 );
+					int c = y * chunkSize + x;
+					int w = y * chunkSize + ( x - 1 );
 
-					int se = ( y + 1 ) * chunkSize + ( x + 1 ); // Southeastern neighbor
-					int s = ( y + 1 ) * chunkSize + x; // Southern neighbor
-					int sw = ( y + 1 ) * chunkSize + ( x - 1 ); // Southwestern neighbor
+					int se = ( y + 1 ) * chunkSize + ( x + 1 );
+					int s = ( y + 1 ) * chunkSize + x;
+					int sw = ( y + 1 ) * chunkSize + ( x - 1 );
 
 					// Quadrant edge merge
 					const Tile* neTile = ( x >= chunkSize - 1 || y <= 0 ) ? this->getTile( worldX + 1, worldY - 1 ) : &tiles[ne];
@@ -2702,25 +2039,9 @@ void World::calculateTileRenders()
 						continue;
 					}
 
-
-					/*
-					std::uint8_t borders = (
-						( ( nwTile == nullptr || nwTile->getId() == TileIdentity::Void ) ? 0 : 1 ) |
-						( ( nTile == nullptr || nTile->getId() == TileIdentity::Void ) ? 0 : 1 ) << 1 |
-						( ( neTile == nullptr || neTile->getId() == TileIdentity::Void ) ? 0 : 1 ) << 2 |
-						( ( eTile == nullptr || eTile->getId() == TileIdentity::Void ) ? 0 : 1 ) << 3 |
-						( ( seTile == nullptr || seTile->getId() == TileIdentity::Void ) ? 0 : 1 ) << 4 |
-						( ( sTile == nullptr || sTile->getId() == TileIdentity::Void ) ? 0 : 1 ) << 5 |
-						( ( swTile == nullptr || swTile->getId() == TileIdentity::Void ) ? 0 : 1 ) << 6 |
-						( ( wTile == nullptr || wTile->getId() == TileIdentity::Void ) ? 0 : 1 << 7 )
-						);
-					*/
-
 					std::uint8_t borders;
-
 					if ( cTile->getComplementary() )
 					{
-
 						borders = (
 							( ( nwTile == nullptr || nwTile->getId() == TileIdentity::Void || !nwTile->getComplementary() ) ? 0 : 1 ) |
 							( ( nTile == nullptr || nTile->getId() == TileIdentity::Void || !nTile->getComplementary() ) ? 0 : 1 ) << 1 |
@@ -2764,8 +2085,6 @@ void World::calculateTileRenders()
 
 					currWorldChunk.insertTileRenders( *cTile,
 						worldX, worldY, 1, 1 );
-
-
 				}
 			}
 		}
@@ -2774,15 +2093,13 @@ void World::calculateTileRenders()
 }
 
 
-
-
 void World::calculateLightRenders()
 {
+	// Based on the light tiles data of the world, use bilinear interpolation to calculate smooth lighting for the light tiles render
 	const BoundingBox<long double>& cameraView = this->_camera->getView();
 	std::uint16_t tileSize = Settings::Screen::CELL_PIXEL_SIZE;
 	std::uint16_t chunkSize = Settings::WorldChunk::SIZE;
 	std::uint16_t numCellsPerChunk = Settings::World::NUM_CELLS_PER_CHUNK;
-
 
 	std::int8_t buffer = 32;
 
@@ -2792,13 +2109,11 @@ void World::calculateLightRenders()
 	std::int64_t bottomRightX = ( std::int64_t )std::ceil( cameraView.getX() + cameraView.getWidth() ) + buffer;
 	std::int64_t bottomRightY = ( std::int64_t )std::ceil( cameraView.getY() + cameraView.getHeight() ) + buffer;
 
-
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
 		const BoundingBox<std::int64_t> chunkBounds = _worldChunks[i].getBounds();
 		WorldChunk& currWorldChunk = this->_worldChunks[i];
-		currWorldChunk.wipeLightRender();
-
+		currWorldChunk.wipeLightRenders();
 		Light* lights = currWorldChunk.getLights();
 
 		for ( std::int16_t i = 0; i < numCellsPerChunk; i++ )
@@ -2809,26 +2124,22 @@ void World::calculateLightRenders()
 			std::int64_t worldX = x + currWorldChunk.getChunkIndexX() * chunkSize;
 			std::int64_t worldY = y + currWorldChunk.getChunkIndexY() * chunkSize;
 
-
 			// Only render lights within camera frame AND within world
 			if ( worldX >= topLeftX && worldX <= bottomRightX && worldY >= topLeftY && worldY <= bottomRightY )
-			//if ( true )
 			{
-				int ne = ( y - 1 ) * chunkSize + ( x + 1 ); // Northerneastern neighbor
-				int n = ( y - 1 ) * chunkSize + x; // Northern neighbor
-				int nw = ( y - 1 ) * chunkSize + ( x - 1 ); // // Northwestern
+				int ne = ( y - 1 ) * chunkSize + ( x + 1 );
+				int n = ( y - 1 ) * chunkSize + x;
+				int nw = ( y - 1 ) * chunkSize + ( x - 1 );
 
-				int e = y * chunkSize + ( x + 1 ); // Eastern neighbor
-				int c = y * chunkSize + x; // Current tile
-				int w = y * chunkSize + ( x - 1 ); // Western neighbor
+				int e = y * chunkSize + ( x + 1 );
+				int c = y * chunkSize + x; 
+				int w = y * chunkSize + ( x - 1 );
 
-				int se = ( y + 1 ) * chunkSize + ( x + 1 ); // Southeastern neighbor
-				int s = ( y + 1 ) * chunkSize + x; // Southern neighbor
-				int sw = ( y + 1 ) * chunkSize + ( x - 1 ); // Southwestern neighbor
-
+				int se = ( y + 1 ) * chunkSize + ( x + 1 );
+				int s = ( y + 1 ) * chunkSize + x;
+				int sw = ( y + 1 ) * chunkSize + ( x - 1 );
 
 				// Quadrant edge merge
-				
 				Light* neLight = ( x >= chunkSize - 1 || y <= 0 ) ? this->getLight( worldX + 1, worldY - 1 ) : &lights[ne];
 				Light* nLight = ( y <= 0 ) ? this->getLight( worldX, worldY - 1 ) : &lights[n];
 				Light* nwLight = ( x <= 0 || y <= 0 ) ? this->getLight( worldX - 1, worldY - 1 ) : &lights[nw];
@@ -2838,20 +2149,7 @@ void World::calculateLightRenders()
 				Light* seLight = ( x >= chunkSize - 1 || y >= chunkSize - 1 ) ? this->getLight( worldX + 1, worldY + 1 ) : &lights[se];
 				Light* sLight = ( y >= chunkSize - 1 ) ? this->getLight( worldX, worldY + 1 ) : &lights[s];
 				Light* swLight = ( x <= 0 || y >= chunkSize - 1 ) ? this->getLight( worldX - 1, worldY + 1 ) : &lights[sw];
-				 
-
-				/*
-				Light* neLight =  this->getLight( worldX + 1, worldY - 1 ) ;
-				Light* nLight = this->getLight( worldX, worldY - 1 ) ;
-				Light* nwLight = this->getLight( worldX - 1, worldY - 1 ) ;
-				Light* eLight =  this->getLight( worldX + 1, worldY ) ;
-				Light* cLight = &lights[i];
-				Light* wLight =  this->getLight( worldX - 1, worldY );
-				Light* seLight = this->getLight( worldX + 1, worldY + 1 ) ;
-				Light* sLight =  this->getLight( worldX, worldY + 1 );
-				Light* swLight =  this->getLight( worldX - 1, worldY + 1 ) ;
-				*/
-
+				
 				// Out of bounds check
 				if ( neLight == nullptr || nLight == nullptr || nwLight == nullptr ||
 					eLight == nullptr || wLight == nullptr ||
@@ -2886,16 +2184,12 @@ void World::calculateLightRenders()
 				std::uint32_t corner2 = ( corner2R << 24 ) + ( corner2G << 16 ) + ( corner2B << 8 ) + ( corner2A );
 				std::uint32_t corner3 = ( corner3R << 24 ) + ( corner3G << 16 ) + ( corner3B << 8 ) + ( corner3A );
 
-
 				currWorldChunk.insertLightRenders( corner0, corner1, corner2, corner3, true, worldX, worldY, 1, 1 );
-
 			}
 		}
 	}
 
-
 	std::lock_guard<std::mutex> lockUpdateLightingBuffer( this->_mutexUpdateLighting );
-
 	for ( int i = 0; i < this->_numWorldChunks; i++ )
 	{
 		const BoundingBox<long double>& cameraView = this->_camera->getView();
@@ -2903,8 +2197,6 @@ void World::calculateLightRenders()
 		WorldChunk& currWorldChunk = this->_worldChunks[i];
 		currWorldChunk.swapLightRenders();
 	}
-
-
 	this->_condLoad.notify_one();
 
 	return;
@@ -3345,7 +2637,7 @@ void World::setPlayer( Player* player )
 void World::tick( float deltaTime )
 {
 	// Updates the absolute time
-	this->_second += deltaTime * 20000;
+	this->_second += deltaTime;
 	if ( this->_second >= Settings::World::SECONDS_PER_DAY )
 	{
 		// while this->_seconds >= Settings::World::SECONDS_PER_DAY ( but just use wrap around )
@@ -3402,11 +2694,30 @@ void World::synchRender()
 
 /// Debug
 
+/*
 void World::printTime() const
 {
 	std::cout << "Year: " << this->_year + 1 << std::endl;
 	std::cout << "Day: " << this->_day + 1 << std::endl;
 	std::cout << "Second: " << ( int )this->_second << std::endl;
 	std::cout << "___________________________________________________________________________" << std::endl;
+	return;
+}
+*/
+
+void World::printTime() const
+{
+	//std::cout << "Year: " << this->_year + 1 << std::endl;
+	//std::cout << "Day: " << this->_day + 1 << std::endl;
+	//std::cout << ( ( ( ( int )this->_second / 60 ) / 60 ) % 24 ) << ":" << ( ( ( int )this->_second / 60 ) % 60 ) << ":" << ( ( int )this->_second % 60 ) << std::endl;
+
+	std::uint8_t hour = ( ( std::uint8_t )( ( this->_second / 60 ) / 60 ) % 12 );
+	hour = ( hour == 0 ) ? 12 : hour;
+	//std::uint8_t minute = ( ( std::uint8_t )( this->_second / 60 ) % 60 );
+	std::uint8_t minute = ( ( ( std::uint16_t )( this->_second ) % 3600 ) ) / 60;
+	std::uint8_t second = ( ( std::uint8_t )this->_second % 60 );
+
+	std::cout << ( std::int32_t )( hour ) << ":" << ( std::int32_t )( minute ) << ":" << ( std::int32_t )( second ) << std::endl;
+
 	return;
 }

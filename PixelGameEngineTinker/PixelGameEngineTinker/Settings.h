@@ -45,7 +45,6 @@ public:
 		static constexpr float GRAVITY = -98.0f;
 		static constexpr float TERMINAL_VELOCITY = -2000.0f;
 
-
 		static constexpr std::uint32_t SECONDS_PER_DAY = 86400;
 		static constexpr std::uint16_t DAYS_PER_YEAR = 365; // ignore leap years
 	};
@@ -75,7 +74,8 @@ public:
 		static const std::uint16_t NUM_TILE_RENDERS = 341; // 4^0 + 4^1 + 4^2 + ... + 4^n ( for n = log( chunkSize ) = quadTreeMaxLevel ) // [hardcode]
 		static const std::uint16_t TILE_RENDER_MIN_LEVEL = 0; // [ hard code ]
 		static const std::uint16_t TILE_RENDER_MAX_LEVEL = 4; // [ hard code ]
-		static const long double TILE_RENDER_MIN_CELL_SIZE; // [ hard code ]
+		static constexpr long double TILE_RENDER_MIN_CELL_SIZE = 1.0f; // [ hard code ]
+
 	};
 
 

@@ -40,7 +40,6 @@ struct BackgroundRenderData
 
 
 	~BackgroundRenderData() {}
-
 };
 
 
@@ -85,49 +84,62 @@ public:
 	~Background() {}
 
 
-	static olc::Pixel getDayTint( float worldSecond ) 
+	static olc::Pixel getDayTint( float worldSecond )
 	{
 		// Return the day tint information to establish ambient lighting
-		if ( worldSecond >= 21600 && worldSecond < 39600 ) // Morning
+		// Morning
+		if ( worldSecond >= 21600 && worldSecond < 32400 )
 		{
 			float difference = worldSecond - 21600;
-			float absoluteDifference = 18000;
+			float absoluteDifference = 10800;
 			float p = difference / ( absoluteDifference - 1 );
 
 			return olc::Pixel{
-				( std::uint8_t )( ( 1.0 - p ) * 4 + p * 255 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 4 + p * 255 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 9 + p * 255 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
 				( std::uint8_t )255
 			};
 		}
-		else if ( worldSecond >= 39600 && worldSecond < 61200 ) // Afternoon
+		// Afternoon
+		else if ( worldSecond >= 32400 && worldSecond < 61200 )
 		{
-			float difference = worldSecond - 39600;
-			float absoluteDifference = 21600;
-			float p = difference / ( absoluteDifference - 1 );
-
 			return olc::Pixel{
-				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 146 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 50 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 50 + 0.5 ),
+				( std::uint8_t )( 255 ),
+				( std::uint8_t )( 255 ),
+				( std::uint8_t )( 255 ),
 				( std::uint8_t )255
 			};
 		}
-		else if ( worldSecond >= 61200 && worldSecond < 75600 ) // Evening
+		// Evening
+		else if ( worldSecond >= 61200 && worldSecond < 64800 )
 		{
 			float difference = worldSecond - 61200;
-			float absoluteDifference = 14400;
+			float absoluteDifference = 3600;
 			float p = difference / ( absoluteDifference - 1 );
 
 			return olc::Pixel{
-				( std::uint8_t )( ( 1.0 - p ) * 146 + p * 4 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 50 + p * 4 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 50 + p * 9 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 201 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 60 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 58 + 0.5 ),
 				( std::uint8_t )255
 			};
 		}
-		else if ( ( worldSecond >= 75600 && worldSecond < 86400 ) || ( worldSecond >= 0 && worldSecond < 21600 ) ) // Night
+		else if ( worldSecond >= 64800 && worldSecond < 75600 )
+		{
+			float difference = worldSecond - 64800;
+			float absoluteDifference = 10800;
+			float p = difference / ( absoluteDifference - 1 );
+
+			return olc::Pixel{
+				( std::uint8_t )( ( 1.0 - p ) * 201 + p * 4 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 60 + p * 4 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 58 + p * 9 + 0.5 ),
+				( std::uint8_t )255
+			};
+		}
+		// Night
+		else if ( ( worldSecond >= 75600 && worldSecond < 86400 ) || ( worldSecond >= 0 && worldSecond < 21600 ) )
 		{
 			float unwrappedSecond = ( worldSecond >= 0 && worldSecond < 21600 ) ? worldSecond + 86400 : worldSecond;
 			float difference = unwrappedSecond - 75600;
@@ -146,8 +158,6 @@ public:
 			return olc::Pixel{ 0, 0, 0, 0 };
 		}
 	}
-
-
 
 	static olc::Pixel getNightTint( float worldSecond )
 	{
@@ -212,70 +222,6 @@ public:
 	}
 
 
-	/*
-	static olc::Pixel getNightTint( float worldSecond )
-	{
-		// Return the night tint information to establish ambient lighting
-		if ( worldSecond >= 21600 && worldSecond < 39600 ) // Morning
-		{
-			float difference = worldSecond - 21600;
-			float absoluteDifference = 18000;
-			float p = difference / ( absoluteDifference - 1 );
-
-			return olc::Pixel{
-				( std::uint8_t )( 255 ),
-				( std::uint8_t )( 255 ),
-				( std::uint8_t )( 255 ),
-				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 0 + 0.5 ),
-			};
-		}
-		else if ( worldSecond >= 39600 && worldSecond < 61200 ) // Afternoon
-		{
-			float difference = worldSecond - 39600;
-			float absoluteDifference = 21600;
-			float p = difference / ( absoluteDifference - 1 );
-
-			return olc::Pixel{
-				( std::uint8_t )( 0 ),
-				( std::uint8_t )( 0 ),
-				( std::uint8_t )( 0 ),
-				( std::uint8_t )0
-			};
-		}
-		else if ( worldSecond >= 61200 && worldSecond < 75600 ) // Evening
-		{
-			float difference = worldSecond - 61200;
-			float absoluteDifference = 14400;
-			float p = difference / ( absoluteDifference - 1 );
-
-			return olc::Pixel{
-				( std::uint8_t )( 255 ),
-				( std::uint8_t )( 255 ),
-				( std::uint8_t )( 255 ),
-				( std::uint8_t )( ( 1.0 - p ) * 0 + p * 255 + 0.5 ),
-			};
-		}
-		else if ( ( worldSecond >= 75600 && worldSecond < 86400 ) || ( worldSecond >= 0 && worldSecond < 21600 ) ) // Night
-		{
-			float unwrappedSecond = ( worldSecond >= 0 && worldSecond < 21600 ) ? worldSecond + 86400 : worldSecond;
-			float difference = unwrappedSecond - 75600;
-			float absoluteDifference = 32400;
-			float p = difference / ( absoluteDifference - 1 );
-
-			return olc::Pixel{
-				( std::uint8_t )( 255 ),
-				( std::uint8_t )( 255 ),
-				( std::uint8_t )( 255 ),
-				( std::uint8_t )255
-			};
-		}
-		else
-		{
-			return olc::Pixel{ 0, 0, 0, 0 };
-		}
-	}
-	*/
-
 	static olc::vf2d getSunPosition( float worldSecond )
 	{
 		// Return sun position for render
@@ -290,26 +236,38 @@ public:
 	}
 
 
+	/*
 	static olc::Pixel getLandscapeTint( float worldSecond )
 	{
-		// Return the landscape tint information to establish ambient lighting
-		if ( worldSecond >= 21600 && worldSecond < 39600 ) // Morning
+		// Return the day tint information to establish ambient lighting
+		// Morning
+		if ( worldSecond >= 21600 && worldSecond < 39600 )
 		{
 			float difference = worldSecond - 21600;
 			float absoluteDifference = 18000;
 			float p = difference / ( absoluteDifference - 1 );
 
 			return olc::Pixel{
-				( std::uint8_t )( ( 1.0 - p ) * 4 + p * 255 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 4 + p * 255 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 9 + p * 255 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
 				( std::uint8_t )255
 			};
 		}
-		else if ( worldSecond >= 39600 && worldSecond < 61200 ) // Afternoon
+		// Afternoon
+		else if ( worldSecond >= 39600 && worldSecond < 57600 )
 		{
-			float difference = worldSecond - 39600;
-			float absoluteDifference = 21600;
+			return olc::Pixel{
+				( std::uint8_t )( 255 ),
+				( std::uint8_t )( 255 ),
+				( std::uint8_t )( 255 ),
+				( std::uint8_t )255
+			};
+		}
+		else if ( worldSecond >= 57600 && worldSecond < 61200 )
+		{
+			float difference = worldSecond - 57600;
+			float absoluteDifference = 3600;
 			float p = difference / ( absoluteDifference - 1 );
 
 			return olc::Pixel{
@@ -319,7 +277,8 @@ public:
 				( std::uint8_t )255
 			};
 		}
-		else if ( worldSecond >= 61200 && worldSecond < 75600 ) // Evening
+		// Evening
+		else if ( worldSecond >= 61200 && worldSecond < 75600 )
 		{
 			float difference = worldSecond - 61200;
 			float absoluteDifference = 14400;
@@ -332,7 +291,85 @@ public:
 				( std::uint8_t )255
 			};
 		}
-		else if ( ( worldSecond >= 75600 && worldSecond < 86400 ) || ( worldSecond >= 0 && worldSecond < 21600 ) ) // Night
+		// Night
+		else if ( ( worldSecond >= 75600 && worldSecond < 86400 ) || ( worldSecond >= 0 && worldSecond < 21600 ) )
+		{
+			float unwrappedSecond = ( worldSecond >= 0 && worldSecond < 21600 ) ? worldSecond + 86400 : worldSecond;
+			float difference = unwrappedSecond - 75600;
+			float absoluteDifference = 32400;
+			float p = difference / ( absoluteDifference - 1 );
+
+			return olc::Pixel{
+				( std::uint8_t )( ( 1.0 - p ) * 4 + p * 1 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 4 + p * 1 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 9 + p * 1 + 0.5 ),
+				( std::uint8_t )255
+			};
+		}
+		else
+		{
+			return olc::Pixel{ 0, 0, 0, 0 };
+		}
+	}
+	*/
+
+
+	static olc::Pixel getLandscapeTint( float worldSecond )
+	{
+		// Return the day tint information to establish ambient lighting
+		// Morning
+		if ( worldSecond >= 21600 && worldSecond < 32400 )
+		{
+			float difference = worldSecond - 21600;
+			float absoluteDifference = 10800;
+			float p = difference / ( absoluteDifference - 1 );
+
+			return olc::Pixel{
+				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
+				( std::uint8_t )255
+			};
+		}
+		// Afternoon
+		else if ( worldSecond >= 32400 && worldSecond < 61200 )
+		{
+			return olc::Pixel{
+				( std::uint8_t )( 255 ),
+				( std::uint8_t )( 255 ),
+				( std::uint8_t )( 255 ),
+				( std::uint8_t )255
+			};
+		}
+		// Evening
+		else if ( worldSecond >= 61200 && worldSecond < 64800 )
+		{
+			float difference = worldSecond - 61200;
+			float absoluteDifference = 3600;
+			float p = difference / ( absoluteDifference - 1 );
+
+			return olc::Pixel{
+				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 178 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 97 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 94 + 0.5 ),
+				( std::uint8_t )255
+			};
+		}
+		else if ( worldSecond >= 64800 && worldSecond < 75600 )
+		{
+			float difference = worldSecond - 64800;
+			float absoluteDifference = 10800;
+			float p = difference / ( absoluteDifference - 1 );
+
+			return olc::Pixel{
+				( std::uint8_t )( ( 1.0 - p ) * 178 + p * 4 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 97 + p * 4 + 0.5 ),
+				( std::uint8_t )( ( 1.0 - p ) * 94 + p * 9 + 0.5 ),
+				( std::uint8_t )255
+			};
+		}
+		// Night
+		else if ( ( worldSecond >= 75600 && worldSecond < 86400 ) || ( worldSecond >= 0 && worldSecond < 21600 ) )
 		{
 			float unwrappedSecond = ( worldSecond >= 0 && worldSecond < 21600 ) ? worldSecond + 86400 : worldSecond;
 			float difference = unwrappedSecond - 75600;
@@ -355,6 +392,7 @@ public:
 
 	const BackgroundRenderData& getRenderData() const
 	{
+		// Return the information needed to render the world background
 		return BackgroundRenderData(
 			this->_dayDecal, this->getDayTint( this->_worldSecond ),
 			this->_nightDecal, this->getNightTint( this->_worldSecond ),

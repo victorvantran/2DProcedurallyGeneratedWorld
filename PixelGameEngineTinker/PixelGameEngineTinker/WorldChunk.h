@@ -12,7 +12,6 @@
 #include "LightSource.h"
 
 
-
 // Forward Declaration
 class World;
 class WorldChunkMemory;
@@ -35,16 +34,12 @@ private:
 	//QuadTree<TileRender> _tileRenders[WorldChunk::_numTileRenders];
 
 	Light _lights[WorldChunk::_size * WorldChunk::_size];
-	//QuadTree<LightRender> _lightRenders[WorldChunk::_numTileRenders];
 
 	QuadTree<LightRender> _lightRendersA[WorldChunk::_numTileRenders];
 	QuadTree<LightRender> _lightRendersB[WorldChunk::_numTileRenders];
 	QuadTree<LightRender>* _lightRenders = this->_lightRendersA;
 	QuadTree<LightRender>* _prevLightRenders = this->_lightRendersB;
 
-
-
-	//LightSource _lightSources[WorldChunk::_size * WorldChunk::_size];
 	std::map<std::uint16_t, LightSource> _lightSources;
 
 	World* _world;
@@ -57,6 +52,9 @@ public:
 
 	void setWorld( World* world );
 	void construct();
+	void delimit( std::int64_t indexX, std::int64_t indexY );
+	void clear();
+
 
 	// Getters
 	std::uint16_t getRelativeChunkIndex() const;
@@ -72,13 +70,9 @@ public:
 	BoundingBox<std::int64_t> getBounds() const;
 
 
-
 	// Insertion
 	typedef void ( WorldChunk::* insertFuncType )( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
 	typedef void ( WorldChunk::* removeFuncType )( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-
-
-
 	void insertTiles( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t borders, std::uint8_t tileBlobMapIndex,
 		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertTileRenders( const Tile& tile, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
@@ -91,8 +85,6 @@ public:
 		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void insertLightSources( TileIdentity tileId, std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a, std::int16_t radius,
 		std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-
-
 
 	void insertVoid( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
 	void insertWater( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
@@ -132,10 +124,7 @@ public:
 	void insertPumpkinMapleLeaves( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
 	void insertGambogeMapleLeaves( std::int64_t x, std::int64_t y, std::uint8_t borders, std::int64_t width, std::int64_t height );
 
-
 	static const insertFuncType insertMethods[( std::size_t )TileIdentity::count];
-
-
 	void insert( TileIdentity tileId, std::uint8_t borders, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 
 
@@ -145,8 +134,6 @@ public:
 	void removeTile( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeLightSources( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeLightSourceTiles( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
-
-
 	void removeVoid( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeWater( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeStone( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
@@ -185,42 +172,36 @@ public:
 	void removePumpkinMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void removeGambogeMapleLeaves( std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 
-
-
 	static const removeFuncType removeMethods[( unsigned long long )TileIdentity::count];
 	void remove( TileIdentity tileId, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 
 
 	// Geography
 	Tile* getTiles();
-
-	// Tile getTile( int x, int y )
+	void wipeTileRenders();
 	QuadTree<TileRender>& getTileRendersRoot();
-
 
 
 	// Lighting
 	Light* getLights();
 	Light* getLight( std::int64_t x, std::int64_t y );
+	void resetLights();
+	void wipeLightRenders();
+	void blackenLights();
+	void sunlitLights();
+
 	std::map<std::uint16_t, LightSource>& getLightSources();
+	void clearLightSources();
+
+	void initializeLightRenders();
 	QuadTree<LightRender>* getLightRenders();
 	QuadTree<LightRender>* getPrevLightRenders();
-	void resetLights();
-	void wipeLightRender();
-	void wipeLightRenders();
-
-	void blackenLights();
-	void clearLightSources();
 	void insertLightRender( std::uint32_t corner0, std::uint32_t corner1, std::uint32_t corner2, std::uint32_t corner3, bool exist, std::int64_t x, std::int64_t y ); // [!] overhaul and model after insert
 	void insertLightRenders( std::uint32_t corner0, std::uint32_t corner1, std::uint32_t corner2, std::uint32_t corner3, bool exist, std::int64_t x, std::int64_t y, std::int64_t width, std::int64_t height );
 	void swapLightRenders();
 
 
 	// Memory Management
-	void wipeRender();
-	void delimit( std::int64_t indexX, std::int64_t indexY );
-	void clear();
-
 	const std::map<TileIdentity, unsigned short> createPalette() const;
 	std::vector<TileIdentity> getPalette();
 	WorldChunkMemory* createMemory();

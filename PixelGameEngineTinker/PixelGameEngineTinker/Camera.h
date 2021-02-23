@@ -12,7 +12,7 @@
 #include "LightRender.h"
 #include "Tile.h"
 #include "DynamicObject.h"
-#include "Player.h" // [!] May need to forward declare
+#include "Player.h" // May need to forward declare
 
 class World; // Forward Declaration
 
@@ -28,9 +28,7 @@ private:
 	long double _zoomX;
 	long double _zoomY;
 
-
 	World* _world = nullptr;
-
 
 	// Decal
 	olc::Sprite* _spriteLight = nullptr;

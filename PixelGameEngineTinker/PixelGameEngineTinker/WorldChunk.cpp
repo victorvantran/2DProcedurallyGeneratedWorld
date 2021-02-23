@@ -32,24 +32,21 @@ void WorldChunk::setWorld( World* world )
 
 void WorldChunk::construct()
 {
-	this->wipeRender();
-	//this->wipeLightRender();
-	this->wipeLightRenders();
+	this->wipeTileRenders();
+	this->initializeLightRenders();
 	this->blackenLights();
 	return;
 }
 
 
-void WorldChunk::wipeRender()
+void WorldChunk::wipeTileRenders()
 {
-	// [!] don't even need clear becasuse wipe Render calls constructQuadTree which sets root divided = false
-	// [!] look to see if we can make it more efficient than construct
-	// [!] soluton is to clear, and then jsut set bounding boxes to proper size? Or is no clear more efficient?
+	// Wipe the quad tree renders
 	std::int64_t rootQuadTreePositionX = this->_chunkIndexX * this->_size;
 	std::int64_t rootQuadTreePositionY = this->_chunkIndexY * this->_size;
 
 
-	// Intialize quadTrees
+	// Reintialize quadTrees
 	this->_tileRenders[0].constructQuadTree(
 		0,
 		-1,
@@ -73,10 +70,6 @@ void WorldChunk::wipeRender()
 
 
 
-
-
-
-
 std::uint16_t WorldChunk::getRelativeChunkIndex() const
 {
 	return this->_relativeChunkIndex;
@@ -88,9 +81,6 @@ void WorldChunk::setRelativeChunkIndex( std::uint16_t relChunkIndex )
 	this->_relativeChunkIndex = relChunkIndex;
 	return;
 }
-
-
-
 
 
 
@@ -200,7 +190,6 @@ void WorldChunk::insertLightSources( TileIdentity tileId, std::int16_t r, std::i
 	}
 	return;
 }
-
 
 
 void WorldChunk::insertLightSourceTile( TileIdentity tileId, TileType tileType, bool consolidatable, bool opaque, bool complementary, std::uint8_t borders, std::uint8_t tileBlobMapIndex,
@@ -1147,8 +1136,8 @@ void WorldChunk::delimit( std::int64_t indexX, std::int64_t indexY )
 	this->clear();
 	this->_chunkIndexX = indexX;
 	this->_chunkIndexY = indexY;
-	this->wipeRender();
-	this->wipeLightRender();
+	this->wipeTileRenders();
+	this->wipeLightRenders();
 	return;
 }
 
@@ -1300,27 +1289,25 @@ QuadTree<LightRender>* WorldChunk::getPrevLightRenders()
 
 void WorldChunk::resetLights()
 {
-	this->wipeLightRender();
-	this->blackenLights();
+	this->wipeLightRenders();
+	this->sunlitLights();
+	//this->blackenLights();
 	return;
 }
 
 
-/*
+
 void WorldChunk::blackenLights()
 {
-	//std::cout << "blacken" << std::endl;
 	for ( std::uint16_t i = 0; i < this->_size * this->_size; i++ )
 	{
 		this->_lights[i].blacken();
-		//this->_lights[i].whiten();
-
 	}
 	return;
 }
-*/
 
-void WorldChunk::blackenLights()
+
+void WorldChunk::sunlitLights()
 {
 	// Natural sunlight
 	static const std::int64_t OVERWORLD_HEIGHT = 1536;
@@ -1338,73 +1325,62 @@ void WorldChunk::blackenLights()
 			if ( worldY < worldYTerranean + SUNRAY_POWER )
 			{
 				//this->_lights[y * this->_size + x].whiten(); // [!] Add light based on day/night time for day/night system
-				float second = this->_world->getSecond();
+				float worldSecond = this->_world->getSecond();
 
 				std::uint8_t red;
 				std::uint8_t green;
 				std::uint8_t blue;
 
-
-				if ( second >= 21600 && second < 28800 ) // Morning
+				// Morning
+				if ( worldSecond >= 21600 && worldSecond < 25200 )
 				{
-					float difference = second - 21600;
-					float absoluteDifference = 7200;
-
+					float difference = worldSecond - 21600;
+					float absoluteDifference = 3600;
 					float p = difference / ( absoluteDifference - 1 );
 
-					red = ( std::uint8_t )( ( 1.0f - p ) * 1.0f + p * 255.0f + 0.5f );
-					green = ( std::uint8_t )( ( 1.0f - p ) * 1.0f + p * 255.0f + 0.5f );
-					blue = ( std::uint8_t )( ( 1.0f - p ) * 1.0f + p * 255.0f + 0.5f );
+					red = ( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 );
+					green = ( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 );
+					blue = ( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 );
 				}
-				else if ( second >= 28800 && second < 57600 ) // Afternoon
+				// Afternoon
+				else if ( worldSecond >= 25200 && worldSecond < 61200 )
 				{
-					//return olc::Pixel{ 255, 255, 255, 255 };
-					float difference = second - 28800;
-					float absoluteDifference = 28800;
+					red = ( std::uint8_t )( 255 );
+					green = ( std::uint8_t )( 255 );
+					blue = ( std::uint8_t )( 255 );
+				}
+				// Evening
+				else if ( worldSecond >= 61200 && worldSecond < 64800 )
+				{
+					float difference = worldSecond - 61200;
+					float absoluteDifference = 3600;
 					float p = difference / ( absoluteDifference - 1 );
 
-					red = 255;
-					green = 255;
-					blue = 255;
+					red = ( std::uint8_t )( ( 1.0 - p ) * 255 + p * 178 + 0.5 );
+					green = ( std::uint8_t )( ( 1.0 - p ) * 255 + p * 97 + 0.5 );
+					blue = ( std::uint8_t )( ( 1.0 - p ) * 255 + p * 94 + 0.5 );
 				}
-				else if ( second >= 57600 && second < 68400 ) // Afternoon to Evening
+				else if ( worldSecond >= 64800 && worldSecond < 75600 )
 				{
-					//return olc::Pixel{ 146, 50, 50, 255 };
-
-					float difference = second - 57600;
+					float difference = worldSecond - 64800;
 					float absoluteDifference = 10800;
-
 					float p = difference / ( absoluteDifference - 1 );
 
-					red = ( std::uint8_t )( ( 1.0f - p ) * 255.0f + p * 146.0f + 0.5f );
-					green = ( std::uint8_t )( ( 1.0f - p ) * 255.0f + p * 50.0f + 0.5f );
-					blue = ( std::uint8_t )( ( 1.0f - p ) * 255.0f + p * 50.0f + 0.5f );
+					red = ( std::uint8_t )( ( 1.0 - p ) * 178 + p * 4 + 0.5 );
+					green = ( std::uint8_t )( ( 1.0 - p ) * 97 + p * 4 + 0.5 );
+					blue = ( std::uint8_t )( ( 1.0 - p ) * 94 + p * 9 + 0.5 );
 				}
-
-				else if ( second >= 64800 && second < 79200 ) // Evening to Night
+				// Night
+				else if ( ( worldSecond >= 75600 && worldSecond < 86400 ) || ( worldSecond >= 0 && worldSecond < 21600 ) )
 				{
-					//return olc::Pixel{ 146, 50, 50, 255 };
-
-					float difference = second - 64800;
-					float absoluteDifference = 14400;
-
+					float unwrappedSecond = ( worldSecond >= 0 && worldSecond < 21600 ) ? worldSecond + 86400 : worldSecond;
+					float difference = unwrappedSecond - 75600;
+					float absoluteDifference = 32400;
 					float p = difference / ( absoluteDifference - 1 );
 
-					red = ( std::uint8_t )( ( 1.0f - p ) * 146.0f + p * 4.0f + 0.5f );
-					green = ( std::uint8_t )( ( 1.0f - p ) * 50.0f + p * 4.0f + 0.5f );
-					blue = ( std::uint8_t )( ( 1.0f - p ) * 50.0f + p * 4.0f + 0.5f );
-
-				}
-				else if ( ( second >= 79200 && second < 86400 ) || ( second >= 0 && second < 21600 ) ) // Night
-				{
-					float unwrappedSecond = ( second >= 0 && second < 21600 ) ? second + 86400 : second;
-					float difference = unwrappedSecond - 79200;
-					float absoluteDifference = 28800;
-					float p = difference / ( absoluteDifference - 1 );
-
-					red = ( std::uint8_t )( ( 1.0f - p ) * 4.0f + p * 1.0f + 0.5f );
-					green = ( std::uint8_t )( ( 1.0f - p ) * 4.0f + p * 1.0f + 0.5f );
-					blue = ( std::uint8_t )( ( 1.0f - p ) * 4.0f + p * 1.0f + 0.5f );
+					red = ( std::uint8_t )( ( 1.0 - p ) * 4 + p * 1 + 0.5 );
+					green = ( std::uint8_t )( ( 1.0 - p ) * 4 + p * 1 + 0.5 );
+					blue = ( std::uint8_t )( ( 1.0 - p ) * 9 + p * 1 + 0.5 );
 				}
 				else
 				{
@@ -1418,8 +1394,6 @@ void WorldChunk::blackenLights()
 				light.addRed( red );
 				light.addGreen( green );
 				light.addBlue( blue );
-
-
 				light.setAlpha( 255 );
 				
 			}
@@ -1441,9 +1415,9 @@ void WorldChunk::clearLightSources()
 }
 
 
-void WorldChunk::wipeLightRender()
+void WorldChunk::wipeLightRenders()
 {
-	// Need to update chunkIndex of lighting when updating index of worldChunk [!]
+	// Wipe the light render
 	std::int64_t rootQuadTreePositionX = this->_chunkIndexX * this->_size;
 	std::int64_t rootQuadTreePositionY = this->_chunkIndexY * this->_size;
 
@@ -1460,20 +1434,16 @@ void WorldChunk::wipeLightRender()
 		Settings::WorldChunk::TILE_RENDER_MIN_CELL_SIZE
 	);
 
-	// The difference between construct and reconstruct is quick reassignment, unless of course, shallow copy does this for us. Then just use construct
-	//for ( int i = 0; i < sizeof( this->_lightRenders ) / sizeof( this->_lightRenders[0] ); i++ )
 	for ( int i = 0; i < ( WorldChunk::_numTileRenders * sizeof( QuadTree<LightRender> ) ) / sizeof( this->_lightRenders[0] ); i++ )
 	{
 		( this->_lightRenders )[i].divide();
 	}
 
-
-	//std::cout << WorldChunk::_numTileRenders * sizeof( QuadTree<LightRender> ) << std::endl;
 	return;
 }
 
 
-void WorldChunk::wipeLightRenders()
+void WorldChunk::initializeLightRenders()
 {
 	// Need to update chunkIndex of lighting when updating index of worldChunk [!]
 	std::int64_t rootQuadTreePositionX = this->_chunkIndexX * this->_size;
@@ -1498,10 +1468,6 @@ void WorldChunk::wipeLightRenders()
 	{
 		( this->_lightRenders )[i].divide();
 	}
-
-
-
-
 
 	( this->_prevLightRenders )[0].constructQuadTree(
 		0,
@@ -1522,12 +1488,9 @@ void WorldChunk::wipeLightRenders()
 		( this->_prevLightRenders )[i].divide();
 	}
 
-
 	//std::cout << WorldChunk::_numTileRenders * sizeof( QuadTree<LightRender> ) << std::endl;
 	return;
 }
-
-
 
 
 void WorldChunk::insertLightRender( std::uint32_t corner0, std::uint32_t corner1, std::uint32_t corner2, std::uint32_t corner3, bool exist, std::int64_t x, std::int64_t y )
@@ -1544,7 +1507,6 @@ void WorldChunk::insertLightRenders( std::uint32_t corner0, std::uint32_t corner
 		BoundingBox<std::int64_t>( x, y, width, height ) ) );
 	return;
 }
-
 
 
 void  WorldChunk::swapLightRenders()
