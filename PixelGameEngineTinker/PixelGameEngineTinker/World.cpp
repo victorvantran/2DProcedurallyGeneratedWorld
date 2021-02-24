@@ -2683,9 +2683,30 @@ const Background& World::getBackground() const
 
 void World::synchRender()
 {
+	this->_camera->renderWorldBackground();
+	this->_camera->renderPlayer( *this->_player );
 	std::unique_lock<std::mutex> lockUpdateLightingBuffer( this->_mutexUpdateLighting );
 	this->_camera->renderWorldForeground();
 	this->_condUpdateLighting.notify_one();
+
+
+
+	/*
+	// Draw Cave background
+	static const std::int64_t OVERWORLD_HEIGHT = 1536;
+	long double playerX = this->player->getCharacter().getCurrPosition().x;
+	long double playerY = this->player->getCharacter().getCurrPosition().y;
+	long double terraneanHeightPerlinVal = this->world->getTerraneanHeightMap().getPerlinValue( playerX );
+	std::int64_t worldYTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT );
+	long double attenuate = std::min( ( long double )1, std::max( ( long double )0, ( ( -worldYTerranean + playerY ) / ( -worldYTerranean / 4 ) ) ) );
+	DrawDecal( olc::vf2d{ 0, 0 }, this->caveBackgroundDecal, olc::vf2d{1.0, 1.0}, olc::Pixel( 255, 255, 255, attenuate * 255 ) );
+	*/
+
+	// Render Enemies
+	//this->camera->renderPlayer( *player ); 
+	//this->camera->renderDynamicObject( *enemy1 );
+	//this->camera->renderDynamicObject( *enemy2 );
+	//this->camera->renderDynamicObject( *enemy3 );
 	return;
 }
 

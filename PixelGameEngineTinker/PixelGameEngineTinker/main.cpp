@@ -475,6 +475,9 @@ public:
 			world->remove( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 1, 1 );
 		}
 
+
+		if ( GetKey( olc::Key::PERIOD ).bPressed ) world->DEBUG_PRINT_TILE_SPRITES();
+
 		
 		// Update Assets
 		this->world->updateDecals();
@@ -482,9 +485,10 @@ public:
 		// Update Game Logic
 		this->world->tick( /*fElapsedTime * 72*/ fElapsedTime * 5000 );
 		this->player->update( fElapsedTime, *this ); // [~!]
+		this->camera->setPosition( this->player->getCharacter().getAABB().getCenter().x - 32 / 2, this->player->getCharacter().getAABB().getCenter().y - 32 / 2 ); //[~!]
 
 
-
+		// this->world->update();
 		/*
 		// Collision Detection [!] Need to put this on another thread with conditional variable
 		this->world->getSpatialPartition().updateSpaces( &this->player->getCharacter() );
@@ -492,45 +496,20 @@ public:
 		//this->world->getSpatialPartition().updateSpaces( this->enemy2 );
 		//this->world->getSpatialPartition().updateSpaces( this->enemy3 );
 
-
 		this->world->getSpatialPartition().checkCollisions();
 
-
 		this->player->getCharacter().updateDynamicPhysics( this->world, fElapsedTime );
+
 		//this->enemy1->updateDynamicPhysics( this->world, fElapsedTime );
 		//this->enemy2->updateDynamicPhysics( this->world, fElapsedTime );
 		//this->enemy3->updateDynamicPhysics( this->world, fElapsedTime );
 		*/
 
 
-		// Camera
-		camera->setPosition( this->player->getCharacter().getAABB().getCenter().x - 32/2, this->player->getCharacter().getAABB().getCenter().y - 32/2 ); //[~!]
 
-
-		// Render Enemies
-		//this->camera->renderPlayer( *player ); 
-		//this->camera->renderDynamicObject( *enemy1 );
-		//this->camera->renderDynamicObject( *enemy2 );
-		//this->camera->renderDynamicObject( *enemy3 );
 
 
 		Clear( olc::BLACK );
-
-		
-
-		this->camera->renderWorldBackground();
-
-		// Draw Cave background
-		static const std::int64_t OVERWORLD_HEIGHT = 1536;
-		long double playerX = this->player->getCharacter().getCurrPosition().x;
-		long double playerY = this->player->getCharacter().getCurrPosition().y;
-		long double terraneanHeightPerlinVal = this->world->getTerraneanHeightMap().getPerlinValue( playerX );
-		std::int64_t worldYTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT );
-		long double attenuate = std::min( ( long double )1, std::max( ( long double )0, ( ( -worldYTerranean + playerY ) / ( -worldYTerranean / 4 ) ) ) );
-		DrawDecal( olc::vf2d{ 0, 0 }, this->caveBackgroundDecal, olc::vf2d{1.0, 1.0}, olc::Pixel( 255, 255, 255, attenuate * 255 ) );
-
-
-		this->camera->renderPlayer( *player ); //[~!]
 		this->world->synchRender(); // renderWorldForeground
 
 
@@ -538,12 +517,6 @@ public:
 		// DEBUG
 		drawTileIndexString( tileIndex );
 		this->world->printTime();
-		
-
-
-		if ( GetKey( olc::Key::PERIOD ).bPressed ) world->DEBUG_PRINT_TILE_SPRITES();
-		
-
 		return true;
 	}
 
@@ -890,35 +863,6 @@ public:
 		return;
 	}
 	
-
-
-
-
-
-
-
-
-
-	void renderPlayer()
-	{
-		const Character& character = this->player->getCharacter();
-		const AABB& aabb = character.getAABB();
-		const olc::vf2d& aabbOffset = character.getAABBOffset();
-		const olc::vf2d& characterScale = character.getScale();
-		//.getAABB().getCenter();
-		
-		return;
-	}
-
-
-
-
-
-
-
-
-
-
 
 
 	void drawTileIndexString( const olc::vi2d& tileIndex )

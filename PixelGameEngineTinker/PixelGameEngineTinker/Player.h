@@ -96,6 +96,48 @@ public:
 	// Setters
 	
 
+	/*
+	void initializeDatabase()
+	{
+		// Create a player file if one does not exist already.
+
+		sqlite3* database = NULL;
+		sqlite3_stmt* statement = NULL;
+		const char* command = NULL;
+		char* errorMessage = NULL;
+		int rc;
+
+		sqlite3_open( "./player.db", &database );
+
+		// Create Table [ chunk_x, chunk_y ] -> [ tiles, palette ]
+		command =
+			"CREATE TABLE IF NOT EXISTS player\n"\
+			"(\n"\
+			"	status STRING,\n"\
+			"	chunk_index_y INT,\n"\
+			"	tiles BLOB,\n"\
+			"	palette BLOB,\n"\
+			"	PRIMARY KEY ( chunk_index_x, chunk_index_y )\n"\
+			");";
+		rc = sqlite3_exec(
+			database,
+			command,
+			NULL,
+			NULL,
+			&errorMessage
+		);
+		if ( rc != SQLITE_OK )
+		{
+			sqlite3_close( database );
+		}
+
+		sqlite3_close( database );
+		return;
+	}
+	*/
+
+
+
 	// Methods
 	void resetInputs()
 	{
