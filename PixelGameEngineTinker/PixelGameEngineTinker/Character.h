@@ -108,5 +108,9 @@ public:
 	void updateCurrCommands( bool* commands );
 	void updatePrevCommands();
 	void updateState( float deltaTime );
+	//void updateState();
+
 	void update( float deltaTime, bool* commands );
+	//void update( bool* commands );
+
 };

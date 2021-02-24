@@ -73,8 +73,8 @@ World::World()
 	_camera( nullptr ),
 	_spatialParition( this ),
 	_seed( 0 ),
-	_background( nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, this->_second, this->_day, this->_year ),
-	_second( 0.0f ), _day( 0 ), _year( 0 )
+	_dayDecal( nullptr ), _nightDecal( nullptr ), _sunDecal( nullptr ), _landscapeDecal( nullptr ),
+	_tick( 0 ), _tickTimer( 0.0f )
 {
 
 }
@@ -101,14 +101,12 @@ World::World( std::int64_t seed,
 	const Tundra& tundra,
 	const Woodland& woodland,
 
-	float second,
-	std::uint16_t day,
-	std::uint64_t year,
+	std::uint64_t tick,
 
-	olc::Sprite* daySprite, olc::Decal* dayDecal,
-	olc::Sprite* nightSprite, olc::Decal* nightDecal,
-	olc::Sprite* sunSprite, olc::Decal* sunDecal,
-	olc::Sprite* landscapeSprite, olc::Decal* landscapeDecal
+	olc::Decal* dayDecal,
+	olc::Decal* nightDecal,
+	olc::Decal* sunDecal,
+	olc::Decal* landscapeDecal
 )
 	: _numChunkWidth( 1 + this->_chunkRadius * 2 ), _numChunkHeight( 1 + this->_chunkRadius * 2 ), _numWorldChunks( this->_numChunkWidth* this->_numChunkHeight ),
 	_focalChunkIndexX( 0 ), _focalChunkIndexY( 0 ),
@@ -137,9 +135,8 @@ World::World( std::int64_t seed,
 	_tundra( tundra ),
 	_woodland( woodland ),
 
-	_background( daySprite, dayDecal, nightSprite, nightDecal, sunSprite, sunDecal, landscapeSprite, landscapeDecal, this->_second, this->_day, this->_year ),
-	
-	_second( second ), _day( day ), _year( year )
+	_dayDecal( dayDecal ), _nightDecal( nightDecal ), _sunDecal( sunDecal ), _landscapeDecal( landscapeDecal ),
+	_tick( tick ), _tickTimer( 0.0f )
 {
 	for ( std::size_t i = 0; i < Settings::World::NUM_WORLD_CHUNKS; i++ )
 	{
@@ -1105,8 +1102,8 @@ void World::loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::ui
 
 
 	// Load in the necessary new sprites
-	std::thread addSpriteTileThread( &World::addSpriteTiles, this, historyTileIds );
-	addSpriteTileThread.join();
+	//std::thread addSpriteTileThread( &World::addSpriteTiles, this, historyTileIds );
+	//addSpriteTileThread.join();
 
 	return;
 }
@@ -2622,8 +2619,292 @@ void World::updateLighting()
 
 
 
+// Background
+olc::Pixel World::getDayTint( long double worldSecond )
+{
+	// Return the day tint information to establish ambient lighting
+	// Morning
+	if ( worldSecond >= 21600 && worldSecond < 32400 )
+	{
+		float difference = worldSecond - 21600;
+		float absoluteDifference = 10800;
+		float p = difference / ( absoluteDifference - 1 );
+
+		return olc::Pixel{
+			( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
+			( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
+			( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
+			( std::uint8_t )255
+		};
+	}
+	// Afternoon
+	else if ( worldSecond >= 32400 && worldSecond < 61200 )
+	{
+		return olc::Pixel{
+			( std::uint8_t )( 255 ),
+			( std::uint8_t )( 255 ),
+			( std::uint8_t )( 255 ),
+			( std::uint8_t )255
+		};
+	}
+	// Evening
+	else if ( worldSecond >= 61200 && worldSecond < 64800 )
+	{
+		float difference = worldSecond - 61200;
+		float absoluteDifference = 3600;
+		float p = difference / ( absoluteDifference - 1 );
+
+		return olc::Pixel{
+			( std::uint8_t )( ( 1.0 - p ) * 255 + p * 201 + 0.5 ),
+			( std::uint8_t )( ( 1.0 - p ) * 255 + p * 60 + 0.5 ),
+			( std::uint8_t )( ( 1.0 - p ) * 255 + p * 58 + 0.5 ),
+			( std::uint8_t )255
+		};
+	}
+	else if ( worldSecond >= 64800 && worldSecond < 75600 )
+	{
+		float difference = worldSecond - 64800;
+		float absoluteDifference = 10800;
+		float p = difference / ( absoluteDifference - 1 );
+
+		return olc::Pixel{
+			( std::uint8_t )( ( 1.0 - p ) * 201 + p * 4 + 0.5 ),
+			( std::uint8_t )( ( 1.0 - p ) * 60 + p * 4 + 0.5 ),
+			( std::uint8_t )( ( 1.0 - p ) * 58 + p * 9 + 0.5 ),
+			( std::uint8_t )255
+		};
+	}
+	// Night
+	else if ( ( worldSecond >= 75600 && worldSecond < 86400 ) || ( worldSecond >= 0 && worldSecond < 21600 ) )
+	{
+		float unwrappedSecond = ( worldSecond >= 0 && worldSecond < 21600 ) ? worldSecond + 86400 : worldSecond;
+		float difference = unwrappedSecond - 75600;
+		float absoluteDifference = 32400;
+		float p = difference / ( absoluteDifference - 1 );
+
+		return olc::Pixel{
+			( std::uint8_t )( ( 1.0 - p ) * 4 + p * 1 + 0.5 ),
+			( std::uint8_t )( ( 1.0 - p ) * 4 + p * 1 + 0.5 ),
+			( std::uint8_t )( ( 1.0 - p ) * 9 + p * 1 + 0.5 ),
+			( std::uint8_t )255
+		};
+	}
+	else
+	{
+		return olc::Pixel{ 0, 0, 0, 0 };
+	}
+}
+
+olc::Pixel World::getNightTint( long double worldSecond )
+{
+	// Return the night tint information to establish ambient lighting
+	if ( worldSecond >= 21600 && worldSecond < 25200 ) // Morning
+	{
+		float difference = worldSecond - 21600;
+		float absoluteDifference = 3600;
+		float p = difference / ( absoluteDifference - 1 );
+
+		return olc::Pixel{
+			( std::uint8_t )( 255 ),
+			( std::uint8_t )( 255 ),
+			( std::uint8_t )( 255 ),
+			( std::uint8_t )( ( 1.0 - p ) * 255 + p * 0 + 0.5 ),
+		};
+	}
+	else if ( worldSecond >= 25200 && worldSecond < 64800 ) // Afternoon
+	{
+		float difference = worldSecond - 25200;
+		float absoluteDifference = 39600;
+		float p = difference / ( absoluteDifference - 1 );
+
+		return olc::Pixel{
+			( std::uint8_t )( 0 ),
+			( std::uint8_t )( 0 ),
+			( std::uint8_t )( 0 ),
+			( std::uint8_t )0
+		};
+	}
+	else if ( worldSecond >= 64800 && worldSecond < 75600 ) // Evening
+	{
+		float difference = worldSecond - 64800;
+		float absoluteDifference = 10800;
+		float p = difference / ( absoluteDifference - 1 );
+
+		return olc::Pixel{
+			( std::uint8_t )( 255 ),
+			( std::uint8_t )( 255 ),
+			( std::uint8_t )( 255 ),
+			( std::uint8_t )( ( 1.0 - p ) * 0 + p * 255 + 0.5 ),
+		};
+	}
+	else if ( ( worldSecond >= 75600 && worldSecond < 86400 ) || ( worldSecond >= 0 && worldSecond < 21600 ) ) // Night
+	{
+		float unwrappedSecond = ( worldSecond >= 0 && worldSecond < 21600 ) ? worldSecond + 86400 : worldSecond;
+		float difference = unwrappedSecond - 75600;
+		float absoluteDifference = 32400;
+		float p = difference / ( absoluteDifference - 1 );
+
+		return olc::Pixel{
+			( std::uint8_t )( 255 ),
+			( std::uint8_t )( 255 ),
+			( std::uint8_t )( 255 ),
+			( std::uint8_t )255
+		};
+	}
+	else
+	{
+		return olc::Pixel{ 0, 0, 0, 0 };
+	}
+}
 
 
+olc::vf2d World::getSunPosition( float worldSecond )
+{
+	// Return sun position for render
+	float difference = worldSecond - 10800;
+	float absoluteDifference = 75600;
+	float p = difference / ( absoluteDifference - 1 );
+
+	float x = ( 1.0f - p ) * 0.0f + p * 1980.0f + 0.5f;
+	//float y = 0.0000007430269776f * worldSecond * worldSecond - 0.0641975308641982f * worldSecond + 1456.6666666666742458f;
+	float y = 0.0000007811309252f * worldSecond * worldSecond - 0.0674897119341570f * worldSecond + 1487.7777777777855590f;
+	return olc::vf2d{ x, y };
+}
+
+
+
+
+olc::Pixel World::getLandscapeTint( long double worldSecond )
+{
+	// Return the day tint information to establish ambient lighting
+	// Morning
+	if ( worldSecond >= 21600 && worldSecond < 32400 )
+	{
+		float difference = worldSecond - 21600;
+		float absoluteDifference = 10800;
+		float p = difference / ( absoluteDifference - 1 );
+
+		return olc::Pixel{
+			( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
+			( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
+			( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
+			( std::uint8_t )255
+		};
+	}
+	// Afternoon
+	else if ( worldSecond >= 32400 && worldSecond < 61200 )
+	{
+		return olc::Pixel{
+			( std::uint8_t )( 255 ),
+			( std::uint8_t )( 255 ),
+			( std::uint8_t )( 255 ),
+			( std::uint8_t )255
+		};
+	}
+	// Evening
+	else if ( worldSecond >= 61200 && worldSecond < 64800 )
+	{
+		float difference = worldSecond - 61200;
+		float absoluteDifference = 3600;
+		float p = difference / ( absoluteDifference - 1 );
+
+		return olc::Pixel{
+			( std::uint8_t )( ( 1.0 - p ) * 255 + p * 178 + 0.5 ),
+			( std::uint8_t )( ( 1.0 - p ) * 255 + p * 97 + 0.5 ),
+			( std::uint8_t )( ( 1.0 - p ) * 255 + p * 94 + 0.5 ),
+			( std::uint8_t )255
+		};
+	}
+	else if ( worldSecond >= 64800 && worldSecond < 75600 )
+	{
+		float difference = worldSecond - 64800;
+		float absoluteDifference = 10800;
+		float p = difference / ( absoluteDifference - 1 );
+
+		return olc::Pixel{
+			( std::uint8_t )( ( 1.0 - p ) * 178 + p * 4 + 0.5 ),
+			( std::uint8_t )( ( 1.0 - p ) * 97 + p * 4 + 0.5 ),
+			( std::uint8_t )( ( 1.0 - p ) * 94 + p * 9 + 0.5 ),
+			( std::uint8_t )255
+		};
+	}
+	// Night
+	else if ( ( worldSecond >= 75600 && worldSecond < 86400 ) || ( worldSecond >= 0 && worldSecond < 21600 ) )
+	{
+		float unwrappedSecond = ( worldSecond >= 0 && worldSecond < 21600 ) ? worldSecond + 86400 : worldSecond;
+		float difference = unwrappedSecond - 75600;
+		float absoluteDifference = 32400;
+		float p = difference / ( absoluteDifference - 1 );
+
+		return olc::Pixel{
+			( std::uint8_t )( ( 1.0 - p ) * 4 + p * 1 + 0.5 ),
+			( std::uint8_t )( ( 1.0 - p ) * 4 + p * 1 + 0.5 ),
+			( std::uint8_t )( ( 1.0 - p ) * 9 + p * 1 + 0.5 ),
+			( std::uint8_t )255
+		};
+	}
+	else
+	{
+		return olc::Pixel{ 0, 0, 0, 0 };
+	}
+}
+
+
+const BackgroundRenderData& World::getRenderData() const
+{
+	// Return the information needed to render the world background
+
+	long double worldDailySecond = ( std::uint64_t )this->getAbsoluteSecond() % Settings::World::SECONDS_PER_DAY;
+
+	return BackgroundRenderData(
+		this->_dayDecal, this->getDayTint( worldDailySecond ),
+		this->_nightDecal, this->getNightTint( worldDailySecond ),
+		this->_sunDecal, this->getSunPosition( worldDailySecond ),
+		this->_landscapeDecal, this->getLandscapeTint( worldDailySecond )
+	);
+
+}
+
+
+
+void World::update( olc::PixelGameEngine& pge )
+{
+	this->tick( pge.GetElapsedTime() * Settings::World::TIME_SCALE );
+	return;
+}
+
+
+
+bool World::tick( float deltaTime )
+{
+	// Updates the tick which derives the absolute time
+	this->_tickTimer += deltaTime;
+
+	if ( this->_tickTimer >= Settings::Game::TICK_RATE )
+	{
+		while ( this->_tickTimer >= Settings::Game::TICK_RATE )
+		{
+			this->_tickTimer -= Settings::Game::TICK_RATE;
+			this->_tick++;
+		}
+
+		return true;
+	}
+	return false;
+}
+
+
+
+long double World::getAbsoluteSecond() const { return ( ( ( long double ) this->_tick / 64.0 ) ); }
+long double World::getAbsoluteDay() const { return ( ( ( ( long double )this->_tick / 64.0 ) ) / 86400.0 ); }
+long double World::getAbsoluteYear() const { return ( std::int64_t )( ( ( ( long double )this->_tick / 64.0 ) ) / ( 86400.0 * 365.0 ) ); }
+
+std::uint8_t World::getNormalizedSecond() const { return ( std::int64_t )( ( ( long double )this->_tick / 64.0 ) ); }
+std::uint16_t World::getNormalizedDay() const { return ( std::int64_t )( ( ( ( long double )this->_tick / 64.0 ) ) / 86400.0 ) % 365; }
+std::uint64_t World::getNormalizedYear() const { return ( std::int64_t )( ( ( ( long double )this->_tick / 64.0 ) ) / ( 86400.0 * 365.0 ) ); }
+
+
+//// Player
 void World::setPlayer( Player* player )
 {
 	this->_player = player;
@@ -2632,113 +2913,43 @@ void World::setPlayer( Player* player )
 
 
 
-/// Natural Update
 
-void World::tick( float deltaTime )
+//// Render
+Camera* World::getCamera()
 {
-	// Updates the absolute time
-	this->_second += deltaTime;
-	if ( this->_second >= Settings::World::SECONDS_PER_DAY )
-	{
-		// while this->_seconds >= Settings::World::SECONDS_PER_DAY ( but just use wrap around )
-		this->_second -= Settings::World::SECONDS_PER_DAY;
+	return this->_camera;
+}
 
-		this->_day++;
-		if ( this->_day >= Settings::World::DAYS_PER_YEAR )
-		{
-			this->_day -= Settings::World::DAYS_PER_YEAR;
-			this->_year++;
-		}
-	}
+
+void World::renderBackground()
+{
+	this->_camera->renderWorldBackground( *this );
 	return;
 }
 
-
-float World::getSecond() const
+void World::renderForeground()
 {
-	return this->_second;
-}
-
-
-std::uint16_t World::getDay() const
-{
-	return this->_day;
-}
-
-
-std::uint64_t World::getYear() const
-{
-	return this->_year;
-}
-
-
-const Background& World::getBackground() const
-{
-	return this->_background;
-}
-
-
-
-/// Render
-
-void World::synchRender()
-{
-	this->_camera->renderWorldBackground();
-	this->_camera->renderPlayer( *this->_player );
 	std::unique_lock<std::mutex> lockUpdateLightingBuffer( this->_mutexUpdateLighting );
-	this->_camera->renderWorldForeground();
-	this->_condUpdateLighting.notify_one();
-
-
-
-	/*
-	// Draw Cave background
-	static const std::int64_t OVERWORLD_HEIGHT = 1536;
-	long double playerX = this->player->getCharacter().getCurrPosition().x;
-	long double playerY = this->player->getCharacter().getCurrPosition().y;
-	long double terraneanHeightPerlinVal = this->world->getTerraneanHeightMap().getPerlinValue( playerX );
-	std::int64_t worldYTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT );
-	long double attenuate = std::min( ( long double )1, std::max( ( long double )0, ( ( -worldYTerranean + playerY ) / ( -worldYTerranean / 4 ) ) ) );
-	DrawDecal( olc::vf2d{ 0, 0 }, this->caveBackgroundDecal, olc::vf2d{1.0, 1.0}, olc::Pixel( 255, 255, 255, attenuate * 255 ) );
-	*/
-
-	// Render Enemies
-	//this->camera->renderPlayer( *player ); 
-	//this->camera->renderDynamicObject( *enemy1 );
-	//this->camera->renderDynamicObject( *enemy2 );
-	//this->camera->renderDynamicObject( *enemy3 );
+	this->_camera->renderWorldForeground( *this );
+	this->_condUpdateLighting.notify_one();	
 	return;
 }
-
 
 
 
 /// Debug
 
-/*
-void World::printTime() const
-{
-	std::cout << "Year: " << this->_year + 1 << std::endl;
-	std::cout << "Day: " << this->_day + 1 << std::endl;
-	std::cout << "Second: " << ( int )this->_second << std::endl;
-	std::cout << "___________________________________________________________________________" << std::endl;
-	return;
-}
-*/
 
 void World::printTime() const
 {
-	//std::cout << "Year: " << this->_year + 1 << std::endl;
-	//std::cout << "Day: " << this->_day + 1 << std::endl;
-	//std::cout << ( ( ( ( int )this->_second / 60 ) / 60 ) % 24 ) << ":" << ( ( ( int )this->_second / 60 ) % 60 ) << ":" << ( ( int )this->_second % 60 ) << std::endl;
+	long double absoluteSecond = this->getAbsoluteSecond();
 
-	std::uint8_t hour = ( ( std::uint8_t )( ( this->_second / 60 ) / 60 ) % 12 );
+	std::uint8_t second = ( std::uint8_t )( ( ( std::uint64_t )absoluteSecond ) % 60 );
+	std::uint8_t minute = ( std::uint8_t )( ( ( ( std::uint64_t )absoluteSecond ) / 60 ) % 60 );
+	//std::uint8_t hour = ( std::uint8_t )( ( ( ( std::uint64_t )absoluteSecond ) / 3600 ) % 24 );
+	std::uint8_t hour = ( std::uint8_t )( ( ( ( std::uint64_t )absoluteSecond ) / 3600 ) % 12 );
 	hour = ( hour == 0 ) ? 12 : hour;
-	//std::uint8_t minute = ( ( std::uint8_t )( this->_second / 60 ) % 60 );
-	std::uint8_t minute = ( ( ( std::uint16_t )( this->_second ) % 3600 ) ) / 60;
-	std::uint8_t second = ( ( std::uint8_t )this->_second % 60 );
 
 	std::cout << ( std::int32_t )( hour ) << ":" << ( std::int32_t )( minute ) << ":" << ( std::int32_t )( second ) << std::endl;
-
 	return;
 }

@@ -103,4 +103,6 @@ public:
 	void updatePrevCommands();
 	void updateState( float deltaTime );
 	void update( float deltaTime, bool* commands );
+	//void updateState();
+	//void update( bool* commands );
 };

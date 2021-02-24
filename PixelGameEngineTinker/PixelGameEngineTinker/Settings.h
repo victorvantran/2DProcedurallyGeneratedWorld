@@ -29,6 +29,12 @@ public:
 	};
 
 
+	// Game
+	struct Game
+	{
+		static constexpr float TICK_RATE = 0.015625f; // ( 1.0f / 64.0f ); == 64Hz
+	};
+
 	// World
 	struct World
 	{
@@ -44,9 +50,13 @@ public:
 
 		static constexpr float GRAVITY = -98.0f;
 		static constexpr float TERMINAL_VELOCITY = -2000.0f;
+		
 
 		static constexpr std::uint32_t SECONDS_PER_DAY = 86400;
 		static constexpr std::uint16_t DAYS_PER_YEAR = 365; // ignore leap years
+
+
+		static constexpr float TIME_SCALE = 72.0f;
 	};
 
 
@@ -151,6 +161,10 @@ public:
 			static constexpr float GRAB_LEDGE_TILE_OFFSET_Y = -( 4.0f / ( float )World::CELL_SIZE );
 			static constexpr std::int32_t GRAB_LEDGE_LET_GO_FRAMES = 3;
 			static constexpr std::int32_t JUMP_FRAMES_THREASHOLD = 4;
+
+
+			static constexpr std::uint8_t ANIMATOR_TICKS_PER_FRAME = 6;
+
 		};
 	};
 

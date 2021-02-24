@@ -118,6 +118,11 @@ public:
 
 	void updateStaticPhysics( const World* world, float deltaTime );
 	void updateDynamicPhysics( const World* world, float deltaTime );
+	//void updateStaticPhysics( const World* world );
+	//void updateDynamicPhysics( const World* world );
+
 
 	virtual void update( float deltaTime, bool* commands ) = 0;
+	//virtual void update( bool* commands ) = 0;
+
 };

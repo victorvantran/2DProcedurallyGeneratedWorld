@@ -41,6 +41,7 @@
     <ClInclude Include="Assets.h" />
     <ClInclude Include="Atlas.h" />
     <ClInclude Include="Background.h" />
+    <ClInclude Include="BackgroundRenderData.h" />
     <ClInclude Include="BackgroundTile.h" />
     <ClInclude Include="Biome.h" />
     <ClInclude Include="BiomeSubstanceMap.h" />
@@ -92,6 +93,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Assets.cpp" />
+    <ClCompile Include="Background.cpp" />
     <ClCompile Include="BackgroundTile.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Cell.cpp" />

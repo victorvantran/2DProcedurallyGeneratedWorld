@@ -46,7 +46,7 @@
 #include "Tundra.h"
 #include "Woodland.h"
 
-#include "Background.h"
+#include "BackgroundRenderData.h"
 
 // Forward Declarations
 #include "WorldChunkMemory.h" // class WorldChunkMemory; 
@@ -131,17 +131,27 @@ private:
 	Tundra _tundra;
 	Woodland _woodland;
 
-	Background _background;
+
+	// Background
+	olc::Decal* _dayDecal;
+	olc::Pixel _dayTint;
+	olc::Decal* _nightDecal;
+	olc::Pixel _nightTint;
+	olc::Decal* _sunDecal;
+	olc::vf2d _sunPosition;
+	olc::Decal* _landscapeDecal;
+	olc::Pixel _landscapeTint;
+
 
 	// Time
-	float _second;
-	std::uint16_t _day;
-	std::uint64_t _year;
+	std::uint64_t _tick;
+	float _tickTimer;
 
 	// Player
 	Player* _player = nullptr;
 
-
+	std::chrono::time_point<std::chrono::system_clock> _t1;
+	std::chrono::time_point<std::chrono::system_clock> _t2;
 private:
 	static unsigned char copyBits( unsigned char& destination, unsigned char copy, unsigned startIndex, unsigned char endIndex );
 	static unsigned char copyBits( unsigned char& destination, unsigned dStartIndex, unsigned char dEndIndex, unsigned char copy, unsigned cStartIndex, unsigned char cEndIndex );
@@ -168,15 +178,12 @@ public:
 		const Tundra& tundra,
 		const Woodland& woodland,
 
-		float _second,
-		std::uint16_t day,
-		std::uint64_t year,
+		std::uint64_t tick,
 
-		olc::Sprite* daySprite, olc::Decal* dayDecal, // Encapsulate in a struct
-		olc::Sprite* nightSprite, olc::Decal* nightDecal,
-		olc::Sprite* sunSprite, olc::Decal* sunDecal,
-		olc::Sprite* landscapeSprite, olc::Decal* landscapeDecal
-
+		olc::Decal* dayDecal, // Encapsulate in a struct
+		olc::Decal* nightDecal,
+		olc::Decal* sunDecal,
+		olc::Decal* landscapeDecal
 	);
 
 	~World();
@@ -328,22 +335,46 @@ public:
 
 
 
+	// Background
+	static olc::Pixel getDayTint( long double worldSecond );
+	static olc::Pixel getNightTint( long double worldSecond );
+	static olc::vf2d getSunPosition( float worldSecond );
+	static olc::Pixel getLandscapeTint( long double worldSecond );
+	const BackgroundRenderData& getRenderData() const;
+
+
+
+
 	// Player
 	void setPlayer( Player* player );
 
 
 	// Natural Update
-	void tick( float deltaTime );
-	float getSecond() const;
-	std::uint16_t getDay() const;
-	std::uint64_t getYear() const;
-	const Background& getBackground() const;
+	void update( olc::PixelGameEngine& pge );
+	bool tick( float deltaTime );
 
+
+	long double getAbsoluteSecond() const;
+	long double getAbsoluteDay() const;
+	long double getAbsoluteYear() const;
+	std::uint8_t getNormalizedSecond() const;
+	std::uint16_t getNormalizedDay() const;
+	std::uint64_t getNormalizedYear() const;
 
 	// Render
-	void synchRender();
+	Camera* getCamera();
+	void renderBackground();
+	void renderForeground();
 
 
+	float getDeltaTime()
+	{
+		_t2 = std::chrono::system_clock::now();
+		std::chrono::duration<float> deltaTime = _t2 - _t1;
+		_t1 = _t2;
+		float d = deltaTime.count();
+		return d;
+	}
 
 	// Debug
 	void printTime() const;

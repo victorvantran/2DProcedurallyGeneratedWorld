@@ -3,6 +3,7 @@
 #include "olcPixelGameEngine.h"
 
 
+/*
 struct BackgroundRenderData
 {
 	olc::Decal* dayDecal;
@@ -59,9 +60,7 @@ private:
 	olc::Sprite* _landscapeSprite;
 	olc::Decal* _landscapeDecal;
 
-	const float& _worldSecond;
-	const std::uint16_t& _worldDay;
-	const std::uint64_t& _worldYear;
+	const std::uint64_t& _worldTick;
 
 public:
 	Background() = delete; // Cannot use default constructor for intializing member reference variables 
@@ -71,20 +70,20 @@ public:
 		olc::Sprite* nightSprite, olc::Decal* nightDecal,
 		olc::Sprite* sunSprite, olc::Decal* sunDecal,
 		olc::Sprite* landscapeSprite, olc::Decal* landscapeDecal,
-		float& worldSecond, std::uint16_t& worldDay, std::uint64_t& worldYear
+		std::uint64_t& worldTick
 		) :
 		_daySprite( daySprite ), _dayDecal( dayDecal ),
 		_nightSprite( nightSprite ), _nightDecal( nightDecal ),
 		_sunSprite( sunSprite ), _sunDecal( sunDecal ),
 		_landscapeSprite( landscapeSprite ), _landscapeDecal( landscapeDecal ),
-		_worldSecond( worldSecond ), _worldDay( worldDay ), _worldYear( worldYear )
+		_worldTick( worldTick )
 	{}
 
 
 	~Background() {}
 
 
-	static olc::Pixel getDayTint( float worldSecond )
+	static olc::Pixel getDayTint( long double worldSecond )
 	{
 		// Return the day tint information to establish ambient lighting
 		// Morning
@@ -159,7 +158,7 @@ public:
 		}
 	}
 
-	static olc::Pixel getNightTint( float worldSecond )
+	static olc::Pixel getNightTint( long double worldSecond )
 	{
 		// Return the night tint information to establish ambient lighting
 		if ( worldSecond >= 21600 && worldSecond < 25200 ) // Morning
@@ -236,85 +235,9 @@ public:
 	}
 
 
-	/*
-	static olc::Pixel getLandscapeTint( float worldSecond )
-	{
-		// Return the day tint information to establish ambient lighting
-		// Morning
-		if ( worldSecond >= 21600 && worldSecond < 39600 )
-		{
-			float difference = worldSecond - 21600;
-			float absoluteDifference = 18000;
-			float p = difference / ( absoluteDifference - 1 );
-
-			return olc::Pixel{
-				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 ),
-				( std::uint8_t )255
-			};
-		}
-		// Afternoon
-		else if ( worldSecond >= 39600 && worldSecond < 57600 )
-		{
-			return olc::Pixel{
-				( std::uint8_t )( 255 ),
-				( std::uint8_t )( 255 ),
-				( std::uint8_t )( 255 ),
-				( std::uint8_t )255
-			};
-		}
-		else if ( worldSecond >= 57600 && worldSecond < 61200 )
-		{
-			float difference = worldSecond - 57600;
-			float absoluteDifference = 3600;
-			float p = difference / ( absoluteDifference - 1 );
-
-			return olc::Pixel{
-				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 146 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 50 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 50 + 0.5 ),
-				( std::uint8_t )255
-			};
-		}
-		// Evening
-		else if ( worldSecond >= 61200 && worldSecond < 75600 )
-		{
-			float difference = worldSecond - 61200;
-			float absoluteDifference = 14400;
-			float p = difference / ( absoluteDifference - 1 );
-
-			return olc::Pixel{
-				( std::uint8_t )( ( 1.0 - p ) * 146 + p * 4 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 50 + p * 4 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 50 + p * 9 + 0.5 ),
-				( std::uint8_t )255
-			};
-		}
-		// Night
-		else if ( ( worldSecond >= 75600 && worldSecond < 86400 ) || ( worldSecond >= 0 && worldSecond < 21600 ) )
-		{
-			float unwrappedSecond = ( worldSecond >= 0 && worldSecond < 21600 ) ? worldSecond + 86400 : worldSecond;
-			float difference = unwrappedSecond - 75600;
-			float absoluteDifference = 32400;
-			float p = difference / ( absoluteDifference - 1 );
-
-			return olc::Pixel{
-				( std::uint8_t )( ( 1.0 - p ) * 4 + p * 1 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 4 + p * 1 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 9 + p * 1 + 0.5 ),
-				( std::uint8_t )255
-			};
-		}
-		else
-		{
-			return olc::Pixel{ 0, 0, 0, 0 };
-		}
-	}
-	*/
 
 
-	static olc::Pixel getLandscapeTint( float worldSecond )
+	static olc::Pixel getLandscapeTint( long double worldSecond )
 	{
 		// Return the day tint information to establish ambient lighting
 		// Morning
@@ -390,14 +313,10 @@ public:
 	}
 
 
-	const BackgroundRenderData& getRenderData() const
-	{
-		// Return the information needed to render the world background
-		return BackgroundRenderData(
-			this->_dayDecal, this->getDayTint( this->_worldSecond ),
-			this->_nightDecal, this->getNightTint( this->_worldSecond ),
-			this->_sunDecal, this->getSunPosition( this->_worldSecond ),
-			this->_landscapeDecal, this->getLandscapeTint( this->_worldSecond )
-		);
-	}
+	const BackgroundRenderData& getRenderData() const;
+
+
+
 };
+
+*/

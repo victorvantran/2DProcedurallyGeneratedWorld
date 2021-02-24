@@ -10,11 +10,11 @@
 
 
 Camera::Camera()
-	: _focalPoint( BoundingBox<long double>() ), _view( BoundingBox<long double>() ), _zoomX( 1.0f ), _zoomY( 1.0f ), _world( nullptr ) {}
+	: _focalPoint( BoundingBox<long double>() ), _view( BoundingBox<long double>() ), _zoomX( 1.0f ), _zoomY( 1.0f ) {}
 
 
 Camera::Camera( BoundingBox<long double> focalPoint, BoundingBox<long double> view, long double zoomX, long double zoomY, World* world )
-	: _focalPoint( focalPoint ), _view( view ), _zoomX( zoomX ), _zoomY( zoomY ), _world( world )
+	: _focalPoint( focalPoint ), _view( view ), _zoomX( zoomX ), _zoomY( zoomY )
 {
 	this->_view.setCenterX( this->_focalPoint.getCenterX() );
 	this->_view.setCenterY( this->_focalPoint.getCenterY() );
@@ -44,10 +44,10 @@ void Camera::worldToScreen( long double cellX, long double cellY, std::int64_t& 
 }
 
 
-void Camera::renderWorldBackground() const
+void Camera::renderWorldBackground( World& world ) const
 {
 	// Render world background
-	const BackgroundRenderData& backgroundRenderData = this->_world->getBackground().getRenderData();
+	const BackgroundRenderData& backgroundRenderData = world.getRenderData();
 
 	pge->DrawDecal( olc::vf2d{ 0, 0 }, backgroundRenderData.dayDecal, olc::vf2d{ 1.0, 1.0 }, backgroundRenderData.dayTint );
 	pge->DrawDecal( olc::vf2d{ 0, 0 }, backgroundRenderData.nightDecal, olc::vf2d{ 1.0, 1.0 }, backgroundRenderData.nightTint );
@@ -58,15 +58,15 @@ void Camera::renderWorldBackground() const
 }
 
 
-void Camera::renderWorldForeground() const
+void Camera::renderWorldForeground( World& world ) const
 {
 	// Render world background
-	WorldChunk* worldChunks = this->_world->getWorldChunks();
-	int numWorldChunks = this->_world->getNumWorldChunks();
+	WorldChunk* worldChunks = world.getWorldChunks();
+	int numWorldChunks = world.getNumWorldChunks();
 
 	for ( int i = 0; i < numWorldChunks; i++ )
 	{
-		this->renderWorldChunk( worldChunks[i], this->_world->getAtlas() );
+		this->renderWorldChunk( worldChunks[i], world.getAtlas() );
 	}
 
 	return;
@@ -442,10 +442,7 @@ void Camera::renderPlayer( Player& player ) const
 
 	pge->DrawPartialDecal(
 		alphaStartPos,
-		olc::v2d_generic<long double>{
-			( long double )this->_zoomX * ( 4 ) * Settings::Screen::CELL_PIXEL_SIZE,
-			( long double )this->_zoomY * ( 4 ) * Settings::Screen::CELL_PIXEL_SIZE,
-		},
+		olc::vf2d{ ( float )( this->_zoomX * 64.0 ), ( float )( this->_zoomY * 64.0 ) },
 		std::get<0>( renderInformation ),
 		olc::vf2d{ ( float )std::get<1>( renderInformation ), ( float )std::get<2>( renderInformation ) },
 		olc::vf2d{ 64.0f, 64.0f } // sourceSize
@@ -712,4 +709,12 @@ long double Camera::getZoomX() const
 long double Camera::getZoomY() const
 {
 	return this->_zoomY;
+}
+
+
+void Camera::update( Player& player )
+{
+	// Update camera position based on player as the subject
+	this->setPosition( player.getCharacter().getAABB().getCenter().x - 32 / 2, player.getCharacter().getAABB().getCenter().y - 32 / 2 );
+	return;
 }

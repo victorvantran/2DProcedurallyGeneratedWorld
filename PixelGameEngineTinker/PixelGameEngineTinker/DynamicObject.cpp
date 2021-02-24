@@ -646,10 +646,6 @@ void DynamicObject::updatePhysicsResponse()
 		}
 	}
 
-
-	
-
-
 	return;
 }
 
@@ -670,6 +666,7 @@ void DynamicObject::updateStaticPhysics( const World* world, float deltaTime )
 
 	// Update position using the current speed
 	this->_currPosition = this->_currPosition + ( olc::v2d_generic<long double>( this->_currVelocity.x, -this->_currVelocity.y ) * deltaTime );
+	//this->_currPosition = this->_currPosition + ( olc::v2d_generic<long double>( this->_currVelocity.x, -this->_currVelocity.y ) * Settings::Game::TICK_RATE );
 
 	long double worldGroundY = this->_currPosition.y + this->_aabb.getHalfSizeY() + this->_aabbOffset.y;
 	long double worldCeilingY = this->_currPosition.y - this->_aabb.getHalfSizeY() + this->_aabbOffset.y;
@@ -746,6 +743,98 @@ void DynamicObject::updateStaticPhysics( const World* world, float deltaTime )
 	return;
 }
 
+/*
+void DynamicObject::updateStaticPhysics( const World* world  )
+{
+	// Cache data of previous frame
+	this->_prevPosition = this->_currPosition;
+	this->_pushedRight = this->_pushingRight;
+	this->_pushedLeft = this->_pushingLeft;
+	this->_pushedDown = this->_pushingDown;
+	this->_pushedUp = this->_pushingUp;
+	this->_prevVelocity = this->_currVelocity;
+
+	// Reset states
+	this->_onOneWayPlatform = false;
+
+	// Update position using the current speed
+	this->_currPosition = this->_currPosition + ( olc::v2d_generic<long double>( this->_currVelocity.x, -this->_currVelocity.y ) * Settings::Game::TICK_RATE );
+
+	long double worldGroundY = this->_currPosition.y + this->_aabb.getHalfSizeY() + this->_aabbOffset.y;
+	long double worldCeilingY = this->_currPosition.y - this->_aabb.getHalfSizeY() + this->_aabbOffset.y;
+	long double worldLeftWallX = this->_currPosition.x - this->_aabb.getHalfSizeX() + this->_aabbOffset.x;
+	long double worldRightWallX = this->_currPosition.x + this->_aabb.getHalfSizeX() + this->_aabbOffset.x;
+
+
+	// Prioritize horizontal collision detection over verticle
+	// Conditions for jutting dynamic object to the right side of the left wall tile:
+	//	(1) Horizontal speed is less than or equal to zero ( left movement )
+	//	(2) Collidie with left wall
+	//	(3) In the previous frame, we did not overlap with tile on horizontal axis ( false not necessarily telling us that object is not pushing the wall )
+	// Colliding Left
+	if ( this->_currVelocity.x <= 0.0f &&
+		this->isCollidingLeft( world, worldLeftWallX ) )
+	{
+		if ( this->_prevPosition.x - this->_aabb.getHalfSizeX() + this->_aabbOffset.x >= worldLeftWallX )
+		{
+			this->_currPosition.x = worldLeftWallX + this->_aabb.getHalfSizeX() - this->_aabbOffset.x + 1.0;
+			this->_pushingLeft = true;
+		}
+		this->_currVelocity.x = std::max( this->_currVelocity.x, 0.0f );
+	}
+	else
+	{
+		this->_pushingLeft = false;
+	}
+
+	// Colliding Right
+	if ( this->_currVelocity.x >= 0.0f &&
+		this->isCollidingRight( world, worldRightWallX ) )
+	{
+		if ( this->_prevPosition.x + this->_aabb.getHalfSizeX() + this->_aabbOffset.x <= worldRightWallX )
+		{
+			this->_currPosition.x = worldRightWallX - this->_aabb.getHalfSizeX() - this->_aabbOffset.x;
+			this->_pushingRight = true;
+		}
+		this->_currVelocity.x = std::min( this->_currVelocity.x, 0.0f );
+	}
+	else
+	{
+		this->_pushingRight = false;
+	}
+
+	// Colliding Down
+	if ( this->_currVelocity.y <= 0.0f &&
+		this->isCollidingDown( world, worldGroundY, this->_onOneWayPlatform ) )
+	{
+		this->_currPosition.y = worldGroundY - this->_aabb.getHalfSizeY() + this->_aabbOffset.y;
+		this->_currVelocity.y = 0.0;
+		this->_pushingDown = true;
+	}
+	else
+	{
+		this->_pushingDown = false;
+	}
+
+	// Colliding Up
+	if ( this->_currVelocity.y >= 0.0f &&
+		this->isCollidingUp( world, worldCeilingY ) )
+	{
+		this->_currPosition.y = worldCeilingY + this->_aabb.getHalfSizeY() + this->_aabbOffset.y + 1.0;
+		this->_currVelocity.y = 0.0;
+		this->_pushingUp = true;
+	}
+	else
+	{
+		this->_pushingUp = false;
+	}
+
+	// Update AABB of object to match new position
+	this->_aabb.setCenter( this->_currPosition + olc::v2d_generic<long double>( this->_aabbOffset.x, -this->_aabbOffset.y ) ); // negative because negY = worldPosY
+
+	return;
+}
+*/
 
 
 void DynamicObject::updateDynamicPhysics( const World* world, float deltaTime )
@@ -764,3 +853,23 @@ void DynamicObject::updateDynamicPhysics( const World* world, float deltaTime )
 
 	return;
 }
+
+
+/*
+void DynamicObject::updateDynamicPhysics( const World* world )
+{
+	this->updatePhysicsResponse();
+
+	this->_pushingLeft = this->_pushingLeft || this->_pushingLeftObject;
+	this->_pushingRight = this->_pushingRight || this->_pushingRightObject;
+	this->_pushingDown = this->_pushingDown || this->_pushingBottomObject;
+	this->_pushingUp = this->_pushingUp || this->_pushingTopObject;
+
+	// Update AABB
+	this->_aabb.setCenter( this->_currPosition );
+
+
+
+	return;
+}
+*/

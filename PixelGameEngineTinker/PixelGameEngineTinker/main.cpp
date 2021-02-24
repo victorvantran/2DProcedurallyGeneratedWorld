@@ -482,13 +482,31 @@ public:
 		// Update Assets
 		this->world->updateDecals();
 
-		// Update Game Logic
-		this->world->tick( /*fElapsedTime * 72*/ fElapsedTime * 5000 );
-		this->player->update( fElapsedTime, *this ); // [~!]
-		this->camera->setPosition( this->player->getCharacter().getAABB().getCenter().x - 32 / 2, this->player->getCharacter().getAABB().getCenter().y - 32 / 2 ); //[~!]
+
+		// Key
+		/*
+		bool nextInputs[( std::size_t )PlayerKeyInput::count];
+		for ( std::size_t i = 0; i < ( std::size_t )Command::count; i++ )
+		{
+			nextInputs[i] = false;
+		}
+		*/
+
+		/*
+		if ( GetKey( olc::Key::W ).bPressed || GetKey( olc::Key::W ).bHeld ) nextInputs[( std::size_t )PlayerKeyInput::W] = true;
+		if ( GetKey( olc::Key::A ).bPressed || GetKey( olc::Key::A ).bHeld ) nextInputs[( std::size_t )PlayerKeyInput::A] = true;
+		if ( GetKey( olc::Key::S ).bPressed || GetKey( olc::Key::S ).bHeld ) nextInputs[( std::size_t )PlayerKeyInput::S] = true;
+		if ( GetKey( olc::Key::D ).bPressed || GetKey( olc::Key::D ).bHeld ) nextInputs[( std::size_t )PlayerKeyInput::D] = true;
+		if ( GetKey( olc::Key::SPACE ).bPressed || GetKey( olc::Key::SPACE ).bHeld ) nextInputs[( std::size_t )PlayerKeyInput::SPACE] = true;
+		*/
 
 
-		// this->world->update();
+		// Update Game
+		this->world->update( *this );
+		this->player->update( *this );
+		this->camera->update( *this->player );
+
+	
 		/*
 		// Collision Detection [!] Need to put this on another thread with conditional variable
 		this->world->getSpatialPartition().updateSpaces( &this->player->getCharacter() );
@@ -508,9 +526,11 @@ public:
 
 
 
-
+		// Render
 		Clear( olc::BLACK );
-		this->world->synchRender(); // renderWorldForeground
+		this->world->renderBackground();
+		this->player->render();
+		this->world->renderForeground();
 
 
 
@@ -775,8 +795,8 @@ public:
 			tropicalSeasonalForest,
 			tundra,
 			woodland,
-			55800.0f, /*21600.0f,*/ /*75600.0f,*/ 0, 0,
-			this->daySprite, this->dayDecal, this->nightSprite, this->nightDecal, this->sunSprite, this->sunDecal, this->landscapeSprite, this->landscapeDecal
+			0, /*55800.0,*/ /*21600.0,*/ /*75600.0,*/
+			this->dayDecal, this->nightDecal, this->sunDecal, this->landscapeDecal
 		);
 
 		/*
@@ -824,6 +844,7 @@ public:
 
 	void createEnemy()
 	{
+		/*
 		this->enemy1 = new Zombie(
 			olc::v2d_generic<long double>{ Settings::Player::Character::DEFAULT_CENTER_X, Settings::Player::Character::DEFAULT_CENTER_Y },
 			olc::vf2d{ Settings::Player::Character::DEFAULT_HALF_SIZE_X*1.5, Settings::Player::Character::DEFAULT_HALF_SIZE_Y*0.5 },
@@ -853,7 +874,7 @@ public:
 			20.0f,
 			this->world, 0.0
 		);
-
+		*/
 		return;
 	}
 

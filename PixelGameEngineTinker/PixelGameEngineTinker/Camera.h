@@ -12,9 +12,10 @@
 #include "LightRender.h"
 #include "Tile.h"
 #include "DynamicObject.h"
+#include "World.h"
 #include "Player.h" // May need to forward declare
 
-class World; // Forward Declaration
+//class World; // Forward Declaration
 
 class Camera : public olc::PGEX
 {
@@ -28,7 +29,7 @@ private:
 	long double _zoomX;
 	long double _zoomY;
 
-	World* _world = nullptr;
+	//World* _world = nullptr;
 
 	// Decal
 	olc::Sprite* _spriteLight = nullptr;
@@ -42,8 +43,8 @@ public:
 	void screenToWorld( std::int64_t pixelX, std::int64_t pixelY, long double& cellX, long double& cellY ) const; // int to float ( camera offest determines displacement )
 	void worldToScreen( long double cellX, long double cellY, std::int64_t& pixelX, std::int64_t& pixelY ) const; // float to int ( camera offset determines displacement )
 
-	void renderWorldBackground() const;
-	void renderWorldForeground() const;
+	void renderWorldBackground( World& world ) const;
+	void renderWorldForeground( World& world) const;
 	void renderWorldChunk( WorldChunk& worldChunk, Atlas& atlas ) const;
 	void renderTileRenders( QuadTree<TileRender>& tileRenders, Atlas& atlas, QuadTree<LightRender>* lightRenderEncapsulates ) const;
 	void renderLightRenders( QuadTree<LightRender>& lightRenders ) const;
@@ -71,5 +72,7 @@ public:
 	long double getCenterY() const;
 	long double getZoomX() const;
 	long double getZoomY() const;
+
+	void update( Player& player );
 
 };

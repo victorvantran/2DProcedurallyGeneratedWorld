@@ -64,9 +64,11 @@ private:
 
 	bool _prevInputs[( std::size_t )PlayerKeyInput::count];
 	bool _currInputs[( std::size_t )PlayerKeyInput::count];
+
+	float _tickTimer;
 public:
 	// Constructors/Destructors
-	Player() : _character(), _world( nullptr ), _prevInputs{ false }, _currInputs{ false } {}
+	Player() : _character(), _world( nullptr ), _prevInputs{ false }, _currInputs{ false }, _tickTimer( 0.0f ) {}
 
 	/*
 	Player( olc::v2d_generic<long double> center, olc::vf2d halfSize, olc::vf2d scale, CharacterState characterState, float runSpeed, float jumpSpeed, World* world, float time ) :
@@ -80,7 +82,9 @@ public:
 		_character( center, halfSize, scale, characterState, runSpeed, jumpSpeed, world, time,
 			characterSprite, characterDecal ),
 		_world( world ),
-		_prevInputs{ false }, _currInputs{ false } {}
+		_prevInputs{ false }, _currInputs{ false },
+		_tickTimer( 0.0f )
+	{}
 
 
 	~Player() {}
@@ -149,20 +153,21 @@ public:
 	}
 
 
+	
 	void updateInputs( olc::PixelGameEngine& pge )
 	{
-		/*
-		if ( pge.GetKey( olc::Key::K0 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::ZERO] = true;
-		if ( pge.GetKey( olc::Key::K1 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::ONE] = true;
-		if ( pge.GetKey( olc::Key::K2 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::TWO] = true;
-		if ( pge.GetKey( olc::Key::K3 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::THREE] = true;
-		if ( pge.GetKey( olc::Key::K4 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::FOUR] = true;
-		if ( pge.GetKey( olc::Key::K5 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::FIVE] = true;
-		if ( pge.GetKey( olc::Key::K6 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::SIX] = true;
-		if ( pge.GetKey( olc::Key::K7 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::SEVEN] = true;
-		if ( pge.GetKey( olc::Key::K8 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::EIGHT] = true;
-		if ( pge.GetKey( olc::Key::K9 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::NINE] = true;
-		*/
+		
+		//if ( pge.GetKey( olc::Key::K0 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::ZERO] = true;
+		//if ( pge.GetKey( olc::Key::K1 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::ONE] = true;
+		//if ( pge.GetKey( olc::Key::K2 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::TWO] = true;
+		//if ( pge.GetKey( olc::Key::K3 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::THREE] = true;
+		//if ( pge.GetKey( olc::Key::K4 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::FOUR] = true;
+		//if ( pge.GetKey( olc::Key::K5 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::FIVE] = true;
+		//if ( pge.GetKey( olc::Key::K6 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::SIX] = true;
+		//if ( pge.GetKey( olc::Key::K7 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::SEVEN] = true;
+		//if ( pge.GetKey( olc::Key::K8 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::EIGHT] = true;
+		//if ( pge.GetKey( olc::Key::K9 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::NINE] = true;
+		
 
 		if ( pge.GetKey( olc::Key::W ).bPressed || pge.GetKey( olc::Key::W ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::W] = true;
 		if ( pge.GetKey( olc::Key::A ).bPressed || pge.GetKey( olc::Key::A ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::A] = true;
@@ -172,6 +177,41 @@ public:
 
 		return;
 	}
+	
+
+	/*
+	void updateInputs( bool* nextInputs )
+	{
+
+		//if ( pge.GetKey( olc::Key::K0 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::ZERO] = true;
+		//if ( pge.GetKey( olc::Key::K1 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::ONE] = true;
+		//if ( pge.GetKey( olc::Key::K2 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::TWO] = true;
+		//if ( pge.GetKey( olc::Key::K3 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::THREE] = true;
+		//if ( pge.GetKey( olc::Key::K4 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::FOUR] = true;
+		//if ( pge.GetKey( olc::Key::K5 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::FIVE] = true;
+		//if ( pge.GetKey( olc::Key::K6 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::SIX] = true;
+		//if ( pge.GetKey( olc::Key::K7 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::SEVEN] = true;
+		//if ( pge.GetKey( olc::Key::K8 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::EIGHT] = true;
+		//if ( pge.GetKey( olc::Key::K9 ).bPressed || pge.GetKey( olc::Key::K0 ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::NINE] = true;
+
+		for ( std::size_t i = 0; i < (std::size_t)PlayerKeyInput::count; i++ )
+		{
+			this->_currInputs[( std::size_t )PlayerKeyInput::W] = nextInputs[i];
+		}
+
+
+		
+		if ( pge.GetKey( olc::Key::W ).bPressed || pge.GetKey( olc::Key::W ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::W] = true;
+		if ( pge.GetKey( olc::Key::A ).bPressed || pge.GetKey( olc::Key::A ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::A] = true;
+		if ( pge.GetKey( olc::Key::S ).bPressed || pge.GetKey( olc::Key::S ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::S] = true;
+		if ( pge.GetKey( olc::Key::D ).bPressed || pge.GetKey( olc::Key::D ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::D] = true;
+		if ( pge.GetKey( olc::Key::SPACE ).bPressed || pge.GetKey( olc::Key::SPACE ).bHeld ) this->_currInputs[( std::size_t )PlayerKeyInput::SPACE] = true;
+		
+
+
+		return;
+	}
+	*/
 
 
 	void updatePrevInputs()
@@ -201,6 +241,8 @@ public:
 		return characterCommands;
 	}
 
+
+	/*
 	void update( float deltaTime, olc::PixelGameEngine& pge )
 	{
 		this->resetInputs();
@@ -210,5 +252,45 @@ public:
 		this->updatePrevInputs();
 		return;
 	}
+	*/
 
+	/*
+	void update( olc::PixelGameEngine& pge )
+	{
+		this->resetInputs();
+		this->updateInputs( pge );
+		bool* characterCommands = this->createCharacterCommands();
+		this->_character.update( characterCommands );
+		this->updatePrevInputs();
+		return;
+	}
+	*/
+
+
+	/*
+	void update( olc::PixelGameEngine& pge, float deltaTime )
+	{
+		this->resetInputs();
+		this->updateInputs( pge );
+		bool* characterCommands = this->createCharacterCommands();
+		this->_character.update( deltaTime, characterCommands );
+		this->updatePrevInputs();
+		return;
+	}
+	*/
+
+
+
+	void update( olc::PixelGameEngine& pge )
+	{
+		this->resetInputs();
+		this->updateInputs( pge );
+		bool* characterCommands = this->createCharacterCommands();
+		this->_character.update( pge.GetElapsedTime(), characterCommands );
+		this->updatePrevInputs();
+		return;
+	}
+
+
+	void render();
 };

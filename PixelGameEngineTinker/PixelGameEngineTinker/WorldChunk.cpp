@@ -1325,62 +1325,62 @@ void WorldChunk::sunlitLights()
 			if ( worldY < worldYTerranean + SUNRAY_POWER )
 			{
 				//this->_lights[y * this->_size + x].whiten(); // [!] Add light based on day/night time for day/night system
-				float worldSecond = this->_world->getSecond();
+				float worldDailySecond = ( std::uint64_t )this->_world->getAbsoluteSecond() % Settings::World::SECONDS_PER_DAY;
 
 				std::uint8_t red;
 				std::uint8_t green;
 				std::uint8_t blue;
 
 				// Morning
-				if ( worldSecond >= 21600 && worldSecond < 25200 )
+				if ( worldDailySecond >= 21600 && worldDailySecond < 25200 )
 				{
-					float difference = worldSecond - 21600;
+					float difference = worldDailySecond - 21600;
 					float absoluteDifference = 3600;
 					float p = difference / ( absoluteDifference - 1 );
 
-					red = ( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 );
-					green = ( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 );
-					blue = ( std::uint8_t )( ( 1.0 - p ) * 1 + p * 255 + 0.5 );
+					red = ( std::uint8_t )( ( 1.0 - p ) * 0 + p * 255 + 0.5 );
+					green = ( std::uint8_t )( ( 1.0 - p ) * 0 + p * 255 + 0.5 );
+					blue = ( std::uint8_t )( ( 1.0 - p ) * 0 + p * 255 + 0.5 );
 				}
 				// Afternoon
-				else if ( worldSecond >= 25200 && worldSecond < 61200 )
+				else if ( worldDailySecond >= 25200 && worldDailySecond < 61200 )
 				{
 					red = ( std::uint8_t )( 255 );
 					green = ( std::uint8_t )( 255 );
 					blue = ( std::uint8_t )( 255 );
 				}
 				// Evening
-				else if ( worldSecond >= 61200 && worldSecond < 64800 )
+				else if ( worldDailySecond >= 61200 && worldDailySecond < 64800 )
 				{
-					float difference = worldSecond - 61200;
+					float difference = worldDailySecond - 61200;
 					float absoluteDifference = 3600;
 					float p = difference / ( absoluteDifference - 1 );
 
-					red = ( std::uint8_t )( ( 1.0 - p ) * 255 + p * 178 + 0.5 );
-					green = ( std::uint8_t )( ( 1.0 - p ) * 255 + p * 97 + 0.5 );
-					blue = ( std::uint8_t )( ( 1.0 - p ) * 255 + p * 94 + 0.5 );
+					red = ( std::uint8_t )( ( 1.0 - p ) * 255 + p * 255 + 0.5 );
+					green = ( std::uint8_t )( ( 1.0 - p ) * 255 + p * 200 + 0.5 );
+					blue = ( std::uint8_t )( ( 1.0 - p ) * 255 + p * 184 + 0.5 );
 				}
-				else if ( worldSecond >= 64800 && worldSecond < 75600 )
+				else if ( worldDailySecond >= 64800 && worldDailySecond < 75600 )
 				{
-					float difference = worldSecond - 64800;
+					float difference = worldDailySecond - 64800;
 					float absoluteDifference = 10800;
 					float p = difference / ( absoluteDifference - 1 );
 
-					red = ( std::uint8_t )( ( 1.0 - p ) * 178 + p * 4 + 0.5 );
-					green = ( std::uint8_t )( ( 1.0 - p ) * 97 + p * 4 + 0.5 );
-					blue = ( std::uint8_t )( ( 1.0 - p ) * 94 + p * 9 + 0.5 );
+					red = ( std::uint8_t )( ( 1.0 - p ) * 253 + p * 4 + 0.5 );
+					green = ( std::uint8_t )( ( 1.0 - p ) * 200 + p * 4 + 0.5 );
+					blue = ( std::uint8_t )( ( 1.0 - p ) * 184 + p * 9 + 0.5 );
 				}
 				// Night
-				else if ( ( worldSecond >= 75600 && worldSecond < 86400 ) || ( worldSecond >= 0 && worldSecond < 21600 ) )
+				else if ( ( worldDailySecond >= 75600 && worldDailySecond < 86400 ) || ( worldDailySecond >= 0 && worldDailySecond < 21600 ) )
 				{
-					float unwrappedSecond = ( worldSecond >= 0 && worldSecond < 21600 ) ? worldSecond + 86400 : worldSecond;
+					float unwrappedSecond = ( worldDailySecond >= 0 && worldDailySecond < 21600 ) ? worldDailySecond + 86400 : worldDailySecond;
 					float difference = unwrappedSecond - 75600;
 					float absoluteDifference = 32400;
 					float p = difference / ( absoluteDifference - 1 );
 
-					red = ( std::uint8_t )( ( 1.0 - p ) * 4 + p * 1 + 0.5 );
-					green = ( std::uint8_t )( ( 1.0 - p ) * 4 + p * 1 + 0.5 );
-					blue = ( std::uint8_t )( ( 1.0 - p ) * 9 + p * 1 + 0.5 );
+					red = ( std::uint8_t )( ( 1.0 - p ) * 4 + p * 0 + 0.5 );
+					green = ( std::uint8_t )( ( 1.0 - p ) * 4 + p * 0 + 0.5 );
+					blue = ( std::uint8_t )( ( 1.0 - p ) * 9 + p * 0 + 0.5 );
 				}
 				else
 				{
