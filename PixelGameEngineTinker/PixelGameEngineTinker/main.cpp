@@ -482,25 +482,6 @@ public:
 		// Update Assets
 		this->world->updateDecals();
 
-
-		// Key
-		/*
-		bool nextInputs[( std::size_t )PlayerKeyInput::count];
-		for ( std::size_t i = 0; i < ( std::size_t )Command::count; i++ )
-		{
-			nextInputs[i] = false;
-		}
-		*/
-
-		/*
-		if ( GetKey( olc::Key::W ).bPressed || GetKey( olc::Key::W ).bHeld ) nextInputs[( std::size_t )PlayerKeyInput::W] = true;
-		if ( GetKey( olc::Key::A ).bPressed || GetKey( olc::Key::A ).bHeld ) nextInputs[( std::size_t )PlayerKeyInput::A] = true;
-		if ( GetKey( olc::Key::S ).bPressed || GetKey( olc::Key::S ).bHeld ) nextInputs[( std::size_t )PlayerKeyInput::S] = true;
-		if ( GetKey( olc::Key::D ).bPressed || GetKey( olc::Key::D ).bHeld ) nextInputs[( std::size_t )PlayerKeyInput::D] = true;
-		if ( GetKey( olc::Key::SPACE ).bPressed || GetKey( olc::Key::SPACE ).bHeld ) nextInputs[( std::size_t )PlayerKeyInput::SPACE] = true;
-		*/
-
-
 		// Update Game
 		this->world->update( *this );
 		this->player->update( *this );
@@ -536,7 +517,7 @@ public:
 
 		// DEBUG
 		drawTileIndexString( tileIndex );
-		this->world->printTime();
+		//this->world->printTime();
 		return true;
 	}
 

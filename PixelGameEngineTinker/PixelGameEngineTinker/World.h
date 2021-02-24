@@ -56,6 +56,8 @@
 
 class World
 {
+public:
+	std::mutex _modifyWorldChunksMutex; // [!] get rid of saveworldchunksmutex and load, and set it to modify/access
 private:
 
 	// WorldChunks
@@ -81,7 +83,7 @@ private:
 
 	// Memory
 	std::mutex _worldDatabaseMutex;
-	std::mutex _modifyWorldChunksMutex; // [!] get rid of saveworldchunksmutex and load, and set it to modify/access
+	//std::mutex _modifyWorldChunksMutex; // [!] get rid of saveworldchunksmutex and load, and set it to modify/access
 
 	std::vector<WorldChunkMemory*> _saveWorldChunks;
 	std::atomic<bool> _runningSaveWorldGeography;
@@ -210,6 +212,8 @@ public:
 	std::uint16_t getNumWorldChunks() const;
 	std::uint16_t getNumChunkWidth() const;
 	std::uint16_t getNumChunkHeight() const;
+	std::int16_t getRelativeChunkIndex( std::int64_t x, std::int64_t y ) const;
+	static std::uint16_t getRelativeTileIndex( std::int64_t x, std::int64_t y );
 
 
 	// Save/Load System
@@ -232,7 +236,6 @@ public:
 	void updateFocalChunk( const BoundingBox<long double>& focalPoint );
 	void updateWorldChunkRelativeIndicies();
 	void updateWorldChunkPointers();
-
 	std::vector<std::tuple<std::uint64_t, std::int64_t, std::int64_t>> delimitWorldChunks( const BoundingBox<long double>& cameraView );
 	void delimitWorldChunk( WorldChunk& worldChunk, std::int64_t newIndexX, std::int64_t newIndexY );
 	void loadTiles( WorldChunk& worldChunk, unsigned char* tilesData, std::uint16_t tilesNumBytes, std::uint64_t* paletteData, std::uint16_t numUniqueKeys );
@@ -272,15 +275,6 @@ public:
 	void procedurallyGenerateChunk( WorldChunk& worldChunk );
 
 
-	// Collision Detection
-	SpatialPartition& getSpatialPartition();
-
-
-
-
-
-
-
 	// TileDecals
 	void initializeSprites();
 	void loadSpriteTilesTask();
@@ -291,19 +285,9 @@ public:
 	void updateDecals();
 
 
-	// Debug
-	void DEBUG_PRINT_TILE_SPRITES();
-
-
-
-
-
-	std::int16_t getRelativeChunkIndex( std::int64_t x, std::int64_t y ) const;
-	static std::uint16_t getRelativeTileIndex( std::int64_t x, std::int64_t y );
 	// Geography
 	Tile* getTile( long double dX, long double dY ) const;
 	Tile* getTile( std::int64_t x, std::int64_t y ) const;
-	void calculateTileRenders();
 
 
 	// Lighting
@@ -312,27 +296,18 @@ public:
 	//void addLight( std::int64_t x, std::int64_t y, std::int16_t r, std::int16_t g, std::int16_t b, std::int16_t a );
 	void addLight( std::int64_t x, std::int64_t y, const LightSource& lightSource, long double intensity );
 	void resetLighting();
-	void calculateLightRenders();
-
 	bool isOpaque( const olc::v2d_generic<long double>& originPosition, const olc::v2d_generic<long double>& castPosition );
 	bool isTransparent( const olc::v2d_generic<long double>& originPosition, const olc::v2d_generic<long double>& castPosition );
-
 	void scanStatic( LightCastQuadrant<long double>& quadrant, LightCastRow& row, const olc::v2d_generic<long double> originPosition, const LightSource& lightSource );
-
 	void revealStatic( LightCastQuadrant<long double>& quadrant, const olc::v2d_generic<long double>& tile, const olc::v2d_generic<long double>& castPosition,
 		const olc::v2d_generic<long double>& originPosition, const LightSource& lightSource );
-
 	void emitStaticLightSource( const LightSource& lightSource, std::int64_t x, std::int64_t y );
 	void emitStaticLightSources();
 	void activateCursorLightSource( long double dX, long double dY, std::int64_t radius );
-
 	void emitDynamicLightSource( const LightSource& lightSource, long double x, long double y );
 	void emitPlayerLightSource();
-
 	void updateLightingTask();
 	void updateLighting();
-	//void updateLighting( long double tilePositionX, long double tilePositionY );
-
 
 
 	// Background
@@ -343,17 +318,17 @@ public:
 	const BackgroundRenderData& getRenderData() const;
 
 
+	// Collision Detection
+	SpatialPartition& getSpatialPartition();
 
 
 	// Player
 	void setPlayer( Player* player );
 
 
-	// Natural Update
+	// Update
 	void update( olc::PixelGameEngine& pge );
 	bool tick( float deltaTime );
-
-
 	long double getAbsoluteSecond() const;
 	long double getAbsoluteDay() const;
 	long double getAbsoluteYear() const;
@@ -361,22 +336,17 @@ public:
 	std::uint16_t getNormalizedDay() const;
 	std::uint64_t getNormalizedYear() const;
 
+
 	// Render
 	Camera* getCamera();
+	void calculateTileRenders();
+	void calculateLightRenders();
 	void renderBackground();
 	void renderForeground();
 
 
-	float getDeltaTime()
-	{
-		_t2 = std::chrono::system_clock::now();
-		std::chrono::duration<float> deltaTime = _t2 - _t1;
-		_t1 = _t2;
-		float d = deltaTime.count();
-		return d;
-	}
-
 	// Debug
+	void DEBUG_PRINT_TILE_SPRITES();
 	void printTime() const;
 };
 

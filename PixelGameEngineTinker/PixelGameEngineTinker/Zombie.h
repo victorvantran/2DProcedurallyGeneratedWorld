@@ -10,7 +10,6 @@ enum class ZombieCommand
 	GoLeft,
 	Jump,
 	Drop,
-
 	count
 };
 
@@ -21,7 +20,6 @@ enum class ZombieState
 	Run,
 	Jump, // Airborn
 	GrabLedge,
-
 	count
 };
 

@@ -3,19 +3,16 @@
 #include <cstdint>
 #include "Settings.h"
 #include "BoundingBox.h"
-//#include "World.h"
 #include "Atlas.h"
 #include "WorldChunk.h"
 #include "QuadTree.h"
-//#include "Lighting.h"
 #include "TileRender.h"
 #include "LightRender.h"
 #include "Tile.h"
 #include "DynamicObject.h"
 #include "World.h"
-#include "Player.h" // May need to forward declare
+#include "Player.h"
 
-//class World; // Forward Declaration
 
 class Camera : public olc::PGEX
 {
@@ -28,8 +25,6 @@ private:
 
 	long double _zoomX;
 	long double _zoomY;
-
-	//World* _world = nullptr;
 
 	// Decal
 	olc::Sprite* _spriteLight = nullptr;

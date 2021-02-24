@@ -580,7 +580,7 @@ void World::saveWorldGeography()
 	// Save all blobs/palettes in one go
 	for ( int i = 0; i < this->_saveWorldChunks.size(); i++ )
 	{
-		std::cout << "(" << this->_saveWorldChunks[i]->getChunkIndexX() << "," << this->_saveWorldChunks[i]->getChunkIndexY() << ")" << std::endl; // [~!]
+		std::cout << "Saving Chunk: [" << this->_saveWorldChunks[i]->getChunkIndexX() << "," << this->_saveWorldChunks[i]->getChunkIndexY() << "]" << std::endl; // [~!]
 		// save
 
 		WorldChunkMemory* worldChunkMemory = this->_saveWorldChunks[i];
@@ -2869,7 +2869,7 @@ const BackgroundRenderData& World::getRenderData() const
 
 void World::update( olc::PixelGameEngine& pge )
 {
-	this->tick( pge.GetElapsedTime() * Settings::World::TIME_SCALE );
+	this->tick( pge.GetElapsedTime() * Settings::Game::TIME_SCALE * Settings::World::SOLAR_TIME_SCALE );
 	return;
 }
 

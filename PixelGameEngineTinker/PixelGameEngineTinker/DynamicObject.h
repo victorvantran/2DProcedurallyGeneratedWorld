@@ -71,6 +71,7 @@ public:
 	DynamicObject( const olc::v2d_generic<long double>& center, const olc::vf2d& halfSize, const olc::vf2d& scale, World* world, long double time );
 	~DynamicObject();
 
+
 	// Getters
 	olc::vf2d getScale() const;
 	float getScaleX() const;
@@ -88,6 +89,7 @@ public:
 	bool getPushingUp() const;
 	bool getPushingDown() const;
 
+
 	// Setters
 	void setScale( const olc::vf2d& scale );
 	void setScaleX( float x );
@@ -97,6 +99,7 @@ public:
 	void setAABBOffsetY( float y );
 	void addToSpaces( std::int64_t spaceIndex, std::size_t id );
 
+
 	// Methods
 	bool isCollidingDown( const World* world, long double& worldGroundY, bool& onOneWayPlatform );
 	bool isCollidingUp( const World* world, long double& worldCeilingY );
@@ -104,25 +107,20 @@ public:
 	bool isCollidingRight( const World* world, long double& worldRightWallX );
 
 
-
 	// Collision Detection
 	std::vector<std::pair<std::int64_t, std::size_t>>& getSpaces();
 	std::vector<CollisionData>& getAllCollisions();
 	bool hasCollisionDataFor( DynamicObject* otherObject ) const;
+
 
 	// Collision Response
 	bool isKinematic() const;
 	void updatePhysicsResponse();
 
 
-
+	// Physics Update
 	void updateStaticPhysics( const World* world, float deltaTime );
 	void updateDynamicPhysics( const World* world, float deltaTime );
-	//void updateStaticPhysics( const World* world );
-	//void updateDynamicPhysics( const World* world );
-
-
 	virtual void update( float deltaTime, bool* commands ) = 0;
-	//virtual void update( bool* commands ) = 0;
 
 };

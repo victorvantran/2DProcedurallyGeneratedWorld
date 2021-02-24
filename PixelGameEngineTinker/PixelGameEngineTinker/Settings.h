@@ -32,6 +32,7 @@ public:
 	// Game
 	struct Game
 	{
+		static constexpr float TIME_SCALE = 1.0f;
 		static constexpr float TICK_RATE = 0.015625f; // ( 1.0f / 64.0f ); == 64Hz
 	};
 
@@ -51,12 +52,10 @@ public:
 		static constexpr float GRAVITY = -98.0f;
 		static constexpr float TERMINAL_VELOCITY = -2000.0f;
 		
-
 		static constexpr std::uint32_t SECONDS_PER_DAY = 86400;
 		static constexpr std::uint16_t DAYS_PER_YEAR = 365; // ignore leap years
 
-
-		static constexpr float TIME_SCALE = 72.0f;
+		static constexpr float SOLAR_TIME_SCALE = 72.0f;
 	};
 
 
@@ -151,10 +150,9 @@ public:
 			static constexpr float DEFAULT_SCALE_X = 1.0f;
 			static constexpr float DEFAULT_SCALE_Y = 1.0f;
 
-			static constexpr float DEFAULT_RUN_SPEED = 15.0f;// 75.0f;//75.0f; //10.0f;
-			static constexpr float DEFAULT_JUMP_SPEED = 25.0f; // 100.0f; //50.0f; // 25.0f;
+			static constexpr float DEFAULT_RUN_SPEED = 20.0f; //15.0f;// 75.0f;//75.0f; //10.0f;
+			static constexpr float DEFAULT_JUMP_SPEED = 25.0f;//25.0f; // 100.0f; //50.0f; // 25.0f;
 			static constexpr float DEFAULT_MIN_JUMP_RATIO = 0.5f;
-
 
 			static constexpr float GRAB_LEDGE_START_Y = 0.0f;
 			static constexpr float GRAB_LEDGE_END_Y = ( 4.0f / ( float )World::CELL_SIZE );
@@ -162,9 +160,7 @@ public:
 			static constexpr std::int32_t GRAB_LEDGE_LET_GO_FRAMES = 3;
 			static constexpr std::int32_t JUMP_FRAMES_THREASHOLD = 4;
 
-
-			static constexpr std::uint8_t ANIMATOR_TICKS_PER_FRAME = 6;
-
+			static constexpr std::uint8_t ANIMATOR_TICKS_PER_FRAME = 4;
 		};
 	};
 

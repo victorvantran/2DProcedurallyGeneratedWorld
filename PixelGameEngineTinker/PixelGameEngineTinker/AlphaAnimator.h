@@ -67,7 +67,7 @@ public:
 	}
 
 
-	/*
+	
 	void tick( float deltaTime )
 	{
 		// Updates the local time based on a fixed refresh rate. Updates the graphic counter for each refresh tick
@@ -75,15 +75,23 @@ public:
 		if ( this->_localTime >= Settings::Game::TICK_RATE )
 		{
 			this->_localTime -= Settings::Game::TICK_RATE;
-			this->updateGraphicCounter();
+			this->_localTick++;
+
+			if ( this->_localTick >= Settings::Player::Character::ANIMATOR_TICKS_PER_FRAME )
+			{
+				this->_localTick -= Settings::Player::Character::ANIMATOR_TICKS_PER_FRAME;
+				this->updateGraphicCounter();
+			}
 		}
 		return;
 	}
-	*/
+	
+
+	/*
 	void tick( )
 	{
 		// Updates the local time based on a fixed refresh rate. Updates the graphic counter for each refresh tick
-		this->_localTick ++;
+		this->_localTick++;
 		if ( this->_localTick >= Settings::Player::Character::ANIMATOR_TICKS_PER_FRAME )
 		{
 			this->_localTick -= Settings::Player::Character::ANIMATOR_TICKS_PER_FRAME;
@@ -91,7 +99,7 @@ public:
 		}
 		return;
 	}
-
+	*/
 
 	/*
 	void update( float deltaTime, GraphicState graphicState, float velocityX )
@@ -113,11 +121,10 @@ public:
 		return;
 	}
 	*/
-	void update( GraphicState graphicState, float velocityX )
+
+	void update( float deltaTime, GraphicState graphicState, float velocityX )
 	{
 		// Updates the graphic state, direction, and proper graphic transition in preparation for rendering
-		this->tick();
-
 		this->_graphicState = graphicState;
 
 		if ( velocityX < 0.0f )
@@ -129,6 +136,8 @@ public:
 			this->_direction = Direction::Right;
 		}
 
+		tick( deltaTime );
+		
 		return;
 	}
 
