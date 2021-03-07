@@ -1484,6 +1484,24 @@ void World::procedurallyGenerateChunk( WorldChunk& worldChunk )
 				{
 					chunk[( tileY - ( originWorldY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originWorldX )] = TileIdentity::Stone;
 				}
+
+
+				// Draw Underworld Tunnel Map
+				long double lowerCavePerlinValue = this->getLowerCaveMap().getPerlinValue( tileX, tileY );
+				int64_t tunnel = ( int64_t )( lowerCavePerlinValue * 256 );
+				if (
+					(
+						( tunnel >= 41 && tunnel < 46 ) ||
+						( tunnel >= 97 && tunnel < 103 ) ||
+
+						( tunnel >= 157 && tunnel < 160 ) ||
+
+						( tunnel >= 234 && tunnel < 240 )
+						)
+					)
+				{
+					chunk[( tileY - ( originWorldY + OVERWORLD_HEIGHT ) ) * 32 + ( tileX - originWorldX )] = TileIdentity::Void;
+				}
 			}
 
 		}

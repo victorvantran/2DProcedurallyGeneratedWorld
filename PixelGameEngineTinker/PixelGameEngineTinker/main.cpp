@@ -42,7 +42,7 @@ public:
 	olc::vi2d gridDimension;
 
 
-	TileIdentity tileId = TileIdentity::Stone;
+	TileIdentity tileId = TileIdentity::Torch;
 
 	olc::v2d_generic<std::int64_t> topLeftScan;
 	olc::v2d_generic<std::int64_t> bottomRightScan;
@@ -67,6 +67,10 @@ public:
 
 	olc::Sprite* alphaSprite;
 	olc::Decal* alphaDecal;
+
+
+	olc::Sprite* controlsSprite;
+	olc::Decal* controlsDecal;
 private:
 
 
@@ -104,6 +108,10 @@ public:
 
 		delete this->alphaSprite;
 		delete this->alphaDecal;
+
+
+		delete this->controlsSprite;
+		delete this->controlsDecal;
 	}
 
 public:
@@ -127,6 +135,11 @@ public:
 
 		this->alphaSprite = new olc::Sprite( "./assets/textures/alpha_spritesheet.png" );
 		this->alphaDecal = new olc::Decal( this->alphaSprite );
+
+
+		this->controlsSprite = new olc::Sprite( "./assets/gui/controls.png" );
+		this->controlsDecal = new olc::Decal( this->controlsSprite );
+
 
 		loadAssets();
 		createWorld();
@@ -300,7 +313,7 @@ public:
 			Tile* rTile = this->world->getTile( tilePositionX, tilePositionY );
 			if ( rTile != nullptr )
 			{
-				world->remove( ( rTile->getId() ), tileIndex.x, tileIndex.y, 5, 5 );
+				world->remove( ( rTile->getId() ), tileIndex.x, tileIndex.y, 8, 8 );
 			}
 			//world->remove( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 5, 5 );
 		}
@@ -473,6 +486,18 @@ public:
 		// Render
 		Clear( olc::BLACK );
 		this->world->renderBackground();
+
+		// Draw Cave background (temporary effect)
+		static const std::int64_t OVERWORLD_HEIGHT = 1536;
+		long double playerX = this->player->getCharacter().getCurrPosition().x;
+		long double playerY = this->player->getCharacter().getCurrPosition().y;
+		long double terraneanHeightPerlinVal = this->world->getTerraneanHeightMap().getPerlinValue( playerX );
+		std::int64_t worldYTerranean = -( std::int64_t )( terraneanHeightPerlinVal * ( long double )OVERWORLD_HEIGHT );
+		long double attenuate = std::min( ( long double )1, std::max( ( long double )0, ( ( -worldYTerranean + playerY ) / ( -worldYTerranean / 4 ) ) ) );
+		DrawDecal( olc::vf2d{ 0, 0 }, this->caveBackgroundDecal, olc::vf2d{1.0, 1.0}, olc::Pixel( 255, 255, 255, attenuate * 255 ) );
+
+
+
 		this->player->render();
 		this->world->renderForeground();
 
@@ -487,7 +512,7 @@ public:
 
 
 
-		if ( GetKey( olc::Key::O ).bPressed || GetKey( olc::Key::O ).bHeld )
+		if ( GetKey( olc::Key::I ).bPressed || GetKey( olc::Key::I ).bHeld )
 		{
 			drawControlsMenu();
 		}
@@ -773,7 +798,7 @@ public:
 	{
 		DrawStringDecal(
 			olc::vi2d( 0, 36 ),
-			"Press \"O\" for Keyboard Controls",
+			"Press \"I\" for Game Controls",
 			olc::WHITE,
 			olc::vf2d( 1.5f, 1.5f )
 		);
@@ -784,6 +809,10 @@ public:
 
 	void drawControlsMenu()
 	{
+		DrawDecal( olc::vf2d{ 
+			(float)((Example::screenWidth - (std::uint16_t)this->controlsSprite->width) / 2),
+			( float )( ( Example::screenHeight - ( std::uint16_t )this->controlsSprite->height ) / 2 ) },
+			this->controlsDecal, olc::vf2d{1.0, 1.0}, olc::Pixel( 255, 255, 255, 255 ) );
 		return;
 	}
 };
