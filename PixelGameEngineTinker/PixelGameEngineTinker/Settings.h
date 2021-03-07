@@ -143,8 +143,8 @@ public:
 
 		struct Character
 		{
-			static constexpr long double DEFAULT_CENTER_X = 1040003.0;// 0.0;
-			static constexpr long double DEFAULT_CENTER_Y = -500.0;//-1536.0; // 0.0;
+			static constexpr long double DEFAULT_CENTER_X = 1040618.0; // 1040003.0;// 0.0;
+			static constexpr long double DEFAULT_CENTER_Y = -800.0; // -500.0;
 			static constexpr float DEFAULT_HALF_SIZE_X = 0.75f;
 			static constexpr float DEFAULT_HALF_SIZE_Y = 1.5f;
 			static constexpr float DEFAULT_SCALE_X = 1.0f;

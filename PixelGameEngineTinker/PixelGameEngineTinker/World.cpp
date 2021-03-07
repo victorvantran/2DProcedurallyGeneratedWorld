@@ -2531,7 +2531,8 @@ void World::emitDynamicLightSource( const LightSource& lightSource, long double 
 void World::emitPlayerLightSource()
 {
 	//const LightSource& playerLight = LightSource( TileIdentity::Void, 255, 255, 255, 255, 15 );
-	const LightSource& playerLight = LightSource( TileIdentity::Void, 15, 15, 15, 255, 5 );
+	//const LightSource& playerLight = LightSource( TileIdentity::Void, 15, 15, 15, 255, 5 );
+	const LightSource& playerLight = LightSource( TileIdentity::Void, 32, 32, 32, 255, 5 );
 	this->emitDynamicLightSource( playerLight, this->_player->getCharacter().getCurrPosition().x, this->_player->getCharacter().getCurrPosition().y );
 	return;
 }
@@ -2629,7 +2630,7 @@ void World::updateLighting()
 {
 	this->resetLighting();
 	this->emitStaticLightSources();
-	//this->emitPlayerLightSource(); // [~!]
+	this->emitPlayerLightSource();
 	this->calculateLightRenders();
 
 	return;
