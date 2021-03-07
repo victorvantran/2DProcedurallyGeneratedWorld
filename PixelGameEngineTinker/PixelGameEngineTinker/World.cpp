@@ -2869,7 +2869,7 @@ const BackgroundRenderData& World::getRenderData() const
 
 void World::update( olc::PixelGameEngine& pge )
 {
-	this->tick( pge.GetElapsedTime() * Settings::Game::TIME_SCALE * Settings::World::SOLAR_TIME_SCALE );
+	this->tick( pge.GetElapsedTime() * Settings::Game::TIME_SCALE * this->_solarTimeScale );
 	return;
 }
 
@@ -2886,6 +2886,7 @@ bool World::tick( float deltaTime )
 		{
 			this->_tickTimer -= Settings::Game::TICK_RATE;
 			this->_tick++;
+			this->_tick %= std::numeric_limits<std::uint64_t>::max();
 		}
 
 		return true;
@@ -2938,18 +2939,66 @@ void World::renderForeground()
 
 
 /// Debug
-
-
 void World::printTime() const
+{
+	std::cout << this->getTimeString() << std::endl;
+	return;
+}
+
+
+std::string World::getTimeString() const
 {
 	long double absoluteSecond = this->getAbsoluteSecond();
 
 	std::uint8_t second = ( std::uint8_t )( ( ( std::uint64_t )absoluteSecond ) % 60 );
 	std::uint8_t minute = ( std::uint8_t )( ( ( ( std::uint64_t )absoluteSecond ) / 60 ) % 60 );
-	//std::uint8_t hour = ( std::uint8_t )( ( ( ( std::uint64_t )absoluteSecond ) / 3600 ) % 24 );
 	std::uint8_t hour = ( std::uint8_t )( ( ( ( std::uint64_t )absoluteSecond ) / 3600 ) % 12 );
 	hour = ( hour == 0 ) ? 12 : hour;
+	std::string amPm = ( std::uint8_t )( ( ( ( std::uint64_t )absoluteSecond ) / 3600 ) % 24 ) >= 12 ? "pm" : "am";
+	std::string hourString = ( ( std::int32_t )( hour ) < 10 ? "0" + std::to_string( ( std::int32_t )hour ) : std::to_string( ( std::int32_t )hour ) );
+	std::string minuteString = ( ( std::int32_t )( minute ) < 10 ? "0" + std::to_string( ( std::int32_t )minute ) : std::to_string( ( std::int32_t )minute ) );
+	std::string secondString = ( ( std::int32_t )( second ) < 10 ? "0" + std::to_string( ( std::int32_t )second ) : std::to_string( ( std::int32_t )second ) );
 
-	std::cout << ( std::int32_t )( hour ) << ":" << ( std::int32_t )( minute ) << ":" << ( std::int32_t )( second ) << std::endl;
+	return hourString + ":" + minuteString + ":" + secondString + " " + amPm;
+}
+
+
+
+
+std::uint64_t World::getSolarTimeScale() const
+{
+	return this->_solarTimeScale;
+}
+
+
+
+void World::incrementSolarTimeScale()
+{
+	this->_solarTimeScale += 50;
+	if ( this->_solarTimeScale > Settings::World::SOLAR_TIME_SCALE * 5000 )
+	{
+		this->_solarTimeScale = Settings::World::SOLAR_TIME_SCALE * 5000;
+	}
+
+	return;
+}
+
+
+
+void World::decrementSolarTimeScale()
+{
+	this->_solarTimeScale -= 50;
+	if ( this->_solarTimeScale < Settings::World::SOLAR_TIME_SCALE )
+	{
+		this->_solarTimeScale = Settings::World::SOLAR_TIME_SCALE;
+	}
+	return;
+}
+
+
+
+void World::resetSolarTimeScale()
+{
+	this->_solarTimeScale = Settings::World::SOLAR_TIME_SCALE;
 	return;
 }

@@ -110,22 +110,22 @@ public:
 	bool OnUserCreate() override
 	{
 		// Create Decal on the render thread with the openGL context. Can dynamically create decals on update PGE engine with a more current OpenGL version
-		this->daySprite = new olc::Sprite( "./background_sky.png" );
+		this->daySprite = new olc::Sprite( "./assets/textures/background_day_sky.png" );
 		this->dayDecal = new olc::Decal( this->daySprite );
 
-		this->nightSprite = new olc::Sprite( "./background_night_sky.png" );
+		this->nightSprite = new olc::Sprite( "./assets/textures/background_night_sky.png" );
 		this->nightDecal = new olc::Decal( this->nightSprite );
 
-		this->landscapeSprite = new olc::Sprite( "./background_mountain.png" );
+		this->landscapeSprite = new olc::Sprite( "./assets/textures/background_mountain.png" );
 		this->landscapeDecal = new olc::Decal( this->landscapeSprite );
 
-		this->sunSprite = new olc::Sprite( "./sun.png" );
+		this->sunSprite = new olc::Sprite( "./assets/textures/sun.png" );
 		this->sunDecal = new olc::Decal( this->sunSprite );
 
-		this->caveBackgroundSprite = new olc::Sprite( "./cave_background.png" );
+		this->caveBackgroundSprite = new olc::Sprite( "./assets/textures/background_cave.png" );
 		this->caveBackgroundDecal = new olc::Decal( this->caveBackgroundSprite );
 
-		this->alphaSprite = new olc::Sprite( "./alpha_spritesheet.png" );
+		this->alphaSprite = new olc::Sprite( "./assets/textures/alpha_spritesheet.png" );
 		this->alphaDecal = new olc::Decal( this->alphaSprite );
 
 		loadAssets();
@@ -147,6 +147,8 @@ public:
 		long double panSpeed = 20.0f;
 
 
+
+		/*
 		if ( GetKey( olc::Key::UP ).bPressed || GetKey( olc::Key::UP ).bHeld )
 		{
 			camera->panY( -panSpeed * (long double)fElapsedTime );
@@ -167,26 +169,10 @@ public:
 		{
 			camera->pan( panSpeed * ( long double )fElapsedTime, panSpeed * ( long double )fElapsedTime );
 		}
-
-		/*
-		if ( GetKey( olc::Key::W ).bPressed )
-		{
-			camera->panY( -1.0f );
-		}
-		if ( GetKey( olc::Key::S ).bPressed )
-		{
-			camera->panY( 1.0f );
-		}
-		if ( GetKey( olc::Key::D ).bPressed )
-		{
-			camera->panY( 1.0f );
-		}
-		if ( GetKey( olc::Key::A ).bPressed )
-		{
-			camera->panY( 1.0f );
-		}
 		*/
 
+
+		/*
 		if ( GetKey( olc::Key::F1 ).bPressed )
 		{
 			camera->panY( -( panSpeed * 100 ) );
@@ -203,6 +189,9 @@ public:
 		{
 			camera->panX( ( panSpeed * 100 ) );
 		}
+		*/
+
+
 
 		// Zoom in
 		if ( GetKey( olc::Key::Z ).bPressed || GetKey( olc::Key::Z ).bHeld )
@@ -228,19 +217,19 @@ public:
 
 		if ( GetKey( olc::Key::K1 ).bPressed )
 		{
-			tileId = TileIdentity::Dirt;
+			tileId = TileIdentity::Torch;
 		}
 		else if ( GetKey( olc::Key::K2 ).bPressed )
 		{
-			tileId = TileIdentity::Stone;
+			tileId = TileIdentity::Dirt;
 		}
 		else if ( GetKey( olc::Key::K3 ).bPressed )
 		{
-			tileId = TileIdentity::Sand;
+			tileId = TileIdentity::Stone;
 		}
 		else if ( GetKey( olc::Key::K4 ).bPressed )
 		{
-			tileId = TileIdentity::Torch;
+			tileId = TileIdentity::Sand;
 		}
 		else if ( GetKey( olc::Key::K5 ).bPressed )
 		{
@@ -248,15 +237,15 @@ public:
 		}
 		else if ( GetKey( olc::Key::K6 ).bPressed )
 		{
-			tileId = TileIdentity::Permafrost;
+			tileId = TileIdentity::MossStone;
 		}
 		else if ( GetKey( olc::Key::K7 ).bPressed )
 		{
-			tileId = TileIdentity::MossStone;
+			tileId = TileIdentity::Gravel;
 		}
 		else if ( GetKey( olc::Key::K8 ).bPressed )
 		{
-			tileId = TileIdentity::Gravel;
+			tileId = TileIdentity::Permafrost;
 		}
 		else if ( GetKey( olc::Key::K9 ).bPressed )
 		{
@@ -266,45 +255,6 @@ public:
 		{
 			tileId = TileIdentity::MapleLog;
 		}
-
-		/*
-		if ( GetKey( olc::Key::K1 ).bPressed )
-		{
-			tileId = TileIdentity::Water;
-		}
-		else if ( GetKey( olc::Key::K2 ).bPressed )
-		{
-			tileId = TileIdentity::Stone;
-		}
-		else if ( GetKey( olc::Key::K3 ).bPressed )
-		{
-			tileId = TileIdentity::Dirt;
-		}
-		else if ( GetKey( olc::Key::K4 ).bPressed )
-		{
-			tileId = TileIdentity::Sand;
-		}
-		else if ( GetKey( olc::Key::K5 ).bPressed )
-		{
-			tileId = TileIdentity::ElmBark;
-		}
-		else if ( GetKey( olc::Key::K6 ).bPressed )
-		{
-			tileId = TileIdentity::ElmLeaves;
-		}
-		else if ( GetKey( olc::Key::K7 ).bPressed )
-		{
-			tileId = TileIdentity::MapleBark;
-		}
-		else if ( GetKey( olc::Key::K8 ).bPressed )
-		{
-			tileId = TileIdentity::MapleLeaves;
-		}
-		else if ( GetKey( olc::Key::K9 ).bPressed )
-		{
-			tileId = TileIdentity::Torch;
-		}
-		*/
 
 
 
@@ -318,6 +268,24 @@ public:
 			( std::int64_t )( std::floor( tilePositionX ) ),
 			( std::int64_t )( std::floor( tilePositionY ) )
 		};
+
+
+		
+		if ( GetKey( olc::Key::B ).bPressed || GetKey( olc::Key::B ).bHeld )
+		{
+			world->incrementSolarTimeScale();
+		}
+
+
+		if ( GetKey( olc::Key::N ).bPressed || GetKey( olc::Key::N ).bHeld )
+		{
+			world->decrementSolarTimeScale();
+		}
+
+		if ( GetKey( olc::Key::M ).bPressed || GetKey( olc::Key::M ).bHeld )
+		{
+			world->resetSolarTimeScale();
+		}
 
 
 
@@ -337,6 +305,8 @@ public:
 			//world->remove( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 5, 5 );
 		}
 
+
+		/*
 		if ( GetKey( olc::Key::L ).bPressed )
 		{
 
@@ -371,7 +341,7 @@ public:
 		}
 
 
-
+		
 		if ( GetKey( olc::Key::V ).bPressed )
 		{
 			std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getBorders() << std::endl;
@@ -389,22 +359,22 @@ public:
 			this->bottomRightScan = olc::v2d_generic<std::int64_t>{ tileIndex.x, tileIndex.y };
 			std::cout << "( " << this->bottomRightScan.x << ", " << this->bottomRightScan.y << " )" << std::endl;
 		}
+		
 
 
 		if ( GetKey( olc::Key::B ).bPressed )
 		{
 			// std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getBorders() << std::endl;
 
-			/*
-			for ( int row = 0; row < 32; row++ )
-			{
-				for ( int col = 0; col < 32; col++ )
-				{
-					std::cout << "[" << ( int )world->getTile( tileIndex.x + col, tileIndex.y + row )->getId() << "]" << ", ";
-				}
-				std::cout << std::endl;
-			}
-			*/
+			//for ( int row = 0; row < 32; row++ )
+			//{
+			//	for ( int col = 0; col < 32; col++ )
+			///	{
+			//		std::cout << "[" << ( int )world->getTile( tileIndex.x + col, tileIndex.y + row )->getId() << "]" << ", ";
+			//	}
+			//	std::cout << std::endl;
+			//}
+			
 
 			for ( std::int64_t y = this->topLeftScan.y; y <= bottomRightScan.y; y++ )
 			{
@@ -414,11 +384,11 @@ public:
 				}
 				std::cout << std::endl;
 			}
-
 		}
+		*/
 
 
-
+		/*
 		if ( GetKey( olc::Key::NP7 ).bPressed )
 		{
 			std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getBorder( TileBorder::NorthWest ) << std::endl;
@@ -451,7 +421,7 @@ public:
 		{
 			std::cout << ( int )world->getTile( tileIndex.x, tileIndex.y )->getBorder( TileBorder::West ) << std::endl;
 		}
-
+		*/
 
 
 		if ( GetMouse( 0 ).bPressed || GetMouse( 0 ).bHeld )
@@ -464,7 +434,9 @@ public:
 		if ( GetMouse( 1 ).bPressed || GetMouse( 1 ).bHeld )
 			//if ( GetMouse( 1 ).bPressed )
 		{
-			world->remove( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 1, 1 );
+			TileIdentity tileIdentity = world->getTile( tileIndex.x, tileIndex.y )->getId();
+			world->remove( tileIdentity, tileIndex.x, tileIndex.y, 1, 1 );
+			//world->remove( static_cast< TileIdentity >( tileId ), tileIndex.x, tileIndex.y, 1, 1 );
 		}
 
 
@@ -481,7 +453,7 @@ public:
 
 	
 		/*
-		// Collision Detection [!] Need to put this on another thread with conditional variable
+		// Collision Detection [!] Need to put this on another thread with conditional variable to synch with world chunk loading
 		this->world->getSpatialPartition().updateSpaces( &this->player->getCharacter() );
 		//this->world->getSpatialPartition().updateSpaces( this->enemy1 );
 		//this->world->getSpatialPartition().updateSpaces( this->enemy2 );
@@ -498,7 +470,6 @@ public:
 
 
 
-
 		// Render
 		Clear( olc::BLACK );
 		this->world->renderBackground();
@@ -509,122 +480,21 @@ public:
 
 		// DEBUG
 		drawTileIndexString( tileIndex );
+		drawFPS();
+		drawTime( this->world->getTimeString() );
+		drawControlsHelper();
 		//this->world->printTime();
+
+
+
+		if ( GetKey( olc::Key::O ).bPressed || GetKey( olc::Key::O ).bHeld )
+		{
+			drawControlsMenu();
+		}
+
+
 		return true;
 	}
-
-
-	void renderSun( float second )
-	{
-		float difference = second - 10800;
-		float absoluteDifference = 75600;
-		float p = difference / ( absoluteDifference - 1 );
-
-
-		//float y = 0.000000795f * second * second - 0.0791f * second + 2039.2f;
-		//float y = 0.00000069539704f * second * second - 0.0600f * second + 1367.77f;
-		//float y = 0.0000007906569121 * second * second - 0.0683127572016466 * second + 1545.5555555555629326;
-		float y = 0.0000007430269776 * second * second - 0.0641975308641982 * second + 1456.6666666666742458;
-
-		DrawDecal(
-			olc::vf2d{
-				( ( 1.0f - p ) * 0.0f + p * 1980.0f + 0.5f ) ,
-				y
-			},
-			this->sunDecal, olc::vf2d{1.0, 1.0}
-		);
-
-		return;
-	}
-
-
-	olc::Pixel transitionColor( float second )
-	{
-		// Ambience
-
-		if ( second >= 21600 && second < 39600 ) // Morning
-		{
-			float difference = second - 21600;
-			float absoluteDifference = 18000;
-
-			std::cout << difference / absoluteDifference << std::endl;
-
-			float p = difference / ( absoluteDifference - 1 );
-
-			return olc::Pixel{
-				( std::uint8_t )( ( 1.0 - p ) * 4 + p * 255 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 4 + p * 255 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 9 + p * 255 + 0.5 ),
-				255
-			};
-
-			//return olc::Pixel{ 250, 250, 210 };
-		}
-		else if ( second >= 39600 && second < 61200 ) // Afternoon
-		{
-			//return olc::Pixel{ 255, 255, 255, 255 };
-			float difference = second - 39600;
-			float absoluteDifference = 21600;
-
-			std::cout << difference / absoluteDifference << std::endl;
-
-
-			float p = difference / ( absoluteDifference - 1 );
-
-
-			return olc::Pixel{
-				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 146 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 50 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 255 + p * 50 + 0.5 ),
-				255
-			};
-		}
-		else if ( second >= 61200 && second < 75600 ) // Evening
-		{
-			//return olc::Pixel{ 146, 50, 50, 255 };
-
-			float difference = second - 61200;
-			float absoluteDifference = 14400;
-
-			std::cout << difference / absoluteDifference << std::endl;
-
-
-			float p = difference / ( absoluteDifference - 1 );
-
-			return olc::Pixel{
-				( std::uint8_t )( ( 1.0 - p ) * 146 + p * 4 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 50 + p * 4 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 50 + p * 9 + 0.5 ),
-				255
-			};
-
-		}
-		else if ( ( second >= 75600 && second < 86400 ) || ( second >= 0 && second < 21600 ) ) // Night
-		{
-			float unwrappedSecond = ( second >= 0 && second < 21600 ) ? second + 86400 : second;
-			float difference = unwrappedSecond - 75600;
-			float absoluteDifference = 32400;
-
-
-			std::cout << difference / absoluteDifference << std::endl;
-
-			float p = difference / ( absoluteDifference - 1 );
-
-			return olc::Pixel{
-				( std::uint8_t )( ( 1.0 - p ) * 4 + p * 1 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 4 + p * 1 + 0.5 ),
-				( std::uint8_t )( ( 1.0 - p ) * 9 + p * 1 + 0.5 ),
-				255 
-			};
-		}
-		else
-		{
-			return olc::Pixel{ 0, 0, 0, 0 };
-		}
-	}
-
-
-
 
 
 
@@ -768,7 +638,7 @@ public:
 			tropicalSeasonalForest,
 			tundra,
 			woodland,
-			0, /*55800.0,*/ /*21600.0,*/ /*75600.0,*/
+			1000000/*1550000*/,
 			this->dayDecal, this->nightDecal, this->sunDecal, this->landscapeDecal
 		);
 
@@ -868,6 +738,53 @@ public:
 			olc::WHITE,
 			olc::vf2d( 2.0f, 2.0f )
 		);
+
+		return;
+	}
+
+
+	void drawFPS()
+	{
+		DrawStringDecal(
+			olc::vi2d( 0, 0 ),
+			"FPS: " + std::to_string( GetFPS() ),
+			olc::YELLOW,
+			olc::vf2d( 2.0f, 2.0f )
+		);
+
+		return;
+	}
+
+
+	void drawTime( std::string time )
+	{
+		DrawStringDecal(
+			olc::vi2d( 0, 24 ),
+			time,
+			olc::WHITE,
+			olc::vf2d( 1.0f, 1.0f )
+		);
+
+		return;
+	}
+
+
+	void drawControlsHelper()
+	{
+		DrawStringDecal(
+			olc::vi2d( 0, 36 ),
+			"Press \"O\" for Keyboard Controls",
+			olc::WHITE,
+			olc::vf2d( 1.5f, 1.5f )
+		);
+
+		return;
+	}
+
+
+	void drawControlsMenu()
+	{
+		return;
 	}
 };
 
@@ -878,7 +795,7 @@ int main()
 	Example demo;
 	/*
 	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize ) )
-		demo.Start();
+		demo.Start();D
 	*/
 	/*
 	if ( demo.Construct( Example::screenWidth, Example::screenHeight, Example::pixelSize, Example::pixelSize, true, true, true ) )

@@ -147,6 +147,7 @@ private:
 
 	// Time
 	std::uint64_t _tick;
+	std::uint64_t _solarTimeScale = Settings::World::SOLAR_TIME_SCALE * 25;
 	float _tickTimer;
 
 	// Player
@@ -348,6 +349,11 @@ public:
 	// Debug
 	void DEBUG_PRINT_TILE_SPRITES();
 	void printTime() const;
+	std::string getTimeString() const;
+	std::uint64_t getSolarTimeScale() const;
+	void incrementSolarTimeScale();
+	void decrementSolarTimeScale();
+	void resetSolarTimeScale();
 };
 
 
