@@ -44,14 +44,8 @@ public:
 
 	TileIdentity tileId = TileIdentity::Stone;
 
-
-
-	//
 	olc::v2d_generic<std::int64_t> topLeftScan;
 	olc::v2d_generic<std::int64_t> bottomRightScan;
-
-
-
 
 	// Temporary render system [!]
 	olc::Sprite* daySprite;
@@ -67,10 +61,8 @@ public:
 	olc::Decal* landscapeDecal;
 
 
-
 	olc::Sprite* caveBackgroundSprite;
 	olc::Decal*	caveBackgroundDecal;
-
 
 
 	olc::Sprite* alphaSprite;
@@ -81,7 +73,7 @@ private:
 public:
 	Example()
 	{
-		sAppName = "Example";
+		sAppName = "Procedurally Generated World";
 	}
 
 	~Example()
@@ -818,6 +810,7 @@ public:
 		);
 
 		this->world->setPlayer( this->player );
+		// [!] now the world can start. Put a starting flag here, else the world starts and runs even before player is finished loading!
 		return;
 	}
 

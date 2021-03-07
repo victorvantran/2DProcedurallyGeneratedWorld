@@ -2611,7 +2611,7 @@ void World::updateLighting()
 {
 	this->resetLighting();
 	this->emitStaticLightSources();
-	this->emitPlayerLightSource(); // [~!]
+	//this->emitPlayerLightSource(); // [~!]
 	this->calculateLightRenders();
 
 	return;
