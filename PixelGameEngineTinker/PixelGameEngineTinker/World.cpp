@@ -1118,7 +1118,7 @@ long double World::normalizeHistogram( long double value )
 	}
 	else if ( value >= 0.324 && value <= 0.676 )
 	{
-		return -16.6757 * ( value * value * value ) + 25.0136 * ( value * value ) - 9.71832 * ( value )+1.19033;
+		return -16.6757 * ( value * value * value ) + 25.0136 * ( value * value ) - 9.71832 * ( value ) + 1.19033;
 	}
 	else // if ( value >= 0.676 )
 	{
@@ -2532,8 +2532,11 @@ void World::emitPlayerLightSource()
 {
 	//const LightSource& playerLight = LightSource( TileIdentity::Void, 255, 255, 255, 255, 15 );
 	//const LightSource& playerLight = LightSource( TileIdentity::Void, 15, 15, 15, 255, 5 );
-	const LightSource& playerLight = LightSource( TileIdentity::Void, 32, 32, 32, 255, 5 );
-	this->emitDynamicLightSource( playerLight, this->_player->getCharacter().getCurrPosition().x, this->_player->getCharacter().getCurrPosition().y );
+	if ( this->_player != nullptr )
+	{
+		const LightSource& playerLight = LightSource( TileIdentity::Void, 32, 32, 32, 255, 5 );
+		this->emitDynamicLightSource( playerLight, this->_player->getCharacter().getCurrPosition().x, this->_player->getCharacter().getCurrPosition().y );
+	}
 	return;
 }
 
